@@ -11,4 +11,4 @@ kr0 Game Studio makes four games: Blackletter, Dropfront, Dual Tech and Metr0nik
 - **The studio repo is the source of truth** (`kr0/kr0-game-studio`). Documents go in `games/<name>/`, art in `art/<name>/`, studio rules in `studio/`. Make changes on a branch and open a pull request; don't keep a second copy of a document anywhere else.
 - **Keep `INDEX.md` current.** Every new or retired document gets a row; old versions move to `superseded/`.
 - **Brand:** write kr0 and Metr0niks with a zero, and highlight the 0 in pink wherever the name is styled.
-- **Ask before** anything outward-facing or hard to undo: creating repos, deploying the site, sending messages outside the project, deleting files.
+- **Ask before** anything outward-facing or hard to undo: creating repos, deploying the game portfolio site (`site/`), sending messages outside the project, deleting files.

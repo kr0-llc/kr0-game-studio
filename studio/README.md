@@ -11,7 +11,7 @@ Everything in `studio/` applies to every game. A game may add its own rules in `
 | `studio/` | Rules for every game: ways of working, GDD template, brand rules, art style guides, shared skills |
 | `games/<name>/` | One game's documents: pitch, GDD, TDD, open questions, tuning history, decision histories, prototype, `superseded/` |
 | `art/<name>/` | One game's art: concept art, art board, prompts, sprites, drawing source, screenshots |
-| `site/` | The public studio site and its deploy scripts |
+| `site/` | kr0's game portfolio site (public) and its deploy scripts |
 | `INDEX.md` | Every document and folder, with status and source links |
 
 Games: `blackletter`, `dropfront`, `dual-tech`, `metr0niks`. Folder names are lowercase with hyphens.

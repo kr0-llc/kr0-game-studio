@@ -82,7 +82,7 @@ Studio site page: https://storage.googleapis.com/kr0-game-studio-site/index.html
 
 ## Site
 
-The public studio site source and deploy scripts are in `site/` (deploy from `site/gcp/`). `site/ways-of-working.md` is the published copy; edit `studio/ways-of-working.md` and copy it over.
+kr0's game portfolio site: the source and deploy scripts are in `site/` (deploy from `site/gcp/`). `site/ways-of-working.md` is the published copy; edit `studio/ways-of-working.md` and copy it over.
 
 ## Notes
 - Markdown exports drop embedded diagrams and images; they show as `[embedded content: …]` or `[image: …]` placeholders (Dropfront core loop, Metr0niks core loop and architecture, Blackletter pitch images, core loop and architecture).
