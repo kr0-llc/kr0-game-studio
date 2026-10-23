@@ -1,6 +1,6 @@
 # kr0 Game Studio: Ways of Working
 
-Last updated: 21 October 2026 · Owner: kr0
+Last updated: 23 October 2026 · Owner: kr0
 
 kr0 Game Studio makes small indie games with a crew of AI agents. It runs like a small studio. Directors guard the vision, department leads own their areas, and specialists do the hands-on work. One human, kr0, makes every decision. We plan work in **tokens**, not hours.
 
@@ -14,7 +14,7 @@ This document covers who does what, how work moves between agents, the checks th
 2. **Budget in tokens.** Every feature carries a token estimate. Sprints close by comparing spend to estimate.
 3. **Play it, then close it.** A change the player can see is done only after someone has run the game and kept a screenshot.
 4. **Process to fit the game.** Use the lightest process that works. More documents don't make a better game.
-5. **Every number is data.** Tunable values live in data files and one tuning table, never hard-coded.
+5. **Every number is data.** Tunable values live in data files and one tuning table, never hard-coded. Each game has a headless deterministic simulation, and tuning changes are backed by its runs: see [simulation and tuning](simulation-and-tuning.md).
 6. **Decisions are written down.** Settled debates go in the decision histories so they stay settled.
 
 ---
@@ -369,7 +369,7 @@ flowchart LR
 | GDD | game-designer | What the game is and how it behaves: loop, systems, content, UX. |
 | TDD | technical-director | How it's built: engine, architecture, data, risks. |
 | Open questions | producer | Decisions still owed, ticked off as kr0 answers. |
-| Tuning history | systems-designer | Every changed number, why, and tokens spent per story. |
+| Tuning history | systems-designer | Every changed number, why, the sweep behind it, and tokens spent per story. Opens with the game's Simulation section ([simulation and tuning](simulation-and-tuning.md)). |
 | GDD decision history | game-designer | Date, change, reason, who decided. |
 | TDD decision history | technical-director | Architecture decisions, options considered, trade-offs. |
 
