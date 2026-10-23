@@ -66,6 +66,7 @@ Studio site page: https://storage.googleapis.com/kr0-game-studio-site/index.html
 | Studio guide: layout, how work runs, where things go | `studio/README.md` |
 | Ways of working (crew, chain of command, phases, token budgets) | `studio/ways-of-working.md` |
 | GDD template | `studio/gdd-template.md` |
+| Simulation and tuning standard (with a proposed shared simulation service) | `studio/simulation-and-tuning.md` |
 | Brand rules (r0 styling) | `studio/brand.md` |
 | Art style guides per game | `studio/art-style-guides.md` |
 | GDD designer skill | `studio/skills/gdd-designer/SKILL.md` |

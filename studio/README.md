@@ -32,6 +32,7 @@ Pitch, GDD, TDD, open questions, tuning history, GDD decision history, TDD decis
 
 - [ways-of-working.md](ways-of-working.md): crew, chain of command, phases, guardrails, token budgets. `site/ways-of-working.md` is the published copy.
 - [gdd-template.md](gdd-template.md): the default GDD outline.
+- [simulation-and-tuning.md](simulation-and-tuning.md): headless deterministic simulation, evidence-based tuning, what each game documents, and a proposed shared simulation service.
 - [brand.md](brand.md): studio brand rules, including the r0 styling.
 - [art-style-guides.md](art-style-guides.md): the candidate looks for each game and which one is chosen.
 - [skills/gdd-designer/SKILL.md](skills/gdd-designer/SKILL.md): the GDD designer skill.
