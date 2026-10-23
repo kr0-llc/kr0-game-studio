@@ -24,7 +24,7 @@ The simulation is the game's rules with no renderer. It is the same code the pla
 
 **Replay check.** Every batch of runs replays at least one of its runs and compares state hashes. A mismatch is a failing build, fixed in the engine and never tuned around.
 
-**Shared tools.** Tooling used by every game lives in [`tools/`](../tools/README.md). The studio's sweep runner, `chronos-sim`, will be built there. Until it exists, a game runs sweeps with its own runner and still follows this standard.
+**Shared tools.** Tooling used by every game lives in [`tools/`](../tools/README.md). The studio's simulation and tuning platform, `chronos-sim`, will be built there. Until it exists, a game runs sweeps with its own runner and still follows this standard.
 
 **Prototypes.** A throwaway prototype may skip the simulation (ways of working section 9 relaxes prototype standards). The simulation is required before a game's first tuning change is logged, and at the latest by the end of pre-production.
 

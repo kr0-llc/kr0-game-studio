@@ -12,4 +12,4 @@ Tools used by every kr0 game live here, one folder per tool. A tool that only on
 
 | Tool | Folder | Status |
 | --- | --- | --- |
-| `chronos-sim`: sweep runner for every game's headless simulation | `tools/chronos-sim/` | Not built yet |
+| `chronos-sim`: simulation and tuning platform for every game (runners, results, Tune Lab, tuning history) | `tools/chronos-sim/` | Not built yet; [project plan](chronos-sim/project-plan.md) is a draft for kr0's review |
