@@ -5,5 +5,6 @@ Design documents, prototypes and art for kr0 Game Studio's games: Blackletter, D
 - `studio/`: rules for every game. Start with [studio/README.md](studio/README.md).
 - `games/<name>/`: each game's pitch, GDD, TDD, decisions and prototype.
 - `art/<name>/`: each game's art.
+- `tools/`: tools shared by every game.
 - `site/`: the public studio site.
 - [INDEX.md](INDEX.md): every document, with status.

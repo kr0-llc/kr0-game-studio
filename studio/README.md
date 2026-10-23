@@ -11,6 +11,7 @@ Everything in `studio/` applies to every game. A game may add its own rules in `
 | `studio/` | Rules for every game: ways of working, GDD template, brand rules, art style guides, shared skills |
 | `games/<name>/` | One game's documents: pitch, GDD, TDD, open questions, tuning history, decision histories, prototype, `superseded/` |
 | `art/<name>/` | One game's art: concept art, art board, prompts, sprites, drawing source, screenshots |
+| `tools/` | Tools shared by every game, such as the `chronos-sim` sweep runner (to be built) |
 | `site/` | kr0's game portfolio site (public) and its deploy scripts |
 | `INDEX.md` | Every document and folder, with status and source links |
 
@@ -32,7 +33,7 @@ Pitch, GDD, TDD, open questions, tuning history, GDD decision history, TDD decis
 
 - [ways-of-working.md](ways-of-working.md): crew, chain of command, phases, guardrails, token budgets. `site/ways-of-working.md` is the published copy.
 - [gdd-template.md](gdd-template.md): the default GDD outline.
-- [simulation-and-tuning.md](simulation-and-tuning.md): headless deterministic simulation, evidence-based tuning, what each game documents, and a proposed shared simulation service.
+- [simulation-and-tuning.md](simulation-and-tuning.md): headless deterministic simulation, evidence-based tuning, and what each game documents.
 - [brand.md](brand.md): studio brand rules, including the r0 styling.
 - [art-style-guides.md](art-style-guides.md): the candidate looks for each game and which one is chosen.
 - [skills/gdd-designer/SKILL.md](skills/gdd-designer/SKILL.md): the GDD designer skill.

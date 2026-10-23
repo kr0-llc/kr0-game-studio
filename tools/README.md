@@ -1,0 +1,15 @@
+# kr0 Game Studio: tools
+
+Last updated: 23 October 2026 · Owner: kr0
+
+Tools used by every kr0 game live here, one folder per tool. A tool that only one game uses stays in that game's own folder or build.
+
+- Each tool has a README saying what it does, how to run it, and which games use it.
+- Tools follow the studio rules in [`studio/`](../studio/README.md), including [simulation and tuning](../studio/simulation-and-tuning.md).
+- Tools never hard-code a game's numbers. A game's tunables, targets and seed counts stay in that game's docs and data.
+
+## Tools
+
+| Tool | Folder | Status |
+| --- | --- | --- |
+| `chronos-sim`: sweep runner for every game's headless simulation | `tools/chronos-sim/` | Not built yet |
