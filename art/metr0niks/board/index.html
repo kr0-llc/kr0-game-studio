@@ -1,0 +1,137 @@
+<title>Metr0niks Art Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a style-by-subject matrix. Three style columns run down the page, one row per subject, like a pinned production wall. */
+:root{
+  --bg:#0c1117; --panel:#121a22; --line:#22303c; --fg:#dfe7ee; --muted:#8597a6;
+  --cyan:#3fd6e8; --rust:#e8722a; --sand:#e9c9a8;
+  --display:"Chakra Petch","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--body)}
+.wrap{max-width:1500px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:grid;gap:10px;margin-bottom:28px}
+.eyebrow{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+h1{font:700 clamp(36px,6vw,64px)/1 var(--display);margin:0;letter-spacing:.01em;text-wrap:balance}
+h1 b{color:var(--rust)}
+.lede{max-width:68ch;color:var(--muted);margin:0}
+.grid{display:grid;grid-template-columns:150px repeat(3,minmax(0,1fr));gap:14px}
+.key{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px;border-bottom:1px solid var(--line);margin-bottom:8px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.style{display:grid;gap:6px;align-content:start;min-width:0}
+.style h2{font:700 20px/1.1 var(--display);margin:0}
+.style p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+.sw{display:flex;gap:4px}
+.sw i{width:18px;height:18px;border-radius:3px;outline:1px solid rgba(255,255,255,.08)}
+.row{padding-block:22px;border-bottom:1px solid var(--line)}
+.rowhead{display:grid;gap:6px;align-content:start}
+.rowhead h3{font:700 22px/1.1 var(--display);margin:0}
+.rowhead p{margin:0;color:var(--muted);font-size:13px}
+figure{margin:0;display:grid;gap:8px;align-content:start;min-width:0}
+figure button{all:unset;cursor:zoom-in;display:block;border-radius:6px;overflow:hidden;background:var(--panel);outline:1px solid var(--line);aspect-ratio:16/9}
+figure button:focus-visible{outline:2px solid var(--cyan)}
+figure img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+figure button:hover img{transform:scale(1.03)}
+figcaption{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;font-size:13px;color:var(--muted)}
+.tag{font:600 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:4px 6px;border-radius:3px;border:1px solid currentColor}
+.t-ai{color:var(--cyan)} .t-cap{color:var(--rust)} .t-orig{color:var(--sand)} .t-q{color:var(--muted)}
+.queued{aspect-ratio:16/9;border-radius:6px;border:1px dashed var(--line);display:grid;place-items:center;text-align:center;padding:16px;color:var(--muted);font:12px/1.5 var(--mono)}
+.extra{display:flex;gap:8px}
+.extra button{all:unset;cursor:zoom-in;width:72px;aspect-ratio:16/9;border-radius:4px;overflow:hidden;outline:1px solid var(--line)}
+.extra img{width:100%;height:100%;object-fit:cover}
+.mobile-label{display:none}
+footer{margin-top:28px;color:var(--muted);font-size:13px;max-width:80ch}
+footer code{font-family:var(--mono);font-size:12px;color:var(--fg)}
+dialog{border:0;padding:0;background:transparent;max-width:96vw;max-height:94vh}
+dialog::backdrop{background:rgba(4,7,10,.92)}
+dialog img{max-width:96vw;max-height:86vh;display:block;border-radius:6px}
+dialog p{color:var(--fg);font:13px var(--mono);margin:8px 0 0;text-align:center}
+@media (max-width:900px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .key{position:static}
+  .key .rowhead{display:none}
+  .mobile-label{display:block;font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--cyan)}
+}
+@media (prefers-reduced-motion:reduce){figure img{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Concept art · Overpass Sector 4 · Oct 2026</span>
+    <h1>Metr<b>0</b>niks art board</h1>
+    <p class="lede">The same game drawn three ways: the prototype's clean blockout voxels, the gritty micro-voxel look of the pitch art, and a sunlit hand-inked comic style that drops voxels entirely. Each row is one subject from the GDD. Click any image to see it full size.</p>
+  </header>
+
+  <div class="grid key">
+    <div class="rowhead"></div>
+    <div class="style"><span class="eyebrow">Style A</span><h2>Prototype blockout</h2><p>Big flat-shaded cubes, no texture, slate and rust with cyan glass and orange armor. What the live build looks like today.</p><div class="sw"><i style="background:#3b4450"></i><i style="background:#7a4632"></i><i style="background:#d9aa2c"></i><i style="background:#3fd6e8"></i><i style="background:#e8722a"></i></div></div>
+    <div class="style"><span class="eyebrow">Style B</span><h2>Pitch rust and sparks</h2><p>Dense micro-voxels, chipped rust paint, hazard stripes, night lighting, sparks and smoke. The original pitch concept look.</p><div class="sw"><i style="background:#2a2b2e"></i><i style="background:#b5572a"></i><i style="background:#e0b52b"></i><i style="background:#39c8d8"></i><i style="background:#e0453a"></i></div></div>
+    <div class="style"><span class="eyebrow">Style C</span><h2>Sun-bleached ink</h2><p>Ligne-claire ink and flat watercolor, midday sun, peach, sand, coral and sage. No voxels at all; rounded, slightly whimsical machines.</p><div class="sw"><i style="background:#f3e9da"></i><i style="background:#eab08e"></i><i style="background:#d9786a"></i><i style="background:#a9b98e"></i><i style="background:#9cc7c4"></i></div></div>
+  </div>
+
+  <div id="rows"></div>
+
+  <footer>
+    <p>Concept images were made with Figma AI (Gemini 3.1 image). Build captures are screenshots of the current prototype. Originals live in <code>art/metr0niks/</code> by style. Small thumbnails under a cell are build captures or original pitch art, for comparison.</p>
+  </footer>
+</div>
+
+<dialog id="lb"><img id="lbimg" alt=""><p id="lbcap"></p></dialog>
+
+<script>
+const STYLES=["Prototype blockout","Pitch rust and sparks","Sun-bleached ink"];
+const TAG={ai:["Concept","t-ai"],cap:["Build capture","t-cap"],orig:["Original pitch art","t-orig"]};
+const ROWS=[
+ {name:"Mechs",note:"Three player builds: Brawler (starter), Siege, Skirmisher.",cells:[
+   {src:"img/prototype-mechs.jpg",kind:"ai",cap:"Brawler, Siege, Skirmisher"},
+   {src:"img/pitch-mechs.jpg",kind:"ai",cap:"Brawler, Siege, Skirmisher"},
+   {src:"img/ink-mechs.jpg",kind:"ai",cap:"Brawler, Siege, Skirmisher"}]},
+ {name:"Enemies",note:"Patrol bot, heavy loader and the bounty boss sniper.",cells:[
+   {src:"img/prototype-enemies.jpg",kind:"ai",cap:"Patrol bot, loader, bounty boss"},
+   {src:"img/pitch-enemies.jpg",kind:"ai",cap:"Patrol bot, loader, bounty boss"},
+   {src:"img/ink-enemies.jpg",kind:"ai",cap:"Patrol bot, loader, bounty boss"}]},
+ {name:"World",note:"Overpass Sector 4: slums under a six-lane highway, with a road collapse.",cells:[
+   {src:"img/prototype-world.jpg",kind:"ai",cap:"Highway span mid-collapse",extra:[{src:"img/cap-world.jpg",cap:"Build capture: Overpass Sector 4"}]},
+   {src:"img/pitch-world.jpg",kind:"ai",cap:"Highway span mid-collapse at night"},
+   {src:"img/ink-world.jpg",kind:"ai",cap:"Highway span mid-collapse at noon"}]},
+ {name:"Items",note:"The twelve parts by rarity, drop pods and scrap cubes.",cells:[
+   {src:"img/prototype-items.jpg",kind:"ai",cap:"Twelve parts, pods, scrap"},
+   {src:"img/pitch-items.jpg",kind:"ai",cap:"Twelve parts, pods, scrap"},
+   {src:"img/ink-items.jpg",kind:"ai",cap:"Twelve parts, pods, scrap"}]},
+ {name:"Garage view",note:"Stats, six slots, blueprint and Drop in.",cells:[
+   {src:"img/cap-garage.jpg",kind:"cap",cap:"Garage and upgrade screen"},
+   {src:"img/orig-garage.jpg",kind:"orig",cap:"Garage and upgrade"},
+   {src:"img/ink-garage.jpg",kind:"ai",cap:"Open-air workshop garage"}]},
+ {name:"Battle view",note:"Isometric fight with the timing ring, pods and falling road.",cells:[
+   {src:"img/prototype-battle.jpg",kind:"ai",cap:"Timing ring, pod and falling road",extra:[{src:"img/cap-battle.jpg",cap:"Build capture: pile-bunker timing ring"},{src:"img/cap-pod.jpg",cap:"Build capture: patrol bot grabs a pod"}]},
+   {src:"img/pitch-battle.jpg",kind:"ai",cap:"Pile-bunker hit under the overpass",extra:[{src:"img/orig-railgun.jpg",cap:"Original pitch art: critical hit"},{src:"img/orig-salvage.jpg",cap:"Original pitch art: salvaging"}]},
+   {src:"img/ink-battle.jpg",kind:"ai",cap:"Timing ring, pod and falling road"}]},
+];
+const lb=document.getElementById("lb"),lbimg=document.getElementById("lbimg"),lbcap=document.getElementById("lbcap");
+function showFull(src,cap){lbimg.src=src;lbimg.alt=cap;lbcap.textContent=cap;lb.showModal()}
+lb.addEventListener("click",()=>lb.close());
+function thumb(src,cap,cls){const b=document.createElement("button");b.type="button";b.setAttribute("aria-label","Open "+cap);if(cls)b.className=cls;const i=new Image();i.src=src;i.alt=cap;i.loading="lazy";b.append(i);b.onclick=()=>showFull(src,cap);return b}
+const root=document.getElementById("rows");
+for(const r of ROWS){
+  const row=document.createElement("section");row.className="grid row";
+  row.innerHTML=`<div class="rowhead"><h3>${r.name}</h3><p>${r.note}</p></div>`;
+  r.cells.forEach((c,i)=>{
+    const f=document.createElement("figure");
+    const ml=document.createElement("span");ml.className="mobile-label";ml.textContent=STYLES[i];f.append(ml);
+    if(c.queued){const q=document.createElement("div");q.className="queued";q.textContent="Queued: generates when Figma AI credits reset";f.append(q)}
+    else{
+      const full=STYLES[i]+" · "+r.name+" · "+c.cap;
+      f.append(thumb(c.src,full));
+      const fc=document.createElement("figcaption");const [t,cl]=TAG[c.kind];
+      fc.innerHTML=`<span class="tag ${cl}">${t}</span><span>${c.cap}</span>`;f.append(fc);
+      if(c.extra){const e=document.createElement("div");e.className="extra";for(const x of c.extra)e.append(thumb(x.src,STYLES[i]+" · "+x.cap));f.append(e)}
+    }
+    row.append(f);
+  });
+  root.append(row);
+}
+</script>

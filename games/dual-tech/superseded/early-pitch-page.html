@@ -1,0 +1,277 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dual Tech pitch</title>
+<style>
+:root{
+  --bg:#f6f3ec; --surface:#ffffff; --ink:#1d1b26; --muted:#5f5b6e; --line:#ddd6c8;
+  --tank:#2f7fd8; --dmg:#e04a3a; --sup:#2fae6a; --accent:#f2b705;
+  --sky1:#bfe3ff; --sky2:#e9f6ff; --ground:#7cc26b; --ground2:#5aa64c;
+  --enemy:#8a4fd1; --enemy2:#5e2fa3;
+  --meter:#2a2838; --good:#f2b705; --perfect:#3ddc84; --miss:#e04a3a;
+  --ui:#1f2a6b; --ui2:#2d3c94; --uiink:#ffffff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14131b; --surface:#1e1d29; --ink:#ece9f5; --muted:#a19cb5; --line:#33314a;
+    --tank:#5aa2f0; --dmg:#ff6b5a; --sup:#4fd08a; --accent:#ffcc33;
+    --sky1:#1c2550; --sky2:#2b3a73; --ground:#3d6b3a; --ground2:#2c5129;
+    --enemy:#a873f0; --enemy2:#6b3cbf;
+    --meter:#0c0b12; --good:#ffcc33; --perfect:#4fe895; --miss:#ff6b5a;
+    --ui:#101640; --ui2:#232f7a; --uiink:#f3f2ff;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14131b; --surface:#1e1d29; --ink:#ece9f5; --muted:#a19cb5; --line:#33314a;
+  --tank:#5aa2f0; --dmg:#ff6b5a; --sup:#4fd08a; --accent:#ffcc33;
+  --sky1:#1c2550; --sky2:#2b3a73; --ground:#3d6b3a; --ground2:#2c5129;
+  --enemy:#a873f0; --enemy2:#6b3cbf;
+  --meter:#0c0b12; --good:#ffcc33; --perfect:#4fe895; --miss:#ff6b5a;
+  --ui:#101640; --ui2:#232f7a; --uiink:#f3f2ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden}
+main{max-width:860px;margin:0 auto;padding:28px 16px 48px}
+h1{font-size:clamp(2rem,7vw,3rem);line-height:1.05;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.15rem;margin:36px 0 10px}
+.hook{font-size:1.1rem;color:var(--muted);margin:0}
+.tag{display:inline-block;font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:4px;color:#fff;vertical-align:middle}
+.t-tank{background:var(--tank)} .t-dmg{background:var(--dmg)} .t-sup{background:var(--sup)}
+ol,ul{margin:0;padding-left:1.3em}
+li{margin:3px 0}
+.muted{color:var(--muted)}
+.heroes{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.card h3{margin:0 0 4px;font-size:1.05rem}
+.card p{margin:0 0 6px;font-size:.9rem}
+.card ul{font-size:.92rem}
+.combos{list-style:none;padding:0}
+.combos li{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:6px 0;font-size:.93rem}
+.combos b{color:var(--ink)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:2px;vertical-align:baseline}
+.weeks{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.cut{margin-top:12px;padding:8px 12px;border-left:4px solid var(--miss);background:var(--surface);font-size:.93rem}
+
+/* Mockup */
+.battle{border-radius:10px;overflow:hidden;border:3px solid var(--ui);background:var(--ui)}
+.battle svg{display:block;width:100%;height:auto}
+.hud{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px;color:var(--uiink);font-family:ui-monospace,Consolas,monospace;font-size:.82rem}
+@media (max-width:560px){.hud{grid-template-columns:1fr}}
+.panel{background:var(--ui2);border:2px solid #ffffff55;border-radius:6px;padding:8px}
+.row{display:grid;grid-template-columns:56px 1fr 46px;align-items:center;gap:8px;margin:3px 0}
+.atb{height:9px;background:#00000055;border-radius:2px;overflow:hidden}
+.atb i{display:block;height:100%}
+.menu div{padding:2px 6px;border-radius:3px}
+.menu .sel{background:var(--accent);color:#1d1b26;font-weight:700}
+.menu .sel::before{content:"\25B6  "}
+.meterwrap{grid-column:1/-1}
+.meter{position:relative;height:26px;background:var(--meter);border:2px solid #ffffffaa;border-radius:4px;cursor:pointer;touch-action:manipulation;outline:none}
+.meter:focus-visible{box-shadow:0 0 0 3px var(--accent)}
+.zone{position:absolute;top:0;bottom:0}
+.zone.good{left:58%;width:20%;background:var(--good);opacity:.55}
+.zone.perfect{left:64%;width:8%;background:var(--perfect)}
+.marker{position:absolute;top:-6px;bottom:-6px;width:5px;margin-left:-2px;background:#fff;box-shadow:0 0 0 1px #000;left:40%}
+.meterbar{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px;flex-wrap:wrap}
+#result{font-weight:800;font-size:1rem;min-width:7ch}
+#result.p{color:var(--perfect)} #result.g{color:var(--good)} #result.m{color:var(--miss)}
+.legend{font-size:.85rem;margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+
+<h1>Dual Tech</h1>
+<p class="hook">Chrono Trigger turns, hero-shooter kits: every attack ends in a timing hit, and two perfect hits fuse into a combo tech.</p>
+
+<h2>Gameplay mockup</h2>
+<div class="battle" aria-label="Battle screen mockup">
+<svg viewBox="0 0 400 190" role="img" aria-label="Three heroes on the left facing a golem boss on the right">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--sky1)"/><stop offset="1" stop-color="var(--sky2)"/></linearGradient>
+  </defs>
+  <rect width="400" height="190" fill="url(#sky)"/>
+  <rect y="132" width="400" height="58" fill="var(--ground)"/>
+  <g fill="var(--ground2)"><rect x="0" y="132" width="400" height="6"/><rect x="40" y="152" width="18" height="6"/><rect x="180" y="165" width="24" height="6"/><rect x="320" y="150" width="16" height="6"/></g>
+  <!-- Brick (tank) -->
+  <g transform="translate(70,88)">
+    <rect x="-4" y="40" width="34" height="6" fill="#00000033"/>
+    <rect x="2" y="14" width="22" height="26" fill="var(--tank)"/>
+    <rect x="6" y="2" width="14" height="13" fill="#f1c9a0"/>
+    <rect x="6" y="0" width="14" height="5" fill="#333"/>
+    <rect x="24" y="10" width="10" height="30" fill="#c9d6e6" stroke="#333" stroke-width="1"/>
+    <text x="13" y="-6" font-size="9" text-anchor="middle" fill="var(--ink)" font-family="monospace">BRICK</text>
+  </g>
+  <!-- Vex (damage) attacking -->
+  <g transform="translate(150,72)">
+    <rect x="-2" y="40" width="28" height="6" fill="#00000033"/>
+    <rect x="4" y="16" width="16" height="24" fill="var(--dmg)"/>
+    <rect x="5" y="4" width="13" height="12" fill="#f1c9a0"/>
+    <rect x="3" y="2" width="17" height="5" fill="#222"/>
+    <rect x="18" y="20" width="22" height="4" fill="#333"/>
+    <rect x="40" y="19" width="5" height="6" fill="var(--accent)"/>
+    <text x="12" y="-4" font-size="9" text-anchor="middle" fill="var(--ink)" font-family="monospace">VEX</text>
+  </g>
+  <!-- Lumen (support) -->
+  <g transform="translate(36,108)">
+    <rect x="-2" y="26" width="26" height="5" fill="#00000033"/>
+    <rect x="4" y="12" width="14" height="16" fill="var(--sup)"/>
+    <rect x="5" y="1" width="12" height="11" fill="#f1c9a0"/>
+    <circle cx="25" cy="8" r="5" fill="var(--accent)" opacity=".9"/>
+    <text x="11" y="-4" font-size="9" text-anchor="middle" fill="var(--ink)" font-family="monospace">LUMEN</text>
+  </g>
+  <!-- combo beam -->
+  <g opacity=".85">
+    <rect x="195" y="91" width="90" height="4" fill="var(--accent)"/>
+    <rect x="102" y="106" width="80" height="3" fill="var(--tank)" transform="rotate(-10 102 106)"/>
+  </g>
+  <text x="210" y="80" font-size="11" font-weight="700" fill="var(--dmg)" font-family="monospace">RICOCHET SLAM!</text>
+  <!-- Enemy golem -->
+  <g transform="translate(290,46)">
+    <rect x="-6" y="82" width="86" height="8" fill="#00000033"/>
+    <rect x="10" y="20" width="56" height="62" fill="var(--enemy)"/>
+    <rect x="18" y="0" width="40" height="24" fill="var(--enemy2)"/>
+    <rect x="26" y="8" width="8" height="6" fill="var(--accent)"/><rect x="42" y="8" width="8" height="6" fill="var(--accent)"/>
+    <rect x="-6" y="28" width="16" height="40" fill="var(--enemy2)"/><rect x="66" y="28" width="16" height="40" fill="var(--enemy2)"/>
+    <rect x="22" y="40" width="32" height="10" fill="var(--enemy2)"/>
+    <rect x="10" y="-14" width="56" height="5" fill="#00000055"/><rect x="10" y="-14" width="34" height="5" fill="var(--miss)"/>
+    <text x="38" y="-18" font-size="9" text-anchor="middle" fill="var(--ink)" font-family="monospace">SCRAP GOLEM</text>
+  </g>
+</svg>
+<div class="hud">
+  <div class="panel">
+    <div class="row"><span>BRICK</span><span class="atb"><i style="width:100%;background:var(--tank)"></i></span><span>412</span></div>
+    <div class="row"><span>VEX</span><span class="atb"><i style="width:100%;background:var(--dmg)"></i></span><span>188</span></div>
+    <div class="row"><span>LUMEN</span><span class="atb"><i style="width:45%;background:var(--sup)"></i></span><span>230</span></div>
+  </div>
+  <div class="panel menu" aria-label="Action menu">
+    <div>Attack</div>
+    <div>Ability</div>
+    <div class="sel">Dual tech: Ricochet Slam</div>
+    <div>Item</div>
+  </div>
+  <div class="panel meterwrap">
+    <div class="meter" id="meter" tabindex="0" role="button" aria-label="Timing meter. Click or press Space to hit.">
+      <div class="zone good"></div><div class="zone perfect"></div><div class="marker" id="marker"></div>
+    </div>
+    <div class="meterbar">
+      <span>Click / tap / Space to hit</span>
+      <span id="result" aria-live="polite">&nbsp;</span>
+      <span>Streak <b id="streak">0</b></span>
+    </div>
+  </div>
+</div>
+</div>
+<p class="legend muted">Green = perfect, yellow = good. Two perfects within the combo window fire the dual tech.</p>
+
+<h2>Core loop</h2>
+<ol>
+  <li>ATB bars fill; a ready hero picks Attack, Ability or Dual tech.</li>
+  <li>The action resolves into a 1-second timing hit in that hero's style.</li>
+  <li>Perfect hits build Sync; two ready heroes plus Sync unlock a dual tech.</li>
+  <li>Dual tech = both heroes' timing hits back-to-back; land both for the big payoff.</li>
+  <li>Win the encounter, pick 1 of 3 upgrades, move to the next fight.</li>
+</ol>
+
+<h2>Heroes</h2>
+<div class="heroes">
+  <div class="card">
+    <h3>Brick <span class="tag t-tank">Tank</span></h3>
+    <p class="muted">Timing: hold to charge, release in the zone.</p>
+    <ul>
+      <li><b>Shield slam</b>: hold-release hit; perfect staggers and delays enemy ATB.</li>
+      <li><b>Barrier wall</b>: taunt for 2 turns; perfect release adds a shield to all.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Vex <span class="tag t-dmg">Damage</span></h3>
+    <p class="muted">Timing: stop a sweeping marker.</p>
+    <ul>
+      <li><b>Railshot</b>: one fast sweep; perfect pierces armor for 2x.</li>
+      <li><b>Flurry</b>: three sweeps, each faster; damage per hit landed.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Lumen <span class="tag t-sup">Support</span></h3>
+    <p class="muted">Timing: rhythm taps on a beat.</p>
+    <ul>
+      <li><b>Pulse heal</b>: three on-beat taps; heal scales with taps hit.</li>
+      <li><b>Amp field</b>: one tap on the downbeat; next ally hit gets a wider perfect zone.</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Dual techs</h2>
+<ul class="combos">
+  <li><span class="dot" style="background:var(--tank)"></span><span class="dot" style="background:var(--dmg)"></span> <b>Ricochet slam</b> (Brick + Vex): release, then stop Vex's marker within 0.3s; rail bounces off the shield for 3x pierce.</li>
+  <li><span class="dot" style="background:var(--tank)"></span><span class="dot" style="background:var(--dmg)"></span> <b>Breach</b> (Brick + Vex): perfect slam first, then a full Flurry; staggered target takes guaranteed crits.</li>
+  <li><span class="dot" style="background:var(--tank)"></span><span class="dot" style="background:var(--sup)"></span> <b>Bulwark hymn</b> (Brick + Lumen): release Brick's charge on Lumen's 4th beat; party shield plus heal over time.</li>
+  <li><span class="dot" style="background:var(--tank)"></span><span class="dot" style="background:var(--sup)"></span> <b>Holy charge</b> (Brick + Lumen): tap the beat while Brick holds; each tap adds charge, release for an AoE stun.</li>
+  <li><span class="dot" style="background:var(--dmg)"></span><span class="dot" style="background:var(--sup)"></span> <b>Overclock volley</b> (Vex + Lumen): stop the marker on each beat for 4 shots; all perfect = ATB refill for both.</li>
+  <li><span class="dot" style="background:var(--dmg)"></span><span class="dot" style="background:var(--sup)"></span> <b>Prism shot</b> (Vex + Lumen): Lumen taps once, Vex hits the same frame window; beam splits to every enemy.</li>
+</ul>
+
+<h2>Four-week plan</h2>
+<div class="weeks">
+  <div class="card"><h3>Week 1: prototype</h3><ul>
+    <li>ATB loop, turn menu, one dummy enemy.</li>
+    <li>Generic timing meter with perfect/good/miss.</li>
+    <li>Brick and Vex basic attacks.</li>
+    <li>Playable: win or lose one fight.</li></ul></div>
+  <div class="card"><h3>Week 2: kits</h3><ul>
+    <li>All three timing styles (hold, sweep, rhythm).</li>
+    <li>Six abilities and Sync meter.</li>
+    <li>First two dual techs end to end.</li></ul></div>
+  <div class="card"><h3>Week 3: content</h3><ul>
+    <li>Remaining four dual techs.</li>
+    <li>Five encounters, incl. one boss with a phase change.</li>
+    <li>Upgrade pick between fights.</li></ul></div>
+  <div class="card"><h3>Week 4: juice</h3><ul>
+    <li>Hit-stop, screen shake, combo name cards, SFX.</li>
+    <li>Balance pass on timing windows.</li>
+    <li>Title screen, results screen, build.</li></ul></div>
+</div>
+<p class="cut"><b>Cut if behind:</b> drop upgrade picks and ship 4 dual techs (one per pair plus Ricochet slam and Prism shot), keeping all 5 encounters.</p>
+
+</main>
+<script>
+(function(){
+  var meter=document.getElementById('meter'), marker=document.getElementById('marker');
+  var out=document.getElementById('result'), streakEl=document.getElementById('streak');
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var period=reduce?2600:1400, t0=performance.now(), pos=0, streak=0, frozen=0;
+  function frame(now){
+    if(now>frozen){
+      var p=((now-t0)%period)/period;
+      pos=p<.5?p*2:2-p*2;
+      marker.style.left=(pos*100)+'%';
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  function hit(){
+    var x=pos*100, cls, txt;
+    if(x>=64&&x<=72){txt='PERFECT';cls='p';streak++;}
+    else if(x>=58&&x<=78){txt='Good';cls='g';streak++;}
+    else{txt='Miss';cls='m';streak=0;}
+    if(cls==='p'&&streak>=2&&streak%2===0)txt='PERFECT · DUAL TECH!';
+    out.textContent=txt; out.className=cls; streakEl.textContent=streak;
+    frozen=performance.now()+350;
+  }
+  meter.addEventListener('pointerdown',function(e){e.preventDefault();meter.focus();hit();});
+  document.addEventListener('keydown',function(e){
+    if((e.code==='Space'||e.key===' ')&&!e.repeat){
+      var tag=(document.activeElement&&document.activeElement.tagName)||'';
+      if(tag==='INPUT'||tag==='TEXTAREA')return;
+      e.preventDefault();hit();
+    }
+  });
+})();
+</script>
+</body>
+</html>
+
+</body></html>

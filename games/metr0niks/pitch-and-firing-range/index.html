@@ -1,0 +1,222 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Metr0niks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one narrow column, a live firing-range HUD as the hero, then short spec blocks. Committed dark industrial look. */
+:root{
+  color-scheme:dark;
+  --bg:#16171a; --panel:#1f2125; --panel2:#272a2f; --line:#363a41;
+  --fg:#e9e6e0; --muted:#a39d93;
+  --rust:#e0702b; --rust-dim:#8a4319; --cyan:#3fd6e8; --hazard:#f2c230;
+  --good:#7fdc6a; --bad:#ff5a4a;
+  --display:"Chakra Petch","Segoe UI",system-ui,sans-serif;
+  --body:"Barlow","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--body);margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+main{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+h1,h2,h3{font-family:var(--display);font-weight:700;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.4rem,9vw,4rem);line-height:.95;text-transform:uppercase;letter-spacing:.01em}
+h1 span{color:var(--rust)}
+h2{font-size:1.25rem;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:22px;height:10px;background:repeating-linear-gradient(-45deg,var(--hazard) 0 4px,var(--bg) 4px 8px)}
+h3{font-size:1rem;letter-spacing:.02em}
+p{margin:0}
+.hook{font-size:1.15rem;color:var(--muted);max-width:56ch;margin-top:10px}
+.hook b{color:var(--fg);font-weight:600}
+.sec{display:flex;flex-direction:column;gap:14px}
+.muted{color:var(--muted)}
+
+/* Firing range */
+.range{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.range-top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:var(--panel2);border-bottom:1px solid var(--line);font:500 .78rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.range-top b{color:var(--cyan)}
+.range-body{display:grid;grid-template-columns:1fr 150px;gap:16px;padding:16px}
+@media (max-width:560px){.range-body{grid-template-columns:1fr}}
+.hudcol{display:flex;flex-direction:column;gap:12px;min-width:0}
+.bar-l{display:flex;justify-content:space-between;font:500 .75rem var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.bar{height:14px;background:#0e0f11;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;width:0}
+#atb i{background:var(--cyan)}
+#atb.full i{background:var(--hazard)}
+#heat i{background:var(--rust)}
+#heat.over i{background:var(--bad)}
+.ringbox{position:relative;height:150px;background:#0e0f11;border:1px solid var(--line);border-radius:4px;display:grid;place-items:center;cursor:pointer;touch-action:manipulation}
+.ringbox:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.ringbox svg{width:150px;height:150px}
+#msg{position:absolute;left:0;right:0;bottom:8px;text-align:center;font:700 .9rem var(--mono);letter-spacing:.06em}
+#msg.p{color:var(--good)} #msg.g{color:var(--hazard)} #msg.m{color:var(--bad)} #msg.i{color:var(--muted)}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btns button{font:700 .85rem var(--display);text-transform:uppercase;letter-spacing:.06em;padding:10px 8px;border-radius:4px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);cursor:pointer;touch-action:manipulation;user-select:none}
+.btns button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+#railBtn.ready{border-color:var(--hazard);color:var(--hazard)}
+.btns small{display:block;font:500 .68rem var(--mono);color:var(--muted);letter-spacing:.04em;text-transform:none}
+.pillar-wrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.deck{width:100%;height:12px;background:var(--muted);border-radius:1px}
+.deck.fall{background:var(--bad)}
+#pillar{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;width:96px}
+#pillar i{aspect-ratio:1;background:#8e8a82;border-top:2px solid #b3aea4}
+#pillar i.gone{visibility:hidden}
+.plabel{font:500 .72rem var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:center}
+.keys{font:500 .75rem var(--mono);color:var(--muted);padding:0 16px 14px}
+
+/* Spec blocks */
+.loop{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font:600 .9rem var(--display);text-transform:uppercase;letter-spacing:.04em}
+.loop span{padding:6px 10px;border:1px solid var(--line);border-radius:3px;background:var(--panel)}
+.loop span.g{border-color:var(--cyan);color:var(--cyan)}
+.loop em{color:var(--rust);font-style:normal}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.blk{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.blk .tag{font:500 .72rem var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--cyan)}
+.blk.r .tag{color:var(--rust)}
+.blk p{font-size:.95rem}
+.art{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.art figure{margin:0;display:flex;flex-direction:column;gap:6px;min-width:0}
+.art .wide{grid-column:1/-1}
+.art img{display:block;width:100%;height:auto;border-radius:4px;border:1px solid var(--line)}
+.art figcaption{font:500 .75rem var(--mono);color:var(--muted);letter-spacing:.04em}
+@media (max-width:520px){.art{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<main>
+<header>
+  <h1>Metr<span>0</span>niks</h1>
+  <p class="hook">An isometric voxel mech brawler. <b>You drive and shoot in real time. Heavy weapons charge on an ATB bar and hit on a timed release.</b> Wreck the city, haul the scrap home, and rebuild your mech in the garage.</p>
+</header>
+
+<section class="sec" aria-labelledby="art-h">
+  <h2 id="art-h">Concept art</h2>
+  <div class="art">
+    <figure class="wide"><img src="art/railgun.webp" alt="A rusted voxel mech fires a railgun through a high-rise while an ATB bar reads Fire" width="1024" height="572"><figcaption>Heavy hardpoint on a perfect timing hit</figcaption></figure>
+    <figure><img src="art/salvage.webp" alt="A mech's arc claw tears scrap off a downed enemy mech in a ruined street" width="1024" height="572" loading="lazy"><figcaption>Salvaging a downed mech for scrap</figcaption></figure>
+    <figure><img src="art/garage.webp" alt="Garage screen with a mech on a build grid, a stats panel and equipped modules" width="1024" height="572" loading="lazy"><figcaption>Garage between matches</figcaption></figure>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="range-h">
+  <h2 id="range-h">Firing range</h2>
+  <div class="range">
+    <div class="range-top"><span>Hardpoints: minigun + railgun</span><span>Target: <b>overpass support</b></span></div>
+    <div class="range-body">
+      <div class="hudcol">
+        <div><div class="bar-l"><span>Railgun ATB</span><span id="atbTxt">charging</span></div><div class="bar" id="atb"><i></i></div></div>
+        <div><div class="bar-l"><span>Heat</span><span id="heatTxt">0%</span></div><div class="bar" id="heat"><i></i></div></div>
+        <div class="ringbox" id="ring" tabindex="0" role="button" aria-label="Timing ring. Hold, then release when the ring meets the target.">
+          <svg viewBox="0 0 150 150" aria-hidden="true">
+            <circle cx="75" cy="75" r="22" fill="none" stroke="#2d4a2a" stroke-width="12"/>
+            <circle cx="75" cy="75" r="22" fill="none" stroke="var(--good)" stroke-width="3"/>
+            <circle id="shrink" cx="75" cy="75" r="0" fill="none" stroke="var(--hazard)" stroke-width="3"/>
+          </svg>
+          <div id="msg" class="i" aria-live="polite">Wait for the bar</div>
+        </div>
+        <div class="btns">
+          <button id="gunBtn" type="button">Minigun<small>hold · free fire</small></button>
+          <button id="railBtn" type="button">Railgun<small>ATB · timing hit</small></button>
+        </div>
+      </div>
+      <div class="pillar-wrap">
+        <div class="deck" id="deck"></div>
+        <div id="pillar" aria-label="Support pillar"></div>
+        <div class="plabel" id="plabel">Support 100%</div>
+      </div>
+    </div>
+    <p class="keys">Keys: hold F for the minigun. Hold Space (or the railgun button) to start the ring, and release it on the green ring. Overheat locks both guns for 3 seconds.</p>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="loop-h">
+  <h2 id="loop-h">The loop</h2>
+  <div class="loop">
+    <span class="g">Garage</span><em>→</em><span>Drop in</span><em>→</em><span>Wreck and harvest</span><em>→</em><span>Grab pods</span><em>→</em><span>Wave 3 boss</span><em>→</em><span class="g">Extract with scrap</span>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="why-h">
+  <h2 id="why-h">Why it's different</h2>
+  <div class="split">
+    <div class="blk"><span class="tag">Build</span><h3>Every part is a tradeoff</h3><p class="muted">A bigger gun makes you slower and hotter. Lose a weapon in a fight and you're suddenly faster.</p></div>
+    <div class="blk r"><span class="tag">Destroy</span><h3>The city is a weapon</h3><p class="muted">Break two pillars and the overpass lands on whoever is under it.</p></div>
+    <div class="blk"><span class="tag">Fight</span><h3>Real-time driving, timed heavy hits</h3><p class="muted">Steer and shoot freely. Heavy weapons charge on an ATB bar and land on a timed release.</p></div>
+    <div class="blk r"><span class="tag">Risk</span><h3>Scrap only counts if you get out</h3><p class="muted">Die and you lose the match's haul. Enemies race you for the drop pods that keep you alive.</p></div>
+  </div>
+</section>
+
+
+</main>
+
+<script>
+(function(){
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $=function(id){return document.getElementById(id)};
+  var atbEl=$('atb'),heatEl=$('heat'),atbTxt=$('atbTxt'),heatTxt=$('heatTxt'),msg=$('msg'),shrink=$('shrink');
+  var railBtn=$('railBtn'),gunBtn=$('gunBtn'),ring=$('ring'),pillar=$('pillar'),plabel=$('plabel'),deck=$('deck');
+  var N=50,cells=[];
+  for(var i=0;i<N;i++){var c=document.createElement('i');pillar.appendChild(c);cells.push(c)}
+  var atb=0,heat=0,over=0,ringOn=false,ringT=0,firing=false,lastShot=0,collapsing=0;
+  var RING_MS=reduce?1800:1000,R0=70,TARGET=22;
+  function say(t,c){msg.textContent=t;msg.className=c}
+  function alive(){return cells.filter(function(c){return !c.classList.contains('gone')})}
+  function damage(n){
+    if(collapsing)return;
+    var a=alive();
+    for(var k=0;k<n&&a.length;k++){var j=Math.floor(Math.random()*a.length);a[j].classList.add('gone');a.splice(j,1)}
+    var pct=Math.round(a.length/N*100);plabel.textContent='Support '+pct+'%';
+    if(pct<=30){collapsing=performance.now();deck.classList.add('fall');plabel.textContent='Overpass down';say('Road section collapsed','p')}
+  }
+  function addHeat(h){heat=Math.min(100,heat+h);if(heat>=100){over=performance.now();firing=false;say('Overheated','m')}}
+  function canFire(){return !over}
+  function startRing(){
+    if(ringOn||atb<100||!canFire())return;
+    ringOn=true;ringT=performance.now();say('Release on the green ring','i');
+  }
+  function lockRing(){
+    if(!ringOn)return;
+    var r=R0*(1-(performance.now()-ringT)/RING_MS),d=Math.abs(r-TARGET);
+    ringOn=false;shrink.setAttribute('r',0);atb=0;
+    if(d<=3){say('Perfect: critical','p');damage(14)}
+    else if(d<=9){say('Good','g');damage(7)}
+    else{say('Miss: half damage','m');damage(3)}
+    addHeat(28);
+  }
+  function tick(now){
+    var dt=Math.min(50,now-(tick.l||now));tick.l=now;
+    if(collapsing&&now-collapsing>2200){collapsing=0;cells.forEach(function(c){c.classList.remove('gone')});deck.classList.remove('fall');plabel.textContent='Support 100%';say('New support spawned','i')}
+    if(over&&now-over>3000){over=0;say('Cooled down','i')}
+    if(!ringOn&&atb<100)atb=Math.min(100,atb+dt/2600*100);
+    heat=Math.max(0,heat-dt/1000*(over?34:14));
+    if(firing&&canFire()&&now-lastShot>110){lastShot=now;damage(1);addHeat(4)}
+    if(ringOn){var r=R0*(1-(now-ringT)/RING_MS);if(r<=0){ringOn=false;shrink.setAttribute('r',0);atb=0;say('Miss: ring closed','m');addHeat(28)}else shrink.setAttribute('r',r.toFixed(1))}
+    atbEl.firstElementChild.style.width=atb+'%';atbEl.classList.toggle('full',atb>=100);
+    atbTxt.textContent=ringOn?'firing':atb>=100?'ready':'charging';
+    railBtn.classList.toggle('ready',atb>=100&&!over);
+    heatEl.firstElementChild.style.width=heat+'%';heatEl.classList.toggle('over',!!over);
+    heatTxt.textContent=over?'locked':Math.round(heat)+'%';
+    if(!ringOn&&atb>=100&&!over&&msg.className==='i'&&msg.textContent==='Wait for the bar')say('Railgun ready','g');
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+  [railBtn,ring].forEach(function(el){
+    el.addEventListener('pointerdown',function(e){e.preventDefault();startRing()});
+    el.addEventListener('pointerup',lockRing);el.addEventListener('pointerleave',lockRing);el.addEventListener('pointercancel',lockRing);
+  });
+  function down(e){e.preventDefault();if(canFire())firing=true}
+  function up(){firing=false}
+  gunBtn.addEventListener('pointerdown',down);
+  gunBtn.addEventListener('pointerup',up);gunBtn.addEventListener('pointerleave',up);gunBtn.addEventListener('pointercancel',up);
+  document.addEventListener('keydown',function(e){
+    if(e.repeat)return;
+    if(e.code==='Space'){e.preventDefault();startRing()}
+    if(e.code==='KeyF'&&canFire())firing=true;
+  });
+  document.addEventListener('keyup',function(e){
+    if(e.code==='KeyF')firing=false;
+    if(e.code==='Space'){e.preventDefault();lockRing()}
+  });
+})();
+</script>
+
+</body></html>

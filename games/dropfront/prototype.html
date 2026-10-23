@@ -1,0 +1,474 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Dropfront Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Saira+Condensed:wght@500;700&display=swap">
+<style>
+/* Layout: one-screen war table. HUD strip, map canvas, hand of cards. Deliberately dark only. */
+:root{
+  --bg:#0f1418; --panel:#172027; --raised:#1f2a32; --ink:#ebe6d9; --muted:#8f9a93; --line:#2c3942;
+  --blue:#4d93ea; --red:#e4573f; --amber:#f2b33d; --grass:#1d2e25; --grass2:#22362b; --road:#3a4434;
+  --squad:#3fb984; --tactic:#a07be8; --gear:#ee8a3a;
+  --display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.4 var(--body)}
+.app{max-width:1000px;margin:0 auto;padding-block:12px 20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:10px}
+.hud{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center}
+.race{display:grid;gap:4px;min-width:0}
+.race .row{display:flex;align-items:center;gap:8px;font:600 13px var(--body);font-variant-numeric:tabular-nums}
+.race .row span:first-child{width:28px;font-family:var(--display);letter-spacing:.06em}
+.bar{flex:1;height:8px;background:var(--line);border-radius:4px;overflow:hidden;min-width:0}
+.bar i{display:block;height:100%;width:0}
+.chip{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 10px;min-width:64px}
+.chip b{font:700 20px/1 var(--display);font-variant-numeric:tabular-nums}
+.chip small{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.pips{display:flex;gap:3px;height:20px;align-items:center}
+.pips i{width:9px;height:16px;border-radius:2px;background:var(--line)}
+.pips i.on{background:var(--amber)}
+.stage{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;max-width:100%;touch-action:none;cursor:crosshair}
+.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,14,17,.82);padding:16px}
+.ov .box{max-width:460px;display:grid;gap:10px}
+.ov h1{font:700 clamp(30px,6vw,46px)/1 var(--display);margin:0;letter-spacing:.02em;text-wrap:balance}
+.ov p,.ov li{margin:0;color:var(--muted);font-size:14px}
+.ov ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.ov kbd{font:600 12px var(--body);background:var(--raised);border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--ink)}
+button{font:inherit;color:inherit}
+.go{justify-self:start;background:var(--amber);color:#1b1608;border:0;border-radius:6px;padding:9px 18px;font:700 16px var(--display);letter-spacing:.08em;cursor:pointer}
+.go:focus-visible,.card:focus-visible,.ghost:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.ghost{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px}
+.log{min-height:1.4em;font-size:14px;color:var(--muted)}
+.log b{color:var(--ink);font-weight:500}
+.hand{display:flex;flex-wrap:wrap;gap:8px}
+.card{--c:var(--squad);flex:1 1 120px;max-width:190px;min-width:0;text-align:left;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:8px;padding:8px 10px 10px;cursor:pointer;position:relative;transition:transform .12s}
+.card:hover{transform:translateY(-3px)}
+.card.sel{transform:translateY(-6px);border-color:var(--c);background:var(--raised)}
+.card.dim{opacity:.45}
+.card .k{position:absolute;top:6px;right:8px;width:22px;height:22px;border-radius:50%;background:var(--amber);color:#1b1608;font:700 14px/22px var(--display);text-align:center}
+.card .ty{font:600 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--c)}
+.card b{display:block;font:700 17px/1.1 var(--display);padding-right:24px;margin:2px 0 3px;letter-spacing:.02em}
+.card span{display:block;font-size:12.5px;color:var(--muted);line-height:1.3}
+.squad{--c:var(--squad)} .tactic{--c:var(--tactic)} .gear{--c:var(--gear)}
+.loadout{display:flex;flex-wrap:wrap;gap:8px}
+.slot{flex:1 1 160px;max-width:260px;min-width:0;text-align:left;background:transparent;border:1px dashed var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;display:grid;gap:1px}
+.slot.full{border-style:solid;border-color:var(--gear);background:var(--panel)}
+.slot.pick{outline:2px solid var(--gear);outline-offset:2px}
+.slot small{font:600 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--gear)}
+.slot b{font:700 16px/1.1 var(--display);letter-spacing:.02em}
+.slot span{font-size:12.5px;color:var(--muted)}
+.slot:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+@media (max-width:560px){.hud{grid-template-columns:minmax(0,1fr) auto}.hud .chip.turn{display:none}.card span{display:none}.card{flex-basis:90px}}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+
+<div class="app">
+  <div class="hud">
+    <div class="race">
+      <div class="row"><span style="color:var(--blue)">YOU</span><div class="bar"><i id="bb" style="background:var(--blue)"></i></div><span id="bs">0</span></div>
+      <div class="row"><span style="color:var(--red)">AI</span><div class="bar"><i id="rb" style="background:var(--red)"></i></div><span id="rs">0</span></div>
+    </div>
+    <div class="chip turn"><b id="tt">15</b><small id="tl">Next turn</small></div>
+    <div class="chip"><div class="pips" id="pips"></div><small id="el">Energy 3</small></div>
+  </div>
+  <div class="stage">
+    <canvas id="cv" width="800" height="500" aria-label="Battlefield"></canvas>
+    <div class="ov" id="ov">
+      <div class="box" id="ovbox">
+        <h1>Dropfront</h1>
+        <p>Prototype of the core loop. One match against the enemy commander.</p>
+        <ul>
+          <li>Every 15 seconds you draw 5 cards and refill 3 energy. The battle keeps running.</li>
+          <li>Click a card, then a highlighted point, to play it.</li>
+          <li>Click a point with enemies on it to drop in for 2 energy. You get 20 seconds: <kbd>WASD</kbd> to move, mouse to aim, click to shoot. On touch, hold where you want to go and you fire automatically.</li>
+          <li>Gear cards equip your hero, up to 2 at a time, for every drop-in. Click equipped gear twice to discard it and make room.</li>
+          <li>While you fight, the map keeps running at 25% speed. Your hero then regroups for 20 seconds (40 if you went down).</li>
+          <li>The enemy plays the same tactic cards you do and drops its champion into fights. Drop into that point to face it.</li>
+          <li>Short on energy? Right-click or long-press a card to scrap it for +1, up to 2 per turn.</li>
+          <li>Held points score 2 per second. First to 2000 wins; at 8:00 the higher score wins.</li>
+        </ul>
+        <button class="go" id="start">Start match</button>
+      </div>
+    </div>
+  </div>
+  <div class="log" id="log" aria-live="polite"></div>
+  <div class="loadout" id="loadout" aria-label="Gear loadout"></div>
+  <div class="hand" id="hand"></div>
+  <div class="foot"><span id="deck">Deck 0 · Discard 0</span><span><button class="ghost" id="pause">Pause</button></span></div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const W=800,H=500;
+function resize(){const d=Math.min(2,window.devicePixelRatio||1);cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0)}
+resize();addEventListener('resize',resize);
+const cs=getComputedStyle(document.documentElement),C={};
+['bg','panel','ink','muted','line','blue','red','amber','grass','grass2','road','gear'].forEach(k=>C[k]=cs.getPropertyValue('--'+k).trim());
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=Math.random,dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+const NODES=[
+  {id:'watch',name:'Watchtower',x:150,y:105},{id:'quarry',name:'Quarry',x:150,y:395},
+  {id:'foundry',name:'Foundry',x:400,y:250},
+  {id:'refinery',name:'Refinery',x:650,y:105},{id:'docks',name:'Docks',x:650,y:395}];
+const EDGES=[['watch','foundry'],['quarry','foundry'],['refinery','foundry'],['docks','foundry'],['watch','quarry'],['refinery','docks'],['watch','refinery'],['quarry','docks']];
+const HOME={b:{x:36,y:250},r:{x:764,y:250}};
+const WIN=2000,SCORE_RATE=2,TURN=15,DROP_COST=2,DROP_CD=20,TIME_LIMIT=480,DROP_SLOW=.25;
+const GEAR_MAX=2,CHAMP={hp:15,worth:4,stay:20,cooldown:30,firstAt:45};
+const adj=id=>EDGES.filter(e=>e.includes(id)).map(e=>e[0]===id?e[1]:e[0]);
+const node=id=>S.nodes.find(n=>n.id===id);
+
+const CARDS={
+  rifle:{name:'Rifle squad',cost:1,type:'squad',text:'Send 3 bots to any point.',target:'any',play:n=>sendSquad('b',n,3,0)},
+  rushers:{name:'Rushers',cost:1,type:'squad',text:'2 bots appear at a point next to one you hold.',target:'nextToHeld',play:n=>{n.b+=2;pop(n,'+2',C.blue)}},
+  heavy:{name:'Heavy squad',cost:2,type:'squad',text:'Send 2 heavies. They count double while defending.',target:'any',play:n=>sendSquad('b',n,0,2)},
+  sniper:{name:'Sniper nest',cost:2,type:'squad',text:'Held point picks off enemy squads passing nearby.',target:'held',play:n=>{n.sniper=true;n.b+=1}},
+  wave:{name:'Reinforcement wave',cost:3,type:'squad',text:'6 bots appear at a point you hold.',target:'held',play:n=>{n.b+=6;pop(n,'+6',C.blue)}},
+  feint:{name:'Feint',cost:0,type:'tactic',text:'The enemy commander chases this point for 8s.',target:'any',play:n=>{S.feint={id:n.id,until:S.t+8}}},
+  rally:{name:'Rally',cost:1,type:'tactic',text:'Your bots at connected points march here.',target:'any',play:n=>{adj(n.id).forEach(id=>{const m=node(id);if(m.b+m.hb>0){sendSquad('b',n,m.b,m.hb,m);m.b=0;m.hb=0}})}},
+  hold:{name:'Hold the line',cost:1,type:'tactic',text:'Freeze a fought-over point’s meter for 10s.',target:'fought',play:n=>{n.frozen=S.t+10}},
+  flare:{name:'Flare',cost:1,type:'tactic',text:'Draw 2 cards.',target:null,play:()=>draw(2)},
+  sabotage:{name:'Sabotage',cost:2,type:'tactic',text:'An enemy point stops scoring for 20s.',target:'enemy',play:n=>{n.sab=S.t+20}},
+  overclock:{name:'Overclock',cost:1,type:'tactic',text:'+2 energy next turn. Exhausts.',target:null,exhaust:true,play:()=>{S.bonus+=2}},
+  shotgun:{name:'Shotgun',cost:2,type:'gear',text:'Equip: your gun fires a 5-pellet close-range blast.',gear:true,short:'5-pellet blast',apply:()=>{F.shotgun=true}},
+  jump:{name:'Jump pack',cost:1,type:'gear',text:'Equip: 3 dashes per drop-in. Kills recharge one.',gear:true,short:'Space or double-tap to dash',apply:()=>{F.dash=3;F.jump=true}},
+  medic:{name:'Medic drone',cost:1,type:'gear',text:'Equip: heal while on the capture circle.',gear:true,short:'Heals on the circle',apply:()=>{F.medic=true}},
+  orbital:{name:'Bomber run',cost:3,type:'gear',text:'Equip: once per drop-in, mark an area that is bombed 2s later.',gear:true,short:'Q, then click a target',apply:()=>{F.orbital=1}}
+};
+const AI_TACTICS=['feint','rally','hold','flare','sabotage','overclock'];
+const GEAR_IDS=['shotgun','jump','medic','orbital'],SCRAPS=2;
+const STARTER=['rifle','rifle','rifle','rushers','heavy','sniper','wave','feint','rally','hold','flare','sabotage','overclock','shotgun','jump','medic','orbital'];
+
+let S=null,F=null,keys={},last=performance.now(),hover=-1;
+
+function newGame(){
+  S={t:0,score:{b:0,r:0},energy:3,bonus:0,gear:[],armed:-1,scraps:0,clock:0,dropCd:0,aiE:3,aiBonus:0,aiDeck:shuffle(AI_TACTICS.slice()),aiDisc:[],aiHand:[],champ:null,champCd:CHAMP.firstAt,champGear:shuffle(GEAR_IDS.slice()).slice(0,2),turnT:TURN,deck:shuffle(STARTER.slice()),disc:[],hand:[],exh:[],sel:-1,squads:[],pops:[],feint:null,aiT:2.5,over:false,paused:false,mode:'map',
+    nodes:NODES.map(n=>Object.assign({},n,{owner:null,meter:0,b:0,hb:0,r:0,frozen:0,locked:0,sab:0,sniper:false,dB:0,dR:0}))};
+  const s=node('watch');s.owner='b';s.meter=100;s.b=3;
+  const g=node('refinery');g.owner='r';g.meter=-100;g.r=3;
+  draw(5);aiDraw(2);say('Your turn. You hold the <b>Watchtower</b>; the enemy holds the <b>Refinery</b>.');renderHand();
+  $('ov').hidden=true;
+}
+function draw(k){for(let i=0;i<k;i++){if(!S.deck.length){S.deck=shuffle(S.disc);S.disc=[]}if(!S.deck.length)break;S.hand.push(S.deck.pop())}}
+function newTurn(){S.disc.push(...S.hand);S.hand=[];S.energy=3+S.bonus;S.bonus=0;S.sel=-1;S.armed=-1;S.scraps=0;
+  S.aiE=Math.min(6,S.aiE+3+S.aiBonus);S.aiBonus=0;S.aiDisc.push(...S.aiHand);S.aiHand=[];aiDraw(2);draw(5);renderHand();say('New turn: 5 cards, '+S.energy+' energy.')}
+function say(h){$('log').innerHTML=h}
+function pop(at,text,color,dur){S.pops.push({x:at.x,y:at.y-30,text,color,t:dur||1.2,d:dur||1.2})}
+function sendSquad(side,n,k,h,from,fake){const o=from||HOME[side];S.squads.push({side,x:o.x,y:o.y,to:n.id,k,h,snipe:1.5,fake})}
+
+function valid(c,n){switch(c.target){
+  case 'any':return true;case 'held':return n.owner==='b';case 'enemy':return n.owner==='r';
+  case 'fought':return (n.r>0||champHere(n))&&(n.b+n.hb>0||n.owner==='b');
+  case 'nextToHeld':return adj(n.id).some(id=>node(id).owner==='b')}return false}
+const droppable=n=>(n.r>0||champHere(n))&&(n.b+n.hb>0||n.owner!=='r');
+
+function playCard(i,n,slot){
+  const id=S.hand[i],c=CARDS[id];
+  if(S.mode!=='map'){say('Cards are locked during a drop-in.');return}
+  if(c.cost>S.energy){say('Not enough energy for <b>'+c.name+'</b>.');return}
+  if(c.gear&&S.gear.length>=GEAR_MAX){say('You already have '+GEAR_MAX+' gear equipped. Click one in the loadout bar twice to discard it first.');return}
+  S.energy-=c.cost;S.hand.splice(i,1);S.sel=-1;S.armed=-1;
+  if(c.gear){S.gear.push(id);say('Equipped <b>'+c.name+'</b>. It goes into every drop-in until you discard it.');renderHand();return}
+  (c.exhaust?S.exh:S.disc).push(id);
+  c.play(n);say('Played <b>'+c.name+'</b>'+(n?' on the <b>'+n.name+'</b>.':'.'));renderHand();
+}
+function cardClick(i){
+  if(!S||S.over)return;const c=CARDS[S.hand[i]];if(!c)return;
+  if(S.mode!=='map'){playCard(i);return}
+  if(S.sel===i){S.sel=-1;say('Cancelled.');renderHand();return}
+  if(c.cost>S.energy){say('Not enough energy for <b>'+c.name+'</b>. Right-click a card to scrap it for +1.');return}
+  if(c.gear||!c.target){playCard(i);return}
+  S.sel=i;say('Choose a point for <b>'+c.name+'</b>.');renderHand();
+}
+function scrap(i){
+  if(!S||S.over||i<0||i>=S.hand.length)return;
+  if(S.mode!=='map'){say('You can’t scrap during a drop-in.');return}
+  if(S.scraps>=SCRAPS){say('You can scrap '+SCRAPS+' cards per turn.');return}
+  const id=S.hand.splice(i,1)[0];S.disc.push(id);S.energy++;S.scraps++;S.sel=-1;hover=-1;
+  say('Scrapped <b>'+CARDS[id].name+'</b> for +1 energy.');renderHand();
+}
+function slotClick(k){
+  if(!S||S.over)return;const id=S.gear[k];
+  if(S.mode==='drop'){if(id==='orbital')toggleAim();return}
+  if(!id){say('Empty gear slot. Play a gear card to equip it.');return}
+  if(S.armed!==k){S.armed=k;say('Click <b>'+CARDS[id].name+'</b> again to discard it. It goes to your discard pile.');renderHand();return}
+  S.gear.splice(k,1);S.disc.push(id);S.armed=-1;say('Discarded <b>'+CARDS[id].name+'</b>. You have room for new gear.');renderHand();
+}
+function toggleAim(){if(!F||!(F.orbital>0)){say('Bomber run is used for this drop-in.');return}F.aiming=!F.aiming;say(F.aiming?'Click where the bombs should fall.':'Bomber run cancelled.');renderHand()}
+function renderHand(){
+  const h=$('hand');h.innerHTML='';
+  S.hand.forEach((id,i)=>{const c=CARDS[id],b=document.createElement('button');
+    b.className='card '+c.type+(S.sel===i?' sel':'')+(c.cost>S.energy||S.mode!=='map'?' dim':'');
+    b.innerHTML='<i class="k">'+c.cost+'</i><div class="ty">'+c.type+'</div><b>'+c.name+'</b><span>'+c.text+'</span>';
+    let lp=null,fired=false;
+    b.onpointerdown=e=>{if(e.pointerType!=='touch')return;fired=false;lp=setTimeout(()=>{fired=true;scrap(i)},500)};
+    b.onpointerup=b.onpointerleave=()=>clearTimeout(lp);
+    b.onclick=()=>{if(fired){fired=false;return}cardClick(i)};
+    b.oncontextmenu=e=>{e.preventDefault();scrap(i)};
+    b.onmouseenter=()=>hover=i;b.onmouseleave=()=>hover=-1;h.appendChild(b)});
+  const lo=$('loadout');lo.innerHTML='';
+  for(let k=0;k<GEAR_MAX;k++){const id=S.gear[k],g=id&&CARDS[id],b=document.createElement('button');
+    b.className='slot'+(g?' full':'')+(S.armed===k?' pick':'');
+    let sub=g?g.short:'Play a gear card';
+    if(id==='orbital'&&S.mode==='drop')sub=F&&F.orbital>0?(F.aiming?'Aiming: click the arena':'Ready: press Q or tap here'):'Used this drop-in';
+    else if(g&&S.armed===k)sub='Click again to discard';
+    b.innerHTML='<small>Gear '+(k+1)+'</small><b>'+(g?g.name:'Empty')+'</b><span>'+sub+'</span>';
+    b.onclick=()=>slotClick(k);lo.appendChild(b)}
+  $('deck').textContent='Deck '+S.deck.length+' · Discard '+S.disc.length+(S.exh.length?' · Exhausted '+S.exh.length:'')+' · Scraps left '+(SCRAPS-S.scraps)+' (right-click or long-press a card)';
+  const p=$('pips');p.innerHTML='';const max=Math.max(5,S.energy);for(let i=0;i<max;i++){const e=document.createElement('i');if(i<S.energy)e.className='on';p.appendChild(e)}
+  $('el').textContent='Energy '+S.energy;
+}
+
+/* ---------- map simulation ---------- */
+function updateMap(dt){
+  S.t+=dt;S.turnT-=dt;if(S.turnT<=0){S.turnT=TURN;newTurn()}
+  for(const q of S.squads){const n=node(q.to),d=Math.hypot(n.x-q.x,n.y-q.y),sp=q.h&&!q.k?42:55;
+    if(d<sp*dt){if(q.fake){}else if(q.side==='b'){n.b+=q.k;n.hb+=q.h}else n.r+=q.k;q.done=true;continue}
+    q.x+=(n.x-q.x)/d*sp*dt;q.y+=(n.y-q.y)/d*sp*dt;
+    if(q.side==='r')for(const s of S.nodes)if(s.sniper&&s.owner==='b'&&Math.hypot(s.x-q.x,s.y-q.y)<140){q.snipe-=dt;if(q.snipe<=0){q.snipe=1.5;q.k--;pop(q,'-1',C.red);if(q.k<=0)q.done=true}break}}
+  S.squads=S.squads.filter(q=>!q.done);
+  if(S.champ&&S.t>S.champ.until){const n=node(S.champ.id);S.champ=null;S.champCd=S.t+10;pop(n,'Champion left',C.red)}
+  if(!S.champ&&S.t>S.champCd&&S.aiE>=2){
+    const free=n=>!(F&&F.node===n);
+    const tgt=S.nodes.find(n=>free(n)&&n.owner==='r'&&n.b+n.hb>=3)||S.nodes.find(n=>free(n)&&n.owner!=='r'&&n.r>0&&n.meter<=0);
+    if(tgt){S.aiE-=2;S.champ={id:tgt.id,until:S.t+CHAMP.stay};pop(tgt,'Champion!',C.red);
+      say('The enemy champion dropped into the <b>'+tgt.name+'</b> with '+S.champGear.map(g=>CARDS[g].name).join(' and ')+'. Drop in to fight it.')}}
+  for(const n of S.nodes){
+    if(F&&F.node===n){if(n.owner&&S.t>n.sab)S.score[n.owner]+=SCORE_RATE*dt;continue}
+    const ch=champHere(n)?CHAMP.worth:0;
+    const B=n.b+n.hb*(n.owner==='b'?2:1),R=n.r+ch;
+    if(B>0&&R>0){n.dB+=R*.11*dt;n.dR+=B*.11*dt;
+      while(n.dB>=1){n.dB--;if(n.b>0)n.b--;else if(n.hb>0)n.hb--}
+      while(n.dR>=1){n.dR--;if(n.r>0)n.r--}}else{n.dB=n.dR=0}
+    if(S.t>n.frozen&&S.t>n.locked){const bb=n.b+n.hb,rr=n.r+ch;let rate=0;
+      if(bb>0&&!rr)rate=10+bb*3;else if(rr>0&&!bb)rate=-(10+rr*3);else if(bb&&rr)rate=(bb-rr)*2;
+      n.meter=clamp(n.meter+rate*dt,-100,100);
+      const prev=n.owner;
+      if(n.meter>=100)n.owner='b';else if(n.meter<=-100)n.owner='r';else if((n.owner==='b'&&n.meter<=0)||(n.owner==='r'&&n.meter>=0))n.owner=null;
+      if(prev!==n.owner){if(n.owner)pop(n,n.owner==='b'?'Captured':'Lost',n.owner==='b'?C.blue:C.red);if(n.owner!=='b')n.sniper=false;
+        if(n.owner==='r'&&prev==='b')say('The AI took the <b>'+n.name+'</b>.');}}
+    if(n.owner&&S.t>n.sab)S.score[n.owner]+=SCORE_RATE*dt;
+  }
+  S.aiT-=dt;if(S.aiT<=0){S.aiT=4.4+rnd()*2;aiMove();aiTactic()}
+  if(S.score.b>=WIN||S.score.r>=WIN||S.clock>=TIME_LIMIT){
+    const held=s=>S.nodes.filter(n=>n.owner===s).length;
+    endGame(S.score.b!==S.score.r?S.score.b>S.score.r:held('b')>=held('r'))}
+}
+function aiMove(){
+  let best=null,bs=-1e9;
+  for(const n of S.nodes){const bb=n.b+n.hb;let s;
+    if(n.owner==='r')s=bb>0?8:(n.r<2?2.5:-4);else if(n.owner==='b')s=5-bb*.6;else s=6-bb*.4-n.r*.8;
+    s-=Math.hypot(n.x-HOME.r.x,n.y-HOME.r.y)/220;s+=rnd()*2.5;
+    if(S.feint&&S.t<S.feint.until&&n.id===S.feint.id)s+=20;
+    if(s>bs){bs=s;best=n}}
+  sendSquad('r',best,2+(rnd()<.5?1:0)+(S.t>180?1:0),0);
+  if(S.t>300){let alt=null,as=-1e9;for(const n of S.nodes){if(n===best)continue;const s=(n.owner==='b'?5:n.owner?0:4)+rnd()*2;if(s>as){as=s;alt=n}}if(alt)sendSquad('r',alt,2,0)}
+}
+function aiDraw(k){for(let i=0;i<k;i++){if(!S.aiDeck.length){S.aiDeck=shuffle(S.aiDisc);S.aiDisc=[]}if(!S.aiDeck.length)break;S.aiHand.push(S.aiDeck.pop())}}
+function aiTactic(){
+  const reserve=!S.champ&&S.t>S.champCd-5?2:0,bots=n=>n.b+n.hb,fighting=n=>F&&F.node===n;
+  const pick={
+    feint:()=>S.nodes.filter(n=>n.owner==='b').sort((a,b)=>bots(a)-bots(b))[0],
+    rally:()=>S.nodes.find(n=>!fighting(n)&&n.r>0&&bots(n)>0&&adj(n.id).some(id=>node(id).owner==='r'&&node(id).r>=2)),
+    hold:()=>S.nodes.find(n=>!fighting(n)&&n.r>0&&bots(n)>n.r&&n.meter<0&&S.t>n.frozen),
+    flare:()=>S.aiHand.length<=2?HOME.r:null,
+    sabotage:()=>S.nodes.find(n=>n.owner==='b'&&S.t>n.sab),
+    overclock:()=>S.t<TIME_LIMIT-60?HOME.r:null};
+  for(let i=0;i<S.aiHand.length;i++){const id=S.aiHand[i],c=CARDS[id];
+    if(S.aiE<c.cost+reserve)continue;const t=pick[id]();if(!t)continue;
+    S.aiE-=c.cost;S.aiHand.splice(i,1);(c.exhaust?[]:S.aiDisc).push(id);
+    if(id==='feint'){sendSquad('r',t,3,0,null,true);return}
+    if(id==='rally')adj(t.id).forEach(a=>{const m=node(a);if(m.owner==='r'&&m.r>=2&&!fighting(m)){const k=m.r-1;m.r=1;sendSquad('r',t,k,0,m)}});
+    if(id==='hold')t.frozen=S.t+10;
+    if(id==='flare')aiDraw(2);
+    if(id==='sabotage')t.sab=S.t+20;
+    if(id==='overclock')S.aiBonus+=2;
+    const at=t.name?t:{x:W-90,y:60};pop(at,'Enemy: '+c.name,C.red,2);
+    say('The enemy played <b>'+c.name+'</b>'+(t.name?' on the <b>'+t.name+'</b>.':'.'));return}
+}
+function endGame(won){S.over=true;S.mode='map';F=null;
+  const mm=Math.floor(S.clock/60)+':'+String(Math.floor(S.clock%60)).padStart(2,'0');
+  $('ovbox').innerHTML='<h1>'+(won?'Victory':'Defeat')+'</h1><p>'+Math.round(S.score.b)+' to '+Math.round(S.score.r)+' in '+mm+(S.clock>=TIME_LIMIT?' (time limit)':'')+'.</p><button class="go" id="again">Play again</button>';
+  $('ov').hidden=false;$('again').onclick=newGame;$('again').focus();}
+
+/* ---------- drop-in firefight ---------- */
+const WALLS=[{x:290,y:110,w:36,h:96},{x:474,y:294,w:36,h:96},{x:200,y:340,w:96,h:28},{x:504,y:132,w:96,h:28}];
+const CIRCLE={x:400,y:250,r:80};
+const champHere=n=>!!(S.champ&&S.champ.id===n.id);
+function launchDrop(n){
+  if(S.energy<DROP_COST){say('Dropping in costs '+DROP_COST+' energy.');renderHand();return}
+  S.energy-=DROP_COST;S.mode='drop';S.sel=-1;S.armed=-1;
+  const aN=Math.min(n.b+n.hb,6),eN=Math.min(n.r,8);
+  let take=aN;const fromB=Math.min(n.b,take);n.b-=fromB;take-=fromB;n.hb-=take;n.r-=eN;
+  F={node:n,t:20,aN,eN,p:{x:120,y:250,hp:10,cd:0,inv:0,ax:1,ay:0},units:[],shots:[],strikes:[],dash:0,jump:false,shotgun:false,medic:false,orbital:0,aiming:false,lastTap:0,aim:{x:400,y:250},fire:false,touch:null};
+  const loadout=S.gear.slice();loadout.forEach(id=>CARDS[id].apply());
+  for(let i=0;i<aN;i++)F.units.push({side:'b',x:80+rnd()*60,y:110+i*55,hp:3,max:3,cd:rnd()});
+  for(let i=0;i<eN;i++)F.units.push({side:'r',x:640+rnd()*90,y:80+i*45,hp:3,max:3,cd:.6+rnd()});
+  if(champHere(n))F.units.push({side:'r',champ:true,x:700,y:250,hp:CHAMP.hp,max:CHAMP.hp,cd:.5,dashCd:2,orbT:6});
+  say('Dropped into the <b>'+n.name+'</b>. Clear every enemy to take it. The map runs at 25% while you fight.'+(loadout.length?' Gear: '+loadout.map(g=>CARDS[g].name).join(' and ')+'.':'')+(champHere(n)?' The enemy champion is here.':''));renderHand();
+}
+function blocked(x,y,r){if(x<r||y<r||x>W-r||y>H-r)return true;for(const w of WALLS)if(x>w.x-r&&x<w.x+w.w+r&&y>w.y-r&&y<w.y+w.h+r)return true;return false}
+function moveBy(o,dx,dy,r){if(!blocked(o.x+dx,o.y,r))o.x+=dx;if(!blocked(o.x,o.y+dy,r))o.y+=dy}
+function shoot(from,side,ang,spd,life,spread,n){for(let i=0;i<(n||1);i++){const a=ang+(n>1?(i-(n-1)/2)*spread:(rnd()-.5)*spread);F.shots.push({x:from.x,y:from.y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,life,side})}}
+function updateDrop(dt){
+  const p=F.p;F.t-=dt;
+  let mx=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0),my=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0);
+  const reds=F.units.filter(u=>u.side==='r'&&u.hp>0);
+  if(F.touch){const d=Math.hypot(F.touch.x-p.x,F.touch.y-p.y);if(d>12){mx=(F.touch.x-p.x)/d;my=(F.touch.y-p.y)/d}
+    let near=null,nd=1e9;for(const u of reds){const d2=dist(u,p);if(d2<nd){nd=d2;near=u}}if(near){F.aim={x:near.x,y:near.y}}}
+  const ml=Math.hypot(mx,my);if(ml){mx/=ml;my/=ml;moveBy(p,mx*190*dt,my*190*dt,12)}
+  const ang=Math.atan2(F.aim.y-p.y,F.aim.x-p.x);p.ax=Math.cos(ang);p.ay=Math.sin(ang);
+  p.cd-=dt;p.inv-=dt;
+  if((F.fire||(F.touch&&reds.length))&&p.cd<=0){if(F.shotgun){shoot(p,'b',ang,620,.32,.16,5);p.cd=.42}else{shoot(p,'b',ang,640,.8,.05);p.cd=.16}}
+  if(F.medic&&dist(p,CIRCLE)<CIRCLE.r)p.hp=Math.min(10,p.hp+1.2*dt);
+  for(const u of F.units){if(u.hp<=0)continue;
+    const foes=u.side==='b'?reds:[p,...F.units.filter(v=>v.side==='b'&&v.hp>0)];
+    let tgt=null,td=1e9;for(const f of foes){if(f.hp<=0)continue;const d=dist(f,u);if(d<td){td=d;tgt=f}}
+    let gx=CIRCLE.x-u.x,gy=CIRCLE.y-u.y;
+    if(tgt&&td<300){gx=tgt.x-u.x;gy=tgt.y-u.y;if(td<190){const t=gx;gx=-gy*(u.side==='b'?1:-1);gy=t*(u.side==='b'?1:-1)}}
+    const gl=Math.hypot(gx,gy)||1,sp=u.champ?105:70;moveBy(u,gx/gl*sp*dt,gy/gl*sp*dt,u.champ?14:10);
+    u.cd-=dt;
+    if(u.champ){const cg=S.champGear;
+      if(cg.includes('jump')&&tgt&&td>200){u.dashCd-=dt;if(u.dashCd<=0){u.dashCd=3;for(let i=0;i<10;i++)moveBy(u,(tgt.x-u.x)/td*11,(tgt.y-u.y)/td*11,14)}}
+      if(cg.includes('medic')&&dist(u,CIRCLE)<CIRCLE.r)u.hp=Math.min(u.max,u.hp+dt);
+      if(cg.includes('orbital')&&u.orbT>0){u.orbT-=dt;if(u.orbT<=0)F.strikes.push({x:p.x,y:p.y,t:2,side:'r'})}
+      if(tgt&&td<360&&u.cd<=0){const a=Math.atan2(tgt.y-u.y,tgt.x-u.x);if(cg.includes('shotgun')){u.cd=.7;shoot(u,'r',a,420,.6,.18,3)}else{u.cd=.5;shoot(u,'r',a,420,1,.12)}}
+    }else if(tgt&&td<330&&u.cd<=0){u.cd=.85+rnd()*.5;shoot(u,u.side,Math.atan2(tgt.y-u.y,tgt.x-u.x),380,1,.22)}}
+  for(const s of F.shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
+    if(s.life<=0||blocked(s.x,s.y,0)){s.dead=true;continue}
+    if(s.side==='r'){if(p.inv<=0&&dist(s,p)<13){p.hp-=1;s.dead=true;continue}}
+    for(const u of F.units)if(u.hp>0&&u.side!==s.side&&dist(s,u)<(u.champ?15:11)){hit(u,1);s.dead=true;break}}
+  F.shots=F.shots.filter(s=>!s.dead);
+  for(const k of F.strikes){k.t-=dt;if(k.t<=0&&!k.done){k.done=true;k.boom=.4;
+      if(k.side==='r'){if(dist(p,k)<95&&p.inv<=0)p.hp-=4;for(const u of F.units)if(u.side==='b'&&u.hp>0&&dist(u,k)<95)hit(u,10)}
+      else for(const u of F.units)if(u.side==='r'&&u.hp>0&&dist(u,k)<95)hit(u,u.champ?6:10)}if(k.boom)k.boom-=dt}
+  F.strikes=F.strikes.filter(k=>!k.done||k.boom>0);
+  const anyRed=F.units.some(u=>u.side==='r'&&u.hp>0);
+  if(F.t<=0||!anyRed||p.hp<=0)endDrop();
+}
+function hit(u,d){u.hp-=d;if(u.hp<=0&&u.side==='r'&&F.jump)F.dash=Math.min(3,F.dash+1)}
+function dash(){if(!F||F.dash<=0)return;const p=F.p;let mx=(keys.KeyD?1:0)-(keys.KeyA?1:0),my=(keys.KeyS?1:0)-(keys.KeyW?1:0);
+  if(!mx&&!my){mx=p.ax;my=p.ay}const l=Math.hypot(mx,my)||1;for(let i=0;i<12;i++)moveBy(p,mx/l*11,my/l*11,12);p.inv=.3;F.dash--}
+function endDrop(){
+  const n=F.node,a=F.units.filter(u=>u.side==='b'&&u.hp>0).length,e=F.units.filter(u=>u.side==='r'&&!u.champ&&u.hp>0).length,alive=F.p.hp>0;
+  const ch=F.units.find(u=>u.champ),champDown=ch&&ch.hp<=0,champLeft=ch&&ch.hp>0;
+  if(champDown){S.champ=null;S.champCd=S.t+CHAMP.cooldown;pop(n,'Champion down',C.blue)}
+  n.b+=a+(alive?1:0);n.r+=e;
+  const cleared=alive&&!e&&!champLeft;
+  if(cleared&&!n.r){n.meter=100;n.owner='b';n.locked=S.t+10;say('You took the <b>'+n.name+'</b>. It’s locked for 10 seconds.'+(champDown?' The champion is out for '+CHAMP.cooldown+' seconds.':''))}
+  else if(cleared){n.meter=clamp(n.meter+50,-100,100);say('You cleared the arena, but '+n.r+' enemies are still on the <b>'+n.name+'</b>. The meter moved 50 your way.')}
+  else{if(alive&&dist(F.p,CIRCLE)<CIRCLE.r)n.meter=clamp(n.meter+25,-100,100);
+    say((alive?'Time’s up':'You went down')+' at the <b>'+n.name+'</b>. '+(n.r+(champLeft?1:0))+' enemies remain.'+(alive&&dist(F.p,CIRCLE)<CIRCLE.r?' Holding the circle moved the meter 25 your way.':''))}
+  pop(n,cleared?'Secured':'Withdrawn',cleared?C.blue:C.amber);
+  S.dropCd=S.t+(alive?DROP_CD:DROP_CD*2);
+  S.mode='map';F=null;renderHand();
+}
+
+/* ---------- drawing ---------- */
+function txt(s,x,y,size,color,align,weight){ctx.font=(weight||600)+' '+size+'px '+(size>=14?'"Saira Condensed","Arial Narrow",sans-serif':'Barlow,system-ui,sans-serif');ctx.fillStyle=color;ctx.textAlign=align||'center';ctx.fillText(s,x,y)}
+function drawMap(){
+  ctx.fillStyle=C.grass;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=C.grass2;[[120,250,90],[400,90,70],[400,420,80],[690,250,90],[270,170,50],[540,330,55]].forEach(([x,y,r])=>{ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill()});
+  ctx.lineCap='round';ctx.strokeStyle=C.road;ctx.lineWidth=14;
+  EDGES.forEach(([a,b])=>{const A=node(a),B=node(b);ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke()});
+  for(const s of ['b','r']){const h=HOME[s];ctx.fillStyle=s==='b'?C.blue:C.red;ctx.fillRect(h.x-12,h.y-22,24,44);}
+  const sel=S.sel>=0?S.sel:(S.mode==='map'?hover:-1),sc=sel>=0&&S.hand[sel]?CARDS[S.hand[sel]]:null;
+  for(const q of S.squads){const col=q.side==='b'?C.blue:C.red,cnt=q.k+q.h;
+    for(let i=0;i<Math.min(cnt,6);i++){ctx.fillStyle=col;ctx.beginPath();ctx.arc(q.x+(i%3)*9-9,q.y+Math.floor(i/3)*9-4,q.h&&i<q.h?5.5:4,0,7);ctx.fill()}
+    txt(String(cnt),q.x,q.y-12,11,C.ink)}
+  for(const n of S.nodes){
+    const bb=n.b+n.hb,fight=bb>0&&n.r>0;
+    ctx.lineWidth=6;ctx.strokeStyle=C.line;ctx.beginPath();ctx.arc(n.x,n.y,30,0,7);ctx.stroke();
+    if(Math.abs(n.meter)>0.5){ctx.strokeStyle=n.meter>0?C.blue:C.red;ctx.beginPath();ctx.arc(n.x,n.y,30,-Math.PI/2,-Math.PI/2+Math.abs(n.meter)/100*Math.PI*2*(n.meter>0?1:-1),n.meter<0);ctx.stroke()}
+    ctx.fillStyle=n.owner==='b'?C.blue:n.owner==='r'?C.red:'#55605a';
+    if(fight&&Math.floor(S.t*3)%2)ctx.fillStyle=C.amber;
+    ctx.beginPath();ctx.arc(n.x,n.y,22,0,7);ctx.fill();
+    if(bb)txt(String(bb),n.x-9,n.y+5,15,'#fff');if(n.r)txt(String(n.r),n.x+9,n.y+5,15,'#fff');
+    if(bb&&n.r)txt('v',n.x,n.y+4,10,'#fff');
+    txt(n.name,n.x,n.y+50,14,C.ink);
+    const tags=[];if(n.locked>S.t)tags.push('LOCKED');if(n.frozen>S.t)tags.push('HELD '+Math.ceil(n.frozen-S.t));if(n.sab>S.t)tags.push('SABOTAGED');if(n.sniper)tags.push('SNIPER');
+    if(S.feint&&S.feint.until>S.t&&S.feint.id===n.id)tags.push('FEINT');
+    if(tags.length)txt(tags.join(' · '),n.x,n.y+64,11,C.muted);
+    if(champHere(n)){ctx.fillStyle=C.red;ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(n.x+26,n.y-34);ctx.lineTo(n.x+38,n.y-14);ctx.lineTo(n.x+14,n.y-14);ctx.closePath();ctx.fill();ctx.stroke();
+      txt('CHAMPION '+Math.ceil(S.champ.until-S.t),n.x,n.y+78,11,C.red,null,700)}
+    if(S.mode==='map'&&droppable(n)&&!sc){const cd=S.t<S.dropCd;ctx.fillStyle=cd?C.line:C.amber;ctx.fillRect(n.x-38,n.y-52,76,16);txt(cd?'REGROUP '+Math.ceil(S.dropCd-S.t):'DROP IN · 2',n.x,n.y-40,11,cd?C.muted:'#1b1608',null,700)}
+    if(sc&&sc.target&&valid(sc,n)){ctx.save();ctx.setLineDash([7,6]);ctx.lineDashOffset=-S.t*20;ctx.lineWidth=2;ctx.strokeStyle=C.ink;ctx.beginPath();ctx.arc(n.x,n.y,40,0,7);ctx.stroke();ctx.restore()}
+  }
+  drawPops();
+}
+function drawPops(){for(const p of S.pops){ctx.globalAlpha=clamp(p.t,0,1);txt(p.text,p.x,p.y-((p.d||1.2)-p.t)*14,14,p.color);ctx.globalAlpha=1}}
+function drawDrop(){
+  ctx.fillStyle='#262b26';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  ctx.fillStyle='rgba(242,179,61,.12)';ctx.beginPath();ctx.arc(CIRCLE.x,CIRCLE.y,CIRCLE.r,0,7);ctx.fill();
+  ctx.save();ctx.setLineDash([8,6]);ctx.strokeStyle=C.amber;ctx.lineWidth=2;ctx.beginPath();ctx.arc(CIRCLE.x,CIRCLE.y,CIRCLE.r,0,7);ctx.stroke();ctx.restore();
+  ctx.fillStyle='#5b625c';for(const w of WALLS)ctx.fillRect(w.x,w.y,w.w,w.h);
+  for(const k of F.strikes){ctx.strokeStyle=C.red;ctx.lineWidth=2;ctx.beginPath();ctx.arc(k.x,k.y,95,0,7);ctx.stroke();
+    if(k.done){ctx.fillStyle='rgba(255,200,90,'+(k.boom*1.5)+')';ctx.beginPath();ctx.arc(k.x,k.y,95,0,7);ctx.fill()}else txt(k.t.toFixed(1),k.x,k.y+6,18,C.red)}
+  for(const u of F.units){if(u.hp<=0)continue;const r=u.champ?15:10,w=u.champ?36:20;
+    ctx.fillStyle=u.side==='b'?C.blue:C.red;ctx.beginPath();ctx.arc(u.x,u.y,r,0,7);ctx.fill();
+    if(u.champ){ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.stroke();txt('CHAMPION',u.x,u.y-28,11,C.red,null,700)}
+    ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(u.x-w/2,u.y-r-7,w,3);ctx.fillStyle=C.ink;ctx.fillRect(u.x-w/2,u.y-r-7,w*u.hp/(u.max||3),3)}
+  const p=F.p;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.atan2(p.ay,p.ax));ctx.fillStyle=p.inv>0?'#fff':C.blue;ctx.strokeStyle='#fff';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(16,0);ctx.lineTo(-10,-11);ctx.lineTo(-5,0);ctx.lineTo(-10,11);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+  for(const s of F.shots){ctx.fillStyle=s.side==='b'?'#cfe3ff':'#ffc2b5';ctx.fillRect(s.x-2,s.y-2,4,4)}
+  txt(F.node.name.toUpperCase()+' · DROP-IN',W/2,30,16,C.muted);
+  txt('0:'+String(Math.max(0,Math.ceil(F.t))).padStart(2,'0'),W/2,62,30,F.t<6?C.red:C.ink,null,700);
+  ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(16,H-30,160,12);ctx.fillStyle=C.blue;ctx.fillRect(16,H-30,160*Math.max(0,p.hp)/10,12);txt('HP',190,H-19,12,C.ink,'left');
+  const g=[];if(F.shotgun)g.push('Shotgun');if(F.jump)g.push('Dashes '+F.dash);if(F.medic)g.push('Medic drone');if(S.gear.includes('orbital'))g.push(F.aiming?'Bomber run: click a target':F.orbital>0?'Bomber run: press Q':'Bomber run used');
+  if(g.length)txt(g.join(' · '),W-16,H-19,12,C.gear,'right');
+}
+function hud(){
+  if(!S)return;
+  $('bb').style.width=Math.min(100,S.score.b/WIN*100)+'%';$('rb').style.width=Math.min(100,S.score.r/WIN*100)+'%';
+  $('bs').textContent=Math.floor(S.score.b);$('rs').textContent=Math.floor(S.score.r);
+  $('tt').textContent=S.mode==='drop'?Math.max(0,Math.ceil(F.t)):Math.ceil(S.turnT);const left=Math.max(0,TIME_LIMIT-S.clock);$('tl').textContent=S.mode==='drop'?'Drop-in':'Turn · '+Math.floor(left/60)+':'+String(Math.floor(left%60)).padStart(2,'0')+' left';
+}
+
+/* ---------- loop and input ---------- */
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(S&&!S.over&&!S.paused){S.clock+=dt;if(S.mode==='drop'){updateDrop(dt);if(!S.over)updateMap(dt*DROP_SLOW)}else updateMap(dt);
+    for(const p of S.pops)p.t-=dt;S.pops=S.pops.filter(p=>p.t>0)}
+  if(S&&S.mode==='drop'&&F)drawDrop();else if(S)drawMap();else drawIdle();
+  hud();requestAnimationFrame(frame);
+}
+function drawIdle(){S={t:performance.now()/1000,nodes:NODES.map(n=>Object.assign({},n,{owner:n.id==='watch'?'b':n.id==='refinery'?'r':null,meter:n.id==='watch'?100:n.id==='refinery'?-100:0,b:n.id==='watch'?3:0,hb:0,r:n.id==='refinery'?3:0})),squads:[],pops:[],hand:[],sel:-1,mode:'idle',champ:null};drawMap();S=null}
+function pt(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
+cv.addEventListener('pointerdown',e=>{
+  if(!S||S.over)return;const m=pt(e);
+  if(S.mode==='drop'){if(F.aiming&&F.orbital>0){F.strikes.push({x:m.x,y:m.y,t:2});F.orbital--;F.aiming=false;say('Bombers inbound.');renderHand();return}
+    if(e.pointerType==='touch'){const now=performance.now();if(now-F.lastTap<300)dash();F.lastTap=now;F.touch=m}else{F.aim=m;F.fire=true}cv.setPointerCapture(e.pointerId);return}
+  let hitN=null;for(const n of S.nodes)if(Math.hypot(n.x-m.x,n.y-m.y)<44)hitN=n;
+  if(!hitN){if(S.sel>=0){S.sel=-1;say('Cancelled.');renderHand()}return}
+  if(S.sel>=0){const c=CARDS[S.hand[S.sel]];if(c.gear){say('Click a gear slot below the map to replace it.');return}if(valid(c,hitN))playCard(S.sel,hitN);else say('<b>'+c.name+'</b> can’t target the <b>'+hitN.name+'</b>.');return}
+  if(droppable(hitN)){if(S.t<S.dropCd)say('Your hero is regrouping. You can drop in again in '+Math.ceil(S.dropCd-S.t)+' seconds.');else launchDrop(hitN)}
+  else say('<b>'+hitN.name+'</b>: '+(hitN.owner==='b'?'yours':hitN.owner==='r'?'held by the AI':'neutral')+'. You can drop in once enemies are on it.');
+});
+cv.addEventListener('pointermove',e=>{if(!F)return;const m=pt(e);if(F.touch)F.touch=m;else F.aim=m});
+const up=()=>{if(F){F.fire=false;F.touch=null}};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+addEventListener('keydown',e=>{keys[e.code]=true;
+  if(S&&S.mode==='drop'&&['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
+  if(e.code==='Space'&&!e.repeat&&S&&S.mode==='drop')dash();
+  if(e.code==='KeyQ'&&!e.repeat&&S&&S.mode==='drop'&&S.gear.includes('orbital'))toggleAim();
+  if(e.code==='KeyX'&&!e.repeat&&S&&S.mode==='map'&&hover>=0)scrap(hover);
+  if(e.code==='Escape'&&S&&S.sel>=0){S.sel=-1;say('Cancelled.');renderHand()}
+  if(e.code==='Escape'&&F&&F.aiming)toggleAim();
+  if(S&&!S.over&&/^Digit[1-9]$/.test(e.code)){const i=+e.code.slice(5)-1;if(i<S.hand.length)cardClick(i)}});
+addEventListener('keyup',e=>{keys[e.code]=false});
+addEventListener('blur',()=>{keys={}});
+$('start').onclick=newGame;
+$('pause').onclick=()=>{if(!S||S.over)return;S.paused=!S.paused;$('pause').textContent=S.paused?'Resume':'Pause';say(S.paused?'Paused.':'Resumed.')};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&S&&!S.over&&!S.paused){S.paused=true;$('pause').textContent='Resume'}});
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>

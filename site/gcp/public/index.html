@@ -1,0 +1,1099 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>kr0 Game Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a studio "build sheet". Sticky nav, one view at a time, a narrow reading column with wide tables and diagrams. */
+:root{
+  --bg:#ECEEEA; --surface:#F8F9F6; --ink:#1C2128; --muted:#58626D; --line:#C8CEC6;
+  --accent:#A86200; --accent-soft:#F4E4C6; --steel:#2F5679; --steel-soft:#DDE7F0;
+  --good:#2E7350; --bad:#A33A2A;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14181D; --surface:#1B2128; --ink:#E5E8E3; --muted:#9AA4AE; --line:#323B45;
+  --accent:#F0A935; --accent-soft:#3A2C12; --steel:#94B8D9; --steel-soft:#1E2D3B;
+  --good:#6CC495; --bad:#F08A78; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14181D; --surface:#1B2128; --ink:#E5E8E3; --muted:#9AA4AE; --line:#323B45;
+  --accent:#F0A935; --accent-soft:#3A2C12; --steel:#94B8D9; --steel-soft:#1E2D3B;
+  --good:#6CC495; --bad:#F08A78; color-scheme:dark}
+
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+a{color:var(--steel)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:980px;margin:0 auto}
+
+/* nav */
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+header.bar .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;padding-block:10px}
+.brand{font:800 22px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);text-decoration:none}
+.brand span{color:var(--accent)}
+nav{display:flex;flex-wrap:wrap;gap:4px}
+nav a{font:600 13px/1 var(--mono);color:var(--muted);text-decoration:none;padding:8px 10px;border-radius:4px}
+nav a:hover{color:var(--ink);background:var(--bg)}
+nav a[aria-current="page"]{color:var(--ink);background:var(--accent-soft)}
+
+main{padding-block:28px 64px}
+section.view{display:grid;gap:28px;grid-template-columns:minmax(0,1fr)}
+.sec,.stack,.stack-lg,figure{grid-template-columns:minmax(0,1fr)}
+figure{display:grid}
+h1,h2,h3{font-family:var(--display);line-height:1.05;text-wrap:balance;margin:0}
+h1{font-size:clamp(44px,8vw,76px);font-weight:800;text-transform:uppercase;letter-spacing:.01em}
+h2{font-size:34px;font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+h3{font-size:22px;font-weight:600;letter-spacing:.02em}
+p{margin:0;max-width:68ch}
+.lede{font-size:19px;max-width:60ch}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted)}
+.stack{display:grid;gap:14px}
+.stack-lg{display:grid;gap:22px}
+ul,ol{margin:0;padding-left:1.3em;max-width:68ch}
+li+li{margin-top:4px}
+code,.mono{font-family:var(--mono);font-size:.86em}
+.agent{font:600 .84em var(--mono);color:var(--steel);white-space:nowrap}
+
+/* section headers with the brief's four required headings */
+.sec{display:grid;gap:18px;padding-top:26px;border-top:2px solid var(--ink)}
+.sec-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.sec-h .n{font:600 13px var(--mono);color:var(--accent)}
+
+/* hero */
+.hero{display:grid;gap:14px;padding-block:8px 6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:600 12px/1 var(--mono);padding:7px 9px;border:1px solid var(--line);border-radius:3px;background:var(--surface);color:var(--muted)}
+.chip b{color:var(--ink);font-weight:600}
+.chip.tok{border-color:var(--accent);color:var(--ink);background:var(--accent-soft)}
+
+/* tables */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+th{font:600 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:14px;white-space:nowrap}
+tr.total td{font-weight:700;background:var(--accent-soft)}
+tr.sub td{background:var(--bg)}
+
+/* facts */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.fact{background:var(--surface);padding:12px 14px;display:grid;gap:4px;min-width:0}
+.fact dt{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.fact dd{margin:0}
+dl{margin:0}
+
+/* pillars & agent cards */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:16px;display:grid;gap:8px;align-content:start;min-width:0}
+.card h3{font-size:21px}
+.card dl{display:grid;gap:6px}
+.card dt{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.card dd{margin:0}
+.winloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.wl{padding:14px 16px;border-radius:4px;border:1px solid var(--line);background:var(--surface);display:grid;gap:6px}
+.wl .tag{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.wl.win .tag{color:var(--good)} .wl.lose .tag{color:var(--bad)}
+.note{border-left:3px solid var(--steel);padding:10px 14px;background:var(--steel-soft);border-radius:0 4px 4px 0;max-width:72ch}
+
+/* walkthrough */
+.walk{display:grid;gap:0;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+.walk .beat{display:grid;grid-template-columns:72px 1fr;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.walk .beat:last-child{border-bottom:0}
+.walk .t{font:600 13px var(--mono);color:var(--accent);font-variant-numeric:tabular-nums}
+.walk .beat p{min-width:0}
+
+/* scope */
+.scope{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.scope .col{border:1px solid var(--line);border-radius:4px;padding:14px 16px;background:var(--surface);display:grid;gap:8px;align-content:start}
+.scope .in h3{color:var(--good)} .scope .out h3{color:var(--muted)}
+
+/* diagrams */
+.fig{overflow-x:auto;border:1px solid var(--line);border-radius:4px;background:var(--surface);padding:14px}
+.fig svg{display:block;min-width:640px;width:100%;height:auto}
+.fig.narrow svg{min-width:560px}
+figcaption{font-size:14px;color:var(--muted);margin-top:8px;max-width:72ch}
+figure{margin:0}
+.d-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.d-box.k{fill:var(--accent-soft);stroke:var(--accent)}
+.d-box.s{fill:var(--steel-soft);stroke:var(--steel)}
+.d-box.g{fill:var(--bg);stroke:var(--muted);stroke-dasharray:4 3}
+.d-t{fill:var(--ink);font:600 13px var(--mono)}
+.d-tb{fill:var(--ink);font:800 16px var(--display);letter-spacing:.04em;text-transform:uppercase}
+.d-s{fill:var(--muted);font:12px var(--body)}
+.d-a{stroke:var(--muted);stroke-width:1.6;fill:none}
+.d-a.k{stroke:var(--accent)}
+.d-a.bad{stroke:var(--bad);stroke-dasharray:5 4}
+.d-a.dash{stroke-dasharray:5 4}
+.d-a.dot{stroke-dasharray:2 4}
+.d-l{fill:var(--muted);font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.d-l.k{fill:var(--accent)} .d-l.bad{fill:var(--bad)}
+.d-head{fill:var(--muted)} .d-head.k{fill:var(--accent)} .d-head.bad{fill:var(--bad)}
+
+/* hierarchy (HTML diagram) */
+.tiers{display:grid;gap:10px}
+.tier{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:start;border:1px solid var(--line);border-radius:4px;background:var(--surface);padding:12px 14px}
+.tier .lbl{display:grid;gap:2px}
+.tier .lbl b{font:800 18px var(--display);text-transform:uppercase;letter-spacing:.04em}
+.tier .lbl span{font-size:13px;color:var(--muted)}
+.tier .pills{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.pill{font:600 12px/1 var(--mono);padding:7px 8px;border-radius:3px;background:var(--bg);border:1px solid var(--line)}
+.tier.t1 .pill{background:var(--accent-soft);border-color:var(--accent)}
+.tier.t2 .pill{background:var(--steel-soft);border-color:var(--steel)}
+.tier-arrow{font:600 12px var(--mono);color:var(--muted);padding-left:14px}
+
+/* home portfolio */
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.game{display:grid;grid-template-rows:auto 1fr auto;gap:10px;padding:18px;border:1px solid var(--line);border-radius:4px;background:var(--surface);text-decoration:none;color:var(--ink);min-width:0}
+a.game:hover{border-color:var(--accent)}
+.game h3{font-size:28px;text-transform:uppercase;font-weight:800}
+.game .meta{display:flex;flex-wrap:wrap;gap:6px}
+.game .go{font:600 13px var(--mono);color:var(--accent)}
+.principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.principles div{display:grid;gap:6px;align-content:start}
+.principles b{font:800 19px var(--display);text-transform:uppercase;letter-spacing:.03em}
+
+.toc{display:flex;flex-wrap:wrap;gap:6px 16px;font:600 13px var(--mono)}
+.toc a{color:var(--muted);text-decoration:none}
+.toc a:hover{color:var(--accent)}
+footer{border-top:1px solid var(--line);padding-block:18px;color:var(--muted);font-size:14px}
+
+@media (max-width:560px){
+  .tier{grid-template-columns:1fr}
+  .walk .beat{grid-template-columns:1fr;gap:2px}
+  h2{font-size:28px}
+}
+@media (prefers-reduced-motion:no-preference){nav a{transition:background .15s,color .15s}}
+@media print{
+  header.bar,footer,.toc,.noprint{display:none!important}
+  body{font-size:11pt;background:#fff;color:#000}
+  .fig svg{min-width:0}
+  .sec{break-inside:auto}
+  .card,.wl,.fact,tr{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<header class="bar gut">
+  <div class="wrap">
+    <a class="brand" href="#home" data-view="home">kr<span>0</span> Game Studio</a>
+    <nav aria-label="Pages">
+      <a href="#home" data-view="home">Studio</a>
+      <a href="#metr0niks" data-view="metr0niks">Metr0niks</a>
+      <a href="#dropfront" data-view="dropfront">Dropfront</a>
+      <a href="#dual-tech" data-view="dual-tech">Dual Tech</a>
+      <a href="#ways" data-view="ways">Ways of Working</a>
+    </nav>
+  </div>
+</header>
+
+<main class="gut">
+<div class="wrap">
+
+<!-- ============================ HOME ============================ -->
+<section class="view" id="v-home" data-view="home">
+  <div class="hero">
+    <div class="eyebrow">Independent games, built with an AI crew</div>
+    <h1>kr0 Game Studio</h1>
+    <p class="lede">We are one human director and a crew of AI agents making small, sharp games. Every game starts as a pitch, earns a design document, and gets built in sprints by named agents with clear jobs. We plan work by how many tokens it takes to deliver, not by how many weeks.</p>
+  </div>
+
+  <div class="principles">
+    <div><b>One owner decides</b><p>Agents ask, offer options and draft. The studio owner picks and approves before anything is written.</p></div>
+    <div><b>Budget in tokens</b><p>Every feature carries a token estimate. Sprints close by comparing spend to estimate, and overruns move work below the cut line.</p></div>
+    <div><b>Play it, then close it</b><p>A story that changes what the player sees is closed only after someone has run the game and kept a screenshot.</p></div>
+    <div><b>Seven documents a game</b><p>Pitch, GDD, TDD, open questions, tuning history, and a decision log for each of the GDD and TDD.</p></div>
+  </div>
+
+  <div class="stack">
+    <h2>Games in development</h2>
+    <div class="games">
+      <a class="game" href="#metr0niks" data-view="metr0niks">
+        <div class="meta"><span class="chip">Mech brawler</span><span class="chip">PC</span><span class="chip tok">54.6M tokens</span></div>
+        <div class="stack"><h3>Metr0niks</h3><p>Drive a voxel mech through a city you can pull down, land heavy shots on a timing ring, and extract with the scrap before you're wrecked.</p></div>
+        <span class="go">Design brief →</span>
+      </a>
+      <a class="game" href="#dropfront" data-view="dropfront">
+        <div class="meta"><span class="chip">Card tactics + shooter</span><span class="chip">Browser</span><span class="chip tok">42.0M tokens</span></div>
+        <div class="stack"><h3>Dropfront</h3><p>Run a capture-point battle with a hand of cards, then drop in yourself for 20-second firefights that flip the map.</p></div>
+        <span class="go">Design brief →</span>
+      </a>
+      <a class="game" href="#dual-tech" data-view="dual-tech">
+        <div class="meta"><span class="chip">JRPG</span><span class="chip">Browser</span><span class="chip tok">33.6M tokens</span></div>
+        <div class="stack"><h3>Dual Tech</h3><p>A short JRPG where every attack ends in a timing hit, each hero's hit feels different, and two heroes chain their hits into one combo.</p></div>
+        <span class="go">Design brief →</span>
+      </a>
+      <div class="game">
+        <div class="meta"><span class="chip">Real-time tactics</span><span class="chip">Browser + phone</span><span class="chip">In design</span></div>
+        <div class="stack"><h3>Blackletter: Chronos</h3><p>A tabletop general's war on a real clock: holy orders fight over hex ground, every unit acts when its gauge fills, and Morale is both your life and your wager.</p></div>
+        <span class="go muted">Design brief after the current GDD revision</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><p>How we work, from the studio hierarchy to the story loop and review gates, is on the <a href="#ways" data-view="ways">Ways of Working</a> page.</p></div>
+</section>
+
+<!-- ============================ METR0NIKS ============================ -->
+<section class="view" id="v-metr0niks" data-view="metr0niks" hidden>
+  <div class="hero">
+    <div class="eyebrow">Design brief · Oct 2026 · owner kr0</div>
+    <h1>Metr0niks</h1>
+    <p class="lede">An isometric voxel mech brawler. You drive and shoot in real time, fire heavy weapons on a timing hit, and tear the city down for scrap that rebuilds your mech between matches.</p>
+    <div class="chips"><span class="chip"><b>Genre</b> mech brawler, extraction</span><span class="chip"><b>Platform</b> PC, keyboard and mouse</span><span class="chip"><b>Mode</b> single player vs AI</span><span class="chip tok"><b>Budget</b> 54.6M tokens</span></div>
+  </div>
+  <div class="toc"><a href="#m-exec">Executive Summary</a><a href="#m-mech">Game Mechanics</a><a href="#m-ai">AI Architecture</a><a href="#m-tech">Technical Strategy</a></div>
+
+  <div class="sec" id="m-exec">
+    <div class="sec-h"><span class="n">1</span><h2>Executive Summary</h2></div>
+    <p>Metr0niks drops you into Overpass Sector 4, a slum under a six-lane highway, in a mech you built from salvaged parts. You fight five waves of enemy mechs, with bosses on waves 3 and 5. Clear wave 5 and you extract with every scrap cube you picked up. Get wrecked and you lose all of it. Back in the garage you spend scrap on parts, and every part changes how the mech moves, heats up and hits.</p>
+    <dl class="facts">
+      <div class="fact"><dt>Player fantasy</dt><dd>Pilot a scrapyard war machine that wins by pulling a highway down on its enemies.</dd></div>
+      <div class="fact"><dt>Win</dt><dd>Clear wave 5 of an excursion. You extract and bank the match's scrap.</dd></div>
+      <div class="fact"><dt>Lose</dt><dd>Your mech's armor hits 0, or you leave early. All of the match's scrap is lost; owned parts are kept.</dd></div>
+      <div class="fact"><dt>This semester ships</dt><dd>One map, Excursion and Gauntlet modes, three enemy types and a 12-part garage.</dd></div>
+    </dl>
+    <div class="grid2">
+      <div class="card"><h3>Every part is a tradeoff</h3><p>Each part changes weight, heat or power, so building your mech changes how it moves and fights.</p></div>
+      <div class="card"><h3>The city is a weapon</h3><p>Pillars, overpasses and vats are as deadly as your guns. A cheap mech can beat an upgraded one by dropping a road on it.</p></div>
+      <div class="card"><h3>Real-time driving, timed heavy hits</h3><p>Movement and light guns never pause. Heavy weapons reward a well-timed release.</p></div>
+    </div>
+  </div>
+
+  <div class="sec" id="m-mech">
+    <div class="sec-h"><span class="n">2</span><h2>Game Mechanics</h2></div>
+    <h3>Core loop</h3>
+    <figure><div class="fig" data-flow="metr0niks"></div><figcaption>One excursion. Dying at any point sends you back to the garage with none of that match's scrap.</figcaption></figure>
+    <ol>
+      <li><b>Build</b> in the garage: buy parts, fit them to six slots, and watch speed, armor and heat change before you confirm.</li>
+      <li><b>Drop in</b> to Overpass Sector 4.</li>
+      <li><b>Fight five waves.</b> Drive, shoot, time heavy hits, and break supports to drop buildings on enemies.</li>
+      <li><b>Grab scrap and drop pods.</b> Destroyed enemies and vaults burst into scrap cubes you drive over to collect.</li>
+      <li><b>Extract</b> after wave 5 to bank the scrap, then build again.</li>
+    </ol>
+
+    <h3>How you win and lose</h3>
+    <div class="winloss">
+      <div class="wl win"><span class="tag">Win an excursion</span><p>Destroy every enemy in wave 5, including the boss. You extract automatically and the scrap you collected is banked.</p></div>
+      <div class="wl lose"><span class="tag">Lose an excursion</span><p>Your armor reaches 0 and the mech is destroyed, or you choose to leave before wave 5 ends. You go back to the garage with no scrap from that match. Parts you own are never lost, and a free starter mech means you can always deploy again.</p></div>
+    </div>
+    <p>Gauntlet runs the same waves with no penalty for losing and no progress for winning. It is where you practise a new build.</p>
+
+    <h3>What you press</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Input</th><th>What happens on screen</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">WASD</td><td>The legs drive. Heavy builds drift and take wide turns; light builds snap around.</td></tr>
+        <tr><td class="mono">Mouse</td><td>The torso turns to the cursor, separately from the legs, so you can back away while firing forward. Aiming at upper floors tilts the guns up.</td></tr>
+        <tr><td class="mono">Left / right click</td><td>Fire the right or left arm. Light guns fire while held. A heavy gun with a full charge bar starts a shrinking timing ring when you hold, and fires when you release.</td></tr>
+        <tr><td class="mono">Q</td><td>Shoulder weapon or utility, such as the cryo vent's freezing blast.</td></tr>
+        <tr><td class="mono">Space</td><td>The legs' ability: a dash, a jump-jet burst onto a rooftop, or a siege anchor.</td></tr>
+      </tbody></table></div>
+
+    <h3>The heavy hit</h3>
+    <p>Each heavy weapon has its own charge bar that fills while you fight. When it's full, hold the button: a ring shrinks toward a target ring over about one second, and you keep driving and aiming the whole time. Release on the target and the hit lands as a <b>Perfect</b>.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Release</th><th>Damage</th><th>What you see</th></tr></thead>
+      <tbody>
+        <tr><td>Perfect</td><td class="num">200%</td><td>The shell cores straight through walls and takes out extra voxels, often the pillar behind your target.</td></tr>
+        <tr><td>Good</td><td class="num">100%</td><td>A normal hit.</td></tr>
+        <tr><td>Miss, or the ring closes</td><td class="num">50%</td><td>A weak hit that still costs full heat.</td></tr>
+      </tbody></table></div>
+    <p>Every shot, jump and energy part adds heat. At 100% the mech overheats: weapons and thrusters shut off for 3 seconds and it vents scalding steam. An overheat during a ring cancels it as a Miss.</p>
+
+    <h3>A minute in Overpass Sector 4</h3>
+    <div class="walk">
+      <div class="beat"><span class="t">0:00</span><p>Wave 2. Three patrol bots come up the slum street under the highway. You back away with WASD while your torso stays on them, minigun chattering. The heat gauge climbs toward the red.</p></div>
+      <div class="beat"><span class="t">0:12</span><p>The bunker-buster's charge bar is full. You hold right click, the ring shrinks, and you release on the target: <b>Perfect</b>. The shell punches through the bots and cores the highway pillar behind them.</p></div>
+      <div class="beat"><span class="t">0:18</span><p>One more minigun burst and the pillar breaks. A dark shadow spreads across the road under the overpass. You hit Space and dash clear as 40 metres of road lands on the bots.</p></div>
+      <div class="beat"><span class="t">0:25</span><p>Scrap cubes pop up on the rubble. A drop-pod marker with a countdown appears two blocks away. A wounded heavy loader turns away from you and lumbers toward it.</p></div>
+      <div class="beat"><span class="t">0:40</span><p>You get there first, touch the pod and get Coolant flood: your heat locks at 0 for 10 seconds. You hold the minigun down on the loader until it bursts into double scrap.</p></div>
+      <div class="beat"><span class="t">0:55</span><p>The wave-3 boss, an ultra-light sniper, lands on a rooftop. You tilt your torso up to the top floor and start charging the mortar.</p></div>
+    </div>
+
+    <h3>Building the mech</h3>
+    <p>A mech has six slots: Core, right arm, left arm, shoulder, legs and reactor. The garage shows every change to power, armor, speed, weight and heat before you confirm. Mid-match, enough damage to an arm disables that weapon and drops its weight, so a battered mech gets faster; damaged legs slow you down. The starting pool is twelve parts, among them the minigun, shotgun, plasma cutter, bunker-buster cannon, pile-bunker spike, siege mortar, jump-jets and bulldozer treads.</p>
+  </div>
+
+  <div class="sec" id="m-ai">
+    <div class="sec-h"><span class="n">3</span><h2>AI Architecture</h2></div>
+    <p>Metr0niks has five in-game agents. Enemy mechs use the same parts, heat and damage rules as you, so you can read what they're about to do from the same cues you use on yourself. All of them run on fixed rules inside the game. None calls a language model while you play.</p>
+    <div class="grid2">
+      <div class="card"><h3>Patrol bot</h3><dl>
+        <div><dt>What you see</dt><dd>Light mechs walking routes through the streets. When you come into view they close to their gun's range and open fire.</dd></div>
+        <div><dt>Effect on play</dt><dd>The early-wave pressure and your main source of scrap. They overheat like you do, and an overheated bot breaks off and hides until it cools: your window to chase.</dd></div></dl></div>
+      <div class="card"><h3>Heavy loader</h3><dl>
+        <div><dt>What you see</dt><dd>A slow, armored hauler carrying ore through the map.</dd></div>
+        <div><dt>Effect on play</dt><dd>A scrap piñata worth chasing. Shoot off its main weapon and it retreats out of sight, so you choose between finishing it and holding your ground.</dd></div></dl></div>
+      <div class="card"><h3>Pod racer</h3><dl>
+        <div><dt>What you see</dt><dd>Any enemy breaks off the fight and runs for a drop pod when the pod is closer to it than to you, or when its own armor falls below half.</dd></div>
+        <div><dt>Effect on play</dt><dd>Every pod becomes a race. A wounded enemy fleeing toward a marker is telling you it's about to heal. Beat it there, or kill it on the way.</dd></div></dl></div>
+      <div class="card"><h3>Demolisher</h3><dl>
+        <div><dt>What you see</dt><dd>When you park under a structure, enemies stop shooting you and shoot the pillar holding it up instead. A falling shadow appears on the ground before it lands.</dd></div>
+        <div><dt>Effect on play</dt><dd>The city works against you too. Standing still under the overpass gets punished, and the shadow gives you time to dash clear.</dd></div></dl></div>
+      <div class="card"><h3>Bounty boss: the rooftop sniper</h3><dl>
+        <div><dt>What you see</dt><dd>An ultra-light mech that jumps between rooftops on waves 3 and 5 and fires long shots from above.</dd></div>
+        <div><dt>Effect on play</dt><dd>Forces you to aim up, use the arcing mortar or jump-jets, or collapse the building it's standing on.</dd></div></dl></div>
+      <div class="card"><h3>Wave director</h3><dl>
+        <div><dt>What you see</dt><dd>Waves arrive in a fixed order with bosses on 3 and 5. At least one drop pod lands every wave, at a random moment, with a marker and countdown.</dd></div>
+        <div><dt>Effect on play</dt><dd>Sets the rhythm of a match: fight, scramble for a pod, fight again. Gauntlet uses the same waves with the scrap penalty switched off.</dd></div></dl></div>
+    </div>
+    <div class="note"><p><b>How the agents play off each other.</b> The demolisher and the pod racer pull in opposite directions. When a pod lands under the overpass, enemies race you to it, and the ones that lose the race start shooting the pillars above you. The rule you learn by wave 3 is to look up before you go for a pod.</p></div>
+  </div>
+
+  <div class="sec" id="m-tech">
+    <div class="sec-h"><span class="n">4</span><h2>Technical Strategy</h2></div>
+    <h3>Development agents</h3>
+    <p>Fourteen AI agents build Metr0niks. kr0 directs them and approves every design decision and every file they write.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Agent</th><th>Role on Metr0niks</th></tr></thead>
+      <tbody>
+        <tr><td class="agent">creative-director</td><td>Rejects any feature that doesn't make parts a tradeoff, the city a weapon, or heavy hits a timed release.</td></tr>
+        <tr><td class="agent">technical-director</td><td>Chose pre-split voxel chunks over full voxel physics, and signs off each architecture decision before code is written.</td></tr>
+        <tr><td class="agent">producer</td><td>Splits the semester into sprints, tracks tokens spent against the 54.6M budget, and moves stories below the cut line when a sprint overruns.</td></tr>
+        <tr><td class="agent">game-designer</td><td>Owns the GDD: run rules, the parts list, the timing-hit table and the drop pods.</td></tr>
+        <tr><td class="agent">systems-designer</td><td>Writes the heat, charge-bar and weight formulas and keeps every tunable number in one table.</td></tr>
+        <tr><td class="agent">economy-designer</td><td>Sets scrap drops and garage prices so a cleared excursion pays for real upgrades and a death stings.</td></tr>
+        <tr><td class="agent">level-designer</td><td>Lays out Overpass Sector 4: which pillars hold the highway, where transports drive, and where pods can land.</td></tr>
+        <tr><td class="agent">gameplay-programmer</td><td>Builds the mech controls, weapons, timing ring, heat and drop pods.</td></tr>
+        <tr><td class="agent">engine-programmer</td><td>Builds the support graph that decides what falls when a pillar breaks, and the 300-piece debris cap.</td></tr>
+        <tr><td class="agent">ai-programmer</td><td>Builds the patrol, engage, pod-race and retreat behaviors, the pillar shooting and the sniper boss.</td></tr>
+        <tr><td class="agent">technical-artist</td><td>Turns the AI-made voxel models into game-ready parts and building chunks, and writes the cutaway and heat-glow shaders.</td></tr>
+        <tr><td class="agent">ux-designer</td><td>Designs the garage screen and the HUD: heat, charge bars, the timing ring and the weight change when an arm is lost.</td></tr>
+        <tr><td class="agent">qa-tester</td><td>Plays every finished story, keeps a screenshot as proof, and runs the 300-debris collapse test before any destruction change is merged.</td></tr>
+        <tr><td class="agent">prototyper</td><td>Built the firing-range prototype and builds throwaway tests for risks like timing the ring while driving.</td></tr>
+      </tbody></table></div>
+    <p><b>How they hand work over.</b> Combat features run as a small team: the game-designer writes the rule, the gameplay-programmer builds the player's side and the ai-programmer the enemies' side, the technical-artist adds the feedback, and the qa-tester closes the story only after watching it run. When two agents disagree, for example the engine-programmer's debris cap against the Perfect hit's bigger blast, the technical-director decides.</p>
+
+    <h3>Semester scope</h3>
+    <p class="muted">Assumes a 15-week semester ending in one playable vertical slice.</p>
+    <div class="scope">
+      <div class="col in"><h3>Ships this semester</h3><ul>
+        <li>Overpass Sector 4 with collapsible highway and pillars</li>
+        <li>Excursion and Gauntlet modes, 5 waves each</li>
+        <li>Patrol bot, heavy loader and the rooftop sniper boss</li>
+        <li>The 12-part starting pool in the first two rarity tiers</li>
+        <li>Four drop pods, garage buying, fitting and repairs</li>
+        <li>Saves stored on the player's machine</li>
+      </ul></div>
+      <div class="col out"><h3>After the semester</h3><ul>
+        <li>The Smelting Yards and Neon Financial Plaza maps</li>
+        <li>Draft Duel and Scrap Rush multiplayer</li>
+        <li>Rarity tiers blue, purple and orange</li>
+        <li>Online accounts and server-side saves</li>
+      </ul></div>
+    </div>
+
+    <h3>Constraints</h3>
+    <div class="grid2">
+      <div class="card"><h3>Collapse performance</h3><p>A big collapse can drop the frame rate, and a stutter during a one-second timing ring turns a Perfect into a Miss. So buildings are pre-split into chunks, live debris is capped at 300 pieces with the oldest fading first, and a collapse test runs before any other feature is built.</p></div>
+      <div class="card"><h3>No model calls during play</h3><p>The timing ring lasts about a second and enemies react every frame. A call to a hosted model takes far longer than that and costs tokens on every match, so every in-game agent runs on fixed rules: zero runtime tokens per match.</p></div>
+      <div class="card"><h3>One developer</h3><p>kr0 is the only human, so everything tunable lives in data files the agents can change without code, and art is AI-made and approved by kr0.</p></div>
+    </div>
+
+    <h3>API constraints on the agent crew</h3>
+    <ul>
+      <li><b>Context window.</b> The GDD and TDD are read one section at a time, so an agent building the heat system loads the heat section, not the parts list.</li>
+      <li><b>Rate limits.</b> At most three agents work in parallel, on stories that don't touch the same files.</li>
+      <li><b>Model tiers.</b> Directors run on the strongest model; specialists run on the session's model, which keeps most tokens on cheaper calls.</li>
+    </ul>
+
+    <h3>Token budget</h3>
+    <p>Planning estimate for the semester build. About 85% of these tokens are input, because every agent call re-reads the GDD section and code it touches. The producer records actual spend per story in the tuning history and re-plans at each sprint close.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Feature</th><th>Main agents</th><th class="num">Tokens</th></tr></thead>
+      <tbody>
+        <tr><td>Design and architecture upkeep, stories</td><td>game-designer, technical-director, producer</td><td class="num">3.0M</td></tr>
+        <tr><td>Voxel destruction and debris cap</td><td>engine-programmer, prototyper</td><td class="num">6.0M</td></tr>
+        <tr><td>Mech model, slots, stats, disabled arms and legs</td><td>gameplay-programmer, systems-designer</td><td class="num">4.0M</td></tr>
+        <tr><td>Light guns, heat, charge bars and timing ring</td><td>gameplay-programmer, systems-designer</td><td class="num">5.0M</td></tr>
+        <tr><td>Camera, building cutaway, falling shadows</td><td>technical-artist, gameplay-programmer</td><td class="num">3.5M</td></tr>
+        <tr><td>Enemy behaviors and sniper boss</td><td>ai-programmer</td><td class="num">5.0M</td></tr>
+        <tr><td>Waves, drop pods, Excursion and Gauntlet rules</td><td>gameplay-programmer, level-designer</td><td class="num">3.0M</td></tr>
+        <tr><td>Garage, scrap economy, local save</td><td>ux-designer, economy-designer</td><td class="num">3.5M</td></tr>
+        <tr><td>Voxel art pipeline</td><td>technical-artist</td><td class="num">2.5M</td></tr>
+        <tr><td>Playtests, screenshot evidence, regression runs</td><td>qa-tester</td><td class="num">3.5M</td></tr>
+        <tr class="sub"><td colspan="2">Subtotal</td><td class="num">39.0M</td></tr>
+        <tr><td colspan="2">Rework reserve (40%)</td><td class="num">15.6M</td></tr>
+        <tr class="total"><td colspan="2">Total development budget</td><td class="num">54.6M</td></tr>
+        <tr><td colspan="2">Runtime tokens per match</td><td class="num">0</td></tr>
+      </tbody></table></div>
+  </div>
+</section>
+
+<!-- ============================ DROPFRONT ============================ -->
+<section class="view" id="v-dropfront" data-view="dropfront" hidden>
+  <div class="hero">
+    <div class="eyebrow">Design brief · Oct 2026 · owner kr0</div>
+    <h1>Dropfront</h1>
+    <p class="lede">A capture-point battle you run with a hand of cards, then drop into yourself for short firefights. Set in a dieselpunk war over an industrial outpost.</p>
+    <div class="chips"><span class="chip"><b>Genre</b> card tactics with top-down shooting</span><span class="chip"><b>Platform</b> browser, mouse or touch</span><span class="chip"><b>Match</b> 5 to 8 minutes</span><span class="chip tok"><b>Budget</b> 42.0M tokens</span></div>
+  </div>
+  <div class="toc"><a href="#d-exec">Executive Summary</a><a href="#d-mech">Game Mechanics</a><a href="#d-ai">AI Architecture</a><a href="#d-tech">Technical Strategy</a></div>
+
+  <div class="sec" id="d-exec">
+    <div class="sec-h"><span class="n">1</span><h2>Executive Summary</h2></div>
+    <p>In Dropfront you command blue bots against a red commander for five points on one map: Watchtower, Quarry, Foundry, Refinery and Docks. Every 15 seconds you draw five cards and spend 3 energy to send squads, play tactics or equip gear on your hero. When a point is under attack you can drop in for 20 seconds of top-down shooting while the battle keeps running at quarter speed. Each point you own scores 2 resources a second. First to 2000 wins.</p>
+    <dl class="facts">
+      <div class="fact"><dt>Player fantasy</dt><dd>The general who can also grab a shotgun and win the fight personally.</dd></div>
+      <div class="fact"><dt>Win a match</dt><dd>Reach 2000 resources first, or lead when the 8:00 clock runs out.</dd></div>
+      <div class="fact"><dt>Lose a match</dt><dd>The enemy reaches 2000 first, or leads at 8:00. Losing any match ends the run.</dd></div>
+      <div class="fact"><dt>Win a run</dt><dd>Win three matches in a row, drafting a new card after each win.</dd></div>
+    </dl>
+    <div class="grid2">
+      <div class="card"><h3>Every turn is a trade</h3><p>Energy is short. Squads, tactics, gear and drop-ins all compete for it, and unspent energy is lost.</p></div>
+      <div class="card"><h3>Short bursts, big stakes</h3><p>A drop-in lasts 20 seconds and can flip a point, and with it the match.</p></div>
+      <div class="card"><h3>Gear for the situation</h3><p>Two gear cards at most. Discard one to make room for what the next fight needs.</p></div>
+    </div>
+  </div>
+
+  <div class="sec" id="d-mech">
+    <div class="sec-h"><span class="n">2</span><h2>Game Mechanics</h2></div>
+    <h3>Core loop</h3>
+    <figure><div class="fig" data-flow="dropfront"></div><figcaption>A command turn comes every 15 seconds of map time, so a match cycles this loop 20 to 30 times.</figcaption></figure>
+    <ol>
+      <li><b>Draw.</b> Discard what's left, draw 5 cards, refill to 3 energy.</li>
+      <li><b>Spend.</b> Play squads and tactics on points, equip gear, or scrap up to two cards for +1 energy each.</li>
+      <li><b>Watch the map.</b> Bots walk the roads and fight at points; capture meters swing.</li>
+      <li><b>Drop in</b> for 2 energy at any point with enemies on it, and fight for 20 seconds.</li>
+      <li><b>Take the point.</b> Clear every enemy and the point is yours, locked for 10 seconds, scoring 2 a second.</li>
+    </ol>
+
+    <h3>How you win and lose</h3>
+    <div class="winloss">
+      <div class="wl win"><span class="tag">Win</span><p>Your score reaches 2000 before the enemy's, or you're ahead when the real-time clock hits 8:00. On a tie, whoever holds more points wins. Win three matches for a full run.</p></div>
+      <div class="wl lose"><span class="tag">Lose</span><p>The enemy reaches 2000 first or is ahead at 8:00. One lost match ends the run. Going down in a drop-in doesn't lose the match; it costs you a 40-second regroup.</p></div>
+    </div>
+
+    <h3>What you press</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Action</th><th>Mouse and keyboard</th><th>Touch</th></tr></thead>
+      <tbody>
+        <tr><td>Play a card</td><td>Click it, then a highlighted point (or keys 1–9)</td><td>Tap it, then the point</td></tr>
+        <tr><td>Scrap a card for +1 energy</td><td>Right-click it, or hover and press X</td><td>Long-press it</td></tr>
+        <tr><td>Drop in</td><td>Click a point marked Drop in</td><td>Tap the point</td></tr>
+        <tr><td>Move, aim, shoot</td><td>WASD, mouse, hold left click</td><td>Hold where you want to go; you fire automatically</td></tr>
+        <tr><td>Dash or call the bomber</td><td>Space; Q then click</td><td>Double-tap; tap the gear slot then the target</td></tr>
+      </tbody></table></div>
+
+    <h3>A turn at the Foundry</h3>
+    <div class="walk">
+      <div class="beat"><span class="t">3:15</span><p>The turn clock ticks its last 3 seconds. You draw Rifle squad, Rifle squad, Feint, Shotgun and Sabotage, and you have 3 energy. You equip the Shotgun (2) and send a Rifle squad to the Quarry (1).</p></div>
+      <div class="beat"><span class="t">3:20</span><p>The map runs. Red dots stream toward the Foundry in the center and a red <i>Rally</i> banner flashes over it for two seconds. The Foundry's meter starts sliding red and its ring turns amber: <b>Drop in</b>.</p></div>
+      <div class="beat"><span class="t">3:30</span><p>Next turn you scrap Feint and Sabotage for +2 energy and click the Foundry. A drum hits, the camera zooms in, and you're the blue arrow behind cover with your shotgun. Six red discs with health bars are on the capture circle.</p></div>
+      <div class="beat"><span class="t">3:45</span><p>You clear the last disc with 5 seconds left. The Foundry flips blue and locks for 10 seconds, and the score bar at the top starts climbing faster. Your hero regroups for 20 seconds.</p></div>
+    </div>
+
+    <h3>The cards</h3>
+    <p>A 17-card starter deck in three types. <b>Squads</b> put bots on the map: Rifle squads, Rushers, Heavies, a Sniper nest and a 6-bot Reinforcement wave. <b>Tactics</b> bend the battle: Feint, Rally, Hold the line, Flare, Sabotage and Overclock. <b>Gear</b> equips your hero for drop-ins: Shotgun, Jump pack, Medic drone and Bomber run. You never steer bots directly; cards are the only way to move the battle.</p>
+  </div>
+
+  <div class="sec" id="d-ai">
+    <div class="sec-h"><span class="n">3</span><h2>AI Architecture</h2></div>
+    <p>Dropfront has four in-game agents. The red side plays the same game you do, with the same tactic cards and its own hero, and every move it makes shows on the map so you can read it. All of them run on fixed rules inside the game, with no language-model calls during a match.</p>
+    <div class="grid2">
+      <div class="card"><h3>Enemy commander</h3><dl>
+        <div><dt>What you see</dt><dd>Every 4 to 6 seconds a red squad of 2 or 3 bots leaves its base. It defends points you're attacking, takes neutral ones and hits your weakest. Its tactic cards flash on the map for 2 seconds.</dd></div>
+        <div><dt>Effect on play</dt><dd>Tells you where the next fight is. Feint makes it chase a point of your choosing for 8 seconds. After 3:00 its squads get bigger, and after 5:00 it sends two at a time, so a slow start loses.</dd></div></dl></div>
+      <div class="card"><h3>Enemy champion</h3><dl>
+        <div><dt>What you see</dt><dd>A red hero drops onto a point, counts as 4 bots there and can't be killed on the map for 20 seconds.</dd></div>
+        <div><dt>Effect on play</dt><dd>Drop in to fight it yourself: 15 HP, faster than bots, carrying two gear. Beat it and it can't drop again for 30 seconds.</dd></div></dl></div>
+      <div class="card"><h3>Bots, both sides</h3><dl>
+        <div><dt>What you see</dt><dd>Dots walking the eight roads, then trading losses on contested points while the capture meter swings toward the bigger side.</dd></div>
+        <div><dt>Effect on play</dt><dd>Numbers win points. Heavies deal double losses while defending, so they're how you hold ground you've just taken.</dd></div></dl></div>
+      <div class="card"><h3>Firefight bots</h3><dl>
+        <div><dt>What you see</dt><dd>When you drop in, up to 8 red bots from that point appear in the arena as discs with health bars, 3 HP each, alongside up to 6 of yours.</dd></div>
+        <div><dt>Effect on play</dt><dd>The squads you sent with cards fight beside you. Sending bots before dropping in makes the 20 seconds easier.</dd></div></dl></div>
+    </div>
+    <div class="note"><p><b>How the agents play off each other.</b> The commander and champion work as a pair. The champion only drops onto a point the commander already holds against 3 or more of your bots, or one its squads have pushed to neutral. When you see it land, that point was about to flip. That's your signal to spend the 2 energy and drop in.</p></div>
+  </div>
+
+  <div class="sec" id="d-tech">
+    <div class="sec-h"><span class="n">4</span><h2>Technical Strategy</h2></div>
+    <h3>Development agents</h3>
+    <p>Twelve AI agents build Dropfront. kr0 directs them and approves every design decision and every file they write.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Agent</th><th>Role on Dropfront</th></tr></thead>
+      <tbody>
+        <tr><td class="agent">creative-director</td><td>Keeps every card and rule tied to "every turn is a trade" and the 8-minute match.</td></tr>
+        <tr><td class="agent">technical-director</td><td>Decides how the command map and the firefight share one clock, and signs off architecture decisions.</td></tr>
+        <tr><td class="agent">producer</td><td>Plans the sprints, tracks spend against the 42.0M-token budget, and moves stories below the cut line when a sprint overruns.</td></tr>
+        <tr><td class="agent">game-designer</td><td>Owns the GDD: scoring, capture rules, the card list and the drop-in outcomes.</td></tr>
+        <tr><td class="agent">systems-designer</td><td>Tunes capture speed, bot losses and match length, using the headless runner's simulated matches.</td></tr>
+        <tr><td class="agent">economy-designer</td><td>Balances card costs, energy and scrapping so a dead hand can still become a drop-in.</td></tr>
+        <tr><td class="agent">gameplay-programmer</td><td>Builds the cards, energy, deck, capture meters and the drop-in firefight.</td></tr>
+        <tr><td class="agent">ai-programmer</td><td>Builds the enemy commander's squad and tactic choices and the champion's drop rules.</td></tr>
+        <tr><td class="agent">ui-programmer</td><td>Builds the hand, loadout bar, score race and turn timer for mouse and touch.</td></tr>
+        <tr><td class="agent">sound-designer</td><td>Makes the turn-clock tick, capture and loss chimes, and the drop-in drum.</td></tr>
+        <tr><td class="agent">qa-tester</td><td>Runs 1,000 simulated matches before each balance change and hand-plays every finished story.</td></tr>
+        <tr><td class="agent">prototyper</td><td>Built the current browser prototype the GDD's numbers come from.</td></tr>
+      </tbody></table></div>
+    <p><b>How they hand work over.</b> A new card goes from the game-designer's rule to the gameplay-programmer's code, then to the ai-programmer so the commander can play its mirror, then to the qa-tester's simulated matches. If those matches push the average length past 8 minutes, the producer sends the card back to the game-designer before it ships.</p>
+
+    <h3>Semester scope</h3>
+    <p class="muted">Assumes a 15-week semester ending in one playable vertical slice.</p>
+    <div class="scope">
+      <div class="col in"><h3>Ships this semester</h3><ul>
+        <li>One map with five points and eight roads</li>
+        <li>The 17-card starter deck and all four gear cards</li>
+        <li>Enemy commander, champion and per-match ramp</li>
+        <li>Drop-in firefight with the base rifle and gear</li>
+        <li>A three-match run with a card draft after each win</li>
+        <li>Mouse, keyboard and touch controls</li>
+      </ul></div>
+      <div class="col out"><h3>After the semester</h3><ul>
+        <li>More maps and a larger draft pool</li>
+        <li>Music</li>
+        <li>Unlocks that carry between runs</li>
+        <li>Multiplayer</li>
+      </ul></div>
+    </div>
+
+    <h3>Constraints</h3>
+    <div class="grid2">
+      <div class="card"><h3>Two clocks, one match</h3><p>The map keeps running at 25% speed during a drop-in, so the firefight and the command map must share one game clock. Map time and real time are tracked separately, because the 8:00 limit counts real time, drop-ins included.</p></div>
+      <div class="card"><h3>No model calls during play</h3><p>The commander decides every 4 to 6 seconds, dozens of times a match. A hosted-model call for each decision would add delay and token cost to every match, so it runs on fixed scoring rules: zero runtime tokens.</p></div>
+      <div class="card"><h3>Balance by simulation first</h3><p>The prototype has been tested only by simulation. Each balance change is checked with headless matches, which are cheaper in tokens than hand play, and a person still plays every finished story.</p></div>
+    </div>
+
+    <h3>API constraints on the agent crew</h3>
+    <ul>
+      <li><b>Context window.</b> Agents read the GDD one section at a time; the card table is the section most stories load.</li>
+      <li><b>Rate limits.</b> At most three agents work in parallel, and never two on the card system at once.</li>
+      <li><b>Model tiers.</b> Directors run on the strongest model; specialists run on the session's model.</li>
+    </ul>
+
+    <h3>Token budget</h3>
+    <p>Planning estimate for the semester build. Most tokens are input, because every call re-reads the rules it touches. Actual spend per story goes into the tuning history and the plan is redone at each sprint close.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Feature</th><th>Main agents</th><th class="num">Tokens</th></tr></thead>
+      <tbody>
+        <tr><td>Design upkeep and stories</td><td>game-designer, producer</td><td class="num">1.5M</td></tr>
+        <tr><td>Map, roads and capture meters</td><td>gameplay-programmer</td><td class="num">3.0M</td></tr>
+        <tr><td>Cards, deck, energy and scrapping</td><td>gameplay-programmer, economy-designer</td><td class="num">3.0M</td></tr>
+        <tr><td>Bots, movement and point combat</td><td>gameplay-programmer</td><td class="num">2.5M</td></tr>
+        <tr><td>Enemy commander</td><td>ai-programmer</td><td class="num">4.0M</td></tr>
+        <tr><td>Enemy champion</td><td>ai-programmer</td><td class="num">2.0M</td></tr>
+        <tr><td>Drop-in firefight</td><td>gameplay-programmer</td><td class="num">4.0M</td></tr>
+        <tr><td>Gear cards</td><td>gameplay-programmer</td><td class="num">2.0M</td></tr>
+        <tr><td>Run structure and card draft</td><td>game-designer, gameplay-programmer</td><td class="num">2.0M</td></tr>
+        <tr><td>UI and touch controls, sound</td><td>ui-programmer, sound-designer</td><td class="num">3.0M</td></tr>
+        <tr><td>Headless runner, balance runs, playtests</td><td>qa-tester, systems-designer</td><td class="num">3.0M</td></tr>
+        <tr class="sub"><td colspan="2">Subtotal</td><td class="num">30.0M</td></tr>
+        <tr><td colspan="2">Rework reserve (40%)</td><td class="num">12.0M</td></tr>
+        <tr class="total"><td colspan="2">Total development budget</td><td class="num">42.0M</td></tr>
+        <tr><td colspan="2">Runtime tokens per match</td><td class="num">0</td></tr>
+      </tbody></table></div>
+  </div>
+</section>
+
+<!-- ============================ DUAL TECH ============================ -->
+<section class="view" id="v-dual-tech" data-view="dual-tech" hidden>
+  <div class="hero">
+    <div class="eyebrow">Design brief · Oct 2026 · owner kr0</div>
+    <h1>Dual Tech</h1>
+    <p class="lede">A short JRPG where every attack ends in a timing hit, and each hero's hit feels different. Brick holds and charges, Vex reacts, Lumen keeps the beat. Chain two heroes' hits and they fuse into a dual tech.</p>
+    <div class="chips"><span class="chip"><b>Genre</b> JRPG, timed hits</span><span class="chip"><b>Platform</b> browser, keyboard, mouse or touch</span><span class="chip"><b>Run</b> 15 to 20 minutes</span><span class="chip tok"><b>Budget</b> 33.6M tokens</span></div>
+  </div>
+  <div class="toc"><a href="#t-exec">Executive Summary</a><a href="#t-mech">Game Mechanics</a><a href="#t-ai">AI Architecture</a><a href="#t-tech">Technical Strategy</a></div>
+
+  <div class="sec" id="t-exec">
+    <div class="sec-h"><span class="n">1</span><h2>Executive Summary</h2></div>
+    <p>Dual Tech is a five-fight run with three heroes. Turn bars fill in real time; when a hero's bar is full the fight pauses and you pick a move. Then you perform it with one button, and how well you time it decides the damage. Brick tests patience, Vex reflexes, Lumen rhythm. Good hits fill a shared Sync meter that unlocks dual techs, where two heroes chain their timing hits back to back. Beat the scrap golem in fight five to finish the run.</p>
+    <dl class="facts">
+      <div class="fact"><dt>Player fantasy</dt><dd>Landing a perfect two-hero combo on a boss, by hand.</dd></div>
+      <div class="fact"><dt>Win</dt><dd>Defeat the scrap golem in the fifth fight. You get a score from perfects, time and damage taken.</dd></div>
+      <div class="fact"><dt>Lose</dt><dd>All three heroes are down. The run ends, you see your score so far, and a retry starts from fight 1.</dd></div>
+      <div class="fact"><dt>This semester ships</dt><dd>3 heroes, 6 abilities, 4 dual techs, 5 encounters and 15 upgrades.</dd></div>
+    </dl>
+    <div class="grid2">
+      <div class="card"><h3>One hero, one feel</h3><p>Each hero's timing style is a different skill: patience, reflex, rhythm. You should be able to tell who's acting with your eyes closed.</p></div>
+      <div class="card"><h3>Decide, then perform</h3><p>The menu is the strategy, and the hit is a one-to-two-second burst of skill. Neither half works alone.</p></div>
+      <div class="card"><h3>Combos are the payoff</h3><p>Dual techs chain two feels back to back. Landing both perfectly is the best moment in the game.</p></div>
+    </div>
+  </div>
+
+  <div class="sec" id="t-mech">
+    <div class="sec-h"><span class="n">2</span><h2>Game Mechanics</h2></div>
+    <h3>Core loop</h3>
+    <figure><div class="fig" data-flow="dualtech"></div><figcaption>A turn takes about 5 seconds. After each of the first four fights you pick 1 of 3 upgrades; HP carries over and Sync resets.</figcaption></figure>
+    <ol>
+      <li><b>Wait.</b> Turn bars fill in real time; the enemy's fills too.</li>
+      <li><b>Decide.</b> A hero's bar is full, the fight pauses, and you pick an ability or a dual tech and a target.</li>
+      <li><b>Perform.</b> Play that hero's timing hit. The grade, Perfect, Good or Miss, sets the effect.</li>
+      <li><b>Build Sync.</b> Good and Perfect hits fill the shared meter; at 50 you can open a dual tech.</li>
+      <li><b>Repeat</b> until the enemy or the party falls, then pick an upgrade and move to the next fight.</li>
+    </ol>
+
+    <h3>How you win and lose</h3>
+    <div class="winloss">
+      <div class="wl win"><span class="tag">Win the run</span><p>Clear four fights and defeat the 700-HP scrap golem. The results screen shows your score: 100 per perfect, plus time under 20 minutes, minus damage taken.</p></div>
+      <div class="wl lose"><span class="tag">Lose the run</span><p>Every hero is down. You see the results screen with your score so far, and a retry starts again from fight 1 with no upgrades.</p></div>
+    </div>
+
+    <h3>Three heroes, three feels</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Hero</th><th>What you do</th><th>What you see and hear</th></tr></thead>
+      <tbody>
+        <tr><td><b>Brick</b>, tank</td><td>Hold to fill a charge bar and let go inside the zone. Hold too long and it overcharges into a Miss.</td><td>The bar fills, the screen tightens, a low hum rises; a perfect slam lands with hit-stop and heavy shake.</td></tr>
+        <tr><td><b>Vex</b>, damage</td><td>A marker sweeps across a bar; press to stop it in a random zone. Flurry's three sweeps get faster.</td><td>A thin bright marker and a sharp click on each sweep; a perfect hit cracks and flashes white.</td></tr>
+        <tr><td><b>Lumen</b>, support</td><td>Beats travel toward a ring 520 ms apart; tap as each one crosses.</td><td>Soft chimes on the music's tempo; a chord builds with each perfect beat.</td></tr>
+      </tbody></table></div>
+    <p>Every hit uses the same button, Space, a click or a tap, so what changes from hero to hero is the skill, not the controls. Keys 1–4 pick a command.</p>
+
+    <h3>The golem fight, turn by turn</h3>
+    <div class="walk">
+      <div class="beat"><span class="t">Turn 1</span><p>Vex's red bar fills first. You pick Railshot; a marker sweeps across the bar and you stop it dead in the zone: <b>Perfect</b>, a white flash and double damage. Sync jumps by 12.</p></div>
+      <div class="beat"><span class="t">Turn 2</span><p>The golem's bar fills and it slams Lumen. You answer with Lumen's Pulse heal: three beats glide toward the ring and you tap all three on the chime. Everyone heals 36.</p></div>
+      <div class="beat"><span class="t">Turn 4</span><p>Sync passes 50 and the meter lights up. Brick opens <b>Ricochet slam</b>: you hold Brick's charge and release in the zone, then without a pause Vex's marker starts sweeping. You stop it in the zone. A name banner, a moment of slow motion, and the golem is staggered.</p></div>
+      <div class="beat"><span class="t">Turn 7</span><p>At half health the golem overheats and glows. Its bar fills faster and it hits 35% harder. You switch to Brick's Barrier wall to pull its attacks onto him.</p></div>
+    </div>
+
+    <h3>Dual techs</h3>
+    <p>A dual tech costs 50 Sync, empties the opener's bar and half of the partner's. This semester builds four: <b>Ricochet slam</b> (Brick's hold, then Vex's sweep), <b>Bulwark hymn</b> (Lumen's beats, then Brick's hold, healing and shielding the party), <b>Prism shot</b> (Lumen's beats, then Vex's sweep, hitting every enemy) and <b>Breach</b> (Brick's slam, then three Flurry sweeps).</p>
+  </div>
+
+  <div class="sec" id="t-ai">
+    <div class="sec-h"><span class="n">3</span><h2>AI Architecture</h2></div>
+    <p>Each of the five encounters is an in-game agent with its own rule for when it acts, who it targets and one twist that tests one hero's style. You read every one of them from its turn bar. All run on fixed rules in the game, with no language-model calls during a run.</p>
+    <div class="grid2">
+      <div class="card"><h3>Rust rats ×3</h3><dl>
+        <div><dt>What you see</dt><dd>Three weak, fast rats whose bars fill quickly; each bites a random hero for 8.</dd></div>
+        <div><dt>Effect on play</dt><dd>The tutorial fight. Vex's Flurry sweeps jump to the next rat when one dies, so it clears the pack.</dd></div></dl></div>
+      <div class="card"><h3>Bell warden</h3><dl>
+        <div><dt>What you see</dt><dd>Always hits your lowest-HP hero. Every third action it rings its bell instead, and Lumen's beats speed up to double time for two turns.</dd></div>
+        <div><dt>Effect on play</dt><dd>Rhythm under pressure: you have to keep Lumen healing while the beat doubles.</dd></div></dl></div>
+      <div class="card"><h3>Plated beetle</h3><dl>
+        <div><dt>What you see</dt><dd>Good and Miss hits clang off its armor for 0 damage. Only Perfect hits get through.</dd></div>
+        <div><dt>Effect on play</dt><dd>Brick's perfect Shield slam staggers it and resets its bar, buying Vex a clean shot.</dd></div></dl></div>
+      <div class="card"><h3>Twin drones</h3><dl>
+        <div><dt>What you see</dt><dd>Two drones with separate bars. A drone you haven't hit since its last turn heals its partner for 25 instead of attacking.</dd></div>
+        <div><dt>Effect on play</dt><dd>Hitting one drone at a time never wins. Prism shot, the dual tech that hits every enemy, is the answer.</dd></div></dl></div>
+      <div class="card"><h3>Scrap golem (boss)</h3><dl>
+        <div><dt>What you see</dt><dd>A 700-HP golem that slams a random hero. At half health it overheats: its bar fills faster and it hits 35% harder.</dd></div>
+        <div><dt>Effect on play</dt><dd>The final exam. You need Barrier wall's taunt, Lumen's heals and big dual techs together.</dd></div></dl></div>
+    </div>
+    <div class="note"><p><b>How the agents play off each other.</b> The twin drones are the one fight where two enemies cooperate. Each drone watches whether you hit it since its last turn, so the pair punishes focus fire. That's what teaches you to save Sync for a dual tech instead of spending every turn on single hits.</p></div>
+  </div>
+
+  <div class="sec" id="t-tech">
+    <div class="sec-h"><span class="n">4</span><h2>Technical Strategy</h2></div>
+    <h3>Development agents</h3>
+    <p>Twelve AI agents build Dual Tech. kr0 directs them and approves every design decision and every file they write.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Agent</th><th>Role on Dual Tech</th></tr></thead>
+      <tbody>
+        <tr><td class="agent">creative-director</td><td>Holds every hero, upgrade and dual tech to "one hero, one feel".</td></tr>
+        <tr><td class="agent">technical-director</td><td>Designed the single timing engine every hit runs through, and signs off architecture decisions.</td></tr>
+        <tr><td class="agent">producer</td><td>Runs the four milestones, tracks spend against the 33.6M-token budget, and applies the cut list in order if a milestone overruns.</td></tr>
+        <tr><td class="agent">game-designer</td><td>Owns the GDD: heroes, abilities, dual techs, encounters and upgrades.</td></tr>
+        <tr><td class="agent">systems-designer</td><td>Keeps the timing windows, grade multipliers and Sync costs in one tuning table.</td></tr>
+        <tr><td class="agent">gameplay-programmer</td><td>Builds the battle, the abilities and each dual tech as a list of timing steps.</td></tr>
+        <tr><td class="agent">ai-programmer</td><td>Builds each enemy's targeting rule and twist: the bell, the beetle's armor, the drones' healing.</td></tr>
+        <tr><td class="agent">ui-programmer</td><td>Builds the hero panel, command menu, Sync meter and timing meter for keyboard and touch.</td></tr>
+        <tr><td class="agent">sound-designer</td><td>Makes each hero's sounds and keeps Lumen's beats locked to the 115 BPM battle track.</td></tr>
+        <tr><td class="agent">art-director</td><td>Keeps the pixel sprites and one colour per hero consistent across bars, sprites and pop-ups.</td></tr>
+        <tr><td class="agent">accessibility-specialist</td><td>Adds hero shapes for colour-blind players, the timing assist, the hold alternative and latency calibration.</td></tr>
+        <tr><td class="agent">qa-tester</td><td>Runs simulated-input fights at 10× speed, tests every timing window at its edges, and hand-plays each story.</td></tr>
+      </tbody></table></div>
+    <p><b>How they hand work over.</b> A dual tech is one data record: the game-designer writes its rule, the systems-designer adds its windows to the tuning table, the gameplay-programmer adds the record, and the qa-tester's input bot plays it at Perfect, Good and Miss before it's closed. When a milestone runs over, the producer cuts from the bottom of the cut list rather than squeezing every feature.</p>
+
+    <h3>Semester scope</h3>
+    <p class="muted">Assumes a 15-week semester ending in one complete run.</p>
+    <div class="scope">
+      <div class="col in"><h3>Ships this semester</h3><ul>
+        <li>Core combat: 3 heroes, 6 abilities, Sync and Amp</li>
+        <li>Ricochet slam, Bulwark hymn, Prism shot and Breach</li>
+        <li>5 encounters, upgrade picks and run scoring</li>
+        <li>One battle track at 115 BPM, title and results screens</li>
+        <li>Accessibility: hero shapes, timing assist, calibration</li>
+      </ul></div>
+      <div class="col out"><h3>Cut list, first to go</h3><ul>
+        <li>Holy charge and Overclock volley (two inputs at once)</li>
+        <li>The golem's laser phase</li>
+        <li>Unlocks that carry between runs</li>
+        <li>A mobile app build</li>
+      </ul></div>
+    </div>
+
+    <h3>Constraints</h3>
+    <div class="grid2">
+      <div class="card"><h3>Input timing</h3><p>Lumen's perfect window is 70 ms either side of the beat, and Brick's is 38 ms. A dropped frame or device lag could turn a Perfect into a Good. So hits are graded by the input's timestamp, beats run on the audio clock, and players get a calibration screen.</p></div>
+      <div class="card"><h3>No model calls during play</h3><p>A hosted-model call takes far longer than a 70 ms window and costs tokens every run, so enemies act on fixed turn-bar rules: zero runtime tokens per run.</p></div>
+      <div class="card"><h3>Content as data</h3><p>Heroes, enemies, dual techs and upgrades are data records, so adding one is a short agent task. Only the cut dual techs with simultaneous inputs would need new code.</p></div>
+    </div>
+
+    <h3>API constraints on the agent crew</h3>
+    <ul>
+      <li><b>Context window.</b> Agents load the GDD one section at a time; the tuning table is the most-read section.</li>
+      <li><b>Rate limits.</b> At most three agents work in parallel, and the timing engine has one owner at a time.</li>
+      <li><b>Model tiers.</b> Directors run on the strongest model; specialists run on the session's model.</li>
+    </ul>
+
+    <h3>Token budget</h3>
+    <p>Planning estimate for the semester build. Most tokens are input, because every call re-reads the tuning table and code it touches. Actual spend per story goes into the tuning history and the plan is redone at each milestone gate.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Feature</th><th>Main agents</th><th class="num">Tokens</th></tr></thead>
+      <tbody>
+        <tr><td>Design upkeep and stories</td><td>game-designer, producer</td><td class="num">1.5M</td></tr>
+        <tr><td>Timing engine and three hit styles</td><td>gameplay-programmer, technical-director</td><td class="num">3.0M</td></tr>
+        <tr><td>Battle flow and turn bars</td><td>gameplay-programmer</td><td class="num">2.0M</td></tr>
+        <tr><td>Six abilities, Sync and Amp</td><td>gameplay-programmer, systems-designer</td><td class="num">2.5M</td></tr>
+        <tr><td>Four dual techs</td><td>gameplay-programmer</td><td class="num">3.0M</td></tr>
+        <tr><td>Five encounters and enemy rules</td><td>ai-programmer</td><td class="num">3.0M</td></tr>
+        <tr><td>Upgrades and run scoring</td><td>game-designer, gameplay-programmer</td><td class="num">2.0M</td></tr>
+        <tr><td>Screens, HUD and accessibility</td><td>ui-programmer, accessibility-specialist</td><td class="num">2.5M</td></tr>
+        <tr><td>Music sync and latency calibration</td><td>sound-designer</td><td class="num">2.0M</td></tr>
+        <tr><td>Input bot, balance runs, playtests</td><td>qa-tester</td><td class="num">2.5M</td></tr>
+        <tr class="sub"><td colspan="2">Subtotal</td><td class="num">24.0M</td></tr>
+        <tr><td colspan="2">Rework reserve (40%)</td><td class="num">9.6M</td></tr>
+        <tr class="total"><td colspan="2">Total development budget</td><td class="num">33.6M</td></tr>
+        <tr><td colspan="2">Runtime tokens per run</td><td class="num">0</td></tr>
+      </tbody></table></div>
+  </div>
+</section>
+
+<!-- ============================ WAYS OF WORKING ============================ -->
+<section class="view" id="v-ways" data-view="ways" hidden>
+  <div class="hero">
+    <div class="eyebrow">How the studio runs</div>
+    <h1>Ways of Working</h1>
+    <p class="lede">kr0 Game Studio runs like a small game studio staffed by AI agents. Directors guard the vision, leads own their departments, and specialists do the hands-on work. One human owner makes every call. This page covers the roles, how work moves between them, and the checks that keep it honest.</p>
+  </div>
+  <div class="toc"><a href="#w-crew">The crew</a><a href="#w-chain">Chain of command</a><a href="#w-collab">Asking before acting</a><a href="#w-phases">Production phases</a><a href="#w-stories">The story loop</a><a href="#w-teams">Feature teams</a><a href="#w-rigor">How much process</a><a href="#w-guard">Guardrails</a><a href="#w-tokens">Tokens, not time</a><a href="#w-docs">Documents</a></div>
+
+  <div class="sec" id="w-crew">
+    <div class="sec-h"><h2>The crew</h2></div>
+    <p>The studio has 49 agent roles in three tiers, plus engine specialists for Godot, Unity and Unreal. Each role has its own instructions, the folders it may edit, and who it reports to. A game only staffs the roles it needs: Metr0niks uses fourteen, Dual Tech and Dropfront twelve each.</p>
+    <figure>
+      <div class="tiers">
+        <div class="tier"><div class="lbl"><b>Owner</b><span>Decides and approves</span></div><div class="pills"><span class="pill">kr0</span></div></div>
+        <div class="tier-arrow">↓ delegates · ↑ escalates</div>
+        <div class="tier t1"><div class="lbl"><b>Directors</b><span>Guard the vision</span></div><div class="pills"><span class="pill">creative-director</span><span class="pill">technical-director</span><span class="pill">producer</span></div></div>
+        <div class="tier-arrow">↓ delegates · ↑ escalates</div>
+        <div class="tier t2"><div class="lbl"><b>Leads</b><span>Own a department</span></div><div class="pills"><span class="pill">game-designer</span><span class="pill">lead-programmer</span><span class="pill">art-director</span><span class="pill">audio-director</span><span class="pill">narrative-director</span><span class="pill">qa-lead</span><span class="pill">release-manager</span><span class="pill">localization-lead</span></div></div>
+        <div class="tier-arrow">↓ delegates · ↑ escalates</div>
+        <div class="tier"><div class="lbl"><b>Specialists</b><span>Do the hands-on work</span></div><div class="pills"><span class="pill">gameplay-programmer</span><span class="pill">engine-programmer</span><span class="pill">ai-programmer</span><span class="pill">network-programmer</span><span class="pill">tools-programmer</span><span class="pill">ui-programmer</span><span class="pill">systems-designer</span><span class="pill">level-designer</span><span class="pill">economy-designer</span><span class="pill">technical-artist</span><span class="pill">sound-designer</span><span class="pill">writer</span><span class="pill">world-builder</span><span class="pill">ux-designer</span><span class="pill">prototyper</span><span class="pill">performance-analyst</span><span class="pill">devops-engineer</span><span class="pill">analytics-engineer</span><span class="pill">security-engineer</span><span class="pill">qa-tester</span><span class="pill">accessibility-specialist</span><span class="pill">live-ops-designer</span><span class="pill">community-manager</span></div></div>
+      </div>
+      <figcaption>Studio hierarchy. Engine specialists (for example a Godot lead with GDScript, shader and native-code sub-specialists) sit beside the specialists for whichever engine a game uses.</figcaption>
+    </figure>
+    <div class="tbl"><table>
+      <thead><tr><th>Role</th><th>What it's responsible for</th></tr></thead>
+      <tbody>
+        <tr><td class="agent">creative-director</td><td>The game's vision, pillars and tone. Settles design disputes.</td></tr>
+        <tr><td class="agent">technical-director</td><td>Architecture, tech stack and performance strategy. Settles technical disputes.</td></tr>
+        <tr><td class="agent">producer</td><td>Sprints, milestones, risk, the token budget, and changes that cross departments.</td></tr>
+        <tr><td class="agent">game-designer</td><td>Mechanics, systems, progression and balance; owns the GDD.</td></tr>
+        <tr><td class="agent">lead-programmer</td><td>Code structure, code review and the interfaces between systems.</td></tr>
+        <tr><td class="agent">art-director</td><td>The art bible, style rules and asset standards.</td></tr>
+        <tr><td class="agent">qa-lead</td><td>Test strategy, bug triage and whether a build is ready.</td></tr>
+        <tr><td class="agent">systems-designer · economy-designer · level-designer</td><td>Formulas and loops; currencies and prices; map layouts and pacing.</td></tr>
+        <tr><td class="agent">gameplay-, engine-, ai-, ui-programmer</td><td>Feature code; core engine, rendering and physics; enemy behavior; screens and HUD.</td></tr>
+        <tr><td class="agent">technical-artist · sound-designer</td><td>Shaders, effects and the art pipeline; sound effects and mixing notes.</td></tr>
+        <tr><td class="agent">qa-tester · accessibility-specialist</td><td>Test cases, playtests and bug reports; colour-blind modes, remapping and timing assists.</td></tr>
+        <tr><td class="agent">prototyper</td><td>Throwaway prototypes that test whether a mechanic is fun before it's built for real.</td></tr>
+      </tbody></table></div>
+  </div>
+
+  <div class="sec" id="w-chain">
+    <div class="sec-h"><h2>Chain of command</h2></div>
+    <figure><div class="fig"><svg viewBox="0 0 760 430" role="img" aria-label="Delegation flows down from the owner to directors, leads and specialists; disagreements escalate up to the shared parent; same-tier agents consult sideways.">
+      <defs>
+        <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head" d="M0,0L10,5L0,10z"/></marker>
+        <marker id="ah1k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head k" d="M0,0L10,5L0,10z"/></marker>
+      </defs>
+      <rect class="d-box k" x="300" y="14" width="160" height="44" rx="4"/><text class="d-tb" x="380" y="42" text-anchor="middle">Owner · kr0</text>
+      <rect class="d-box s" x="40" y="118" width="180" height="40" rx="4"/><text class="d-t" x="130" y="143" text-anchor="middle">creative-director</text>
+      <rect class="d-box s" x="290" y="118" width="180" height="40" rx="4"/><text class="d-t" x="380" y="143" text-anchor="middle">producer</text>
+      <rect class="d-box s" x="540" y="118" width="180" height="40" rx="4"/><text class="d-t" x="630" y="143" text-anchor="middle">technical-director</text>
+      <rect class="d-box" x="20" y="232" width="160" height="40" rx="4"/><text class="d-t" x="100" y="257" text-anchor="middle">game-designer</text>
+      <rect class="d-box" x="210" y="232" width="160" height="40" rx="4"/><text class="d-t" x="290" y="257" text-anchor="middle">art-director</text>
+      <rect class="d-box" x="400" y="232" width="160" height="40" rx="4"/><text class="d-t" x="480" y="257" text-anchor="middle">lead-programmer</text>
+      <rect class="d-box" x="590" y="232" width="150" height="40" rx="4"/><text class="d-t" x="665" y="257" text-anchor="middle">qa-lead</text>
+      <rect class="d-box" x="20" y="346" width="160" height="40" rx="4"/><text class="d-t" x="100" y="371" text-anchor="middle">systems-designer</text>
+      <rect class="d-box" x="210" y="346" width="160" height="40" rx="4"/><text class="d-t" x="290" y="371" text-anchor="middle">technical-artist</text>
+      <rect class="d-box" x="400" y="346" width="160" height="40" rx="4"/><text class="d-t" x="480" y="371" text-anchor="middle">gameplay-prog.</text>
+      <rect class="d-box" x="590" y="346" width="150" height="40" rx="4"/><text class="d-t" x="665" y="371" text-anchor="middle">qa-tester</text>
+      <!-- owner to directors -->
+      <path class="d-a" d="M340,58 L150,116" marker-end="url(#ah1)"/>
+      <path class="d-a" d="M380,58 L380,116" marker-end="url(#ah1)"/>
+      <path class="d-a" d="M420,58 L610,116" marker-end="url(#ah1)"/>
+      <!-- directors to leads -->
+      <path class="d-a" d="M110,158 L100,230" marker-end="url(#ah1)"/>
+      <path class="d-a" d="M160,158 L270,230" marker-end="url(#ah1)"/>
+      <path class="d-a" d="M600,158 L500,230" marker-end="url(#ah1)"/>
+      <path class="d-a" d="M650,158 L665,230" marker-end="url(#ah1)"/>
+      <!-- leads to specialists -->
+      <path class="d-a" d="M100,272 L100,344" marker-end="url(#ah1)"/>
+      <path class="d-a" d="M290,272 L290,344" marker-end="url(#ah1)"/>
+      <path class="d-a" d="M480,272 L480,344" marker-end="url(#ah1)"/>
+      <path class="d-a" d="M665,272 L665,344" marker-end="url(#ah1)"/>
+      <!-- consult sideways -->
+      <path class="d-a dot" d="M182,252 L208,252" marker-end="url(#ah1)" marker-start="url(#ah1)"/>
+      <path class="d-a dot" d="M562,252 L588,252" marker-end="url(#ah1)" marker-start="url(#ah1)"/>
+      <!-- escalate -->
+      <path class="d-a k dash" d="M182,366 C205,320 205,190 222,152" marker-end="url(#ah1k)"/>
+      <text class="d-l k" x="196" y="300" text-anchor="middle" transform="rotate(-76 196 300)">escalate</text>
+      <!-- producer propagates -->
+      <path class="d-a k dash" d="M380,158 C380,200 330,215 300,230" marker-end="url(#ah1k)"/>
+      <path class="d-a k dash" d="M380,158 C380,200 440,215 470,230" marker-end="url(#ah1k)"/>
+      <text class="d-l k" x="380" y="208" text-anchor="middle">propagate change</text>
+      <!-- legend -->
+      <path class="d-a" d="M40,412 L80,412" marker-end="url(#ah1)"/><text class="d-s" x="88" y="416">delegates down</text>
+      <path class="d-a k dash" d="M210,412 L250,412" marker-end="url(#ah1k)"/><text class="d-s" x="258" y="416">escalates or coordinates</text>
+      <path class="d-a dot" d="M430,412 L470,412" marker-end="url(#ah1)"/><text class="d-s" x="478" y="416">consults, no binding decision</text>
+    </svg></div><figcaption>A sample of the hierarchy. Work flows down; disagreements go up to the nearest shared boss.</figcaption></figure>
+    <div class="grid2">
+      <div class="card"><h3>Delegate down</h3><p>Directors hand work to leads, and leads to specialists. Complex decisions never skip a tier.</p></div>
+      <div class="card"><h3>Consult sideways</h3><p>Agents on the same tier can ask each other, but can't make binding decisions outside their own area.</p></div>
+      <div class="card"><h3>Escalate up</h3><p>When two agents disagree, the shared boss decides: the creative-director for design, the technical-director for technical questions.</p></div>
+      <div class="card"><h3>Producer carries changes</h3><p>A design change that touches several departments is coordinated by the producer, so every affected document and story is updated.</p></div>
+      <div class="card"><h3>Stay in your folders</h3><p>An agent never edits files outside its own area unless it was asked to.</p></div>
+      <div class="card"><h3>Never post upstream</h3><p>Agents don't file issues or pull requests on engine or plugin projects. They write a draft and the owner decides whether to send it.</p></div>
+    </div>
+  </div>
+
+  <div class="sec" id="w-collab">
+    <div class="sec-h"><h2>Asking before acting</h2></div>
+    <p>Agents are collaborators, not an autopilot. Every task follows the same five steps, and nothing is written to the project without the owner's yes.</p>
+    <figure><div class="fig" data-flow="collab"></div><figcaption>If the owner rejects a draft, the agent goes back to options. A skipped or dismissed question is never treated as a yes.</figcaption></figure>
+    <ul>
+      <li>Before writing, an agent asks "May I write this to <i>file</i>?" and shows the draft or a summary.</li>
+      <li>A change spanning several files is approved as one set.</li>
+      <li>No commits unless the owner asks for one.</li>
+      <li>How often agents stop to ask is a setting: every step, only at phase boundaries, or run to the end and log each decision.</li>
+    </ul>
+  </div>
+
+  <div class="sec" id="w-phases">
+    <div class="sec-h"><h2>Production phases</h2></div>
+    <p>A game moves through seven phases. Between each, a gate check asks the directors whether the game is ready to move on. The gates advise; the owner decides whether to proceed.</p>
+    <figure><div class="fig" data-flow="phases"></div><figcaption>Each diamond is a gate check run by the creative-director, technical-director and producer. A gate can send work back.</figcaption></figure>
+    <div class="tbl"><table>
+      <thead><tr><th>Phase</th><th>What gets made</th></tr></thead>
+      <tbody>
+        <tr><td><b>Concept</b></td><td>The idea grows into a pitch, pillars, a game concept and an art direction.</td></tr>
+        <tr><td><b>Systems design</b></td><td>A map of the game's systems, then a GDD section for each one.</td></tr>
+        <tr><td><b>Technical setup</b></td><td>Engine choice, architecture decisions, the visual identity and accessibility foundations.</td></tr>
+        <tr><td><b>Pre-production</b></td><td>UX and asset specs, a prototype of the core mechanic, the stories, and proof the game is fun.</td></tr>
+        <tr><td><b>Production</b></td><td>Sprints: pick a story, build it, close it.</td></tr>
+        <tr><td><b>Polish</b></td><td>Performance, balance, playtests and bug fixing.</td></tr>
+        <tr><td><b>Release</b></td><td>Launch checklist, certification and shipping.</td></tr>
+      </tbody></table></div>
+    <h3>Review gates inside the phases</h3>
+    <p>Directors and leads also review specific pieces of work along the way. A few that matter most for our games:</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Gate</th><th>Reviewer</th><th>Checks</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">Pillar stress test</td><td class="agent">creative-director</td><td>Are the pillars distinct enough to settle real design arguments?</td></tr>
+        <tr><td class="mono">GDD pillar alignment</td><td class="agent">creative-director</td><td>Does each new system serve a pillar?</td></tr>
+        <tr><td class="mono">Technical feasibility</td><td class="agent">technical-director</td><td>Can the risky parts of the concept actually be built?</td></tr>
+        <tr><td class="mono">Scope check</td><td class="agent">producer</td><td>Does the plan fit the budget?</td></tr>
+        <tr><td class="mono">Code review</td><td class="agent">lead-programmer</td><td>Is each finished story's code sound?</td></tr>
+        <tr><td class="mono">Story ready / test coverage</td><td class="agent">qa-lead</td><td>Can the acceptance criteria be tested, and were they?</td></tr>
+      </tbody></table></div>
+  </div>
+
+  <div class="sec" id="w-stories">
+    <div class="sec-h"><h2>The story loop</h2></div>
+    <p>In production, all work is a story: one small, testable piece of a feature with acceptance criteria. Each story runs the same loop.</p>
+    <figure><div class="fig" data-flow="story"></div><figcaption>A failed check sends the story back to the build step. A story that changes what the player sees closes only with a screenshot from a real run.</figcaption></figure>
+    <ul>
+      <li><b>Write stories</b> from the GDD and architecture decisions, grouped into epics.</li>
+      <li><b>Readiness check:</b> the qa-lead confirms the acceptance criteria can be tested.</li>
+      <li><b>Build:</b> the specialist writes the code and the tests.</li>
+      <li><b>Review:</b> the lead-programmer reviews the code.</li>
+      <li><b>Run and look:</b> someone launches the game and watches the change. A passing test says nothing about a menu drawn off-screen.</li>
+      <li><b>Close:</b> the evidence is filed and the producer records the tokens the story used.</li>
+    </ul>
+  </div>
+
+  <div class="sec" id="w-teams">
+    <div class="sec-h"><h2>Feature teams</h2></div>
+    <p>Some features need several departments at once. The studio runs them as a small team with a fixed hand-off order. Combat is the one we use most.</p>
+    <figure><div class="fig" data-flow="combat"></div><figcaption>The combat team. The owner approves at each hand-off. At the smallest team size, the gameplay-programmer runs the whole pipeline and consults the others.</figcaption></figure>
+    <p>There are similar teams for narrative, UI, audio, levels, QA, polish, live operations and release. Independent agents run in parallel; an agent that needs another's output waits for it.</p>
+  </div>
+
+  <div class="sec" id="w-rigor">
+    <div class="sec-h"><h2>How much process</h2></div>
+    <p>One setting, rigor, decides how much paperwork and review a game gets. Lighter is the default, because more documents don't make a better game. When the studio built the same brief at two settings, the heavy version wrote 30 documents before its first line of code and came last in blind reviews and a playtest.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Rigor</th><th>Design docs</th><th>Director review</th><th>Best for</th></tr></thead>
+      <tbody>
+        <tr><td><b>Minimal</b></td><td>A one-page brief, then stories</td><td>None: solo review</td><td>Jams and prototypes</td></tr>
+        <tr><td><b>Standard</b></td><td>5 required GDD sections per system</td><td>Phase gates only</td><td>A semester build</td></tr>
+        <tr><td><b>Full</b></td><td>All 8 GDD sections, thorough docs</td><td>Every gate, every step</td><td>A commercial release</td></tr>
+      </tbody></table></div>
+    <p>A single system can be held to a higher standard than the rest. Dual Tech's timing engine, for example, gets full review while the menus stay light.</p>
+  </div>
+
+  <div class="sec" id="w-guard">
+    <div class="sec-h"><h2>Guardrails</h2></div>
+    <p>Automatic checks run while agents work. They warn or block before a mistake lands, so the owner doesn't have to catch it.</p>
+    <div class="grid2">
+      <div class="card"><h3>On every commit</h3><p>Checks for hard-coded numbers, badly formatted to-dos, broken data files and design docs missing required sections.</p></div>
+      <div class="card"><h3>On every push</h3><p>Warns on pushes to protected branches and on release or store uploads.</p></div>
+      <div class="card"><h3>On reading big docs</h3><p>A design doc over 40 KB can't be read whole; the agent gets its headings and reads one section. This keeps tokens down.</p></div>
+      <div class="card"><h3>On writing</h3><p>Warns when a write breaks a rule, such as editing a prototype from production code or renumbering a registry entry.</p></div>
+      <div class="card"><h3>Agent audit trail</h3><p>Logs when each agent starts and stops, and warns when one stops without writing the file it was asked for.</p></div>
+      <div class="card"><h3>Blocked commands</h3><p>Force pushes, recursive deletes and reading secret files are refused outright.</p></div>
+    </div>
+    <h3>Coding rules by folder</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Folder</th><th>Rule</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">gameplay/</td><td>Values come from data files; movement uses frame time; no UI references.</td></tr>
+        <tr><td class="mono">core/</td><td>No memory allocation in hot paths; thread-safe; stable interfaces.</td></tr>
+        <tr><td class="mono">ai/</td><td>Performance budgets, debuggable, parameters in data.</td></tr>
+        <tr><td class="mono">ui/</td><td>Doesn't own game state; ready for translation; accessible.</td></tr>
+        <tr><td class="mono">design/gdd/</td><td>Required sections, formulas in a set format, edge cases listed.</td></tr>
+        <tr><td class="mono">prototypes/</td><td>Relaxed standards, but a README and a stated hypothesis are required.</td></tr>
+      </tbody></table></div>
+    <h3>Memory between sessions</h3>
+    <p>Each session keeps a checkpoint file of what it's doing. After a crash, a reset or a long conversation is summarized, the agent reads the checkpoint first. Helper scripts report what they observe and never hand down verdicts, so a script can't overrule a setting it can't see.</p>
+  </div>
+
+  <div class="sec" id="w-tokens">
+    <div class="sec-h"><h2>Tokens, not time</h2></div>
+    <p>Our agents don't bill hours, so we plan in tokens: the unit of work an AI model reads and writes. Every feature gets a token estimate before the sprint starts.</p>
+    <ul>
+      <li><b>Estimate by feature.</b> Each feature's estimate covers building, review and one round of fixes. One feature typically costs hundreds of thousands to a few million tokens.</li>
+      <li><b>Count input.</b> Every agent call re-reads the documents and code it touches, so reading costs far more than writing. Reading docs by section is our biggest saving.</li>
+      <li><b>Hold a reserve.</b> Each budget adds 40% for rework.</li>
+      <li><b>Track and re-plan.</b> The producer logs actual tokens per story in the game's tuning history and compares spend to estimate at every sprint close. Overruns move stories below the cut line rather than stretching the budget.</li>
+      <li><b>Match the model to the job.</b> Directors run on the strongest model; most specialists run on the session's model.</li>
+      <li><b>Runtime is separate.</b> In-game agents that call a model while someone plays need their own per-session budget. All three current games run their in-game agents on fixed rules, so their runtime cost is zero.</li>
+    </ul>
+    <div class="tbl"><table>
+      <thead><tr><th>Game</th><th class="num">Build estimate</th><th class="num">Rework reserve</th><th class="num">Total</th><th class="num">Runtime</th></tr></thead>
+      <tbody>
+        <tr><td>Metr0niks</td><td class="num">39.0M</td><td class="num">15.6M</td><td class="num">54.6M</td><td class="num">0</td></tr>
+        <tr><td>Dropfront</td><td class="num">30.0M</td><td class="num">12.0M</td><td class="num">42.0M</td><td class="num">0</td></tr>
+        <tr><td>Dual Tech</td><td class="num">24.0M</td><td class="num">9.6M</td><td class="num">33.6M</td><td class="num">0</td></tr>
+      </tbody></table></div>
+  </div>
+
+  <div class="sec" id="w-docs">
+    <div class="sec-h"><h2>Documents for every game</h2></div>
+    <div class="tbl"><table>
+      <thead><tr><th>Document</th><th>Owner</th><th>Holds</th></tr></thead>
+      <tbody>
+        <tr><td><b>Pitch</b></td><td class="agent">creative-director</td><td>The hook, the pillars and who it's for. Short, and it sells.</td></tr>
+        <tr><td><b>GDD</b></td><td class="agent">game-designer</td><td>What the game is and how it behaves: loop, systems, content, UX.</td></tr>
+        <tr><td><b>TDD</b></td><td class="agent">technical-director</td><td>How it's built: engine, architecture, data, risks.</td></tr>
+        <tr><td><b>Open questions</b></td><td class="agent">producer</td><td>Decisions still owed, ticked off as the owner answers them.</td></tr>
+        <tr><td><b>Tuning history</b></td><td class="agent">systems-designer</td><td>Every changed number, why it changed, and tokens spent per story.</td></tr>
+        <tr><td><b>GDD decision history</b></td><td class="agent">game-designer</td><td>Date, change, reason and who decided, so settled debates stay settled.</td></tr>
+        <tr><td><b>TDD decision history</b></td><td class="agent">technical-director</td><td>Architecture decisions with the options considered and the trade-offs.</td></tr>
+      </tbody></table></div>
+  </div>
+</section>
+
+</div>
+</main>
+<footer class="gut"><div class="wrap">kr0 Game Studio · design briefs updated October 2026</div></footer>
+
+<script>
+(function(){
+  /* ---------- flow diagrams ---------- */
+  var FLOWS = {
+    metr0niks:{steps:[["Garage","buy and fit parts"],["Drop in","Overpass Sector 4"],["Fight 5 waves","bosses on 3 and 5"],["Grab scrap","cubes and pods"],["Extract","bank the scrap"]],loop:"next excursion",fail:{from:2,label:"mech destroyed: lose match scrap"}},
+    dropfront:{steps:[["Draw 5","refill to 3 energy"],["Spend","squads, tactics, gear"],["Map runs","bots fight at points"],["Drop in","20 s firefight"],["Take the point","score 2 per second"]],loop:"every 15 s of map time",fail:{from:3,label:"you go down: 40 s regroup"}},
+    dualtech:{steps:[["Wait","turn bars fill"],["Decide","pick a move"],["Perform","timing hit"],["Build Sync","unlock dual techs"],["Next fight","pick an upgrade"]],loop:"until the golem falls",fail:{from:2,label:"all heroes down: run over"}},
+    collab:{steps:[["Ask","questions first"],["Options","2 to 4, pros and cons"],["Decide","the owner picks"],["Draft","shown, not written"],["Approve","then it's written"]],loop:null,back:{from:4,to:1,label:"rejected: new options"}},
+    phases:{steps:[["Concept",""],["Systems",""],["Tech setup",""],["Pre-prod",""],["Production",""],["Polish",""],["Release",""]],gates:true},
+    story:{steps:[["Write story","from GDD and ADRs"],["Ready?","criteria testable"],["Build","code and tests"],["Review","lead-programmer"],["Run and look","screenshot kept"],["Close","log tokens"]],back:{from:4,to:2,label:"check fails: back to build"}},
+    combat:{steps:[["Design","game-designer"],["Build","gameplay- and ai-programmer"],["Feedback","technical-artist, sound"],["Validate","qa-tester"]],back:{from:3,to:1,label:"fails: fix and re-test"}}
+  };
+  function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+  function wrapText(s,max){var w=s.split(" "),l=[],c="";w.forEach(function(x){if((c+" "+x).trim().length>max&&c){l.push(c);c=x}else c=(c+" "+x).trim()});if(c)l.push(c);return l}
+  function flow(id,f){
+    var n=f.steps.length, gate=!!f.gates;
+    var bw=gate?96:132, gap=gate?34:40, bh=f.steps[0][1]?66:44, padX=20, top=56;
+    var W=padX*2+n*bw+(n-1)*gap, H=top+bh+70;
+    var m="m"+id, o=[];
+    o.push('<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(f.steps.map(function(s){return s[0]}).join(", then "))+'">');
+    o.push('<defs><marker id="'+m+'" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head" d="M0,0L10,5L0,10z"/></marker><marker id="'+m+'k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head k" d="M0,0L10,5L0,10z"/></marker><marker id="'+m+'b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head bad" d="M0,0L10,5L0,10z"/></marker></defs>');
+    function x(i){return padX+i*(bw+gap)}
+    f.steps.forEach(function(s,i){
+      var cls="d-box"+(i===0?" k":"");
+      o.push('<rect class="'+cls+'" x="'+x(i)+'" y="'+top+'" width="'+bw+'" height="'+bh+'" rx="4"/>');
+      var cx=x(i)+bw/2;
+      if(s[1]){
+        o.push('<text class="d-tb" x="'+cx+'" y="'+(top+26)+'" text-anchor="middle">'+esc(s[0])+'</text>');
+        wrapText(s[1],18).slice(0,2).forEach(function(l,j){o.push('<text class="d-s" x="'+cx+'" y="'+(top+44+j*14)+'" text-anchor="middle">'+esc(l)+'</text>')});
+      } else {
+        o.push('<text class="d-tb" x="'+cx+'" y="'+(top+bh/2+6)+'" text-anchor="middle" style="font-size:14px">'+esc(s[0])+'</text>');
+      }
+      if(i<n-1){
+        var ax=x(i)+bw, ay=top+bh/2;
+        if(gate){
+          var gx=ax+gap/2;
+          o.push('<path class="d-a" d="M'+ax+','+ay+' L'+(gx-9)+','+ay+'"/>');
+          o.push('<path class="d-box k" d="M'+gx+','+(ay-9)+' L'+(gx+9)+','+ay+' L'+gx+','+(ay+9)+' L'+(gx-9)+','+ay+'z"/>');
+          o.push('<path class="d-a" d="M'+(gx+9)+','+ay+' L'+(x(i+1)-2)+','+ay+'" marker-end="url(#'+m+')"/>');
+        } else o.push('<path class="d-a" d="M'+(ax+2)+','+ay+' L'+(x(i+1)-2)+','+ay+'" marker-end="url(#'+m+')"/>');
+      }
+    });
+    var by=top+bh;
+    if(f.loop){
+      var x1=x(n-1)+bw/2, x0=x(0)+bw/2, ly=by+34;
+      o.push('<path class="d-a k" d="M'+x1+','+by+' L'+x1+','+ly+' L'+x0+','+ly+' L'+x0+','+(by+2)+'" marker-end="url(#'+m+'k)"/>');
+      o.push('<text class="d-l k" x="'+((x0+x1)/2)+'" y="'+(ly+16)+'" text-anchor="middle">'+esc(f.loop)+'</text>');
+    }
+    if(f.back){
+      var xb=x(f.back.from)+bw/2, xt=x(f.back.to)+bw/2, yy=by+34;
+      o.push('<path class="d-a k dash" d="M'+xb+','+by+' L'+xb+','+yy+' L'+xt+','+yy+' L'+xt+','+(by+2)+'" marker-end="url(#'+m+'k)"/>');
+      o.push('<text class="d-l k" x="'+((xb+xt)/2)+'" y="'+(yy+16)+'" text-anchor="middle">'+esc(f.back.label)+'</text>');
+    }
+    if(f.fail){
+      var xf=x(f.fail.from)+bw/2, x0b=x(0)+bw/2, fy=top-26;
+      o.push('<path class="d-a bad" d="M'+xf+','+top+' L'+xf+','+fy+' L'+x0b+','+fy+' L'+x0b+','+(top-2)+'" marker-end="url(#'+m+'b)"/>');
+      o.push('<text class="d-l bad" x="'+((xf+x0b)/2)+'" y="'+(fy-7)+'" text-anchor="middle">'+esc(f.fail.label)+'</text>');
+    }
+    if(gate){
+      o.push('<path class="d-box k" d="M'+(padX+6)+','+(by+40)+' l9,-9 l9,9 l-9,9z"/><text class="d-s" x="'+(padX+30)+'" y="'+(by+44)+'">gate check: directors advise, the owner decides</text>');
+    }
+    o.push('</svg>');
+    return o.join("");
+  }
+  document.querySelectorAll("[data-flow]").forEach(function(el){var k=el.getAttribute("data-flow");if(FLOWS[k])el.innerHTML=flow(k,FLOWS[k])});
+
+  /* ---------- views ---------- */
+  var views=["home","metr0niks","dropfront","dual-tech","ways"];
+  var anchorView={};
+  document.querySelectorAll("section.view [id]").forEach(function(el){var v=el.closest("section.view");if(v)anchorView[el.id]=v.getAttribute("data-view")});
+  function show(v,scrollId){
+    if(views.indexOf(v)<0)v="home";
+    document.querySelectorAll("section.view").forEach(function(s){s.hidden=s.getAttribute("data-view")!==v});
+    document.querySelectorAll("nav a").forEach(function(a){if(a.getAttribute("data-view")===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+    if(scrollId){var t=document.getElementById(scrollId);if(t)t.scrollIntoView()}else window.scrollTo(0,0);
+  }
+  function route(h){
+    h=(h||"").replace(/^#/,"");
+    if(views.indexOf(h)>=0)return show(h);
+    if(anchorView[h])return show(anchorView[h],h);
+    show("home");
+  }
+  document.addEventListener("click",function(e){
+    var a=e.target.closest('a[href^="#"]');if(!a)return;
+    var h=a.getAttribute("href").slice(1);
+    if(views.indexOf(h)>=0||anchorView[h]){e.preventDefault();try{history.replaceState(null,"","#"+h)}catch(_){}route(h)}
+  });
+  window.addEventListener("hashchange",function(){route(location.hash)});
+  route(location.hash);
+})();
+</script>
+</body>
+</html>

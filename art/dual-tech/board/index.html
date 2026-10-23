@@ -1,0 +1,142 @@
+<title>Dual Tech Art Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a style-by-subject matrix. Three style columns run down the page, one row per subject, like a pinned production wall. */
+:root{
+  --bg:#0d1233; --panel:#141a45; --line:#262f72; --fg:#e6e4ff; --muted:#9aa3cf;
+  --cyan:#5aa2ff; --rust:#ffcf4a; --sand:#4fe0a0; --ruby:#ff6b6b;
+  --display:"Pixelify Sans","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--body)}
+.wrap{max-width:1500px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:grid;gap:10px;margin-bottom:28px}
+.eyebrow{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+h1{font:700 clamp(36px,6vw,64px)/1 var(--display);margin:0;letter-spacing:.01em;text-wrap:balance}
+h1 b{color:var(--rust)}
+.lede{max-width:68ch;color:var(--muted);margin:0}
+.grid{display:grid;grid-template-columns:150px repeat(3,minmax(0,1fr));gap:14px}
+.key{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px;border-bottom:1px solid var(--line);margin-bottom:8px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.style{display:grid;gap:6px;align-content:start;min-width:0}
+.style h2{font:700 20px/1.1 var(--display);margin:0}
+.style p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+.sw{display:flex;gap:4px}
+.sw i{width:18px;height:18px;border-radius:3px;outline:1px solid rgba(255,255,255,.08)}
+.row{padding-block:22px;border-bottom:1px solid var(--line)}
+.rowhead{display:grid;gap:6px;align-content:start}
+.rowhead h3{font:700 22px/1.1 var(--display);margin:0}
+.rowhead p{margin:0;color:var(--muted);font-size:13px}
+figure{margin:0;display:grid;gap:8px;align-content:start;min-width:0}
+figure button{all:unset;cursor:zoom-in;display:block;border-radius:6px;overflow:hidden;background:var(--panel);outline:1px solid var(--line);aspect-ratio:16/9}
+figure button:focus-visible{outline:2px solid var(--cyan)}
+figure img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+figure button:hover img{transform:scale(1.03)}
+figcaption{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;font-size:13px;color:var(--muted)}
+.tag{font:600 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:4px 6px;border-radius:3px;border:1px solid currentColor}
+.t-ai{color:var(--cyan)} .t-cap{color:var(--rust)} .t-orig{color:var(--sand)} .t-q{color:var(--muted)}
+.queued{background:repeating-linear-gradient(135deg,transparent 0 12px,rgba(255,255,255,.025) 12px 24px);aspect-ratio:16/9;border-radius:6px;border:1px dashed var(--line);display:grid;place-items:center;text-align:center;padding:16px;color:var(--muted);font:12px/1.5 var(--mono)}
+.extra{display:flex;gap:8px}
+.extra button{all:unset;cursor:zoom-in;width:72px;aspect-ratio:16/9;border-radius:4px;overflow:hidden;outline:1px solid var(--line)}
+.extra img{width:100%;height:100%;object-fit:cover}
+.mobile-label{display:none}
+footer{margin-top:28px;color:var(--muted);font-size:13px;max-width:80ch}
+footer code{font-family:var(--mono);font-size:12px;color:var(--fg)}
+dialog{border:0;padding:0;background:transparent;max-width:96vw;max-height:94vh}
+dialog::backdrop{background:rgba(4,7,10,.92)}
+dialog img{max-width:96vw;max-height:86vh;display:block;border-radius:6px}
+dialog p{color:var(--fg);font:13px var(--mono);margin:8px 0 0;text-align:center}
+@media (max-width:900px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .key{position:static}
+  .key .rowhead{display:none}
+  .mobile-label{display:block;font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--cyan)}
+}
+@media (prefers-reduced-motion:reduce){figure img{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Concept art · Dual Tech · Oct 2026</span>
+    <h1>Dual <b>Tech</b> art board</h1>
+    <p class="lede">The same JRPG drawn three ways: the prototype's flat blockout shapes, the chunky 16-bit pixel art of the original pitch, and a new cathedral stained-glass look that drops pixels entirely. Each row is one subject from the GDD: the three heroes, the four regular enemies, the scrap golem, the five-stop run, upgrades, the battle screen and a dual tech. Click any image to see it full size.</p>
+  </header>
+
+  <div class="grid key">
+    <div class="rowhead"></div>
+    <div class="style"><span class="eyebrow">Style A</span><h2>Prototype blockout</h2><p>Plain flat rectangles, no outlines or texture, navy night and Chrono Trigger blue windows. What the playable fight looks like today.</p><div class="sw"><i style="background:#10153a"></i><i style="background:#2135a0"></i><i style="background:#5aa2ff"></i><i style="background:#ff6b6b"></i><i style="background:#4fe0a0"></i><i style="background:#a274f0"></i></div></div>
+    <div class="style"><span class="eyebrow">Style B</span><h2>Pitch pixel art</h2><p>Chunky 16-bit sprites with navy outlines, starry sky, crescent moon and mountain silhouettes, gold pixel lettering. The original pitch look.</p><div class="sw"><i style="background:#141a45"></i><i style="background:#2f6fd0"></i><i style="background:#ffcf4a"></i><i style="background:#fff4cf"></i><i style="background:#c23d4a"></i><i style="background:#22a374"></i></div></div>
+    <div class="style"><span class="eyebrow">Style C</span><h2>Stained glass</h2><p>Art Nouveau cathedral glass: jewel-toned panes in thick lead lines, gold-leaf filigree, light shining through. No pixels at all.</p><div class="sw"><i style="background:#2a1846"></i><i style="background:#1d4fa8"></i><i style="background:#b3203a"></i><i style="background:#1f8a5a"></i><i style="background:#d9a43a"></i></div></div>
+  </div>
+
+  <div id="rows"></div>
+
+  <footer>
+    <p>Styles A and B were drawn in code (Python pixel and shape kits in <code>art/dual-tech/source/</code>) because the image credits were used up on Oct 22. Style C was generated with Scenario (Gemini 3.1 Flash Image). Build captures are screenshots of the current prototype; original pitch art comes from the pitch. Originals live in <code>art/dual-tech/</code> by style, and every prompt is in <code>art/dual-tech/prompts/</code>.</p>
+  </footer>
+</div>
+
+<dialog id="lb"><img id="lbimg" alt=""><p id="lbcap"></p></dialog>
+
+<script>
+const STYLES=["Prototype blockout","Pitch pixel art","Stained glass"];
+const TAG={code:["Concept · code-drawn","t-ai"],ai:["Concept","t-ai"],cap:["Build capture","t-cap"],orig:["Original pitch art","t-orig"]};
+const Q={queued:true};
+const ROWS=[
+ {name:"Heroes",note:"Brick (tank, hold), Vex (damage, sweep), Lumen (support, rhythm).",cells:[
+   {src:"img/prototype-heroes.jpg",kind:"code",cap:"Lineup with each hero's timing widget"},
+   {src:"img/pitch-heroes.jpg",kind:"code",cap:"Hero cards with shape motifs",extra:[{src:"img/orig-heroes.jpg",cap:"Original pitch art: hero cards"}]},
+   {src:"img/glass-heroes.jpg",kind:"ai",cap:"Hero panels with their shape motifs"}]},
+ {name:"Enemies",note:"Rust rats, Bell warden, Plated beetle and Twin drones.",cells:[
+   {src:"img/prototype-enemies.jpg",kind:"code",cap:"The four regular encounters"},
+   {src:"img/pitch-enemies.jpg",kind:"code",cap:"The four regular encounters",extra:[{src:"img/orig-prism.jpg",cap:"Original pitch art: Prism shot on the twin drones"}]},
+   {src:"img/glass-enemies.jpg",kind:"ai",cap:"The four regular encounters"}]},
+ {name:"Boss",note:"The scrap golem, calm and overheated below 50% HP.",cells:[
+   {src:"img/prototype-boss.jpg",kind:"code",cap:"Scrap golem and its overheat phase"},
+   {src:"img/pitch-boss.jpg",kind:"code",cap:"Scrap golem and its overheat phase"},
+   {src:"img/glass-boss.jpg",kind:"ai",cap:"Scrap golem and its overheat phase"}]},
+ {name:"World",note:"One run: five fights from the scrapyard to the forge.",cells:[
+   {src:"img/prototype-world.jpg",kind:"code",cap:"The five-stop route"},
+   {src:"img/pitch-world.jpg",kind:"code",cap:"The five-stop route by moonlight",extra:[{src:"img/orig-banner.jpg",cap:"Original pitch art: title banner"}]},
+   {src:"img/glass-world.jpg",kind:"ai",cap:"The night journey to the forge"}]},
+ {name:"Upgrades and items",note:"Pick 1 of 3 after each fight; grade badges.",cells:[
+   {src:"img/prototype-items.jpg",kind:"code",cap:"Upgrade pick, grades, items"},
+   {src:"img/pitch-items.jpg",kind:"code",cap:"Upgrade pick, grades, items"},
+   {src:"img/glass-items.jpg",kind:"ai",cap:"Upgrade pick, grades, items"}]},
+ {name:"Battle view",note:"Turn bars, command menu and Vex's reflex sweep.",cells:[
+   {src:"img/prototype-battle.jpg",kind:"code",cap:"Vex's turn, sweep ready",extra:[{src:"img/cap-battle.jpg",cap:"Build capture: the prototype fight"},{src:"img/cap-full.jpg",cap:"Build capture: full prototype screen"}]},
+   {src:"img/pitch-battle.jpg",kind:"code",cap:"Vex's turn, sweep ready"},
+   {src:"img/glass-battle.jpg",kind:"ai",cap:"Vex's turn, sweep ready"}]},
+ {name:"Dual tech",note:"Ricochet slam: Brick's shield, Vex's rail, both perfect.",cells:[
+   {src:"img/prototype-dualtech.jpg",kind:"code",cap:"Ricochet slam, perfect + perfect"},
+   {src:"img/pitch-dualtech.jpg",kind:"code",cap:"Ricochet slam, perfect + perfect",extra:[{src:"img/orig-ricochet.jpg",cap:"Original pitch art: Ricochet slam"}]},
+   {src:"img/glass-dualtech.jpg",kind:"ai",cap:"Ricochet slam, perfect + perfect"}]},
+];
+const lb=document.getElementById("lb"),lbimg=document.getElementById("lbimg"),lbcap=document.getElementById("lbcap");
+function showFull(src,cap){lbimg.src=src;lbimg.alt=cap;lbcap.textContent=cap;lb.showModal()}
+lb.addEventListener("click",()=>lb.close());
+function thumb(src,cap,cls){const b=document.createElement("button");b.type="button";b.setAttribute("aria-label","Open "+cap);if(cls)b.className=cls;const i=new Image();i.src=src;i.alt=cap;i.loading="lazy";b.append(i);b.onclick=()=>showFull(src,cap);return b}
+const root=document.getElementById("rows");
+for(const r of ROWS){
+  const row=document.createElement("section");row.className="grid row";
+  row.innerHTML=`<div class="rowhead"><h3>${r.name}</h3><p>${r.note}</p></div>`;
+  r.cells.forEach((c,i)=>{
+    const f=document.createElement("figure");
+    const ml=document.createElement("span");ml.className="mobile-label";ml.textContent=STYLES[i];f.append(ml);
+    if(c.queued){const q=document.createElement("div");q.className="queued";q.textContent="Queued: generates when Figma AI credits reset (Oct 23)";f.append(q)}
+    else{
+      const full=STYLES[i]+" · "+r.name+" · "+c.cap;
+      f.append(thumb(c.src,full));
+      const fc=document.createElement("figcaption");const [t,cl]=TAG[c.kind];
+      fc.innerHTML=`<span class="tag ${cl}">${t}</span><span>${c.cap}</span>`;f.append(fc);
+      if(c.extra){const e=document.createElement("div");e.className="extra";for(const x of c.extra)e.append(thumb(x.src,STYLES[i]+" · "+x.cap));f.append(e)}
+    }
+    row.append(f);
+  });
+  root.append(row);
+}
+</script>

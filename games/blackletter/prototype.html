@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Blackletter: Chronos prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* One screen: an illuminated war table. Parchment, ink, two host colours. */
+:root{
+  --paper:#efe6d2; --paper2:#e4d8bf; --ink:#1d1812; --faint:#6b5f4d; --rule:#8d7d62;
+  --sun:#2f5fa8; --sun2:#c9d6ea; --crim:#a4262c; --crim2:#ebcaca; --gold:#b8891c; --gold2:#f1dc9a;
+  --display:"Pirata One","Old English Text MT",Georgia,serif; --body:"EB Garamond",Georgia,"Times New Roman",serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.35 var(--body)}
+.app{max-width:1040px;margin:0 auto;padding:10px max(14px,env(safe-area-inset-left)) 24px max(14px,env(safe-area-inset-right));display:grid;gap:10px}
+h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:.01em;margin:0}
+.top{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;border-top:3px double var(--rule);border-bottom:3px double var(--rule);padding:6px 4px}
+.host{display:grid;gap:2px}
+.host.r{text-align:right}
+.host b{font:28px/1 var(--display)}
+.host .n{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.host .bleed{font-size:13px;color:var(--crim);font-weight:600;min-height:1.2em}
+.host.sun b{color:var(--sun)} .host.crim b{color:var(--crim)}
+.mid{text-align:center;display:grid;gap:4px;justify-items:center}
+.clock{font:26px/1 var(--display);font-variant-numeric:tabular-nums}
+.pips{display:flex;gap:5px}
+.pip{width:14px;height:14px;border:2px solid var(--ink);background:var(--paper)}
+.pip.circ{border-radius:50%}
+.pip.dia{transform:rotate(45deg) scale(.85)}
+.pip.sun{background:var(--sun)} .pip.crim{background:var(--crim)} .pip.con{border-style:dashed}
+.ctl{display:flex;gap:4px}
+button{font:inherit;color:inherit;cursor:pointer;background:var(--paper2);border:1.5px solid var(--ink);border-radius:3px;padding:3px 9px}
+button:disabled{opacity:.4;cursor:default}
+button.on{background:var(--ink);color:var(--paper)}
+button.big{font:22px var(--display);padding:8px 22px;background:var(--gold2);letter-spacing:.04em}
+.stage{position:relative;border:2px solid var(--ink);outline:1px solid var(--rule);outline-offset:3px;background:var(--paper2)}
+canvas{display:block;width:100%;height:auto;touch-action:manipulation}
+.ov{position:absolute;inset:0;background:rgba(239,230,210,.9);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto}
+.ov[hidden]{display:none}
+.ov .box{max-width:520px;display:grid;gap:10px}
+.ov h1{font-size:clamp(34px,7vw,54px);line-height:1}
+.ov p{margin:0}
+.ov ul{margin:0;padding-left:20px}
+.ov .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.panels{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:10px}
+.panel{border:1.5px solid var(--ink);padding:8px 10px;background:rgba(255,255,255,.25);display:grid;gap:6px;align-content:start}
+.panel h3{font-size:20px;border-bottom:1px solid var(--rule);padding-bottom:2px}
+.q{display:grid;gap:4px}
+.q button{display:flex;justify-content:space-between;gap:8px;text-align:left}
+.q button small{color:var(--faint)}
+.q button.sel{background:var(--gold2)}
+.unit{display:grid;gap:3px;font-size:15px}
+.unit .st{display:flex;flex-wrap:wrap;gap:4px 10px;color:var(--faint)}
+.unit .st b{color:var(--ink)}
+.orders{display:flex;flex-wrap:wrap;gap:6px}
+.res{display:flex;justify-content:space-between;font-size:15px}
+.res b{font-size:18px}
+.rec button{width:100%;display:flex;justify-content:space-between;margin-top:4px}
+.mir{display:grid;gap:4px}
+.hint{font-size:14px;color:var(--faint);font-style:italic;min-height:1.3em}
+.log{font-size:14px;color:var(--faint);display:grid;gap:1px;max-height:7.5em;overflow:hidden}
+.log div:first-child{color:var(--ink)}
+.seal{display:grid;gap:10px;justify-items:center;text-align:center}
+.seal .bid{font:54px/1 var(--display)}
+.seal .bl{display:grid;gap:6px;width:100%}
+.seal .bl button{text-align:left;display:grid;gap:2px}
+.seal .bl button.on{background:var(--gold2);color:var(--ink)}
+.seal .bl small{color:var(--faint)}
+.reveal{display:grid;grid-template-columns:1fr 1fr;gap:14px;text-align:center}
+.reveal b{font:44px/1 var(--display)}
+.foot{font-size:13px;color:var(--faint);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+@media (max-width:720px){
+  .panels{grid-template-columns:1fr 1fr}
+  .panel.log-p{grid-column:1/-1}
+  body{font-size:16px}
+  .host b{font-size:24px}
+}
+@media (max-width:460px){.panels{grid-template-columns:1fr}.top{grid-template-columns:1fr auto 1fr}.ctl{flex-wrap:wrap;justify-content:center}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="host sun"><span class="n">Order of the Sun · you</span><b id="mS">20</b><span class="bleed" id="bS"></span></div>
+    <div class="mid">
+      <div class="clock" id="clock">0:00</div>
+      <div class="pips" id="pips"></div>
+      <div class="ctl"><button id="pause" title="Space">Pause</button><button id="s1" class="on">1×</button><button id="s2">2×</button></div>
+    </div>
+    <div class="host crim r"><span class="n">Crimson Vanguard · Sebastion</span><b id="mC">20</b><span class="bleed" id="bC"></span></div>
+  </div>
+
+  <div class="stage">
+    <canvas id="cv" width="760" height="690" aria-label="The hex battlefield"></canvas>
+    <div class="ov" id="ov"></div>
+  </div>
+
+  <div class="panels">
+    <div class="panel">
+      <h3>Action Queue</h3>
+      <div class="q" id="queue"></div>
+      <div class="unit" id="unit"></div>
+      <div class="orders" id="orders"></div>
+      <div class="hint" id="hint"></div>
+    </div>
+    <div class="panel rec">
+      <h3>Recruit</h3>
+      <div class="res"><span>Tithes</span><b id="tithes">10.0 ₮</b></div>
+      <div class="res"><span>Income</span><span id="income">0.00 ₮/s</span></div>
+      <button data-rec="C">Chopper <span>12 ₮</span></button>
+      <button data-rec="J">Jumper <span>14 ₮</span></button>
+      <button data-rec="S">Shooter <span>14 ₮</span></button>
+      <div class="hint" id="rechint">Recruits deploy in your Cathedral Zone, the bottom row.</div>
+    </div>
+    <div class="panel">
+      <h3>Miracles</h3>
+      <div class="res"><span>Fervor</span><b id="fervor">0</b></div>
+      <div class="mir"><button id="wager">Challenge Morale <span style="float:right">10 Fervor</span></button></div>
+      <div class="hint">Freeze the clock. Both commanders seal a Morale bid; both pay it. The higher bid wins a blessing for 45 s.</div>
+      <div class="res"><span>Blessing</span><span id="blessS">none</span></div>
+    </div>
+    <div class="panel log-p">
+      <h3>Chronicle</h3>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+  <div class="foot"><span>Blackletter: Chronos · pitch prototype · tuning baseline v2.14.6</span><span>Tab: next ready unit · Space: pause · Esc: cancel</span></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- tuning ---------- */
+var T={
+  step:0.1, gaugePerInit:1.0, marchBase:2.6, income:0.05, startTithes:10, capture:13, neutralise:16,
+  bleed1:0.03, bleedHalf:0.5, underdogCapture:1.25, underdogFervor:0.09, relFervorEvery:5,
+  fervorDealt:2, fervorTaken:1, fervorCap:100, wagerCost:10, wagerMax:10, blessing:75, surge:1.3,
+  purchaseCooldown:5, supply:8, extinction:50, lateBleedAt:1200, lateBleed:0.02, prep:60,
+  openGauge:{C:55,J:100,S:30}
+};
+var UNITS={
+  C:{name:"Chopper",init:3,move:3,rng:1,atk:3,hit:3,def:3,dmg:1,hp:11,cost:12,traits:"Melee (Charge), Braced"},
+  J:{name:"Jumper",init:4,move:6,rng:1,atk:4,hit:3,def:2,dmg:1,hp:8,cost:14,traits:"Hit and Run, Flank, Trackless"},
+  S:{name:"Shooter",init:3,move:3,rng:8,atk:4,hit:3,def:2,dmg:2,hp:8,cost:14,traits:"Suppressing Fire, Volley Weapon"}
+};
+var NAMES={sun:{C:"Templar Halberdier",J:"Sun Vaulter",S:"Hooded Fusilier"},crim:{C:"Crimson Flailman",J:"Vanguard Leaper",S:"Crimson Musketeer"}};
+var BLESS={cut:{name:"Cut Them Down",desc:"+2 HIT, enemies save at −1"},hold:{name:"Hold the Line",desc:"+3 to every save"},surge:{name:"Holy Surge",desc:"gauges fill 30% faster"}};
+
+/* ---------- seeded dice ---------- */
+var seed=(Date.now()%2147483647)||7;
+function rnd(){seed=(seed*48271)%2147483647;return (seed-1)/2147483646}
+function d6(){return 1+Math.floor(rnd()*6)}
+
+/* ---------- board: 9 by 9, odd-r offset, pointy-top ---------- */
+var COLS=9, ROWS=9, HS=44;
+function toAx(c,r){return {q:c-((r-(r&1))>>1),r:r}}
+function key(q,r){return q+","+r}
+var hexes={}, list=[];
+for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){var a=toAx(c,r);var h={q:a.q,r:a.r,c:c,row:r,node:null,zone:null};hexes[key(a.q,a.r)]=h;list.push(h)}
+function hx(q,r){return hexes[key(q,r)]}
+var DIRS=[[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]];
+function nbrs(h){var o=[];DIRS.forEach(function(d){var n=hx(h.q+d[0],h.r+d[1]);if(n)o.push(n)});return o}
+function dist(a,b){var dq=a.q-b.q,dr=a.r-b.r;return (Math.abs(dq)+Math.abs(dr)+Math.abs(dq+dr))/2}
+function px(h){var x=HS*Math.sqrt(3)*(h.q+h.r/2),y=HS*1.5*h.r;return {x:x+HS*1.1,y:y+HS*1.15+20}}
+var nodes=[];
+function mkNode(c,r,kind,name){var a=toAx(c,r),h=hx(a.q,a.r);var n={hex:h,kind:kind,name:name,owner:null,prog:0,progSide:null,contested:false};h.node=n;nodes.push(n);return n}
+mkNode(4,4,"rel","the Reliquary");mkNode(2,2,"fort","the North Fortress");mkNode(6,6,"fort","the South Fortress");
+list.forEach(function(h){if(h.row===0)h.zone="crim";if(h.row===ROWS-1)h.zone="sun"});
+
+/* ---------- state ---------- */
+var G, auto=/[?&]auto/.test(location.search), speed=1, raf=0, last=0, acc=0;
+function newGame(diff){
+  G={t:0,phase:"prep",paused:false,units:[],nextId:1,diff:diff||"normal",
+     side:{sun:{morale:20,tithes:T.startTithes,fervor:0,bless:null,blessT:0,cd:0,ext:0,lastWager:-999,relAcc:0},
+           crim:{morale:20,tithes:T.startTithes,fervor:0,bless:null,blessT:0,cd:0,ext:0,lastWager:-999,relAcc:0}},
+     sel:null,mode:null,wager:null,over:null,log:[],bot:{next:0,hesitate:0},shake:0};
+  nodes.forEach(function(n){n.owner=null;n.prog=0;n.progSide=null;n.contested=false});
+  // starters: Jumper centre, Chopper and Shooter beside, in each Cathedral Zone
+  place("sun","C",3,ROWS-1);place("sun","J",4,ROWS-1);place("sun","S",5,ROWS-1);
+  place("crim","C",5,0);place("crim","J",4,0);place("crim","S",3,0);
+  G.units.forEach(function(u){u.gauge=T.openGauge[u.kind]});
+  say("The hosts muster. Place your three soldiers in the bottom row, then ring the bell.");
+}
+function place(side,kind,c,r){var a=toAx(c,r),h=hx(a.q,a.r);var p=UNITS[kind];
+  var u={id:G.nextId++,side:side,kind:kind,hex:h,hp:p.hp,gauge:0,path:null,stepT:0,readyAt:0,pinned:false,attackOnArrive:null,dead:false};
+  G.units.push(u);return u}
+function unitAt(h){for(var i=0;i<G.units.length;i++){var u=G.units[i];if(!u.dead&&u.hex===h)return u}return null}
+function alive(side){return G.units.filter(function(u){return !u.dead&&u.side===side})}
+function field(side){return alive(side).filter(function(u){return !u.hex.zone})}
+function ready(side){return alive(side).filter(function(u){return u.gauge>=100&&!u.path}).sort(function(a,b){return a.readyAt-b.readyAt})}
+function stat(u,k){return UNITS[u.kind][k]}
+function uname(u){return NAMES[u.side][u.kind]}
+function other(s){return s==="sun"?"crim":"sun"}
+function say(s){G.log.unshift(fmt(G.t)+"  "+s);if(G.log.length>40)G.log.length=40}
+function fmt(t){var m=Math.floor(t/60),s=Math.floor(t%60);return m+":"+(s<10?"0":"")+s}
+
+/* ---------- movement ---------- */
+function reach(u){ // hexes reachable within MOVE through free hexes; returns map key->path
+  var out={},front=[{h:u.hex,p:[]}];out[key(u.hex.q,u.hex.r)]=[];
+  while(front.length){var cur=front.shift();if(cur.p.length>=stat(u,"move"))continue;
+    nbrs(cur.h).forEach(function(n){var k=key(n.q,n.r);if(out[k])return;if(unitAt(n))return;if(n.zone&&n.zone!==u.side)return;if(n.zone===u.side&&!u.hex.zone)return;
+      out[k]=cur.p.concat([n]);front.push({h:n,p:out[k]})})}
+  delete out[key(u.hex.q,u.hex.r)];return out}
+function order(u,path,target){u.path=path;u.stepT=0;u.gauge=0;u.readyAt=0;u.attackOnArrive=target||null;u.pinned=false}
+function stepMarch(u,dt){u.stepT+=dt;var per=T.marchBase*6/stat(u,"move");
+  while(u.path&&u.stepT>=per){u.stepT-=per;var n=u.path.shift();if(unitAt(n)){u.path=null;break}u.hex=n;
+    if(!u.path.length){u.path=null;if(u.attackOnArrive&&!u.attackOnArrive.dead&&dist(u.hex,u.attackOnArrive.hex)<=stat(u,"rng")){skirmish(u,u.attackOnArrive,true)}u.attackOnArrive=null}}}
+
+/* ---------- combat ---------- */
+function roll(mod){var d=d6();return d!==1&&d+mod>=7}
+function strike(a,d,charge,flankDie){
+  var S=G.side[a.side],D=G.side[d.side];
+  var hit=stat(a,"hit"),dice=stat(a,"atk"),def=stat(d,"def");
+  if(dist(a.hex,d.hex)>=7)hit-=1;
+  if(a.kind==="S"&&dist(a.hex,d.hex)<=1)hit-=2;
+  if(S.bless==="cut")hit+=2;
+  if(D.bless==="cut")def-=1; // cut them down: targets save at −1 (applied to the striker's victims below)
+  if(S.bless==="cut")def-=1;
+  if(D.bless==="hold")def+=3;
+  if(d.hex.node&&d.hex.node.kind==="fort")def+=1;
+  if(flankDie)dice+=1;
+  var hits=0,unsaved=0;for(var i=0;i<dice;i++)if(roll(hit)){hits++;if(!roll(def))unsaved++}
+  var dmg=unsaved*stat(a,"dmg");d.hp-=dmg;S.fervor=Math.min(T.fervorCap,S.fervor+dmg*T.fervorDealt);D.fervor=Math.min(T.fervorCap,D.fervor+dmg*T.fervorTaken);
+  if(a.kind==="S"&&unsaved){d.gauge=Math.max(0,d.gauge-10*unsaved);d.pinned=true}
+  var txt=uname(a)+(charge?" charges ":" strikes ")+uname(d)+": "+hits+" of "+dice+" hit, "+unsaved+" unsaved, "+dmg+" damage";
+  if(d.hp<=0){d.dead=true;txt+=". "+uname(d)+" falls";if(G.sel===d)G.sel=null}
+  say(txt);G.shake=0.25;
+}
+function canStrikeBack(d,a,charge){
+  if(d.dead)return false;
+  if(dist(d.hex,a.hex)>stat(d,"rng"))return false;
+  if(charge&&a.kind==="J"&&d.kind!=="C")return false; // Hit and Run, unless Braced
+  return true;
+}
+function skirmish(a,d,charge){
+  var flank=a.kind==="J"&&alive(a.side).some(function(f){return f!==a&&dist(f.hex,d.hex)<=1});
+  var first=stat(d,"init")>stat(a,"init")&&canStrikeBack(d,a,charge);
+  if(first){strike(d,a,false,false);if(!a.dead)strike(a,d,charge,flank)}
+  else{strike(a,d,charge,flank);if(canStrikeBack(d,a,charge))strike(d,a,false,false)}
+}
+function targets(u){ // enemies this unit can strike this order: {enemy, path}
+  var out=[];var en=alive(other(u.side)).filter(function(e){return !e.hex.zone});
+  if(stat(u,"rng")>1){en.forEach(function(e){if(dist(u.hex,e.hex)<=stat(u,"rng"))out.push({e:e,path:[]})});return out}
+  var rc=reach(u);
+  en.forEach(function(e){if(dist(u.hex,e.hex)<=1){out.push({e:e,path:[]});return}
+    var best=null;nbrs(e.hex).forEach(function(n){var p=rc[key(n.q,n.r)];if(p&&(!best||p.length<best.length))best=p});
+    if(best)out.push({e:e,path:best})});
+  return out;
+}
+
+/* ---------- nodes, economy, morale ---------- */
+function touching(n,side){return alive(side).filter(function(u){return !u.hex.zone&&dist(u.hex,n.hex)<=1}).length}
+function held(side){return nodes.filter(function(n){return n.owner===side&&!n.contested}).length}
+function owned(side){return nodes.filter(function(n){return n.owner===side}).length}
+function tickNodes(dt){
+  nodes.forEach(function(n){var s=touching(n,"sun"),c=touching(n,"crim");n.contested=false;
+    var att=s>c?"sun":c>s?"crim":null;
+    if(s&&c&&s===c){n.contested=true;return}
+    if(!att){return}
+    if(att===n.owner){n.prog=0;n.progSide=null;return}
+    var rate=1,gap=owned(other(att))-owned(att);if(gap>0)rate=1+(T.underdogCapture-1)*gap;
+    if(n.progSide!==att){n.prog=0;n.progSide=att}
+    n.prog+=dt*rate;
+    if(n.owner===null){if(n.prog>=T.capture){n.owner=att;n.prog=0;n.progSide=null;say((att==="sun"?"The Sun":"The Vanguard")+" takes "+n.name)}}
+    else{if(n.prog>=T.neutralise){say(n.name+" is lost by "+(n.owner==="sun"?"the Sun":"the Vanguard"));n.owner=null;n.prog=0;n.progSide=null}}
+  });
+}
+function tickSides(dt){
+  ["sun","crim"].forEach(function(s){var S=G.side[s],h=held(s);S.tithes+=h*T.income*dt;
+    var rel=nodes[0];if(rel.owner===s&&!rel.contested){S.relAcc+=dt;if(S.relAcc>=T.relFervorEvery){S.relAcc-=T.relFervorEvery;S.fervor=Math.min(T.fervorCap,S.fervor+1)}}
+    var behind=owned(other(s))-owned(s);if(behind>0)S.fervor=Math.min(T.fervorCap,S.fervor+behind*T.underdogFervor*dt);
+    if(S.cd>0)S.cd-=dt;if(S.blessT>0){S.blessT-=dt;if(S.blessT<=0){S.bless=null;say((s==="sun"?"Your":"Sebastion's")+" blessing fades")}}
+    if(field(s).length===0&&(alive(s).length===0||G.t>90)){S.ext+=dt}else S.ext=0;
+  });
+  var lead=owned("sun")-owned("crim");
+  var b=bleedFor(Math.abs(lead));
+  if(lead>0)G.side.crim.morale-=b*dt;else if(lead<0)G.side.sun.morale-=b*dt;
+  if(G.t>=T.lateBleedAt){G.side.sun.morale-=T.lateBleed*dt;G.side.crim.morale-=T.lateBleed*dt}
+}
+function bleedFor(n){var b=0,x=T.bleed1;for(var i=0;i<n;i++){b+=x;x*=T.bleedHalf}return b}
+function gaugeRate(u){var S=G.side[u.side];var r=T.gaugePerInit*stat(u,"init");if(S.bless==="surge")r*=T.surge;return r}
+function tickUnits(dt){G.units.forEach(function(u){if(u.dead)return;if(u.path){stepMarch(u,dt);return}
+  if(u.gauge<100){u.gauge=Math.min(100,u.gauge+gaugeRate(u)*dt);if(u.gauge>=100){u.readyAt=G.t;u.pinned=false}}})}
+function checkEnd(){
+  var s=G.side.sun,c=G.side.crim;
+  if(s.morale<=0&&c.morale<=0)return end(null,"Both hosts collapse together. A draw.");
+  if(s.morale<=0)return end("crim","Your Morale breaks. The Vanguard holds the field.");
+  if(c.morale<=0)return end("sun","Sebastion's Morale breaks. The field is yours.");
+  if(s.ext>=T.extinction)return end("crim","Your host has no one in the field. Extinction.");
+  if(c.ext>=T.extinction)return end("sun","The Vanguard has no one in the field. Extinction.");
+}
+function end(w,why){G.over={w:w,why:why};G.phase="over";say(why);render();showOver()}
+
+/* ---------- recruit and wager ---------- */
+function recruit(side,kind){var S=G.side[side];var p=UNITS[kind];
+  if(S.cd>0||S.tithes<p.cost||alive(side).length>=T.supply)return false;
+  var free=list.filter(function(h){return h.zone===side&&!unitAt(h)}).sort(function(a,b){return dist(a,nodes[0].hex)-dist(b,nodes[0].hex)});
+  if(!free.length)return false;S.tithes-=p.cost;S.cd=T.purchaseCooldown;var u=place(side,kind,free[0].c,free[0].row);u.gauge=0;
+  say((side==="sun"?"You recruit a ":"Sebastion recruits a ")+p.name);return true}
+function maxBid(side){return Math.max(0,Math.min(T.wagerMax,Math.floor(G.side[side].morale)))}
+function openWager(by){var S=G.side[by];if(S.fervor<T.wagerCost||G.wager)return false;S.fervor-=T.wagerCost;S.lastWager=G.t;
+  G.wager={by:by,bidS:null,blS:"hold",bidC:null,blC:null,stage:"seal"};G.sel=null;G.mode=null;
+  say((by==="sun"?"You call":"Sebastion calls")+" a Challenge. The clock freezes.");
+  // Sebastion's sealed bid: from his Morale and how much he needs the blessing
+  var need=owned("crim")<owned("sun")?2:0;var fight=alive("crim").some(function(u){return alive("sun").some(function(e){return dist(u.hex,e.hex)<=2})})?1:0;
+  var b=Math.round(2+rnd()*3+need+fight);if(G.diff==="easy")b=Math.round(1+rnd()*3);
+  G.wager.bidC=Math.max(0,Math.min(b,maxBid("crim")));
+  G.wager.blC=fight?"cut":"surge";if(G.side.crim.bless===G.wager.blC)G.wager.blC=G.wager.blC==="cut"?"hold":"cut";
+  if(auto){G.wager.bidS=Math.min(maxBid("sun"),Math.round(1+rnd()*4));G.wager.blS="hold";resolveWager()}
+  else{G.wager.bidS=Math.min(maxBid("sun"),3);showSeal()}
+  return true}
+function resolveWager(){var w=G.wager;var S=G.side.sun,C=G.side.crim;S.morale-=w.bidS;C.morale-=w.bidC;
+  var txt="The seals break: you bid "+w.bidS+", Sebastion bid "+w.bidC+". ";
+  if(w.bidS>w.bidC){S.bless=w.blS;S.blessT=T.blessing;txt+="Your host is blessed: "+BLESS[w.blS].name}
+  else if(w.bidC>w.bidS){C.bless=w.blC;C.blessT=T.blessing;txt+="The Vanguard is blessed: "+BLESS[w.blC].name}
+  else txt+="A tie. No blessing.";
+  say(txt);w.stage="reveal";if(auto){G.wager=null}else showReveal()}
+
+/* ---------- Sebastion (utility-lite) ---------- */
+function botTick(){
+  if(G.t<G.bot.next)return;G.bot.next=G.t+(G.diff==="easy"?2.5:0.5);
+  var side="crim",S=G.side[side];
+  // recruit
+  if(alive(side).length<(G.diff==="easy"?4:5)){var want=["C","S","J"][Math.floor(rnd()*3)];recruit(side,want)}
+  // wager
+  if(S.fervor>=T.wagerCost&&G.t-S.lastWager>120&&G.side.sun.morale>=10&&!G.wager&&rnd()<(G.diff==="easy"?0.3:0.6)){openWager(side);return}
+  var rs=ready(side);if(!rs.length)return;var u=rs[0];
+  if(G.diff==="easy"&&rnd()<0.5){G.bot.next=G.t+2;} // slip: dither on this unit
+  var opts=[];
+  // attacks: expected damage vs taken
+  targets(u).forEach(function(t){var e=t.e;var pHit=hitP(stat(u,"hit")+(G.side[side].bless==="cut"?2:0)),pSave=hitP(stat(e,"def")+(G.side.sun.bless==="hold"?3:0));
+    var exp=stat(u,"atk")*pHit*(1-pSave)*stat(u,"dmg");var back=canStrikeBack(e,u,t.path.length>0)?stat(e,"atk")*hitP(stat(e,"hit"))*(1-hitP(stat(u,"def")))*stat(e,"dmg"):0;
+    var score=exp*2-back*1.2+(e.hp<=exp?3:0)+(e.hex.node?1.5:0);opts.push({s:score,act:function(){if(t.path.length)order(u,t.path,e);else{u.gauge=0;u.readyAt=0;skirmish(u,e,false)}}})});
+  // moves toward the most valuable node
+  var rc=reach(u);var goal=pickNode(u);
+  Object.keys(rc).forEach(function(k){var p=rc[k],h=p[p.length-1];var d=dist(h,goal.hex);var score=9-d*1.5;
+    if(h.node&&h.node.owner!==side)score+=3;if(u.kind==="S"){var near=alive("sun").filter(function(e){return dist(e.hex,h)<=2}).length;score-=near*2;if(alive("sun").some(function(e){return dist(e.hex,h)<=stat(u,"rng")&&dist(e.hex,h)>=3}))score+=2}
+    if(u.kind==="C"){var ally=alive(side).filter(function(f){return f!==u&&f.kind==="S"&&dist(f.hex,h)<=2}).length;score+=ally}
+    opts.push({s:score,act:function(){order(u,p,null)}})});
+  if(!opts.length)return;opts.sort(function(a,b){return b.s-a.s});
+  var pick=opts[0];if(G.diff==="easy"&&opts.length>1&&rnd()<0.5)pick=opts[1];
+  pick.act();
+}
+function hitP(mod){var n=0;for(var d=2;d<=6;d++)if(d+mod>=7)n++;return n/6}
+function pickNode(u){var best=null,bs=-1e9;nodes.forEach(function(n){var s=0;if(n.kind==="rel")s+=4;if(n.owner===u.side)s-=3;if(n.owner===other(u.side))s+=2;if(n.owner===null)s+=2;
+  var mine=alive(u.side).filter(function(f){return f!==u&&(f.path?f.path[f.path.length-1]:f.hex)&&dist(f.path?f.path[f.path.length-1]:f.hex,n.hex)<=1}).length;s-=mine*1.5;
+  s-=dist(u.hex,n.hex)*0.3;if(s>bs){bs=s;best=n}});return best}
+function autoSun(){ // ?auto: Sebastion also plays the Sun, for smoke tests
+  var side="sun",S=G.side[side];if(G.t<(G.bot.nextS||0))return;G.bot.nextS=G.t+0.5;
+  if(alive(side).length<5){recruit(side,["C","S","J"][Math.floor(rnd()*3)])}
+  if(S.fervor>=T.wagerCost&&G.t-S.lastWager>120&&G.side.crim.morale>=10&&!G.wager&&rnd()<0.6){openWager(side);return}
+  var rs=ready(side);if(!rs.length)return;var u=rs[0];var ts=targets(u);
+  if(ts.length&&rnd()<0.7){var t=ts[0];if(t.path.length)order(u,t.path,t.e);else{u.gauge=0;skirmish(u,t.e,false)}return}
+  var rc=reach(u),goal=pickNode(u),bk=null,bd=1e9;Object.keys(rc).forEach(function(k){var p=rc[k];var d=dist(p[p.length-1],goal.hex);if(d<bd){bd=d;bk=p}});if(bk)order(u,bk,null)}
+
+/* ---------- main loop ---------- */
+function tick(dt){
+  if(G.phase!=="battle"||G.paused||G.wager)return;
+  G.t+=dt;tickUnits(dt);tickNodes(dt);tickSides(dt);botTick();if(auto)autoSun();if(G.shake>0)G.shake-=dt;checkEnd();
+}
+function frame(ts){raf=requestAnimationFrame(frame);if(!last)last=ts;var el=Math.min(0.25,(ts-last)/1000);last=ts;acc+=el*speed;
+  var n=0;while(acc>=T.step&&n<40){tick(T.step);acc-=T.step;n++}render()}
+
+/* ---------- rendering ---------- */
+var cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+function hexPath(p,s){ctx.beginPath();for(var i=0;i<6;i++){var a=Math.PI/180*(60*i-30);var x=p.x+s*Math.cos(a),y=p.y+s*Math.sin(a);if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y)}ctx.closePath()}
+function col(side){return side==="sun"?"#2f5fa8":"#a4262c"}
+function col2(side){return side==="sun"?"#c9d6ea":"#ebcaca"}
+function render(){
+  if(!G)return;var W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="#e9dfc6";ctx.fillRect(0,0,W,H);
+  var rc=null,ts=null;
+  if(G.sel&&G.mode==="move")rc=reach(G.sel);
+  if(G.sel&&G.mode==="attack")ts=targets(G.sel);
+  // hexes
+  list.forEach(function(h){var p=px(h);hexPath(p,HS-1.5);
+    ctx.fillStyle=h.zone?(h.zone==="sun"?"rgba(47,95,168,.12)":"rgba(164,38,44,.12)"):"rgba(255,250,236,.55)";ctx.fill();
+    if(rc&&rc[key(h.q,h.r)]){ctx.fillStyle="rgba(184,137,28,.45)";ctx.fill()}
+    ctx.strokeStyle="#5a4d3a";ctx.lineWidth=1.2;ctx.stroke();
+    if(h.zone){ctx.save();ctx.clip();ctx.strokeStyle="rgba(60,50,35,.25)";ctx.lineWidth=1;for(var i=-HS*2;i<HS*2;i+=7){ctx.beginPath();ctx.moveTo(p.x+i-HS,p.y-HS);ctx.lineTo(p.x+i+HS,p.y+HS);ctx.stroke()}ctx.restore()}
+  });
+  // nodes
+  nodes.forEach(function(n){var p=px(n.hex);ctx.save();ctx.translate(p.x,p.y);
+    ctx.fillStyle=n.owner?col(n.owner):"#efe6d2";ctx.strokeStyle="#1d1812";ctx.lineWidth=3;if(n.contested)ctx.setLineDash([5,4]);
+    if(n.kind==="rel"){ctx.beginPath();ctx.arc(0,0,HS*.62,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.setLineDash([]);ctx.strokeStyle=n.owner?"#f1dc9a":"#1d1812";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-HS*.4);ctx.lineTo(0,HS*.4);ctx.moveTo(-HS*.26,-HS*.14);ctx.lineTo(HS*.26,-HS*.14);ctx.stroke()}
+    else{ctx.rotate(Math.PI/4);ctx.fillRect(-HS*.45,-HS*.45,HS*.9,HS*.9);ctx.strokeRect(-HS*.45,-HS*.45,HS*.9,HS*.9)}
+    ctx.restore();
+    if(n.progSide&&n.prog>0){var need=n.owner===null?T.capture:T.neutralise;ctx.beginPath();ctx.arc(p.x,p.y,HS*.82,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,n.prog/need));ctx.strokeStyle=col(n.progSide);ctx.lineWidth=5;ctx.stroke()}
+  });
+  // targets
+  if(ts)ts.forEach(function(t){var p=px(t.e.hex);ctx.beginPath();ctx.arc(p.x,p.y,HS*.8,0,Math.PI*2);ctx.strokeStyle="#b8891c";ctx.lineWidth=4;ctx.setLineDash([6,5]);ctx.stroke();ctx.setLineDash([])});
+  // units
+  G.units.forEach(function(u){if(u.dead)return;var p=px(u.hex);var r=HS*.46;
+    if(u===G.sel){ctx.beginPath();ctx.arc(p.x,p.y,r+8,0,Math.PI*2);ctx.strokeStyle="#b8891c";ctx.lineWidth=4;ctx.stroke()}
+    ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle=col2(u.side);ctx.fill();ctx.strokeStyle=col(u.side);ctx.lineWidth=3;ctx.stroke();
+    // gauge arc
+    ctx.beginPath();ctx.arc(p.x,p.y,r+3,-Math.PI/2,-Math.PI/2+Math.PI*2*u.gauge/100);ctx.strokeStyle=u.gauge>=100?"#b8891c":col(u.side);ctx.lineWidth=u.gauge>=100?5:3;ctx.stroke();
+    ctx.fillStyle=col(u.side);ctx.font="bold 22px 'Pirata One',Georgia,serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(u.kind,p.x,p.y+1);
+    // hp
+    var w=HS*.9,hpw=w*u.hp/stat(u,"hp");ctx.fillStyle="#1d1812";ctx.fillRect(p.x-w/2,p.y+r+5,w,5);ctx.fillStyle=u.hp/stat(u,"hp")>.4?"#3f8f4a":"#a4262c";ctx.fillRect(p.x-w/2,p.y+r+5,hpw,5);
+    if(u.path){ctx.strokeStyle=col(u.side);ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(p.x,p.y);u.path.forEach(function(h){var q=px(h);ctx.lineTo(q.x,q.y)});ctx.stroke();ctx.setLineDash([])}
+  });
+  // zone labels
+  ctx.fillStyle="rgba(29,24,18,.55)";ctx.font="italic 15px 'EB Garamond',Georgia,serif";ctx.textAlign="left";ctx.textBaseline="alphabetic";
+  ctx.fillText("Cathedral Zone of the Vanguard: sanctuary, holds no ground",12,18);
+  ctx.fillText("Your Cathedral Zone: recruits deploy here and may never return",12,H-7);
+  renderHud();
+}
+function renderHud(){
+  var S=G.side.sun,C=G.side.crim;
+  document.getElementById("mS").textContent=Math.max(0,S.morale).toFixed(1);document.getElementById("mC").textContent=Math.max(0,C.morale).toFixed(1);
+  var lead=owned("sun")-owned("crim");var b=bleedFor(Math.abs(lead))*60;var late=G.t>=T.lateBleedAt?T.lateBleed*60:0;
+  document.getElementById("bS").textContent=(lead<0?"▼ "+b.toFixed(1)+"/min":"")+(late?" ▼ late "+late.toFixed(1)+"/min":"");
+  document.getElementById("bC").textContent=(lead>0?"▼ "+b.toFixed(1)+"/min":"")+(late?" ▼ late "+late.toFixed(1)+"/min":"");
+  document.getElementById("clock").textContent=fmt(G.t);
+  document.getElementById("pips").innerHTML=nodes.map(function(n){return '<span class="pip '+(n.kind==="rel"?"circ":"dia")+(n.owner?" "+n.owner:"")+(n.contested?" con":"")+'" title="'+n.name+'"></span>'}).join("");
+  document.getElementById("pause").textContent=G.paused?"Resume":"Pause";
+  document.getElementById("tithes").textContent=S.tithes.toFixed(1)+" ₮";document.getElementById("income").textContent=(held("sun")*T.income).toFixed(2)+" ₮/s";
+  document.querySelectorAll("[data-rec]").forEach(function(b){var k=b.getAttribute("data-rec");b.disabled=G.phase!=="battle"||S.cd>0||S.tithes<UNITS[k].cost||alive("sun").length>=T.supply});
+  document.getElementById("rechint").textContent=alive("sun").length>=T.supply?"Supply cap: 8 living units.":S.cd>0?"Purchase cooldown "+S.cd.toFixed(1)+" s.":"Recruits deploy in your Cathedral Zone, the bottom row.";
+  document.getElementById("fervor").textContent=Math.floor(S.fervor);
+  document.getElementById("wager").disabled=G.phase!=="battle"||S.fervor<T.wagerCost||!!G.wager;
+  document.getElementById("blessS").textContent=S.bless?BLESS[S.bless].name+" · "+Math.ceil(S.blessT)+" s":"none"+(C.bless?" · Sebastion: "+BLESS[C.bless].name+" "+Math.ceil(C.blessT)+" s":"");
+  var q=document.getElementById("queue");var rs=ready("sun");
+  q.innerHTML=rs.length?rs.map(function(u){return '<button data-u="'+u.id+'" class="'+(u===G.sel?"sel":"")+'">'+uname(u)+' <small>ready '+Math.floor(G.t-u.readyAt)+' s</small></button>'}).join(""):'<span class="hint">No unit is ready. Gauges fill in real time; a ready unit waits for you.</span>';
+  var up=document.getElementById("unit"),od=document.getElementById("orders");
+  if(G.sel){var u=G.sel,p=UNITS[u.kind];up.innerHTML="<b>"+uname(u)+"</b> · "+p.name+'<div class="st"><span>INIT <b>'+p.init+'</b></span><span>MOVE <b>'+p.move+'</b></span><span>RNG <b>'+p.rng+'</b></span><span>ATK <b>'+p.atk+'</b></span><span>HIT <b>+'+p.hit+'</b></span><span>DEF <b>+'+p.def+'</b></span><span>DMG <b>'+p.dmg+'</b></span><span>HP <b>'+u.hp+'/'+p.hp+'</b></span></div><div class="st">'+p.traits+'</div>';
+    var isReady=u.gauge>=100&&!u.path&&u.side==="sun";
+    od.innerHTML=isReady?'<button id="oMove" class="'+(G.mode==="move"?"on":"")+'">Move</button><button id="oAtk" class="'+(G.mode==="attack"?"on":"")+'">'+(p.rng>1?"Fire":"Charge")+'</button><button id="oHold">Hold</button>':"";
+  }else{up.innerHTML="";od.innerHTML=""}
+  document.getElementById("log").innerHTML=G.log.slice(0,6).map(function(s){return "<div>"+esc(s)+"</div>"}).join("");
+}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+
+/* ---------- input ---------- */
+function hexAt(ev){var r=cv.getBoundingClientRect();var x=(ev.clientX-r.left)*cv.width/r.width,y=(ev.clientY-r.top)*cv.height/r.height;var best=null,bd=1e9;list.forEach(function(h){var p=px(h);var d=(p.x-x)*(p.x-x)+(p.y-y)*(p.y-y);if(d<bd){bd=d;best=h}});return bd<HS*HS?best:null}
+function hint(s){document.getElementById("hint").textContent=s}
+cv.addEventListener("click",function(ev){if(!G)return;var h=hexAt(ev);if(!h)return;
+  if(G.phase==="prep"){var u=unitAt(h);if(u&&u.side==="sun"){G.sel=u;hint("Now tap an empty hex of your Cathedral Zone.");return}
+    if(G.sel&&h.zone==="sun"&&!u){G.sel.hex=h;G.sel=null;hint("");return}return}
+  if(G.phase!=="battle"||G.wager)return;
+  var u=unitAt(h);
+  if(G.mode==="move"&&G.sel){var rc=reach(G.sel),p=rc[key(h.q,h.r)];if(p){order(G.sel,p,null);say(uname(G.sel)+" marches "+p.length+" hex"+(p.length>1?"es":""));select(null);return}}
+  if(G.mode==="attack"&&G.sel&&u&&u.side==="crim"){var ts=targets(G.sel);for(var i=0;i<ts.length;i++)if(ts[i].e===u){var a=G.sel;if(ts[i].path.length){order(a,ts[i].path,u);say(uname(a)+" charges toward "+uname(u))}else{a.gauge=0;a.readyAt=0;skirmish(a,u,false)}select(null);return}
+    hint("Out of reach. Pick a reticled enemy.");return}
+  if(u){select(u);return}
+  select(null);
+});
+function select(u){G.sel=u;G.mode=null;if(u&&u.side==="sun"&&u.gauge>=100&&!u.path){G.mode=stat(u,"rng")>1?null:"move";hint(u.kind==="S"?"Fire at a reticled enemy within 8 hexes, or Move.":"Tap a gold hex to march, or Charge a reticled enemy.");if(u.kind==="S")G.mode="attack"}else hint(u?(u.side==="crim"?"An enemy "+UNITS[u.kind].name+"."+(u.gauge>=100?" It is ready.":"")+"":"Its gauge is at "+Math.floor(u.gauge)+"%."):"")}
+document.addEventListener("click",function(ev){var b=ev.target.closest("button");if(!b||!G)return;
+  if(b.hasAttribute("data-u")){var id=+b.getAttribute("data-u");select(G.units.filter(function(u){return u.id===id})[0]);return}
+  if(b.id==="oMove"){G.mode="move";hint("Tap a gold hex.");return}
+  if(b.id==="oAtk"){G.mode="attack";hint("Tap a reticled enemy.");return}
+  if(b.id==="oHold"){select(null);hint("It holds, and stays ready.");return}
+  if(b.id==="pause"){G.paused=!G.paused;return}
+  if(b.id==="s1"||b.id==="s2"){speed=b.id==="s2"?2:1;document.getElementById("s1").classList.toggle("on",speed===1);document.getElementById("s2").classList.toggle("on",speed===2);return}
+  if(b.hasAttribute("data-rec")){recruit("sun",b.getAttribute("data-rec"));return}
+  if(b.id==="wager"){openWager("sun");return}
+});
+document.addEventListener("keydown",function(ev){if(!G)return;if(ev.key===" "&&G.phase==="battle"){ev.preventDefault();G.paused=!G.paused}
+  if(ev.key==="Tab"&&G.phase==="battle"){ev.preventDefault();var rs=ready("sun");if(rs.length){var i=rs.indexOf(G.sel);select(rs[(i+1)%rs.length])}}
+  if(ev.key==="Escape")select(null);if(ev.key==="m"&&G.sel){G.mode="move"}if(ev.key==="a"&&G.sel){G.mode="attack"}
+  if(G.wager&&G.wager.stage==="seal"){if(ev.key==="ArrowLeft"){G.wager.bidS=Math.max(0,G.wager.bidS-1);showSeal()}if(ev.key==="ArrowRight"){G.wager.bidS=Math.min(maxBid("sun"),G.wager.bidS+1);showSeal()}if(ev.key==="Enter")resolveWager()}
+});
+
+/* ---------- overlays ---------- */
+var ov=document.getElementById("ov");
+function showMuster(){ov.hidden=false;ov.innerHTML='<div class="box"><h1>Blackletter: Chronos</h1><p><b>A tabletop general\'s war, on a real clock.</b> Every unit acts when its gauge fills, and a ready unit never loses its turn. Hold more nodes than Sebastion and his Morale bleeds; at 0 his host collapses.</p>'+
+  '<ul><li><b>Place</b> your Chopper, Jumper and Shooter in your Cathedral Zone (bottom row).</li><li><b>Order</b> a ready unit: Move, Charge or Fire. Dice: d6 + modifier, 7 or more hits, a natural 1 fails.</li><li><b>Take ground.</b> More units touching a node than the enemy captures it. Nodes pay Tithes for recruits.</li><li><b>Wager.</b> At 10 Fervor, call a Challenge: the clock freezes, both seal a Morale bid, the higher bid wins a blessing.</li></ul>'+
+  '<div class="row"><span>Sebastion\'s skill:</span><button id="dEasy" class="'+(G.diff==="easy"?"on":"")+'">Easy</button><button id="dNormal" class="'+(G.diff==="normal"?"on":"")+'">Normal</button></div>'+
+  '<div class="row"><button class="big" id="begin">Ring the bell</button><span class="hint">Space pauses.</span></div></div>';
+  document.getElementById("begin").onclick=function(){G.phase="battle";ov.hidden=true;say("The bell rings. Your Jumper is ready.");if(auto)G.diff="normal"};
+  document.getElementById("dEasy").onclick=function(){G.diff="easy";showMuster()};document.getElementById("dNormal").onclick=function(){G.diff="normal";showMuster()};
+}
+function showSeal(){var w=G.wager;ov.hidden=false;ov.innerHTML='<div class="box seal"><h1>The Secret Wager</h1><p>The clock is frozen. Seal a bid of Morale, 0 to '+maxBid("sun")+'. Both commanders pay what they bid; the higher bid picks a blessing for 45 s. Sebastion\'s bid is already sealed.</p>'+
+  '<div class="row"><button id="bidDn">−</button><span class="bid" id="bidV">'+w.bidS+'</span><button id="bidUp">+</button></div><div class="bl">'+Object.keys(BLESS).map(function(k){return '<button data-bl="'+k+'" class="'+(w.blS===k?"on":"")+'"'+(G.side.sun.bless===k?" disabled":"")+'><b>'+BLESS[k].name+'</b><small>'+BLESS[k].desc+'</small></button>'}).join("")+'</div>'+
+  '<button class="big" id="sealBtn">Seal the bid</button></div>';
+  document.getElementById("bidDn").onclick=function(){w.bidS=Math.max(0,w.bidS-1);document.getElementById("bidV").textContent=w.bidS};
+  document.getElementById("bidUp").onclick=function(){w.bidS=Math.min(maxBid("sun"),w.bidS+1);document.getElementById("bidV").textContent=w.bidS};
+  ov.querySelectorAll("[data-bl]").forEach(function(b){b.onclick=function(){w.blS=b.getAttribute("data-bl");ov.querySelectorAll("[data-bl]").forEach(function(x){x.classList.toggle("on",x===b)})}});
+  document.getElementById("sealBtn").onclick=resolveWager;
+}
+function showReveal(){var w=G.wager;var win=w.bidS>w.bidC?"sun":w.bidC>w.bidS?"crim":null;ov.hidden=false;
+  ov.innerHTML='<div class="box seal"><h1>The seals break</h1><div class="reveal"><div><span class="n">You</span><b style="color:var(--sun)">'+w.bidS+'</b></div><div><span class="n">Sebastion</span><b style="color:var(--crim)">'+w.bidC+'</b></div></div>'+
+  '<p>'+(win==="sun"?"Your host is blessed: <b>"+BLESS[w.blS].name+"</b>, "+BLESS[w.blS].desc+".":win==="crim"?"The Vanguard is blessed: <b>"+BLESS[w.blC].name+"</b>, "+BLESS[w.blC].desc+".":"A tie. Both paid, no one is blessed.")+' Morale now '+G.side.sun.morale.toFixed(1)+' to '+G.side.crim.morale.toFixed(1)+'.</p><button class="big" id="resume">Resume the clock</button></div>';
+  document.getElementById("resume").onclick=function(){G.wager=null;ov.hidden=true};
+}
+function showOver(){ov.hidden=false;var w=G.over;ov.innerHTML='<div class="box"><h1>'+(w.w==="sun"?"Victory":w.w==="crim"?"The host breaks":"A draw")+'</h1><p>'+w.why+'</p><p class="hint">'+fmt(G.t)+' of battle · Morale '+Math.max(0,G.side.sun.morale).toFixed(1)+' to '+Math.max(0,G.side.crim.morale).toFixed(1)+' · nodes '+owned("sun")+' to '+owned("crim")+'</p><div class="row"><button class="big" id="again">Muster again</button></div></div>';
+  document.getElementById("again").onclick=function(){newGame(G.diff);showMuster()}}
+
+window.BL={get:function(){return G},tick:tick,T:T};
+newGame("normal");showMuster();if(auto){G.phase="battle";ov.hidden=true}
+raf=requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

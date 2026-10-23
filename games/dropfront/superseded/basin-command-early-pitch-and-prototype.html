@@ -1,0 +1,264 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Basin Command</title>
+<style>
+:root{
+  --bg:#f4f1ea; --panel:#ffffff; --ink:#1f2330; --muted:#636a7a; --line:#d9d4c7;
+  --grass:#b9d98a; --grass2:#a6cc72; --road:#e7d3a4;
+  --blue:#2f6fe0; --blue-soft:#d7e4fb; --red:#e0483a; --red-soft:#fbdcd8;
+  --amber:#f2a516; --neutral:#9aa0ab;
+  --squad:#2f9e6b; --tactic:#8a4fd8; --gear:#e07a1f;
+  --shadow:0 2px 0 rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161d; --panel:#1e212b; --ink:#eceef3; --muted:#a2a8b6; --line:#323745;
+    --grass:#2e4a2a; --grass2:#36552f; --road:#6b5d3f;
+    --blue:#5b90f5; --blue-soft:#22314f; --red:#f2665a; --red-soft:#4a2525;
+    --amber:#ffb92e; --neutral:#7c8290;
+    --squad:#3fc48a; --tactic:#a77af0; --gear:#f59a45;
+    --shadow:0 2px 0 rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161d; --panel:#1e212b; --ink:#eceef3; --muted:#a2a8b6; --line:#323745;
+  --grass:#2e4a2a; --grass2:#36552f; --road:#6b5d3f;
+  --blue:#5b90f5; --blue-soft:#22314f; --red:#f2665a; --red-soft:#4a2525;
+  --amber:#ffb92e; --neutral:#7c8290;
+  --squad:#3fc48a; --tactic:#a77af0; --gear:#f59a45;
+  --shadow:0 2px 0 rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden}
+main{max-width:960px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:clamp(2rem,7vw,3.2rem);line-height:1.05;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:1.25rem;margin:40px 0 12px}
+.hook{font-size:1.15rem;color:var(--muted);margin:0;max-width:44ch}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.tag{font-size:.75rem;padding:3px 9px;border-radius:99px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
+ol.loop{margin:0;padding:0;list-style:none;counter-reset:s}
+ol.loop li{counter-increment:s;display:flex;gap:12px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line)}
+ol.loop li::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:700;font-size:.85rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-top:5px solid var(--c);border-radius:10px;padding:10px 12px 12px;box-shadow:var(--shadow);position:relative}
+.card .cost{position:absolute;top:8px;right:10px;width:24px;height:24px;border-radius:50%;background:var(--amber);color:#1f2330;font-weight:800;font-size:.85rem;display:grid;place-items:center}
+.card b{display:block;padding-right:28px;line-height:1.2}
+.card .type{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--c);font-weight:700}
+.card p{margin:6px 0 0;font-size:.85rem;color:var(--muted);line-height:1.35}
+.squad{--c:var(--squad)} .tactic{--c:var(--tactic)} .gear{--c:var(--gear)}
+.combo{margin-top:12px;font-size:.9rem;color:var(--muted)}
+.combo strong{color:var(--ink)}
+.weeks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.week{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.week h3{margin:0 0 6px;font-size:1rem}
+.week ul{margin:0;padding-left:18px;font-size:.9rem}
+.week li{margin:3px 0}
+.week.ms{border-color:var(--squad)}
+.week .flag{font-size:.7rem;font-weight:700;color:var(--squad);text-transform:uppercase;letter-spacing:.06em}
+.cut{margin-top:10px;padding:10px 14px;border-left:4px solid var(--red);background:var(--red-soft);border-radius:6px;font-size:.92rem}
+/* mockup */
+.mock{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+.hud{display:flex;align-items:center;gap:10px;font-weight:700;font-size:.85rem;margin-bottom:10px}
+.hud .bar{flex:1;height:14px;border-radius:7px;background:var(--line);overflow:hidden;position:relative}
+.hud .bar i{position:absolute;top:0;bottom:0}
+.hud .you{color:var(--blue)} .hud .foe{color:var(--red)}
+.stage{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:720px){.stage{grid-template-columns:3fr 2fr}}
+.map,.fight{width:100%;height:auto;display:block;border-radius:10px}
+.inset{position:relative}
+.inset .label{font-size:.75rem;font-weight:700;color:var(--muted);margin:0 0 4px;text-transform:uppercase;letter-spacing:.06em}
+.node{cursor:default;transition:opacity .2s}
+.map.targeting .node{opacity:.35}
+.map.targeting .node.valid{opacity:1}
+.node .ring{fill:none;stroke:var(--ink);stroke-width:3;stroke-dasharray:6 5;opacity:0}
+.node.valid .ring{opacity:1;animation:spin 3s linear infinite;transform-origin:center;transform-box:fill-box}
+@keyframes spin{to{transform:rotate(360deg)}}
+.contested .core{animation:flash .8s steps(2) infinite}
+@keyframes flash{50%{fill:var(--amber)}}
+.nlabel{font-size:11px;font-weight:700;fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:var(--panel);stroke-width:3px}
+.tagtxt{font-size:9px;font-weight:800;fill:#1f2330;text-anchor:middle}
+.hand{display:flex;gap:8px;margin-top:12px;align-items:stretch}
+.energy{flex:none;width:52px;border-radius:50%;aspect-ratio:1;background:var(--amber);color:#1f2330;display:grid;place-items:center;font-weight:800;align-self:center;font-size:1rem;box-shadow:var(--shadow)}
+.hcards{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;flex:1;min-width:0}
+.hc{background:var(--bg);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:8px;padding:6px 6px 8px;font-size:.72rem;line-height:1.2;cursor:pointer;position:relative;transition:transform .15s;font-family:inherit;color:inherit;text-align:left;min-width:0}
+.hc:hover,.hc:focus-visible,.hc.on{transform:translateY(-6px);outline:2px solid var(--c)}
+.hc b{display:block;font-size:.76rem;overflow-wrap:anywhere}
+.hc .k{position:absolute;top:-8px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--amber);color:#1f2330;font-weight:800;display:grid;place-items:center;font-size:.7rem}
+.hc span{color:var(--muted);display:block;margin-top:2px}
+.hint{font-size:.8rem;color:var(--muted);margin:8px 0 0;min-height:1.3em}
+@media (max-width:480px){.hc span{display:none}.energy{width:40px;font-size:.85rem}}
+@media (prefers-reduced-motion:reduce){.node.valid .ring,.contested .core{animation:none}}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <h1>Basin command</h1>
+  <p class="hook">Run the battleground with a hand of cards, then drop in and win the fight that decides it yourself.</p>
+  <div class="tags"><span class="tag">Arathi Basin x Slay the Spire</span><span class="tag">1-month solo</span><span class="tag">Single-player vs AI</span><span class="tag">1 map, 5 points, 15 cards</span></div>
+</header>
+
+<section>
+  <h2>Core loop</h2>
+  <ol class="loop">
+    <li>Every 15 seconds a command turn starts: draw 5, refill 3 energy, the battlefield keeps running.</li>
+    <li>Play squad cards to send bots down the roads; tactic cards bend the enemy commander's plans.</li>
+    <li>When a capture meter hits 70%, the point flashes contested. Pay 2 energy to drop in for a 20-second top-down firefight.</li>
+    <li>Gear cards are only playable while you are dropped in. Win the fight and the point locks for 10 seconds.</li>
+    <li>Held points tick resources. First to 1600 wins the match; win 3 matches in a run, drafting 1 card after each.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>First 15 cards</h2>
+  <div class="cards">
+    <div class="card squad"><span class="cost">1</span><span class="type">Squad</span><b>Rifle squad</b><p>Send 3 bots to any point.</p></div>
+    <div class="card squad"><span class="cost">1</span><span class="type">Squad</span><b>Rushers</b><p>2 fast bots. Arrive instantly at a point next to one you hold.</p></div>
+    <div class="card squad"><span class="cost">2</span><span class="type">Squad</span><b>Heavy squad</b><p>2 tanky bots. Count double while defending.</p></div>
+    <div class="card squad"><span class="cost">2</span><span class="type">Squad</span><b>Sniper nest</b><p>1 bot. Thins every squad walking roads next to its point.</p></div>
+    <div class="card squad"><span class="cost">3</span><span class="type">Squad</span><b>Reinforcement wave</b><p>5 bots, but only to a point you already hold.</p></div>
+    <div class="card tactic"><span class="cost">0</span><span class="type">Tactic</span><b>Feint</b><p>Fake squad marker. Enemy AI diverts bots to defend it.</p></div>
+    <div class="card tactic"><span class="cost">1</span><span class="type">Tactic</span><b>Rally</b><p>Move all your bots at one point to a connected point.</p></div>
+    <div class="card tactic"><span class="cost">1</span><span class="type">Tactic</span><b>Hold the line</b><p>Freeze a contested meter for 10 seconds.</p></div>
+    <div class="card tactic"><span class="cost">1</span><span class="type">Tactic</span><b>Flare</b><p>Reveal enemy squads on roads. Draw 1.</p></div>
+    <div class="card tactic"><span class="cost">2</span><span class="type">Tactic</span><b>Sabotage</b><p>An enemy point stops ticking resources for 20 seconds.</p></div>
+    <div class="card tactic"><span class="cost">1</span><span class="type">Tactic</span><b>Overclock</b><p>+2 energy next turn. Exhaust.</p></div>
+    <div class="card gear"><span class="cost">1</span><span class="type">Gear</span><b>Shotgun</b><p>Drop-in: double damage at close range.</p></div>
+    <div class="card gear"><span class="cost">1</span><span class="type">Gear</span><b>Jump pack</b><p>Drop-in: triple dash. Recharges on kill.</p></div>
+    <div class="card gear"><span class="cost">1</span><span class="type">Gear</span><b>Medic drone</b><p>Drop-in: heal while standing on the capture circle.</p></div>
+    <div class="card gear"><span class="cost">3</span><span class="type">Gear</span><b>Orbital strike</b><p>Drop-in: mark an area, wipe it 3 seconds later. Exhaust.</p></div>
+  </div>
+  <p class="combo"><strong>The core tension:</strong> dropping in costs 2 of your 3 energy, so gear competes with squads. <strong>Combos:</strong> Feint pulls defenders, then Sabotage the point they left. Hold the line buys the seconds to Overclock into a fully geared drop-in. Rushers chain off whatever you just captured.</p>
+</section>
+
+<section>
+  <h2>Gameplay mockup</h2>
+  <div class="mock">
+    <div class="hud">
+      <span class="you">You 1120</span>
+      <div class="bar" aria-label="Resource race to 1600">
+        <i style="left:0;width:35%;background:var(--blue)"></i>
+        <i style="right:0;width:38.75%;background:var(--red)"></i>
+      </div>
+      <span class="foe">1240 AI</span>
+    </div>
+    <div class="stage">
+      <svg class="map" id="map" viewBox="0 0 400 300" role="img" aria-label="Top-down map with five capture points">
+        <rect width="400" height="300" fill="var(--grass)"/>
+        <circle cx="120" cy="130" r="40" fill="var(--grass2)"/><circle cx="300" cy="170" r="50" fill="var(--grass2)"/><circle cx="210" cy="40" r="28" fill="var(--grass2)"/>
+        <g stroke="var(--road)" stroke-width="10" stroke-linecap="round" fill="none">
+          <path d="M60 60 L200 150"/><path d="M340 60 L200 150"/><path d="M60 240 L200 150"/><path d="M340 240 L200 150"/>
+          <path d="M60 60 L60 240"/><path d="M340 60 L340 240"/>
+        </g>
+        <!-- squads -->
+        <g fill="var(--blue)" stroke="var(--panel)" stroke-width="1.5">
+          <circle r="5"><animateMotion dur="6s" repeatCount="indefinite" path="M60 240 L190 156"/></circle>
+          <circle r="5"><animateMotion dur="6s" begin="-.5s" repeatCount="indefinite" path="M60 240 L190 156"/></circle>
+          <circle r="5"><animateMotion dur="6s" begin="-1s" repeatCount="indefinite" path="M60 240 L190 156"/></circle>
+          <circle r="5"><animateMotion dur="8s" repeatCount="indefinite" path="M60 60 L60 230"/></circle>
+        </g>
+        <g fill="var(--red)" stroke="var(--panel)" stroke-width="1.5">
+          <circle r="5"><animateMotion dur="7s" repeatCount="indefinite" path="M340 60 L210 144"/></circle>
+          <circle r="5"><animateMotion dur="7s" begin="-.6s" repeatCount="indefinite" path="M340 60 L210 144"/></circle>
+          <circle r="5"><animateMotion dur="9s" repeatCount="indefinite" path="M340 240 L340 70"/></circle>
+          <circle r="5"><animateMotion dur="9s" begin="-.7s" repeatCount="indefinite" path="M340 240 L340 70"/></circle>
+        </g>
+        <!-- nodes -->
+        <g class="node" data-id="stables"><circle class="ring" cx="60" cy="60" r="27"/><circle cx="60" cy="60" r="20" fill="var(--blue)"/><text class="nlabel" x="60" y="98">Stables</text></g>
+        <g class="node" data-id="farm"><circle class="ring" cx="60" cy="240" r="27"/><circle cx="60" cy="240" r="20" fill="var(--blue)"/><text class="nlabel" x="60" y="278">Farm</text></g>
+        <g class="node" data-id="gold"><circle class="ring" cx="340" cy="60" r="27"/><circle cx="340" cy="60" r="20" fill="var(--red)"/><text class="nlabel" x="340" y="98">Gold mine</text></g>
+        <g class="node" data-id="lumber"><circle class="ring" cx="340" cy="240" r="27"/><circle cx="340" cy="240" r="20" fill="var(--red)"/><text class="nlabel" x="340" y="278">Lumber mill</text></g>
+        <g class="node contested" data-id="smith">
+          <circle class="ring" cx="200" cy="150" r="33"/>
+          <circle cx="200" cy="150" r="26" fill="none" stroke="var(--line)" stroke-width="5"/>
+          <circle id="meter" cx="200" cy="150" r="26" fill="none" stroke="var(--red)" stroke-width="5" stroke-dasharray="163.4" stroke-dashoffset="49" transform="rotate(-90 200 150)"/>
+          <circle class="core" cx="200" cy="150" r="20" fill="var(--blue)"/>
+          <rect x="166" y="104" width="68" height="15" rx="7" fill="var(--amber)"/><text class="tagtxt" x="200" y="115">CONTESTED</text>
+          <text class="nlabel" x="200" y="194">Blacksmith</text>
+        </g>
+      </svg>
+      <div class="inset">
+        <p class="label">Drop-in: Blacksmith</p>
+        <svg class="fight" viewBox="0 0 240 200" role="img" aria-label="Drop-in firefight view">
+          <rect width="240" height="200" fill="var(--road)"/>
+          <circle cx="120" cy="100" r="44" fill="var(--amber)" opacity=".25" stroke="var(--amber)" stroke-width="2" stroke-dasharray="5 4"/>
+          <g fill="var(--neutral)"><rect x="40" y="40" width="40" height="14" rx="3"/><rect x="160" y="140" width="40" height="14" rx="3"/><rect x="170" y="40" width="14" height="40" rx="3"/><rect x="50" y="120" width="14" height="40" rx="3"/></g>
+          <g stroke="var(--amber)" stroke-width="2"><line x1="112" y1="108" x2="186" y2="66"/><line x1="112" y1="108" x2="160" y2="128"/></g>
+          <polygon points="104,116 118,96 124,114" fill="var(--blue)" stroke="var(--panel)" stroke-width="2"/>
+          <g fill="var(--blue)" opacity=".8"><circle cx="78" cy="96" r="6"/><circle cx="90" cy="140" r="6"/></g>
+          <g fill="var(--red)"><circle cx="192" cy="62" r="7"/><circle cx="166" cy="128" r="7"/><circle cx="150" cy="30" r="7"/><circle cx="210" cy="110" r="7"/></g>
+          <rect x="8" y="8" width="56" height="24" rx="6" fill="var(--ink)"/>
+          <text id="timer" x="36" y="25" text-anchor="middle" font-size="14" font-weight="800" fill="var(--bg)">0:20</text>
+          <rect x="8" y="176" width="90" height="10" rx="5" fill="var(--panel)"/><rect x="8" y="176" width="66" height="10" rx="5" fill="var(--squad)"/>
+          <text x="104" y="185" font-size="9" font-weight="700" fill="var(--ink)">HP</text>
+          <rect x="140" y="174" width="92" height="16" rx="8" fill="var(--gear)"/><text x="186" y="185" text-anchor="middle" font-size="9" font-weight="800" fill="#1f2330">SHOTGUN x2 DMG</text>
+        </svg>
+      </div>
+    </div>
+    <div class="hand">
+      <div class="energy" title="Energy">3/3</div>
+      <div class="hcards" id="hand">
+        <button class="hc squad" data-t="stables farm gold lumber smith" data-h="Rifle squad: any point"><i class="k">1</i><b>Rifle squad</b><span>3 bots, any point</span></button>
+        <button class="hc squad" data-t="stables farm" data-h="Reinforcement wave: only points you hold"><i class="k">3</i><b>Reinf. wave</b><span>5 bots, held point</span></button>
+        <button class="hc tactic" data-t="smith" data-h="Hold the line: contested points only"><i class="k">1</i><b>Hold the line</b><span>Freeze meter 10s</span></button>
+        <button class="hc tactic" data-t="gold lumber" data-h="Sabotage: enemy points only"><i class="k">2</i><b>Sabotage</b><span>Stop enemy ticks</span></button>
+        <button class="hc gear" data-t="smith" data-h="Shotgun: gear, needs a drop-in at a contested point"><i class="k">1</i><b>Shotgun</b><span>Drop-in only</span></button>
+      </div>
+    </div>
+    <p class="hint" id="hint">Hover or tap a card to see where it can be played.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Four-week plan</h2>
+  <div class="weeks">
+    <div class="week ms"><span class="flag">Playable by Friday</span><h3>Week 1: the two halves</h3><ul><li>Map graph, roads, bots walk and capture</li><li>Resource ticks and win at 1600</li><li>Top-down twin-stick arena with 20s timer</li><li>Hard-switch drop-in on a contested point</li></ul></div>
+    <div class="week"><h3>Week 2: the deck</h3><ul><li>Data-driven cards, draw, energy, discard</li><li>Targeting UI with valid-point highlights</li><li>All squad and tactic cards working</li><li>Enemy commander AI v1 (weighted point scoring)</li></ul></div>
+    <div class="week"><h3>Week 3: the firefight</h3><ul><li>Gear cards and 3 enemy bot types</li><li>Fight outcome feeds back to bot counts and meter</li><li>Juice: hit stop, screenshake, flip fanfare</li><li>Contested prompts and pause-free switching</li></ul></div>
+    <div class="week"><h3>Week 4: the run</h3><ul><li>3-match run with card draft after each</li><li>AI difficulty ramp per match</li><li>Balance pass, sound, title and results screens</li><li>Build, playtest, fix</li></ul></div>
+  </div>
+  <p class="cut"><strong>Cut if behind:</strong> drop the run and the draft; ship one match with a fixed 15-card deck.</p>
+</section>
+
+</main>
+<script>
+(function(){
+  var map=document.getElementById('map'),hint=document.getElementById('hint'),hand=document.getElementById('hand');
+  var nodes=map.querySelectorAll('.node'),locked=null;
+  function show(btn){
+    var t=btn?btn.getAttribute('data-t').split(' '):null;
+    map.classList.toggle('targeting',!!btn);
+    nodes.forEach(function(n){n.classList.toggle('valid',!!t&&t.indexOf(n.getAttribute('data-id'))>-1)});
+    hint.textContent=btn?btn.getAttribute('data-h'):'Hover or tap a card to see where it can be played.';
+  }
+  hand.querySelectorAll('.hc').forEach(function(b){
+    b.addEventListener('mouseenter',function(){if(!locked)show(b)});
+    b.addEventListener('mouseleave',function(){if(!locked)show(null)});
+    b.addEventListener('focus',function(){if(!locked)show(b)});
+    b.addEventListener('blur',function(){if(!locked)show(null)});
+    b.addEventListener('click',function(){
+      if(locked===b){locked=null;b.classList.remove('on');show(null);return}
+      if(locked)locked.classList.remove('on');
+      locked=b;b.classList.add('on');show(b);
+    });
+  });
+  // contested meter + drop-in timer
+  var meter=document.getElementById('meter'),timer=document.getElementById('timer');
+  var C=163.4,p=.7,dir=1,t=20;
+  setInterval(function(){
+    p+=dir*.01; if(p>=.98||p<=.55)dir*=-1;
+    meter.setAttribute('stroke-dashoffset',(C*(1-p)).toFixed(1));
+  },120);
+  setInterval(function(){t=t<=0?20:t-1;timer.textContent='0:'+(t<10?'0':'')+t},1000);
+})();
+</script>
+</body>
+</html>
+
+</body></html>
