@@ -40,6 +40,10 @@ Most questions are now answered. The GDD and TDD reflect every decision up to 20
 | 2026-10-25 | Co-op (two player mechs) ships in the first version; "no multiplayer" leaves the non-goals (GDD review, issue 1) |
 | 2026-10-25 | The first version stays always-online; the GDD must state why and define disconnects (GDD review, issue 4) |
 | 2026-10-25 | Zones are an account unlock: extracting opens the next zone for good, never lost on death (GDD review, D3) |
+| 2026-10-25 | Gauntlet is practice: its scrap never banks; rewards are mastery goals and test-driving unowned parts (GDD review, D1) |
+| 2026-10-25 | No cash-out after the wave-3 boss; scrap stays all-or-nothing until extract (GDD review, D2) |
+| 2026-10-25 | Durability stays in the first version, with a floor (details to define) (GDD review, D5) |
+| 2026-10-25 | Metr0niks is a PvP mech game shipping a co-op PvE stage first; Draft Duel and Scrap Rush are the destination (GDD review, issue 4) |
 
 ## Design questions
 
