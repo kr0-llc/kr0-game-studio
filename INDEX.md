@@ -66,7 +66,7 @@ Studio site page: https://storage.googleapis.com/kr0-game-studio-site/index.html
 | Studio guide: layout, how work runs, where things go | `studio/README.md` |
 | Ways of working (crew, chain of command, phases, token budgets) | `studio/ways-of-working.md` |
 | GDD template | `studio/gdd-template.md` |
-| Simulation and tuning standard (with a proposed shared simulation service) | `studio/simulation-and-tuning.md` |
+| Simulation and tuning standard | `studio/simulation-and-tuning.md` |
 | Brand rules (r0 styling) | `studio/brand.md` |
 | Art style guides per game | `studio/art-style-guides.md` |
 | GDD designer skill | `studio/skills/gdd-designer/SKILL.md` |
@@ -80,6 +80,14 @@ Studio site page: https://storage.googleapis.com/kr0-game-studio-site/index.html
 | Dual Tech | `art/dual-tech/` | Art board (`board/index.html`), three styles (`prototype/`, `pitch/`, `glass/`), `prompts/`, Python drawing kits in `source/` |
 | Metr0niks | `art/metr0niks/` | Art board (`board/index.html`), styles (`prototype/`, `pitch/`, `ink/`), prototype `themes/`, `prompts/`, zone-unlock `screenshots/` |
 | Dropfront | none yet | The core loop diagram lives in `games/dropfront/gdd.pdf` |
+
+## Tools (shared by every game)
+
+| Tool | Folder | Status |
+| --- | --- | --- |
+| What belongs in `tools/` | `tools/README.md` | Current |
+| `chronos-sim`: simulation and tuning platform for every game | `tools/chronos-sim/` | Not built yet |
+| chronos-sim project plan | `tools/chronos-sim/project-plan.md` | Draft, awaiting kr0's review |
 
 ## Site
 

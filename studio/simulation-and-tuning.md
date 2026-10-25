@@ -6,8 +6,6 @@ This standard applies to every kr0 game. It turns [ways of working](ways-of-work
 
 How much to run, what counts as passing and when to run again are left to each game. Each game writes those down in its own docs (section 4). A game's approach can go beyond this standard but never below it without a decision logged in that game's decision history.
 
-Sections 1 to 5 are the standard. Section 6 is a **proposal** for a shared simulation service and is not a rule yet.
-
 ---
 
 ## 1. Every game has a headless deterministic simulation
@@ -25,6 +23,8 @@ The simulation is the game's rules with no renderer. It is the same code the pla
 | Reports metrics | A run ends with a small record of measures (length, winner, resources, errors). What to measure is the game's call. |
 
 **Replay check.** Every batch of runs replays at least one of its runs and compares state hashes. A mismatch is a failing build, fixed in the engine and never tuned around.
+
+**Shared tools.** Tooling used by every game lives in [`tools/`](../tools/README.md). The studio's simulation and tuning platform, `chronos-sim`, will be built there. Until it exists, a game runs sweeps with its own runner and still follows this standard.
 
 **Prototypes.** A throwaway prototype may skip the simulation (ways of working section 9 relaxes prototype standards). The simulation is required before a game's first tuning change is logged, and at the latest by the end of pre-production.
 
@@ -94,85 +94,3 @@ Observed in the studio repo on 2026-10-23. Each gap is a story for that game, no
 | Metr0niks | `games/metr0niks/sim.js`: headless (no DOM, no timers), fixed 1/60 s tick, seeded stream, tunables in `T`; runs in the browser and in Node | No headless runner, metrics record or replay hash check yet; no tuning-history file; no documented seeds or targets |
 | Dropfront | TDD plans a seeded headless runner playing thousands of matches overnight, target 5 to 8 minutes | Prototype draws from `Math.random`; no runner yet; no tuning-history file |
 | Dual Tech | TDD plans balance runs with simulated perfect, good and 50/50 players, one tuning table | Prototype draws from `Math.random`; no runner yet; no tuning-history file |
-
----
-
-## 6. Proposal: a shared kr0 simulation service
-
-**Status: proposal, not a rule.** Nothing here is built or approved. kr0 decides whether to build it, and when.
-
-Each game would otherwise grow its own sweep runner, cache and results viewer. A shared service lets any game submit a job, runs it on the game's own headless simulation, and returns results in one format the tuning histories can quote.
-
-### Job format
-
-A job is one JSON document. The service runs every variant on the same seed list. Values in both examples are illustrative.
-
-```json
-{
-  "game": "blackletter",
-  "build": { "repo": "kr0/kr0-game-studio", "commit": "246d89a", "entry": "games/blackletter/sim/run.mjs" },
-  "tuning": { "version": "4.0.0", "base": "tuning.js" },
-  "variants": [
-    { "name": "baseline", "overrides": {} },
-    { "name": "shooter-init-3", "overrides": { "units.shooter.init": 3 } }
-  ],
-  "scenario": { "id": "duel", "params": { "a": "shooter", "b": "chopper", "distance": 8 } },
-  "seeds": { "count": 400, "start": 1, "paired": true },
-  "metrics": ["winner", "length_s", "rejected_orders"],
-  "caps": { "maxTicks": 18000 },
-  "requestedBy": "kr0",
-  "question": "Does Shooter INIT 3 still win 65 to 80% over Chopper with Interrupt?"
-}
-```
-
-### Result format
-
-```json
-{
-  "job": "job id",
-  "status": "done | partial | failed",
-  "engine": { "commit": "246d89a", "tuningVersion": "4.0.0" },
-  "replay": { "checked": 1, "diverged": 0 },
-  "variants": [
-    {
-      "name": "shooter-init-3",
-      "runs": 400, "unfinished": 0, "errors": 0,
-      "metrics": { "winner.a": { "share": 0.665 }, "length_s": { "mean": 41.2, "sd": 6.1 } },
-      "perSeed": "link to the per-seed rows"
-    }
-  ],
-  "observations": ["winner.a 66.5%; target 65 to 80% (from the game's Simulation section)"]
-}
-```
-
-Results carry observations only (section 3). Targets come from the game's own Simulation section, which the service reads; the service has no thresholds of its own.
-
-### What each game provides
-
-An adapter: one entry point that takes `(tuning overrides, scenario, seed, caps)`, runs one simulation to its end, and returns the metrics record and the final state hash. Blackletter's engine already has this shape; Metr0niks' `sim.js` needs a runner around `MetroSim.create({seed, ...})` and `sim.step()`.
-
-### Blackletter's infra as the first backend
-
-The infra exists in the Blackletter build (`kr0/blackletter-chronos`), as described in the earlier Blackletter TDD export ([superseded/tdd-export.md](../games/blackletter/superseded/tdd-export.md)) and the current [Blackletter TDD](../games/blackletter/tdd.md). It has not been re-checked in that repo's code for this proposal.
-
-| Blackletter piece | Becomes |
-| --- | --- |
-| `npm run sim:sweep`: Node worker pool playing every variant on the same seeds | The local runner: same job format, run on a laptop |
-| Cloud Run Job `chronos-sim` for large sweeps | The cloud runner: one job fans out across task instances, each running a slice of the seeds |
-| Match cache keyed by engine, tuning and seed | The shared result cache, keyed by game, commit, tuning hash, scenario and seed |
-| Firestore sim-run records | The job and result store |
-| Tuning Lab, with Game Master access from Firestore `config/gm` | The submit-and-browse page, with access per game |
-| Sweep suggester (`server/suggest.js`: structured output, known keys only, at most 8 variants, 50 matches and 6 changed keys per variant, a person presses Start) | An optional job drafter for any game, with each game's tuning keys as its schema |
-| Replay check (`replay DIVERGED`) | A required step on every job |
-
-Steps, if kr0 approves: write the job and result formats as a schema; wrap Blackletter's sweep runner so it reads a job file; move the cache key to include the game; add a Metr0niks adapter as the second game to prove the format isn't Blackletter-shaped.
-
-### Open questions
-
-- [ ] Build it at all, or keep a runner per game and share only the job and result formats?
-- [ ] Where it lives: a folder in this repo, its own repo (kr0 creates repos), or inside the Blackletter build until a second game uses it.
-- [ ] Which GCP project and budget it runs under, and a cap on runs or compute per job.
-- [ ] How a job names the build: a commit in the studio repo, a game's own repo, or an uploaded bundle. Prototypes today are single HTML files.
-- [ ] Simulations in different languages or engines (a Godot or Unity game would need a batch-mode adapter).
-- [ ] Who may submit jobs: kr0 only, or agents on a game's crew within a token and compute budget.
-- [ ] Whether results are written back into `tuning-history.md` automatically as a draft, or always copied by the systems-designer.
