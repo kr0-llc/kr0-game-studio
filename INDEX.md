@@ -25,6 +25,7 @@ An isometric voxel mech brawler: real-time driving and shooting, heavy weapons o
 | Headless game simulation (loaded by the prototype, also runs in Node) | `games/metr0niks/sim.js` | none | Keep next to `prototype.html` |
 | Open questions (gallery title "Scrap-Breaker open questions") | `games/metr0niks/open-questions.md` | https://claude.ai/artifact/MUiquZomvsgbswqEjYxt4v | Imported |
 | Playable prototype (drive, shoot, patrol bots, small Overpass Sector 4 map) | `games/metr0niks/prototype.html` | https://storage.googleapis.com/kr0-game-studio-site/play/metr0niks/index.html | New (Oct 21, 2026); source of truth is studio-site/static/play/metr0niks/index.html in kr0/blackletter-chronos |
+| GDD review (six-reviewer board, method from GixGosu/gdd-review-kit): one file per reviewer, plus `SYNTHESIS.md` after round 3 | `games/metr0niks/reviews/` | none | In progress (Oct 25, 2026): round 1 done |
 
 ## Dropfront (formerly Basin Command)
 A capture-point battle you run with a hand of cards, then drop in yourself for short firefights.
