@@ -39,7 +39,7 @@ Most questions are now answered. The GDD and TDD reflect every decision up to 20
 | 2026-10-20 | Single-player against AI first, on one map; PvP later |
 | 2026-10-25 | Co-op (two player mechs) ships in the first version; "no multiplayer" leaves the non-goals (GDD review, issue 1) |
 | 2026-10-25 | The first version stays always-online; the GDD must state why and define disconnects (GDD review, issue 4) |
-| 2026-10-25 | Zones are an account unlock: extracting opens the next zone for good, never lost on death (GDD review, D3) |
+| 2026-10-25 | ~~Zones are an account unlock: extracting opens the next zone for good, never lost on death (GDD review, D3)~~ Superseded the same day: see the level-reset decision below |
 | 2026-10-25 | Gauntlet is practice: its scrap never banks; rewards are mastery goals and test-driving unowned parts (GDD review, D1) |
 | 2026-10-25 | No cash-out after the wave-3 boss; scrap stays all-or-nothing until extract (GDD review, D2) |
 | 2026-10-25 | Durability stays in the first version, with a floor (details to define) (GDD review, D5) |
@@ -50,6 +50,9 @@ Most questions are now answered. The GDD and TDD reflect every decision up to 20
 | 2026-10-25 | Durability floor: starter parts repair free; other parts take durability damage, and repair cost rises with the part's tier (GDD review, D5) |
 | 2026-10-25 | Damage regions are deferred: the first version keeps one armor pool, as prototyped. The ram fallback and the capped weight gain wait with them (prototype reconciliation) |
 | 2026-10-25 | Bosses: the same sniper on waves 3 and 5; wave 5 is a harder variant on the wrecked skyline (GDD review, D6) |
+| 2026-10-25 | Excursion is the story mode. Dying in an Excursion resets the campaign to level 1 (parts and scrap stay), so zones reopen as you climb again; this is what the prototype does (prototype reconciliation) |
+| 2026-10-25 | Gauntlet also resets to level 1 |
+| 2026-10-25 | Co-op Excursion plays at the lower of the two players' levels |
 
 ## Design questions
 
