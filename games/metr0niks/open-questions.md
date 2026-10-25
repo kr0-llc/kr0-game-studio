@@ -4,7 +4,7 @@ Oct 20, 2026 · @kr0
 
 ## Decided so far
 
-Most questions are now answered. The GDD and TDD reflect every decision up to 2026-10-20; the 2026-10-25 decisions come from the [GDD review](reviews/SYNTHESIS.md) and are not in the GDD yet.
+Most questions are now answered. The GDD reflects every decision below as of 2026-10-25 (they come from the [GDD review](reviews/SYNTHESIS.md) and the [prototype reconciliation](reviews/prototype-reconciliation.md)). The TDD reflects decisions up to 2026-10-20 and still needs the 2026-10-25 ones.
 
 | Date | Decision |
 | --- | --- |

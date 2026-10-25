@@ -20,7 +20,7 @@ An isometric voxel mech brawler: real-time driving and shooting, heavy weapons o
 | Document | File | Source link | Status |
 | --- | --- | --- | --- |
 | Pitch and firing-range prototype (with 3 concept art images) | `games/metr0niks/pitch-and-firing-range/index.html` (+ `art/`) | https://claude.ai/artifact/TgLkPWgZdjqbAj7vNQXHdb | Imported (from zip) |
-| GDD (gallery title "Scrap-Breaker GDD") | `games/metr0niks/gdd.md` | https://claude.ai/artifact/XBYfrT2AvabsFNsYTJudsq | Imported |
+| GDD (gallery title "Scrap-Breaker GDD"; the artifact is the Oct 20 version) | `games/metr0niks/gdd.md` (Oct 25 update; Oct 20 version in `games/metr0niks/superseded/gdd-2026-10-20.md`) | https://claude.ai/artifact/XBYfrT2AvabsFNsYTJudsq | Updated Oct 25, 2026 from the GDD review; waiting on kr0 |
 | TDD (gallery title "Scrap-Breaker TDD") | `games/metr0niks/tdd.md` | https://claude.ai/artifact/XbGJLgDdqYtnVLmsZyrnge | Imported |
 | Headless game simulation (loaded by the prototype, also runs in Node) | `games/metr0niks/sim.js` | none | Keep next to `prototype.html` |
 | Open questions (gallery title "Scrap-Breaker open questions") | `games/metr0niks/open-questions.md` | https://claude.ai/artifact/MUiquZomvsgbswqEjYxt4v | Imported |
