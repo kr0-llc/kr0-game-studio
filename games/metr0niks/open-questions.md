@@ -44,6 +44,9 @@ Most questions are now answered. The GDD and TDD reflect every decision up to 20
 | 2026-10-25 | No cash-out after the wave-3 boss; scrap stays all-or-nothing until extract (GDD review, D2) |
 | 2026-10-25 | Durability stays in the first version, with a floor (details to define) (GDD review, D5) |
 | 2026-10-25 | Metr0niks is a PvP mech game shipping a co-op PvE stage first; Draft Duel and Scrap Rush are the destination (GDD review, issue 4) |
+| 2026-10-25 | Disconnect mid-excursion: the player can rejoin within a window and the mech holds until they do (GDD review, issue 2) |
+| 2026-10-25 | Every mech can ram for melee damage, so losing both arm weapons never leaves it helpless (GDD review, adversarial-qa F3) |
+| 2026-10-25 | A disabled weapon's weight still comes off, but the speed gain is capped below a healthy build's and the HUD explains it (GDD review, D4) |
 
 ## Design questions
 
