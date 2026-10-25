@@ -50,7 +50,7 @@ Most questions are now answered. The GDD and TDD reflect every decision up to 20
 | 2026-10-25 | Durability floor: starter parts repair free; other parts take durability damage, and repair cost rises with the part's tier (GDD review, D5) |
 | 2026-10-25 | Damage regions are deferred: the first version keeps one armor pool, as prototyped. The ram fallback and the capped weight gain wait with them (prototype reconciliation) |
 | 2026-10-25 | Bosses: the same sniper on waves 3 and 5; wave 5 is a harder variant on the wrecked skyline (GDD review, D6) |
-| 2026-10-25 | Excursion is the story mode. Dying in an Excursion resets the campaign to level 1 (parts and scrap stay), so zones reopen as you climb again; this is what the prototype does (prototype reconciliation) |
+| 2026-10-25 | Excursion is the game's main mode, played single-player or co-op; it is not called "story mode", since other modes may come later. Dying in an Excursion resets the campaign to level 1 (parts and scrap stay), so zones reopen as you climb again; this is what the prototype does (prototype reconciliation) |
 | 2026-10-25 | Gauntlet also resets to level 1 |
 | 2026-10-25 | Co-op Excursion plays at the lower of the two players' levels |
 
