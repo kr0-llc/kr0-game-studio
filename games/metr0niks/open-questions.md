@@ -47,6 +47,9 @@ Most questions are now answered. The GDD and TDD reflect every decision up to 20
 | 2026-10-25 | Disconnect mid-excursion: the player can rejoin within a window and the mech holds until they do (GDD review, issue 2) |
 | 2026-10-25 | Every mech can ram for melee damage, so losing both arm weapons never leaves it helpless (GDD review, adversarial-qa F3) |
 | 2026-10-25 | A disabled weapon's weight still comes off, but the speed gain is capped below a healthy build's and the HUD explains it (GDD review, D4) |
+| 2026-10-25 | Durability floor: starter parts repair free; other parts take durability damage, and repair cost rises with the part's tier (GDD review, D5) |
+| 2026-10-25 | Damage regions are deferred: the first version keeps one armor pool, as prototyped. The ram fallback and the capped weight gain wait with them (prototype reconciliation) |
+| 2026-10-25 | Bosses: the same sniper on waves 3 and 5; wave 5 is a harder variant on the wrecked skyline (GDD review, D6) |
 
 ## Design questions
 
