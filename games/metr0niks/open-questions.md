@@ -4,7 +4,7 @@ Oct 20, 2026 · @kr0
 
 ## Decided so far
 
-Most questions are now answered; the GDD and TDD reflect every decision below.
+Most questions are now answered. The GDD and TDD reflect every decision up to 2026-10-20; the 2026-10-25 decisions come from the [GDD review](reviews/SYNTHESIS.md) and are not in the GDD yet.
 
 | Date | Decision |
 | --- | --- |
@@ -37,6 +37,9 @@ Most questions are now answered; the GDD and TDD reflect every decision below.
 | 2026-10-20 | Garage between matches only; drop pods give temporary boosts or heals, then disappear |
 | 2026-10-20 | Hybrid combat: real-time movement and light weapons, ATB timing hits for heavy weapons |
 | 2026-10-20 | Single-player against AI first, on one map; PvP later |
+| 2026-10-25 | Co-op (two player mechs) ships in the first version; "no multiplayer" leaves the non-goals (GDD review, issue 1) |
+| 2026-10-25 | The first version stays always-online; the GDD must state why and define disconnects (GDD review, issue 4) |
+| 2026-10-25 | Zones are an account unlock: extracting opens the next zone for good, never lost on death (GDD review, D3) |
 
 ## Design questions
 
