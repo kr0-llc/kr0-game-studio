@@ -4,7 +4,8 @@ Newest first. Status is Proposed until kr0 accepts or rejects it. The [TDD](tdd.
 
 | ID | Date | Decision | Options considered | Trade-off | Status |
 | --- | --- | --- | --- | --- | --- |
-| TDD-D5 | 2026-10-25 | Per-part durability is data on each owned part instance, replacing the prototype's single carried armor value | Keep the carried armor pool and charge repairs by fitted tier | Per-part durability matches GDD-D9 but needs a damage-spreading rule and a UI; the armor pool is built and simple | Proposed |
+| TDD-D6 | 2026-10-25 | Enemies and pods use flow fields over a walk grid rebuilt when voxels change, as the prototype does, instead of a navmesh | A navmesh with local rebakes | The grid is already built and updates with every collapse; a navmesh is more work and the TDD's old plan | Proposed |
+| TDD-D5 | 2026-10-25 | Per-part wear is data on each owned part instance, applying GDD-D18 (wear 10% of armor lost ÷ max armor, helpful stat changes scaled by 1 − wear), replacing the prototype's single carried armor value | Keep the carried armor pool and charge repairs by fitted tier | Per-part durability matches GDD-D9 but needs a damage-spreading rule and a UI; the armor pool is built and simple | Proposed |
 | TDD-D4 | 2026-10-25 | Disconnects are handled by the server holding the match and sending a full snapshot on rejoin | Drop the player and give the partner the mech; end the excursion | Holding state keeps the player's run but needs the server to snapshot the destroyed map; the prototype destroys a dropped mech | Proposed |
 | TDD-D3 | 2026-10-25 | Single-player runs on the server too, so account progress, co-op and later PvP share one economy | Keep single-player in the browser with a local save and campaign code | Server-backed saves stop edited scrap; the browser version works offline and needs no backend | Proposed |
 | TDD-D2 | 2026-10-25 | The rules stay a headless, deterministic simulation in `sim.js`, run by the room server and by Node for sweeps | A separate balance copy of the rules; the engine's own physics | One rules file keeps sweeps and the game identical; it ties the build to JavaScript until the engine choice is made | Proposed |
@@ -14,4 +15,4 @@ Newest first. Status is Proposed until kr0 accepts or rejects it. The [TDD](tdd.
 
 | Date | Change |
 | --- | --- |
-| 2026-10-25 | TDD updated from the Oct 20 version: simulation and netcode section, level and death reset, rejoin, durability data, heat rules, save data, risks (TDD-D1 to TDD-D5). The Oct 20 version moved to `superseded/` |
+| 2026-10-25 | TDD aligned with the Excursion-only GDD (no Gauntlet or damage regions, wear rules, flow fields, camera and AI as built). Earlier on the same day it was updated from the Oct 20 version: simulation and netcode section, level and death reset, rejoin, durability data, heat rules, save data, risks (TDD-D1 to TDD-D5). The Oct 20 version moved to `superseded/` |

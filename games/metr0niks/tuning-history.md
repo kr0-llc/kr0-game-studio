@@ -8,24 +8,24 @@ Every changed number, why it changed, and the tokens each story spent. No tuning
 
 - **Runner:** none yet. The rules are `sim.js`; in Node, `import './sim.js'` then `globalThis.MetroSim.create({seed, mode, builds, level})`, and `sim.step()` advances one tick. A runner that plays whole excursions and writes a metrics record per run is to be built. Results will land in `games/metr0niks/tuning-runs/` (proposed).
 - **Determinism:** the simulation draws from one seeded stream, steps in fixed 1/60 s ticks and has no DOM, timers or browser globals. `MetroSim.hash` exists. The replay check (a seed, the tuning version and the input log reproducing one state hash) is not built.
-- **Scenarios:** TBD. Likely: Excursion level 1 and level 3 (all zones open), single-player and two-player co-op, Overpass Sector 4.
-- **Players:** none yet. A scripted bot has to drive a mech through five waves; co-op needs a second bot. Settings TBD.
+- **Scenarios:** to be set by kr0. Likely: Excursion level 1 and level 3 (all zones open), single-player and two-player co-op, Overpass Sector 4.
+- **Players:** none yet. A scripted bot has to drive a mech through five waves; co-op needs a second bot.
 - **Seeds:** TBD (kr0 to decide). Paired seeds are required by the standard.
 - **Measures and targets:**
 
   | Measure | Target | Source of the target |
   | --- | --- | --- |
-  | Excursion length | TBD | Not in the GDD yet |
-  | Extract rate for a starter mech at level 1 | TBD | Not in the GDD yet |
-  | Scrap per extract, by level | TBD | GDD Economy: all values TBD |
-  | Runs to afford each part tier | TBD | Not in the GDD yet |
-  | Share of damage that becomes durability damage | TBD | GDD-D9; open question |
+  | Excursion length | TBD | No target set |
+  | Extract rate for a starter mech at level 1 | TBD | No target set |
+  | Scrap per extract, by level | TBD | GDD Economy lists the sources; no target set |
+  | Runs to afford each part tier | TBD | No target set |
+  | Wear per extract (share of armor lost) | 0.10 as a starting value | GDD-D18 |
   | Rejected inputs and errors | 0 | Standard |
 
 - **Re-run when:** any key in `T` changes, a part's stat change or cost changes, the wave table changes, or the durability or repair rule changes.
 - **Caps:** TBD. A run that exceeds the cap is counted and reported, not dropped.
 
-Open design questions that need sweeps: what share of excursion damage becomes durability damage and what repairs cost (open questions), and the length of the rejoin window.
+Questions that need sweeps: whether 10% wear and the repair rates let a losing player recover, and whether 60 s is the right rejoin window.
 
 ## Baseline: tuning in the prototype (Oct 25, 2026)
 
@@ -44,6 +44,17 @@ The values in `sim.js` `T` and `PARTS`, carried over unchanged. They are the pro
 | Repair | 3 armor restored per scrap |
 | Collapse | Warning 0.9 s; bot damage 80; player damage 40; debris cap 300 |
 | Parts | 21 parts; prices 0 to 140 scrap across three rarity tiers (see the GDD parts list) |
+
+## Values proposed for the prototype, not yet in it
+
+The GDD sets these (GDD-D18 and GDD-D20). They are starting values for the first sweeps, not tuned.
+
+| Key | Value |
+| --- | --- |
+| `durability.share` | 0.10 of armor lost ÷ max armor, as wear on each fitted non-starter part |
+| `durability.repair` | Common 0.25, rare 0.5, epic 0.75 of price × wear |
+| Rejoin window | 60 s |
+| Wave-5 boss | Health × 1.5, fire interval 1.5 s, scrap 18 |
 
 ## Changes
 

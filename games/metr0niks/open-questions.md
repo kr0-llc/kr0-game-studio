@@ -40,10 +40,10 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | 2026-10-25 | Co-op (two player mechs) ships in the first version; "no multiplayer" leaves the non-goals (GDD review, issue 1) |
 | 2026-10-25 | The first version stays always-online; the GDD must state why and define disconnects (GDD review, issue 4) |
 | 2026-10-25 | ~~Zones are an account unlock: extracting opens the next zone for good, never lost on death (GDD review, D3)~~ Superseded the same day: see the level-reset decision below |
-| 2026-10-25 | Gauntlet is practice: its scrap never banks; rewards are mastery goals and test-driving unowned parts (GDD review, D1) |
+| 2026-10-25 | ~~Gauntlet is practice: its scrap never banks; rewards are mastery goals and test-driving unowned parts (GDD review, D1)~~ Superseded the same day: Excursion is the only mode |
 | 2026-10-25 | No cash-out after the wave-3 boss; scrap stays all-or-nothing until extract (GDD review, D2) |
-| 2026-10-25 | Durability stays in the first version, with a floor (details to define) (GDD review, D5) |
-| 2026-10-25 | Metr0niks is a PvP mech game shipping a co-op PvE stage first; Draft Duel and Scrap Rush are the destination (GDD review, issue 4) |
+| 2026-10-25 | Durability stays in the first version; the rules are GDD-D18 (GDD review, D5) |
+| 2026-10-25 | ~~Metr0niks is a PvP mech game shipping a co-op PvE stage first~~ The PvP wording was dropped with the other modes (GDD-D17) |
 | 2026-10-25 | Disconnect mid-excursion: the player can rejoin within a window and the mech holds until they do (GDD review, issue 2) |
 | 2026-10-25 | Every mech can ram for melee damage, so losing both arm weapons never leaves it helpless (GDD review, adversarial-qa F3) |
 | 2026-10-25 | A disabled weapon's weight still comes off, but the speed gain is capped below a healthy build's and the HUD explains it (GDD review, D4) |
@@ -51,16 +51,28 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | 2026-10-25 | Damage regions are deferred: the first version keeps one armor pool, as prototyped. The ram fallback and the capped weight gain wait with them (prototype reconciliation) |
 | 2026-10-25 | Bosses: the same sniper on waves 3 and 5; wave 5 is a harder variant on the wrecked skyline (GDD review, D6) |
 | 2026-10-25 | Excursion is the game's main mode, played single-player or co-op; it is not called "story mode", since other modes may come later. Dying in an Excursion resets the campaign to level 1 (parts and scrap stay), so zones reopen as you climb again; this is what the prototype does (prototype reconciliation) |
-| 2026-10-25 | Gauntlet also resets to level 1 |
+| 2026-10-25 | ~~Gauntlet also resets to level 1~~ Superseded: no Gauntlet |
 | 2026-10-25 | Co-op Excursion plays at the lower of the two players' levels |
+| 2026-10-25 | Excursion is the only game mode. Gauntlet, Draft Duel and Scrap Rush are removed from the GDD, TDD and prototype (GDD-D17) |
+| 2026-10-25 | The GDD has no TBDs: values come from the prototype, and what the prototype lacks is dropped or given a number (GDD-D18 to GDD-D20) |
 
 ## Design questions
 
-Only tuning questions are left.
+All design questions are answered. Values that need sweeps (wear share, repair rates, the 60 s rejoin window) are in the [tuning history](tuning-history.md).
 
-- [ ] What share of excursion damage becomes durability damage, and how much scrap does a repair cost?
-- [ ] How much does disabled legs slow the mech?
-- [ ] Which multiplayer mode comes first after Excursion and Gauntlet?
+## Backlog: dropped from the GDD, to bring back only by decision
+
+These were in the Oct 20 GDD or later drafts and have no counterpart in the prototype (GDD-D17, GDD-D19):
+
+- Draft Duel (1v1, best of 5) and Scrap Rush (1v1 or 2v2 plus AI), and PvP in general.
+- Gauntlet as a practice mode.
+- Damage regions: disabling the left arm, right arm or legs, with the ram fallback and the capped weight gain that came with them (GDD-D11, GDD-D12).
+- Accessibility options: widen the Perfect window and auto-release timing rings. Remappable keys.
+- The overheat steam damage zone.
+- The Smelting Yards and Neon Financial Plaza maps; armored transports, vaults and power relays.
+- The Coolant flood and Bolt-on plate pods.
+- Free torso pitch for aiming at upper floors.
+- Enemies that break supports on purpose.
 
 ## Technical questions
 
@@ -69,6 +81,7 @@ The engine and voxel scale are deferred; the online backend is new and needed fo
 - [ ] Godot 4 or Unity? Deferred.
 - [ ] Voxel size and chunk size to match the concept art? Deferred.
 - [ ] Which backend handles accounts, mech data and online play?
+- [ ] Does the touch control scheme in the prototype stay, or is the platform keyboard and mouse only? (prototype changes, section 9)
 
 ## Scope and production questions
 

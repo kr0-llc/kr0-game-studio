@@ -20,9 +20,10 @@ An isometric voxel mech brawler: real-time driving and shooting, heavy weapons o
 | Document | File | Source link | Status |
 | --- | --- | --- | --- |
 | Pitch and firing-range prototype (with 3 concept art images) | `games/metr0niks/pitch-and-firing-range/index.html` (+ `art/`) | https://claude.ai/artifact/TgLkPWgZdjqbAj7vNQXHdb | Imported (from zip) |
-| GDD (gallery title "Scrap-Breaker GDD"; the artifact is the Oct 20 version) | `games/metr0niks/gdd.md` (Oct 25 update; Oct 20 version in `games/metr0niks/superseded/gdd-2026-10-20.md`) | https://claude.ai/artifact/XBYfrT2AvabsFNsYTJudsq | Updated Oct 25, 2026 from the GDD review; waiting on kr0 |
+| GDD (gallery title "Scrap-Breaker GDD"; the artifact is the Oct 20 version) | `games/metr0niks/gdd.md` (Oct 25 update; Oct 20 version in `games/metr0niks/superseded/gdd-2026-10-20.md`) | https://claude.ai/artifact/XBYfrT2AvabsFNsYTJudsq | Rewritten Oct 25, 2026: Excursion only, no TBDs, matches the prototype plus kr0's decisions; waiting on kr0 |
 | TDD (gallery title "Scrap-Breaker TDD"; the artifact is the Oct 20 version) | `games/metr0niks/tdd.md` (Oct 25 update; Oct 20 version in `games/metr0niks/superseded/tdd-2026-10-20.md`) | https://claude.ai/artifact/XbGJLgDdqYtnVLmsZyrnge | Updated Oct 25, 2026; waiting on kr0 |
 | GDD decision history | `games/metr0niks/gdd-decisions.md` | none | New (Oct 25, 2026) |
+| Prototype changes (what the prototype must change to match the GDD and TDD) | `games/metr0niks/prototype-changes.md` | none | New (Oct 25, 2026); nothing done yet |
 | TDD decision history | `games/metr0niks/tdd-decisions.md` | none | New (Oct 25, 2026); all Proposed |
 | Tuning history (Simulation section and prototype baseline) | `games/metr0niks/tuning-history.md` | none | New (Oct 25, 2026); no changes logged yet |
 | Headless game simulation (loaded by the prototype, also runs in Node) | `games/metr0niks/sim.js` | none | Keep next to `prototype.html` |
