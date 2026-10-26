@@ -71,6 +71,43 @@ Decision: scrap buys parts, weapon upgrades and repairs; no raw stat upgrades (G
 - Garage: show the selected weapon's level and an Upgrade button with the next price; buying pays from banked scrap. Show the level on the slot tile. Wear and the repair price ignore the level.
 - Co-op: the guest's `ready` message (P:1816) carries its upgrade levels.
 
-## 11. Checked, nothing to change
+## 11. Level 50 victory
+
+Decision: extracting level 50 wins the campaign (GDD-D24).
+
+- On the extract event at `T.level.max`, show a Victory overlay instead of Extracted. Its button runs `newCampaign()` and opens the garage. `Campaign.advance` (S:1212) already clamps the level at 50.
+
+## 12. Co-op revive and wear for a downed partner
+
+Decision: GDD-D24.
+
+- **New:** `T.coop = { revivePrice: 40, reviveArmor: 0.3 }` (use `T.level.revive` for the armor if it stays).
+- In `updateWave` (S:556 to 558), when a wave below the last clears and one mech is down: if the survivor's `scrap` wallet holds `round(revivePrice × lvm("scrap"))`, take it from that wallet (and from `sim.scrap`), set the downed mech's hp to `reviveArmor × maxHp` beside the survivor, reset its heat, ATB and timers, and emit a toast and an event for audio.
+- The damage-taken total of section 2 keeps counting across the revive; the extract event sends it for every mech, alive or not, and wear applies to all of them. A downed mech's wallet already banks at extract (S:564).
+
+## 13. Settable seed
+
+Decision: GDD-D25.
+
+- Garage: at level 1, show the campaign seed in a number field (1 to 2,147,483,000; `Campaign.validate` already enforces the range). Changing it updates `CAMP.seed` and saves. Hidden or read-only past level 1.
+
+## 14. Death and leaving save the reset at once
+
+Decision: the GDD's death reset (GDD-D14, GDD-D28). Today an Excursion death doesn't write the save; the reset happens only on "New campaign", so reloading after a death or mid-match offers Continue at the same level.
+
+- On the `dead` event, call `newCampaign()` (P:706) before showing the screen.
+- When a match starts (`start()`, P:1634), save the campaign marked as in a match; on load, a save still marked in a match is treated as a death (level 1). Clear the mark on extract.
+
+## 15. Audio
+
+Decision: GDD-D26. The prototype has no audio.
+
+- Add the music cues and the essential sound effects in the GDD's Audio section, driven by sim events (add events where the sim has none: ATB ready, ring start, grade, overheat, dash, footsteps can come from the renderer). Settings gets music and effects volume, saved like the art style.
+
+## 16. Corrections in the GDD, nothing to change
+
+GDD-D28 changed GDD text to match the prototype (collapse scrap, timing grades, Perfect knockback, overheat during a ring, screen shake, bot fire timing, mortar falloff, Overclock on loaders, level scaling, pods, spawns, boss placement, friendly fire, voxel damage and power, menus). The prototype stays as it is for these.
+
+## 17. Checked, nothing to change
 
 These GDD statements already match the prototype: the controls table, the dimetric camera and cutaway fade, the 35% vignette, the ATB and ring values, heat rules (every grade costs the same heat, an overheat during a ring adds none, the flash-vent ends a lockout, Overclock doubles every fill), the 21 parts and prices, two pod types and the pod rules, the wave table, level scaling, zones and drop-in timing for levels 2 and 3, death resetting the campaign to level 1, and co-op partner-down behaviour.

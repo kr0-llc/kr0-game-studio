@@ -57,22 +57,24 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | 2026-10-25 | The GDD has no TBDs: values come from the prototype, and what the prototype lacks is dropped or given a number (GDD-D18 to GDD-D20) |
 | 2026-10-25 | Server features go to the backlog: rejoin, accounts and server-held saves, online single-player (GDD-D21) |
 | 2026-10-25 | No touch controls: PC with keyboard and mouse only (GDD-D22) |
-| 2026-10-26 | Scrap buys parts, weapon upgrades (Mk I to Mk III, nine weapons including the shoulder actives) and repairs; no raw stat upgrades (GDD-D23). Upgrade values are proposed and wait on a sweep |
+| 2026-10-26 | Accepted: wear and repair numbers and armor refill (GDD-D18), wave-5 boss, drop-in lock and co-op level (GDD-D20), weapon upgrade values (GDD-D23) |
+| 2026-10-26 | Extracting level 50 wins the campaign with a victory screen; a co-op partner is revived at the end of a wave for a scrap price paid by the survivor, and takes wear (GDD-D24) |
+| 2026-10-26 | The campaign seed can be set (GDD-D25) |
+| 2026-10-26 | Five new pillars and a synthwave audio section (GDD-D26) |
+| 2026-10-26 | Audience and player fantasy stay TBD; production milestones and pricing are not in the GDD (GDD-D27) |
+| 2026-10-26 | GDD corrected against the prototype and its gaps filled (GDD-D28) |
+| 2026-10-26 | Scrap buys parts, weapon upgrades (Mk I to Mk III, nine weapons including the shoulder actives) and repairs; no raw stat upgrades (GDD-D23). Upgrade values are starting values for a sweep |
 
 ## Design questions
 
-Values that need sweeps (the wear share, the repair rates and the weapon upgrade values of GDD-D23) are in the [tuning history](tuning-history.md). The questions still open from the Oct 26 review are listed below until kr0 answers them.
+Values that need sweeps (the wear share, the repair rates and the weapon upgrade values of GDD-D23) are in the [tuning history](tuning-history.md).
 
-Still Proposed in the [decision history](gdd-decisions.md): the wear and repair numbers and armor refilling every level (GDD-D18), the wave-5 boss values, the zone drop-in lock and the co-op level (GDD-D20), and the weapon upgrade values (GDD-D23).
+Still Proposed in the [decision history](gdd-decisions.md): the revive price and the 30% revive armor, what the victory button does (GDD-D24), limiting seed changes to level 1 (GDD-D25) and repair in slot order (GDD-D28).
 
-Raised by the Oct 26 review of the GDD against the prototype; each needs kr0's answer before the GDD can state a rule:
-
-- [ ] What happens after extracting level 50? The prototype keeps the campaign at level 50.
-- [ ] In co-op, a partner who died before the team extracts still banks the scrap they picked up (prototype). Does that mech's fitted parts take wear?
-- [ ] Wear basis: total damage taken (counting damage later healed by pods or the Nanite core) or net armor lost? Does wear add up across extracts, capped at 100%? When the wallet can't cover every repair, which part is repaired first? Is the repair price rounded up?
-- [ ] Every campaign uses the same seed, so each level's wave-1 pod times and types repeat on every climb. Intended?
-- [ ] A fourth pillar: the pitch has "Scrap only counts if you get out"; the GDD has three pillars. Add it?
-- [ ] Missing GDD sections with no source yet: what makes it fun, player fantasy, target audience, difficulty targets, audio (the prototype has none), production milestones and dependencies, positioning, comparables and price. Write them, or state in the GDD that they are out of scope for now?
+- [ ] Target audience and player fantasy: TBD in the GDD on kr0's instruction (GDD-D27).
+- [ ] Where production milestones live, since they are not part of the GDD (GDD-D27). The producer's documents and the phases in ways of working section 5 are the candidates.
+- [ ] The death screen offers the campaign code from before the run, and pasting it as a co-op host restores that level, which gets around the reset on death. Keep it as a deliberate retry, or remove it? (Prototype changes section 9 currently suggests adding a single-player paste box.)
+- [ ] What makes it fun: the GDD's overview has no paragraph on it yet. The mech-game research of Oct 26 may feed it.
 
 ## Backlog: dropped from the GDD, to bring back only by decision
 

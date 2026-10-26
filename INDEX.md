@@ -20,10 +20,10 @@ An isometric voxel mech brawler: real-time driving and shooting, heavy weapons o
 | Document | File | Source link | Status |
 | --- | --- | --- | --- |
 | Pitch and firing-range prototype (with 3 concept art images) | `games/metr0niks/pitch-and-firing-range/index.html` (+ `art/`) | https://claude.ai/artifact/TgLkPWgZdjqbAj7vNQXHdb | Imported (from zip) |
-| GDD (gallery title "Scrap-Breaker GDD"; the artifact is the Oct 20 version) | `games/metr0niks/gdd.md` (Oct 26 update; Oct 20 version in `games/metr0niks/superseded/gdd-2026-10-20.md`) | https://claude.ai/artifact/XBYfrT2AvabsFNsYTJudsq | Rewritten Oct 25, 2026: Excursion only, no TBDs, matches the prototype plus kr0's decisions. Oct 26: weapon upgrades (GDD-D23). Proposed values waiting on kr0 |
+| GDD (gallery title "Scrap-Breaker GDD"; the artifact is the Oct 20 version) | `games/metr0niks/gdd.md` (Oct 26 update; Oct 20 version in `games/metr0niks/superseded/gdd-2026-10-20.md`) | https://claude.ai/artifact/XBYfrT2AvabsFNsYTJudsq | Rewritten Oct 25, 2026: Excursion only, no TBDs, matches the prototype plus kr0's decisions. Oct 26: weapon upgrades, pillars, audio, victory, co-op revive, seed, corrections against the prototype (GDD-D23 to D28); a few values Proposed; earlier Oct 26 draft in `superseded/gdd-2026-10-26-draft.md` |
 | TDD (gallery title "Scrap-Breaker TDD"; the artifact is the Oct 20 version) | `games/metr0niks/tdd.md` (Oct 26 update; Oct 20 version in `games/metr0niks/superseded/tdd-2026-10-20.md`) | https://claude.ai/artifact/XbGJLgDdqYtnVLmsZyrnge | Updated Oct 25, 2026; waiting on kr0 |
-| GDD decision history | `games/metr0niks/gdd-decisions.md` | none | New (Oct 25, 2026); GDD-D23 added Oct 26; GDD-D18, D20 and D23 values Proposed |
-| Prototype changes (what the prototype must change to match the GDD and TDD) | `games/metr0niks/prototype-changes.md` | none | New (Oct 25, 2026); weapon upgrades added Oct 26; nothing done yet |
+| GDD decision history | `games/metr0niks/gdd-decisions.md` | none | New (Oct 25, 2026); GDD-D23 to D28 added Oct 26; D18, D20 and D23 accepted; revive price, victory button, seed limit and repair order Proposed |
+| Prototype changes (what the prototype must change to match the GDD and TDD) | `games/metr0niks/prototype-changes.md` | none | New (Oct 25, 2026); sections 10 to 16 added Oct 26; nothing done yet |
 | Handoff prompt for the agent finalizing the GDD | `games/metr0niks/handoff-gdd-prompt.md` | none | New (Oct 25, 2026) |
 | TDD decision history | `games/metr0niks/tdd-decisions.md` | none | New (Oct 25, 2026); all Proposed |
 | Tuning history (Simulation section and prototype baseline) | `games/metr0niks/tuning-history.md` | none | New (Oct 25, 2026); weapon-upgrade sweep planned Oct 26; no changes logged yet |

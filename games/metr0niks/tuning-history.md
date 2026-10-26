@@ -30,6 +30,7 @@ Every changed number, why it changed, and the tokens each story spent. No tuning
 Questions that need sweeps:
 
 - Whether 10% wear and the repair rates let a losing player recover.
+- Co-op revive (GDD-D24): how often a survivor can afford the revive price by wave, by level. Needs the runner, a two-bot scenario and kr0's target.
 - Weapon upgrades (GDD-D23): how many extracts it takes to take a weapon to Mk III, and how much each level shortens a wave. Planned variants: damage per level 0.05, 0.10 and 0.15, crossed with upgrade cost ×0.5, ×1 and ×2, on paired seeds at level 1 and level 3, single-player, the starter build and one rare build. Needs the runner and kr0's targets first.
 
 ## Baseline: tuning in the prototype (Oct 25, 2026)
@@ -50,9 +51,9 @@ The values in `sim.js` `T` and `PARTS`, carried over unchanged. They are the pro
 | Collapse | Warning 0.9 s; bot damage 80; player damage 40; debris cap 300 |
 | Parts | 21 parts; prices 0 to 140 scrap across three rarity tiers (see the GDD parts list) |
 
-## Values proposed for the prototype, not yet in it
+## Values the GDD sets that the prototype doesn't have yet
 
-The GDD sets these (GDD-D18, GDD-D20 and GDD-D23). They are starting values for the first sweeps, not tuned.
+The GDD sets these (GDD-D18, GDD-D20, GDD-D23 and GDD-D24). kr0 accepted the GDD-D18, D20 and D23 values on 2026-10-26 as starting values; the revive values are Proposed. None is tuned.
 
 | Key | Value |
 | --- | --- |
@@ -61,6 +62,8 @@ The GDD sets these (GDD-D18, GDD-D20 and GDD-D23). They are starting values for 
 | Wave-5 boss | Health × 1.5, fire interval 1.5 s, scrap 18 |
 | `upgrade.levels` | 2 (Mk I to Mk III) on the nine weapons: four Arm-R guns, three Arm-L heavy weapons, siege mortar, Cryo flash-vent |
 | `upgrade.dmg` | 0.10 of the weapon's damage to enemies per level |
+| `coop.revivePrice` | 40 scrap at level 1, × (1 + 0.10 × (level − 1)), rounded; paid from the survivor's match scrap at the end of waves 1 to 4 |
+| `coop.reviveArmor` | 0.30 of max armor (the prototype's `level.revive`) |
 | `upgrade.cost` | Common 20 and 40, rare 35 and 70, epic 60 and 120 scrap for Mk II and Mk III |
 
 ## Changes

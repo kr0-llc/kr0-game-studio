@@ -41,7 +41,8 @@ The rules are a headless, deterministic simulation with no renderer, as [simulat
 - **Co-op (prototype):** a room server runs the whole simulation. Mech 0 and mech 1 are the two players; the server sends snapshots at 20 per second with voxel diffs, each client sends its input every tick and predicts only its own movement, and a silent partner's keys are released after 0.5 s. A local two-tab transport exists for testing. The server code is not in this repo.
 - **Authority:** in a co-op room the server decides firing, heat, ATB, damage and pod ties. The "same frame" pod rule is "same server tick" online.
 - **Leaving a room:** a partner who leaves or drops is destroyed (`dropPlayer`) and the other mech fights on; the room closes when the excursion ends.
-- **Levels:** each excursion is one campaign level (1 to 50) with its own deterministic seed; a level decides which zones are open and scales enemies. A death resets the level to 1. Co-op runs at the lower of the two players' levels.
+- **Levels:** each excursion is one campaign level (1 to 50) with its own deterministic seed, derived from the campaign seed (settable at level 1, GDD-D25); a level decides which zones are open and scales enemies. A death, or leaving mid-match, resets the level to 1 and is saved at once. Extracting level 50 ends the campaign with a victory screen. Co-op runs at the lower of the two players' levels.
+- **Co-op revive:** when a wave below the last clears, the sim revives a downed mech if the survivor's wallet covers `T.coop.revivePrice` scaled by level, at `T.coop.reviveArmor` (GDD-D24). Damage-taken totals carry across the revive, and every mech's total goes in the extract event for wear.
 - **Checks still to build:** a headless runner, a metrics record per run and a replay hash check (see the [tuning history](tuning-history.md)).
 
 ## Voxel destruction
@@ -115,11 +116,15 @@ Heavy loaders patrol, hunt on sight and charge (tell 0.5 s, charge up to 1 s at 
 
 The save is one campaign code, base64url JSON, kept in the browser (`localStorage`, key `metr0niks.campaign`) and copyable from the garage. In a co-op room the room's campaign replaces each client's.
 
-- **Saved:** banked scrap, owned parts, the equipped build, per-part wear, per-weapon upgrade levels, the campaign level and the seed.
+- **Saved:** banked scrap, owned parts, the equipped build, per-part wear, per-weapon upgrade levels, an in-match mark (a save still marked on load counts as a death), the campaign level and the seed.
 - **Not saved:** match scrap, pod effects and match damage. Dying or leaving early discards them, and a death resets the campaign level to 1 (parts and banked scrap stay).
 - **Validation:** decoding rejects unknown part ids, negative or oversized scrap, wear outside 0 to 1, upgrade levels outside 0 to 2 or on parts that aren't owned weapons, a level outside 1 to 50 and more than two players.
-- **Write points:** on extract, on death and on leaving the garage.
+- **Write points:** on extract, on death, when a match starts (the in-match mark) and on leaving the garage.
 - **Versioning:** a version number (`v`) on the data, with a small migration step when the format changes.
+
+## Audio
+
+The sim emits events for the moments the GDD's Audio section lists; the client plays music and effects from them, with music and effects volumes saved on the device. Repeated sounds are pooled and pitch-varied; warning sounds are mixed above music. Tools and middleware wait on the engine choice.
 
 ## Technical risks
 
