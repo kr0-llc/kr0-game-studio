@@ -2,7 +2,7 @@
 
 Updated Oct 26, 2026 · @kr0 · Earlier version: [Oct 20](superseded/tdd-2026-10-20.md)
 
-This TDD matches the [GDD](gdd.md): one mode, Excursion, built the way the prototype builds it (`prototype.html`, `sim.js`) plus kr0's decisions of Oct 25 ([GDD decision history](gdd-decisions.md)). Architecture choices that are not yet kr0's decisions are in the [TDD decision history](tdd-decisions.md) as Proposed. What the prototype still has to change is in [prototype changes](prototype-changes.md).
+This TDD matches the [GDD](gdd.md): one mode, Excursion, built the way the prototype builds it (`prototype.html`, `sim.js`) plus kr0's decisions of Oct 25 ([GDD decision history](gdd-decisions.md)). Architecture choices that are not yet kr0's decisions are in the [TDD decision history](tdd-decisions.md) as Proposed. What the prototype still has to change is in [prototype changes](prototypes/prototype-changes.md).
 
 ## Goals and constraints
 

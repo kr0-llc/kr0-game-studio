@@ -1,5 +1,5 @@
 /* Metr0niks headless simulation. Runs the game in the browser (single player and the co-op host, loaded with a
-   classic <script src="sim.js">) and in Node (`import './sim.js'`, then globalThis.MetroSim). No DOM, no timers,
+   classic <script src="../simulations/sim.js">) and in Node (`import './simulations/sim.js'`, then globalThis.MetroSim). No DOM, no timers,
    no browser globals: time comes in as fixed ticks, and everything a renderer needs that is not state is an event.
 
    MetroSim.create({seed, mode:'excursion'|'gauntlet', builds:[build,...], level?, armor?, colorOf?, clock?}) -> sim

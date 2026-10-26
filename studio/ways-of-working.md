@@ -380,17 +380,17 @@ Keep the three main documents separate. The GDD says "enemies flee below 20% HP"
 
 ### Game folders in the studio repo
 
-Each game's folder `games/<name>/` holds the seven documents above and its playable prototype at the top, plus these folders:
+Each game's folder `games/<name>/` holds the seven documents above at the top, plus these folders:
 
 | Folder | Holds | Written by |
 | --- | --- | --- |
 | research/ | Market, genre and reference-game research, technical spikes. Suggestions, not decisions. | Any agent |
 | decisions/ | Decision records too long for a row in a decision history: option papers, trade-off write-ups, kr0's sign-offs. Each is linked from its row in the GDD or TDD decision history. | game-designer, technical-director |
-| simulations/ | Sweep configs, simulation run outputs and reports that back a tuning change (see [simulation and tuning](simulation-and-tuning.md)). A simulation the prototype loads stays next to the prototype. | systems-designer |
-| prototypes/ | Extra and throwaway prototypes, each with a README stating its hypothesis. The current playable prototype stays at the top of the game folder. | prototyper |
+| simulations/ | The game's headless simulation (for example Metr0niks' `sim.js`), which prototypes and the room server load, plus sweep configs, run outputs and reports that back a tuning change (see [simulation and tuning](simulation-and-tuning.md)). | systems-designer |
+| prototypes/ | Every playable prototype (HTML builds, firing ranges, art tests), with its briefs and change lists. Each has a README or a stated hypothesis. Throwaway builds live here too. | prototyper |
 | feedback/synthetic/ | Feedback from agents: review boards, persona playtests, critiques. | Any agent |
 | feedback/human/ | Feedback from people: playtest notes, survey results, comments from kr0's classmates or players. | kr0, community-manager |
-| artifacts/ | Things made to hand to someone: PDF and print exports, decks, one-pagers, snapshots of published pages, trailer cuts. Art itself stays in `art/<name>/`. | producer |
+| artifacts/ | Things made to hand to someone: PDF and print exports, decks, one-pagers, snapshots of published pages, trailer cuts, agent handoff prompts. Art itself stays in `art/<name>/`. | producer |
 
 ### Game code project layout
 

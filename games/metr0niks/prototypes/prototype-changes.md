@@ -2,7 +2,7 @@
 
 Oct 25, 2026 · @kr0 · kept by the producer
 
-What `prototype.html` and `sim.js` must change to match the [GDD](gdd.md) and [TDD](tdd.md). Nothing here has been done. The prototype is unchanged; line numbers are for the files as of Oct 25, 2026 (P = `prototype.html`, S = `sim.js`). Values marked **new** are numbers the GDD sets that the prototype doesn't have yet; kr0 hasn't approved them.
+What `prototypes/prototype.html` and `simulations/sim.js` must change to match the [GDD](../gdd.md) and [TDD](../tdd.md). Nothing here has been done. The prototype is unchanged; line numbers are for the files as of Oct 25, 2026 (P = `prototypes/prototype.html`, S = `simulations/sim.js`). Values marked **new** are numbers the GDD sets that the prototype doesn't have yet; kr0 hasn't approved them.
 
 ## 1. Remove Gauntlet
 
@@ -11,7 +11,7 @@ Decision: Excursion is the only mode (GDD-D17, confirmed by kr0 on Oct 26, GDD-D
 - Delete the Gauntlet button and its note (P:407, 409), the `gauntletBtn` wiring (P:1878, 1889, 1905) and the start-a-campaign-from-Gauntlet path.
 - Remove the `mode` value `"gauntlet"` everywhere: `newSim` (P:506), the HUD label (P:1242), the campaign save and `curCampaign` (P:1266, 1269), the garage mode label (P:1424), co-op host and welcome messages (P:1612, 1739, 1757, 1761), the console hook (P:2078) and Continue (P:1903).
 - Remove the banking branch on death (P:702 and P:1767) and `deathScreen`'s Gauntlet case (P:705 to 707).
-- In `sim.js`: drop the `mode` option and the Gauntlet branch of `lossCheck` (S:5, 30, 250, 893 to 895), the `sim.mode` getter (S:1148) and the `mode` field of the campaign save (S:1165, 1176, 1199). Keep decoding old saves by ignoring a `mode` field.
+- In `simulations/sim.js`: drop the `mode` option and the Gauntlet branch of `lossCheck` (S:5, 30, 250, 893 to 895), the `sim.mode` getter (S:1148) and the `mode` field of the campaign save (S:1165, 1176, 1199). Keep decoding old saves by ignoring a `mode` field.
 
 ## 2. Per-part durability replaces the carried armor
 

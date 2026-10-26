@@ -4,7 +4,7 @@ Oct 26, 2026 · reviewer: a separate Claude agent using the [GDD designer skill]
 
 Reviewed: `gdd.md` at commit "accept D18, D20, D23; victory, co-op revive, seed, pillars, audio", with `gdd-decisions.md`, `open-questions.md`, `tdd.md`, `tdd-decisions.md`, `tuning-history.md`, `prototype-changes.md`, `INDEX.md` and spot checks against `sim.js`. Read only. kr0's choices in GDD-D27 (audience and player fantasy TBD; milestones and pricing out of the GDD), the items in `prototype-changes.md`, the Proposed values and the backlog were not re-flagged.
 
-The three critical findings were checked against `sim.js` by the session that commissioned the review, and hold. Nothing below has been applied yet; fixes wait on kr0 (see the [handoff prompt](../../handoff-gdd-prompt.md)).
+The three critical findings were checked against `sim.js` by the session that commissioned the review, and hold. Nothing below has been applied yet; fixes wait on kr0 (see the [handoff prompt](../../artifacts/handoff-gdd-prompt.md)).
 
 ## Summary
 

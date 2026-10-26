@@ -95,11 +95,11 @@ button.small{font-size:16px;padding:4px 10px;width:auto;box-shadow:2px 2px 0 var
 <div id="pause" class="ui">Paused · Esc to resume</div>
 <div id="result" class="ui"><div class="panel"><h1 id="rTitle">Extracted!</h1><p id="rText"></p><button id="rBtn">Back to the garage</button></div></div>
 
-<script src="sim.js"></script>
+<script src="../simulations/sim.js"></script>
 <script>
 "use strict";
 /* Assets live with the art. A published copy sets window.INK_ASSETS to "" before this script. */
-var BASE=window.INK_ASSETS!==undefined?window.INK_ASSETS:"../../art/metr0niks/ink-proto/";
+var BASE=window.INK_ASSETS!==undefined?window.INK_ASSETS:"../../../art/metr0niks/ink-proto/";
 (function(){var s=document.createElement("script");s.src=BASE+"sprites/atlas.js";s.onload=boot;s.onerror=function(){document.getElementById("loading").textContent="Could not load "+BASE+"sprites/atlas.js"};document.head.appendChild(s)})();
 
 /* ---------- tunables: read from the sim so the numbers match the main prototype ---------- */

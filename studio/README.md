@@ -36,11 +36,11 @@ Pitch, GDD, TDD, open questions, tuning history, GDD decision history, TDD decis
 | --- | --- |
 | `research/` | Research and reference studies. Suggestions, not decisions. |
 | `decisions/` | Long decision records, linked from the GDD or TDD decision history. |
-| `simulations/` | Sweep configs, run outputs and reports behind tuning changes. |
-| `prototypes/` | Extra and throwaway prototypes, each with a README and hypothesis. The current playable prototype stays at the top of the game folder. |
+| `simulations/` | The game's headless simulation (such as Metr0niks' `sim.js`), plus sweep configs, run outputs and reports behind tuning changes. Prototypes load the simulation from here. |
+| `prototypes/` | Every playable prototype (HTML builds, firing ranges, art tests) with its briefs and change lists, each with a README or stated hypothesis. |
 | `feedback/synthetic/` | Feedback from agents: review boards, persona playtests, critiques. |
 | `feedback/human/` | Feedback from people: playtests, surveys, comments. |
-| `artifacts/` | Exports and hand-outs: PDFs, decks, one-pagers, page snapshots. |
+| `artifacts/` | Exports and hand-outs: PDFs, decks, one-pagers, page snapshots, agent handoff prompts. |
 
 Section 11 of [ways of working](ways-of-working.md) says who writes each one. An empty folder holds a `.gitkeep` until its first file arrives.
 

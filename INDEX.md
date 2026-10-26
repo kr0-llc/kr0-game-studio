@@ -1,6 +1,6 @@
 # Studio index
 
-Imported 2026-10-21 from files kr0 downloaded and uploaded (the claude.ai links live in another organization and can't be read from this project). Reorganized 2026-10-23 into `games/`, `art/` and `studio/`. On 2026-10-26 every game folder gained `research/`, `decisions/`, `simulations/`, `prototypes/`, `feedback/synthetic/`, `feedback/human/` and `artifacts/` (see `studio/README.md`); empty ones hold a `.gitkeep`. Paths are relative to the studio root (`/mnt/project-files/`).
+Imported 2026-10-21 from files kr0 downloaded and uploaded (the claude.ai links live in another organization and can't be read from this project). Reorganized 2026-10-23 into `games/`, `art/` and `studio/`. On 2026-10-26 every game folder gained `research/`, `decisions/`, `simulations/`, `prototypes/`, `feedback/synthetic/`, `feedback/human/` and `artifacts/` (see `studio/README.md`); empty ones hold a `.gitkeep`. The same day, prototypes moved to `prototypes/`, `sim.js` to `simulations/`, the Metr0niks handoff prompt to `artifacts/` and the Metr0niks reviews to `feedback/synthetic/`. Paths are relative to the studio root (`/mnt/project-files/`).
 
 ## Dual Tech
 A short JRPG where every attack ends in a timing hit, and each hero's hit feels different.
@@ -11,7 +11,7 @@ A short JRPG where every attack ends in a timing hit, and each hero's hit feels 
 | GDD (tab, 13 pages, with concept art) | `games/dual-tech/gdd.pdf` | https://claude.ai/artifact/WKgFyuThdjSNVyiPKTNBTQ | Imported (PDF export) |
 | TDD (tab, 4 pages) | `games/dual-tech/tdd.pdf` | https://claude.ai/artifact/WKgFyuThdjSNVyiPKTNBTQ | Imported (PDF export) |
 | Open questions (tab, 2 pages) | `games/dual-tech/open-questions.pdf` | https://claude.ai/artifact/WKgFyuThdjSNVyiPKTNBTQ | Imported (PDF export) |
-| Playable prototype: Golem Fight | `games/dual-tech/prototype-golem-fight.html` | https://claude.ai/artifact/9WAVtVwq9AzWUXC2852yDx | Imported |
+| Playable prototype: Golem Fight | `games/dual-tech/prototypes/prototype-golem-fight.html` | https://claude.ai/artifact/9WAVtVwq9AzWUXC2852yDx | Imported |
 | Early pitch page (SUPERSEDED by the Pitch tab) | `games/dual-tech/superseded/early-pitch-page.html` | https://claude.ai/artifact/CeFhzMDWCksHCHQbKoHs2k | Imported |
 
 ## Metr0niks (formerly Scrap-Breaker)
@@ -19,21 +19,21 @@ An isometric voxel mech brawler: real-time driving and shooting, heavy weapons o
 
 | Document | File | Source link | Status |
 | --- | --- | --- | --- |
-| Pitch and firing-range prototype (with 3 concept art images) | `games/metr0niks/pitch-and-firing-range/index.html` (+ `art/`) | https://claude.ai/artifact/TgLkPWgZdjqbAj7vNQXHdb | Imported (from zip) |
+| Pitch and firing-range prototype (with 3 concept art images) | `games/metr0niks/prototypes/pitch-and-firing-range/index.html` (+ `art/`) | https://claude.ai/artifact/TgLkPWgZdjqbAj7vNQXHdb | Imported (from zip) |
 | GDD (gallery title "Scrap-Breaker GDD"; the artifact is the Oct 20 version) | `games/metr0niks/gdd.md` (Oct 26 update; Oct 20 version in `games/metr0niks/superseded/gdd-2026-10-20.md`) | https://claude.ai/artifact/XBYfrT2AvabsFNsYTJudsq | Rewritten Oct 25, 2026: Excursion only, no TBDs, matches the prototype plus kr0's decisions. Oct 26: weapon upgrades, pillars, audio, victory, co-op revive, seed, corrections against the prototype (GDD-D23 to D28); a few values Proposed; earlier Oct 26 draft in `superseded/gdd-2026-10-26-draft.md` |
 | TDD (gallery title "Scrap-Breaker TDD"; the artifact is the Oct 20 version) | `games/metr0niks/tdd.md` (Oct 26 update; Oct 20 version in `games/metr0niks/superseded/tdd-2026-10-20.md`) | https://claude.ai/artifact/XbGJLgDdqYtnVLmsZyrnge | Updated Oct 25, 2026; waiting on kr0 |
 | GDD decision history | `games/metr0niks/gdd-decisions.md` | none | New (Oct 25, 2026); GDD-D23 to D29 added Oct 26; D17, D18, D20, D22 and D23 accepted; revive price, victory button, seed limit and repair order Proposed |
-| Prototype changes (what the prototype must change to match the GDD and TDD) | `games/metr0niks/prototype-changes.md` | none | New (Oct 25, 2026); sections 10 to 16 added Oct 26; sections 1 (Gauntlet), 4 (drop-in lock) and 7 (touch removal) confirmed by kr0 Oct 26; nothing done yet |
-| Handoff prompt for the next agent: push the branch, open the pull request, finish the GDD | `games/metr0niks/handoff-gdd-prompt.md` (Oct 25 version in `games/metr0niks/superseded/handoff-gdd-prompt-2026-10-25.md`) | none | Rewritten Oct 26, 2026 for an agent that can push. Its first job (push the branch, open the pull request) is done: the work arrived as a git bundle and is in the repo, so the private sync artifact (https://claude.ai/artifact/Ti35254yyvzkEC8L7VeyUv) is retired and kept, not deleted. Sections 2 to 4 still apply |
+| Prototype changes (what the prototype must change to match the GDD and TDD) | `games/metr0niks/prototypes/prototype-changes.md` | none | New (Oct 25, 2026); sections 10 to 16 added Oct 26; sections 1 (Gauntlet), 4 (drop-in lock) and 7 (touch removal) confirmed by kr0 Oct 26; nothing done yet |
+| Handoff prompt for the next agent: push the branch, open the pull request, finish the GDD | `games/metr0niks/artifacts/handoff-gdd-prompt.md` (Oct 25 version in `games/metr0niks/superseded/handoff-gdd-prompt-2026-10-25.md`) | none | Rewritten Oct 26, 2026 for an agent that can push. Its first job (push the branch, open the pull request) is done: the work arrived as a git bundle and is in the repo, so the private sync artifact (https://claude.ai/artifact/Ti35254yyvzkEC8L7VeyUv) is retired and kept, not deleted. Sections 2 to 4 still apply |
 | GDD critique (gdd-designer skill, critique mode) | `games/metr0niks/feedback/synthetic/2026-10-26-gdd-critique.md` | none | New (Oct 26, 2026); fixes waiting on kr0 |
 | Mech-game design research (principles, mechanics, pitfalls, audio, sources) | `games/metr0niks/research/mech-games-2026-10-26.md` | none | New (Oct 26, 2026); suggestions, not decisions |
 | TDD decision history | `games/metr0niks/tdd-decisions.md` | none | New (Oct 25, 2026); all Proposed |
 | Tuning history (Simulation section and prototype baseline) | `games/metr0niks/tuning-history.md` | none | New (Oct 25, 2026); weapon-upgrade sweep planned Oct 26; no changes logged yet |
-| Headless game simulation (loaded by the prototype, also runs in Node) | `games/metr0niks/sim.js` | none | Keep next to `prototype.html` |
+| Headless game simulation (loaded by the prototype, also runs in Node) | `games/metr0niks/simulations/sim.js` | none | The prototypes load it from `../simulations/sim.js` |
 | Open questions (gallery title "Scrap-Breaker open questions") | `games/metr0niks/open-questions.md` | https://claude.ai/artifact/MUiquZomvsgbswqEjYxt4v | Imported |
-| Playable prototype (drive, shoot, patrol bots, small Overpass Sector 4 map) | `games/metr0niks/prototype.html` | https://storage.googleapis.com/kr0-game-studio-site/play/metr0niks/index.html | New (Oct 21, 2026); source of truth is studio-site/static/play/metr0niks/index.html in kr0/blackletter-chronos |
-| Ink prototype: art style C as 2D cut-out puppets, three enemy types, collapsing buildings, Scenario music and sound effects (loads `sim.js` and `art/metr0niks/ink-proto/`) | `games/metr0niks/prototype-ink.html` | https://claude.ai/artifact/79WTMgYErJNqwFX5NsL64f | New (Oct 26, 2026); exploration, GDD-D30 Proposed |
-| Ink prototype brief: how the art is made, the audio made so far, what the full game still needs, decisions for kr0 | `games/metr0niks/ink-prototype.md` | none | New (Oct 26, 2026) |
+| Playable prototype (drive, shoot, patrol bots, small Overpass Sector 4 map) | `games/metr0niks/prototypes/prototype.html` | https://storage.googleapis.com/kr0-game-studio-site/play/metr0niks/index.html | New (Oct 21, 2026); source of truth is studio-site/static/play/metr0niks/index.html in kr0/blackletter-chronos |
+| Ink prototype: art style C as 2D cut-out puppets, three enemy types, collapsing buildings, Scenario music and sound effects (loads `simulations/sim.js` and `art/metr0niks/ink-proto/`) | `games/metr0niks/prototypes/prototype-ink.html` | https://claude.ai/artifact/79WTMgYErJNqwFX5NsL64f | New (Oct 26, 2026); exploration, GDD-D30 Proposed |
+| Ink prototype brief: how the art is made, the audio made so far, what the full game still needs, decisions for kr0 | `games/metr0niks/prototypes/ink-prototype.md` | none | New (Oct 26, 2026) |
 | GDD review (six-reviewer board, method from GixGosu/gdd-review-kit): one file per reviewer, plus `SYNTHESIS.md` (round 3) and `prototype-reconciliation.md` | `games/metr0niks/feedback/synthetic/gdd-review-2026-10-25/` (moved from `reviews/` on Oct 26, 2026) | none | Review done (Oct 25, 2026): rounds 1–3; GDD changes waiting on kr0 |
 
 ## Dropfront (formerly Basin Command)
@@ -45,7 +45,7 @@ A capture-point battle you run with a hand of cards, then drop in yourself for s
 | Pitch (tab, 2 pages) | `games/dropfront/pitch.pdf` | https://claude.ai/artifact/4sbxMoBmieuv5APbj5Gb4R | Imported (PDF export) |
 | TDD (tab, 5 pages) | `games/dropfront/tdd.pdf` | https://claude.ai/artifact/4sbxMoBmieuv5APbj5Gb4R | Imported (PDF export) |
 | Open questions (tab, 1 page, all 13 settled) | `games/dropfront/open-questions.pdf` | https://claude.ai/artifact/4sbxMoBmieuv5APbj5Gb4R | Imported (PDF export) |
-| Playable prototype ("Dropfront Prototype"; simulation-tested only) | `games/dropfront/prototype.html` | https://claude.ai/artifact/UZXJnMj6NDnuH5UEUUS5sP | Imported |
+| Playable prototype ("Dropfront Prototype"; simulation-tested only) | `games/dropfront/prototypes/prototype.html` | https://claude.ai/artifact/UZXJnMj6NDnuH5UEUUS5sP | Imported |
 | Early pitch and prototype "Basin Command" (SUPERSEDED) | `games/dropfront/superseded/basin-command-early-pitch-and-prototype.html` | https://claude.ai/artifact/VirxreyhLp1Y9NNcMqumXv | Imported |
 
 ## Blackletter: Chronos
@@ -60,7 +60,7 @@ A slow real-time tactics game on a hex battlefield: each unit acts when its ATB 
 | Tuning history | `games/blackletter/tuning-history.md` | Current; baseline v2.14.6 plus planned stories |
 | GDD decision history | `games/blackletter/gdd-decisions.md` | GDD-D1 to D9; Proposed until kr0 accepts |
 | TDD decision history | `games/blackletter/tdd-decisions.md` | TDD-D1 to D6; Proposed until kr0 accepts |
-| Playable prototype (one battle vs Sebastion, Snappy pace) | `games/blackletter/prototype.html` (also live at the studio site, `play/blackletter/index.html`) | Current |
+| Playable prototype (one battle vs Sebastion, Snappy pace) | `games/blackletter/prototypes/prototype.html` (also live at the studio site, `play/blackletter/index.html`) | Current |
 | Concept art (key art, Sebastion, units, wager table) and card art | `art/blackletter/concept/`, `art/blackletter/` (see `art/blackletter/README.md`) | Current |
 | Screenshots of the experimental build and the prototype | `art/blackletter/screenshots/` | Current |
 | Earlier exports and working files (GDD rev 11, pitch, TDD, GDD v2, critique) | `games/blackletter/superseded/` | Superseded |
