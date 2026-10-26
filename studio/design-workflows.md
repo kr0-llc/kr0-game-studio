@@ -59,8 +59,8 @@ All three live in kr0's Scenario project (team `team_pG6MaimfJd9b9PTLYKkYR7fQ`, 
 
 ### Before running from an agent
 
-- **The workflows are drafts.** On 26 October 2026 all three had status `draft` and no compiled flow, so they run in the Scenario web app but not through the API or MCP `workflow_run`. To let agents run them, kr0 opens each one in Scenario and publishes it (status `ready`). Until then an agent can read a workflow (`workflow_get`) and reproduce its steps with `model_run`, or kr0 runs it in the app and the agent downloads the output.
-- **Price it first.** Call `workflow_run` with `dry_run=true` and quote the cost before a real run. The character sheet and turnaround render at high quality on GPT Image 2.5 Sunburst, so a turnaround is six high-quality renders.
+- **Published.** kr0 asked for all three to be published on 26 October 2026, and they are `ready`, so agents can run them with `workflow_run`. Editing a workflow's graph in Scenario does not update its compiled flow: run `workflow_publish` again after any edit, or agents keep running the old version.
+- **Price it first.** Call `workflow_run` with `dry_run=true` and quote the cost before a real run. Dry runs on 26 October 2026 quoted about 18.75 Scenario credits for a character sheet, 72 for a turnaround (six high-quality renders) and 16.5 for an action sprite sheet. Check again before a big batch; prices change.
 - **One run per character, one run per action.** None of the three loops over a list.
 - **Three jobs at a time.** Scenario returned HTTP 429 at twelve parallel jobs.
 
