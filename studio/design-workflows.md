@@ -67,6 +67,12 @@ All three live in kr0's Scenario project (team `team_pG6MaimfJd9b9PTLYKkYR7fQ`, 
 - **Use it for:** attack, idle, hit and walk cycles for prototypes; animation tests before committing to a rig; reference for hand-drawn or code-drawn animation.
 - **Tips:** one action per run. Check the 12 frames for hand swaps and drift before packing them into an atlas. The white background has to be keyed out for the game; for transparent cut-out parts, use the GPT Image route in the Metr0niks ink prototype instead (`art/metr0niks/source/`).
 - **Changed in Scenario on 26 October 2026 (published, no real run yet):** View & Action is marked required, shows a placeholder example, and the prompt now starts by telling the model to fill every blank from that text and never output asterisks. A dry run without it still returned a quote, so still always fill it: the camera (side, top-down, isometric), the move, and which hand.
+- **Also changed on 26 October 2026 after the Tim-o runs:** the brief now has a hand-lock rule for actions with no weapon (hands stay empty, and a backpack, tank or jetpack is never turned into something held) and asks for a plain pale background with no ground, grass or props.
+- **What the Tim-o runs showed** (see `art/metr0niks/characters/tim-o/README.md`):
+  1. *The brief leans toward a strike.* Left to itself it turns "dash" into a jump and "win" into a club swing. Describe each action frame by frame in View & Action (frames 1 to 12, what the arms, legs and effects do), say "empty hands", and name which way the character faces.
+  2. *The hidden Reference Grid image leaks.* It is a second reference, so grass, a beige backdrop or frame numbers sometimes appear. The Metr0niks runs that came out cleanest skipped the workflow and called GPT Image 2 directly with the same brief and one reference image.
+  3. *Facing is not stable.* Some sheets come out facing left or mix both. State "faces right in every frame, tank on his left" and flip frames afterwards where needed.
+  4. *Rate limit.* Scenario returned 429 "wait about 780 seconds" on the prompt-writing step and on direct image calls, after about five parallel runs and again after bursts. It is account-wide: one generation then about 13 minutes. Do not retry before the stated wait; retries restart it.
 - **Still open:**
   1. *Remove the background.* The sheet is drawn on white with black grid lines and cut into 12 equal cells, so frames keep the white and may keep grid-line edges. Key it out and trim afterwards, before building an atlas.
   2. *Resolution.* The sheet is 1536 × 1024 at "auto" quality, so each frame is about 384 × 341. Raise the quality and size for large sprites; downscale for pixel art.
@@ -78,7 +84,7 @@ All three live in kr0's Scenario project (team `team_pG6MaimfJd9b9PTLYKkYR7fQ`, 
 - **Published.** kr0 asked for all three to be published on 26 October 2026, and they are `ready`, so agents can run them with `workflow_run`. Editing a workflow's graph in Scenario does not update its compiled flow: run `workflow_publish` again after any edit, or agents keep running the old version.
 - **Price it first.** Call `workflow_run` with `dry_run=true` and quote the cost before a real run. Dry runs on 26 October 2026 quoted about 18.75 Scenario credits for a character sheet, 72 for a turnaround (six high-quality renders) and 16.5 for an action sprite sheet. Check again before a big batch; prices change.
 - **One run per character, one run per action.** None of the three loops over a list.
-- **Three jobs at a time.** Scenario returned HTTP 429 at twelve parallel jobs.
+- **Three jobs at a time, and slower than that after bursts.** Scenario returned HTTP 429 at twelve parallel jobs, and later an account-wide wait of about 780 seconds after a burst of runs (see the Tim-o notes under the sprite studio).
 
 ## Where the output goes
 
