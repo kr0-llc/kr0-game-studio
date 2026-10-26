@@ -1,6 +1,6 @@
 # kr0 Game Studio: Ways of Working
 
-Last updated: 23 October 2026 · Owner: kr0
+Last updated: 25 October 2026 · Owner: kr0
 
 kr0 Game Studio makes small indie games with a crew of AI agents. It runs like a small studio. Directors guard the vision, department leads own their areas, and specialists do the hands-on work. One human, kr0, makes every decision. We plan work in **tokens**, not hours.
 
@@ -155,7 +155,7 @@ flowchart LR
 
 - Before writing, an agent asks "May I write this to *file*?" and shows the draft or a summary.
 - A change spanning several files is approved as one set.
-- No commits unless kr0 asks for one.
+- Agents commit to their working branch as needed, so work is never lost. Nothing reaches `main` except through a pull request kr0 approves.
 - A skipped or dismissed question is not a yes. The agent acts on nothing and asks again.
 
 **Automation level.** How often agents stop to ask is a setting:

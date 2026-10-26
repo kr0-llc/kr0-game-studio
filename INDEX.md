@@ -20,11 +20,19 @@ An isometric voxel mech brawler: real-time driving and shooting, heavy weapons o
 | Document | File | Source link | Status |
 | --- | --- | --- | --- |
 | Pitch and firing-range prototype (with 3 concept art images) | `games/metr0niks/pitch-and-firing-range/index.html` (+ `art/`) | https://claude.ai/artifact/TgLkPWgZdjqbAj7vNQXHdb | Imported (from zip) |
-| GDD (gallery title "Scrap-Breaker GDD") | `games/metr0niks/gdd.md` | https://claude.ai/artifact/XBYfrT2AvabsFNsYTJudsq | Imported |
-| TDD (gallery title "Scrap-Breaker TDD") | `games/metr0niks/tdd.md` | https://claude.ai/artifact/XbGJLgDdqYtnVLmsZyrnge | Imported |
+| GDD (gallery title "Scrap-Breaker GDD"; the artifact is the Oct 20 version) | `games/metr0niks/gdd.md` (Oct 26 update; Oct 20 version in `games/metr0niks/superseded/gdd-2026-10-20.md`) | https://claude.ai/artifact/XBYfrT2AvabsFNsYTJudsq | Rewritten Oct 25, 2026: Excursion only, no TBDs, matches the prototype plus kr0's decisions. Oct 26: weapon upgrades, pillars, audio, victory, co-op revive, seed, corrections against the prototype (GDD-D23 to D28); a few values Proposed; earlier Oct 26 draft in `superseded/gdd-2026-10-26-draft.md` |
+| TDD (gallery title "Scrap-Breaker TDD"; the artifact is the Oct 20 version) | `games/metr0niks/tdd.md` (Oct 26 update; Oct 20 version in `games/metr0niks/superseded/tdd-2026-10-20.md`) | https://claude.ai/artifact/XbGJLgDdqYtnVLmsZyrnge | Updated Oct 25, 2026; waiting on kr0 |
+| GDD decision history | `games/metr0niks/gdd-decisions.md` | none | New (Oct 25, 2026); GDD-D23 to D29 added Oct 26; D17, D18, D20, D22 and D23 accepted; revive price, victory button, seed limit and repair order Proposed |
+| Prototype changes (what the prototype must change to match the GDD and TDD) | `games/metr0niks/prototype-changes.md` | none | New (Oct 25, 2026); sections 10 to 16 added Oct 26; sections 1 (Gauntlet), 4 (drop-in lock) and 7 (touch removal) confirmed by kr0 Oct 26; nothing done yet |
+| Handoff prompt for the next agent: push the branch, open the pull request, finish the GDD | `games/metr0niks/handoff-gdd-prompt.md` (Oct 25 version in `games/metr0niks/superseded/handoff-gdd-prompt-2026-10-25.md`) | none | Rewritten Oct 26, 2026 for an agent that can push. Its first job (push the branch, open the pull request) is done: the work arrived as a git bundle and is in the repo, so the private sync artifact (https://claude.ai/artifact/Ti35254yyvzkEC8L7VeyUv) is retired and kept, not deleted. Sections 2 to 4 still apply |
+| GDD critique (gdd-designer skill, critique mode) | `games/metr0niks/reviews/2026-10-26-gdd-critique.md` | none | New (Oct 26, 2026); fixes waiting on kr0 |
+| Mech-game design research (principles, mechanics, pitfalls, audio, sources) | `games/metr0niks/research/mech-games-2026-10-26.md` | none | New (Oct 26, 2026); suggestions, not decisions |
+| TDD decision history | `games/metr0niks/tdd-decisions.md` | none | New (Oct 25, 2026); all Proposed |
+| Tuning history (Simulation section and prototype baseline) | `games/metr0niks/tuning-history.md` | none | New (Oct 25, 2026); weapon-upgrade sweep planned Oct 26; no changes logged yet |
 | Headless game simulation (loaded by the prototype, also runs in Node) | `games/metr0niks/sim.js` | none | Keep next to `prototype.html` |
 | Open questions (gallery title "Scrap-Breaker open questions") | `games/metr0niks/open-questions.md` | https://claude.ai/artifact/MUiquZomvsgbswqEjYxt4v | Imported |
 | Playable prototype (drive, shoot, patrol bots, small Overpass Sector 4 map) | `games/metr0niks/prototype.html` | https://storage.googleapis.com/kr0-game-studio-site/play/metr0niks/index.html | New (Oct 21, 2026); source of truth is studio-site/static/play/metr0niks/index.html in kr0/blackletter-chronos |
+| GDD review (six-reviewer board, method from GixGosu/gdd-review-kit): one file per reviewer, plus `SYNTHESIS.md` (round 3) and `prototype-reconciliation.md` | `games/metr0niks/reviews/` | none | Review done (Oct 25, 2026): rounds 1–3; GDD changes waiting on kr0 |
 
 ## Dropfront (formerly Basin Command)
 A capture-point battle you run with a hand of cards, then drop in yourself for short firefights.
@@ -96,4 +104,4 @@ kr0's game portfolio site: the source and deploy scripts are in `site/` (deploy 
 ## Notes
 - Markdown exports drop embedded diagrams and images; they show as `[embedded content: …]` or `[image: …]` placeholders (Dropfront core loop, Metr0niks core loop and architecture, Blackletter pitch images, core loop and architecture).
 - Dual Tech and Dropfront tabs are PDF exports; the GDD PDF includes its concept art. Run `pdftotext` to get plain text.
-- Blackletter has the full seven-document set plus a prototype. For the other games, tuning history and GDD/TDD decision history are not separate files yet; the Dropfront GDD has a changelog and the Metr0niks open questions has a decisions table.
+- Blackletter has the full seven-document set plus a prototype. For the other games, tuning history and GDD/TDD decision history are not separate files yet; the Dropfront GDD has a changelog. Metr0niks now has the full seven-document set apart from a standalone pitch document (the pitch is `pitch-and-firing-range/index.html`).
