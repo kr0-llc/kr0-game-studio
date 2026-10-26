@@ -1,6 +1,6 @@
 # Studio index
 
-Imported 2026-10-21 from files kr0 downloaded and uploaded (the claude.ai links live in another organization and can't be read from this project). Reorganized 2026-10-23 into `games/`, `art/` and `studio/`. Paths are relative to the studio root (`/mnt/project-files/`).
+Imported 2026-10-21 from files kr0 downloaded and uploaded (the claude.ai links live in another organization and can't be read from this project). Reorganized 2026-10-23 into `games/`, `art/` and `studio/`. On 2026-10-26 every game folder gained `research/`, `decisions/`, `simulations/`, `prototypes/`, `feedback/synthetic/`, `feedback/human/` and `artifacts/` (see `studio/README.md`); empty ones hold a `.gitkeep`. Paths are relative to the studio root (`/mnt/project-files/`).
 
 ## Dual Tech
 A short JRPG where every attack ends in a timing hit, and each hero's hit feels different.
@@ -25,7 +25,7 @@ An isometric voxel mech brawler: real-time driving and shooting, heavy weapons o
 | GDD decision history | `games/metr0niks/gdd-decisions.md` | none | New (Oct 25, 2026); GDD-D23 to D29 added Oct 26; D17, D18, D20, D22 and D23 accepted; revive price, victory button, seed limit and repair order Proposed |
 | Prototype changes (what the prototype must change to match the GDD and TDD) | `games/metr0niks/prototype-changes.md` | none | New (Oct 25, 2026); sections 10 to 16 added Oct 26; sections 1 (Gauntlet), 4 (drop-in lock) and 7 (touch removal) confirmed by kr0 Oct 26; nothing done yet |
 | Handoff prompt for the next agent: push the branch, open the pull request, finish the GDD | `games/metr0niks/handoff-gdd-prompt.md` (Oct 25 version in `games/metr0niks/superseded/handoff-gdd-prompt-2026-10-25.md`) | none | Rewritten Oct 26, 2026 for an agent that can push. Its first job (push the branch, open the pull request) is done: the work arrived as a git bundle and is in the repo, so the private sync artifact (https://claude.ai/artifact/Ti35254yyvzkEC8L7VeyUv) is retired and kept, not deleted. Sections 2 to 4 still apply |
-| GDD critique (gdd-designer skill, critique mode) | `games/metr0niks/reviews/2026-10-26-gdd-critique.md` | none | New (Oct 26, 2026); fixes waiting on kr0 |
+| GDD critique (gdd-designer skill, critique mode) | `games/metr0niks/feedback/synthetic/2026-10-26-gdd-critique.md` | none | New (Oct 26, 2026); fixes waiting on kr0 |
 | Mech-game design research (principles, mechanics, pitfalls, audio, sources) | `games/metr0niks/research/mech-games-2026-10-26.md` | none | New (Oct 26, 2026); suggestions, not decisions |
 | TDD decision history | `games/metr0niks/tdd-decisions.md` | none | New (Oct 25, 2026); all Proposed |
 | Tuning history (Simulation section and prototype baseline) | `games/metr0niks/tuning-history.md` | none | New (Oct 25, 2026); weapon-upgrade sweep planned Oct 26; no changes logged yet |
@@ -34,7 +34,7 @@ An isometric voxel mech brawler: real-time driving and shooting, heavy weapons o
 | Playable prototype (drive, shoot, patrol bots, small Overpass Sector 4 map) | `games/metr0niks/prototype.html` | https://storage.googleapis.com/kr0-game-studio-site/play/metr0niks/index.html | New (Oct 21, 2026); source of truth is studio-site/static/play/metr0niks/index.html in kr0/blackletter-chronos |
 | Ink prototype: art style C as 2D cut-out puppets, three enemy types, collapsing buildings, Scenario music and sound effects (loads `sim.js` and `art/metr0niks/ink-proto/`) | `games/metr0niks/prototype-ink.html` | https://claude.ai/artifact/79WTMgYErJNqwFX5NsL64f | New (Oct 26, 2026); exploration, GDD-D30 Proposed |
 | Ink prototype brief: how the art is made, the audio made so far, what the full game still needs, decisions for kr0 | `games/metr0niks/ink-prototype.md` | none | New (Oct 26, 2026) |
-| GDD review (six-reviewer board, method from GixGosu/gdd-review-kit): one file per reviewer, plus `SYNTHESIS.md` (round 3) and `prototype-reconciliation.md` | `games/metr0niks/reviews/` | none | Review done (Oct 25, 2026): rounds 1–3; GDD changes waiting on kr0 |
+| GDD review (six-reviewer board, method from GixGosu/gdd-review-kit): one file per reviewer, plus `SYNTHESIS.md` (round 3) and `prototype-reconciliation.md` | `games/metr0niks/feedback/synthetic/gdd-review-2026-10-25/` (moved from `reviews/` on Oct 26, 2026) | none | Review done (Oct 25, 2026): rounds 1–3; GDD changes waiting on kr0 |
 
 ## Dropfront (formerly Basin Command)
 A capture-point battle you run with a hand of cards, then drop in yourself for short firefights.
@@ -79,6 +79,8 @@ Studio site page: https://storage.googleapis.com/kr0-game-studio-site/index.html
 | Simulation and tuning standard | `studio/simulation-and-tuning.md` |
 | Brand rules (r0 styling) | `studio/brand.md` |
 | Art style guides per game | `studio/art-style-guides.md` |
+| Design workflows: Scenario character sheet, turnaround and action-sprite workflows; Scenario MCP and skills; gemini-creative MCP | `studio/design-workflows.md` |
+| MCP servers for Claude Code sessions on this repo (Scenario) | `.mcp.json` |
 | GDD designer skill | `studio/skills/gdd-designer/SKILL.md` |
 | Draft project instructions (awaiting kr0's approval) | `studio/project-instructions-draft.md` |
 

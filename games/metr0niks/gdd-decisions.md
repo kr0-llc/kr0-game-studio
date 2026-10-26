@@ -1,6 +1,6 @@
 # Metr0niks GDD decision history
 
-Newest first. Status is Proposed until kr0 accepts or rejects it. The [GDD](gdd.md) holds the rules; this file records the choices behind them so debates don't repeat. The reviews that raised each question are in [reviews/](reviews/SYNTHESIS.md). Decisions made on 2026-10-20 are in the table in [open questions](open-questions.md) and are not repeated here.
+Newest first. Status is Proposed until kr0 accepts or rejects it. The [GDD](gdd.md) holds the rules; this file records the choices behind them so debates don't repeat. The reviews that raised each question are in [feedback/synthetic/](feedback/synthetic/gdd-review-2026-10-25/SYNTHESIS.md). Decisions made on 2026-10-20 are in the table in [open questions](open-questions.md) and are not repeated here.
 
 | ID | Date | Decision | Options considered | Why | Status | Decided by |
 | --- | --- | --- | --- | --- | --- | --- |

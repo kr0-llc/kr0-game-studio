@@ -2,7 +2,7 @@
 
 25 October 2026 · Claude · Decides: kr0
 
-The six reviewers read only the GDD. This file checks their findings, and kr0's decisions of 25 October (in [open-questions.md](../open-questions.md)), against what the prototype does today.
+The six reviewers read only the GDD. This file checks their findings, and kr0's decisions of 25 October (in [open-questions.md](../../../open-questions.md)), against what the prototype does today.
 
 **Source checked.** `games/metr0niks/prototype.html` and `games/metr0niks/sim.js`. Both are byte-identical to the deployed build at `storage.googleapis.com/kr0-game-studio-site/play/metr0niks/`. The co-op server (`server/metr0niks.js`, referenced by the prototype) lives in the private `kr0/blackletter-chronos` repo and wasn't checked.
 

@@ -24,7 +24,7 @@ The work sits on branch `claude/metr0niks-gdd-review`: 19 commits ahead of `main
 2. `studio/gdd-template.md` and `studio/skills/gdd-designer/SKILL.md`.
 3. `games/metr0niks/gdd.md`.
 4. `games/metr0niks/gdd-decisions.md` (newest first; GDD-D23 to D28 are from Oct 26) and `open-questions.md`.
-5. `games/metr0niks/reviews/2026-10-26-gdd-critique.md`: the latest critique, with fixes not yet applied.
+5. `games/metr0niks/feedback/synthetic/2026-10-26-gdd-critique.md`: the latest critique, with fixes not yet applied.
 6. `games/metr0niks/research/mech-games-2026-10-26.md`: mech-game design research. Its suggestions are not decisions.
 7. `games/metr0niks/prototype-changes.md`, `tdd.md`, `tdd-decisions.md`, `tuning-history.md`.
 8. `sim.js` (the rules; `T` at the top holds every tunable) and `prototype.html` are the ground truth for what the game does today. Read big files by section.

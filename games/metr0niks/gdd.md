@@ -442,5 +442,5 @@ Direction: synthwave and retrowave (GDD-D26). Music uses analog-style synth bass
 - [Tuning history](tuning-history.md)
 - [Prototype changes](prototype-changes.md)
 - Prototype: [prototype.html](prototype.html) with the rules in [sim.js](sim.js)
-- Reviews: [reviews/](reviews/SYNTHESIS.md)
+- Reviews: [feedback/synthetic/](feedback/synthetic/gdd-review-2026-10-25/SYNTHESIS.md)
 - Art: `art/metr0niks/` (art board, styles, prompts, screenshots)

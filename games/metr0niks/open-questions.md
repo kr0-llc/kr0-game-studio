@@ -4,7 +4,7 @@ Oct 20, 2026 · updated Oct 26, 2026 · @kr0
 
 ## Decided so far
 
-Most questions are now answered. The GDD reflects every decision below as of 2026-10-25 (they come from the [GDD review](reviews/SYNTHESIS.md) and the [prototype reconciliation](reviews/prototype-reconciliation.md)). The TDD was updated the same day; its architecture choices are Proposed in the [TDD decision history](tdd-decisions.md).
+Most questions are now answered. The GDD reflects every decision below as of 2026-10-25 (they come from the [GDD review](feedback/synthetic/gdd-review-2026-10-25/SYNTHESIS.md) and the [prototype reconciliation](feedback/synthetic/gdd-review-2026-10-25/prototype-reconciliation.md)). The TDD was updated the same day; its architecture choices are Proposed in the [TDD decision history](tdd-decisions.md).
 
 | Date | Decision |
 | --- | --- |
