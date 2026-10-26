@@ -88,7 +88,7 @@ Studio site page: https://storage.googleapis.com/kr0-game-studio-site/index.html
 | --- | --- | --- |
 | Blackletter | `art/blackletter/` | Cards, illustrations, battle sprites, brand masks, concept art, screenshots (see `README.md`) |
 | Dual Tech | `art/dual-tech/` | Art board (`board/index.html`), three styles (`prototype/`, `pitch/`, `glass/`), `prompts/`, Python drawing kits in `source/` |
-| Metr0niks | `art/metr0niks/` | Art board (`board/index.html`), styles (`prototype/`, `pitch/`, `ink/`), prototype `themes/`, `prompts/`, zone-unlock `screenshots/`; ink prototype sheets, sprite atlas and audio in `ink-proto/`, atlas builder and Scenario script in `source/` |
+| Metr0niks | `art/metr0niks/` | Art board (`board/index.html`), styles (`prototype/`, `pitch/`, `ink/`), prototype `themes/`, `prompts/`, zone-unlock and ink-prototype `screenshots/`; ink prototype sheets, sprite atlas and audio in `ink-proto/`, atlas builder and Scenario script in `source/` |
 | Dropfront | none yet | The core loop diagram lives in `games/dropfront/gdd.pdf` |
 
 ## Tools (shared by every game)
