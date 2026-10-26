@@ -1,0 +1,6 @@
+Tool: Scenario, model GPT Image 2.5 Sunburst (model_openai-gpt-image-2-5-sunburst), quality medium, 1024x1024, background opaque.
+Reference images (Scenario asset ids): none
+Date: 2026-10-26
+
+Seamless tileable top-down ground texture for a sunny desert slum under a highway: pale sand and sun-bleached cracked asphalt patches, faint tire tracks, a few pebbles and dry weeds, light paper grain, very low contrast so sprites read clearly on top. Flat even midday lighting, no objects casting big shadows. Ligne-claire ink style with thin sparse ink lines, palette of sand, pale peach, faint sage. ART STYLE: sun-bleached ligne-claire comic ink, like the reference character: confident clean black ink outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0), dusty coral and pale teal, very simple soft cel shading, slightly whimsical and cute, rounded chunky shapes. No voxels, no cubes, no text, no labels, no ground shadow, no background scenery.
+

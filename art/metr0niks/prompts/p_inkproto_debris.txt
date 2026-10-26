@@ -1,0 +1,6 @@
+Tool: Scenario, model GPT Image 2.5 Sunburst (model_openai-gpt-image-2-5-sunburst), quality medium, 1536x1024, background transparent.
+Reference images (Scenario asset ids): asset_TuQurpmMdYvpBoeLbA3Mz5XW
+Date: 2026-10-26
+
+Game sprite sheet of flying debris fragments for explosions, each a separate small object with generous empty transparent space between them, none touching, in a neat 5x4 grid: broken peach armor plates, sage armor shards, bent bolts and nuts, a spring, adobe brick chunks, splintered planks, corrugated tin scraps, concrete chunks with rebar, a gear, a pipe elbow. Varied sizes and rotations. ART STYLE: sun-bleached ligne-claire comic ink, like the reference character: confident clean black ink outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0), dusty coral and pale teal, very simple soft cel shading, slightly whimsical and cute, rounded chunky shapes. No voxels, no cubes, no text, no labels, no ground shadow, no background scenery.
+
