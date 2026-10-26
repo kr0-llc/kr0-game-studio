@@ -21,7 +21,10 @@ An isometric voxel mech brawler: real-time driving and shooting, heavy weapons o
 | --- | --- | --- | --- |
 | Pitch and firing-range prototype (with 3 concept art images) | `games/metr0niks/pitch-and-firing-range/index.html` (+ `art/`) | https://claude.ai/artifact/TgLkPWgZdjqbAj7vNQXHdb | Imported (from zip) |
 | GDD (gallery title "Scrap-Breaker GDD"; the artifact is the Oct 20 version) | `games/metr0niks/gdd.md` (Oct 25 update; Oct 20 version in `games/metr0niks/superseded/gdd-2026-10-20.md`) | https://claude.ai/artifact/XBYfrT2AvabsFNsYTJudsq | Updated Oct 25, 2026 from the GDD review; waiting on kr0 |
-| TDD (gallery title "Scrap-Breaker TDD") | `games/metr0niks/tdd.md` | https://claude.ai/artifact/XbGJLgDdqYtnVLmsZyrnge | Imported |
+| TDD (gallery title "Scrap-Breaker TDD"; the artifact is the Oct 20 version) | `games/metr0niks/tdd.md` (Oct 25 update; Oct 20 version in `games/metr0niks/superseded/tdd-2026-10-20.md`) | https://claude.ai/artifact/XbGJLgDdqYtnVLmsZyrnge | Updated Oct 25, 2026; waiting on kr0 |
+| GDD decision history | `games/metr0niks/gdd-decisions.md` | none | New (Oct 25, 2026) |
+| TDD decision history | `games/metr0niks/tdd-decisions.md` | none | New (Oct 25, 2026); all Proposed |
+| Tuning history (Simulation section and prototype baseline) | `games/metr0niks/tuning-history.md` | none | New (Oct 25, 2026); no changes logged yet |
 | Headless game simulation (loaded by the prototype, also runs in Node) | `games/metr0niks/sim.js` | none | Keep next to `prototype.html` |
 | Open questions (gallery title "Scrap-Breaker open questions") | `games/metr0niks/open-questions.md` | https://claude.ai/artifact/MUiquZomvsgbswqEjYxt4v | Imported |
 | Playable prototype (drive, shoot, patrol bots, small Overpass Sector 4 map) | `games/metr0niks/prototype.html` | https://storage.googleapis.com/kr0-game-studio-site/play/metr0niks/index.html | New (Oct 21, 2026); source of truth is studio-site/static/play/metr0niks/index.html in kr0/blackletter-chronos |
@@ -97,4 +100,4 @@ kr0's game portfolio site: the source and deploy scripts are in `site/` (deploy 
 ## Notes
 - Markdown exports drop embedded diagrams and images; they show as `[embedded content: …]` or `[image: …]` placeholders (Dropfront core loop, Metr0niks core loop and architecture, Blackletter pitch images, core loop and architecture).
 - Dual Tech and Dropfront tabs are PDF exports; the GDD PDF includes its concept art. Run `pdftotext` to get plain text.
-- Blackletter has the full seven-document set plus a prototype. For the other games, tuning history and GDD/TDD decision history are not separate files yet; the Dropfront GDD has a changelog and the Metr0niks open questions has a decisions table.
+- Blackletter has the full seven-document set plus a prototype. For the other games, tuning history and GDD/TDD decision history are not separate files yet; the Dropfront GDD has a changelog. Metr0niks now has the full seven-document set apart from a standalone pitch document (the pitch is `pitch-and-firing-range/index.html`).
