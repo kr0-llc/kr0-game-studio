@@ -6,7 +6,7 @@ Every changed number, why it changed, and the tokens each story spent. No tuning
 
 ## Simulation
 
-- **Runner:** none yet. The rules are `sim.js`; in Node, `import './sim.js'` then `globalThis.MetroSim.create({seed, mode, builds, level})`, and `sim.step()` advances one tick. A runner that plays whole excursions and writes a metrics record per run is to be built. Results will land in `games/metr0niks/tuning-runs/` (proposed).
+- **Runner:** none yet. The rules are `simulations/sim.js`; in Node, `import './simulations/sim.js'` from this folder then `globalThis.MetroSim.create({seed, mode, builds, level})`, and `sim.step()` advances one tick. A runner that plays whole excursions and writes a metrics record per run is to be built. Results will land in `games/metr0niks/tuning-runs/` (proposed).
 - **Determinism:** the simulation draws from one seeded stream, steps in fixed 1/60 s ticks and has no DOM, timers or browser globals. `MetroSim.hash` exists. The replay check (a seed, the tuning version and the input log reproducing one state hash) is not built.
 - **Scenarios:** to be set by kr0. Likely: Excursion level 1 and level 3 (all zones open), single-player and two-player co-op, Overpass Sector 4.
 - **Players:** none yet. A scripted bot has to drive a mech through five waves; co-op needs a second bot.

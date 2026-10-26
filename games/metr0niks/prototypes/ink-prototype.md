@@ -2,9 +2,9 @@
 
 Last updated: 26 October 2026 · Requested by kr0 · Status: exploration, nothing here is a GDD rule yet
 
-The ink prototype (`prototype-ink.html`) tests whether the game can look like art board style C, sun-bleached ink, instead of voxels. It is a second, separate prototype: `prototype.html` and `sim.js` are unchanged. It also carries the first music and sound effects the game has had, made cheaply on Scenario.
+The ink prototype (`prototypes/prototype-ink.html`) tests whether the game can look like art board style C, sun-bleached ink, instead of voxels. It is a second, separate prototype: `prototypes/prototype.html` and `simulations/sim.js` are unchanged. It also carries the first music and sound effects the game has had, made cheaply on Scenario.
 
-Play it: open `games/metr0niks/prototype-ink.html` from a local web server at the repo root (it loads `sim.js` and the art in `art/metr0niks/ink-proto/`), or use the published copy linked in INDEX.md.
+Play it: open `games/metr0niks/prototypes/prototype-ink.html` from a local web server at the repo root (it loads `simulations/sim.js` and the art in `art/metr0niks/ink-proto/`), or use the published copy linked in INDEX.md.
 
 ## What it is
 

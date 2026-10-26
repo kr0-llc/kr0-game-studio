@@ -1,6 +1,6 @@
 # kr0 Game Studio: Ways of Working
 
-Last updated: 25 October 2026 · Owner: kr0
+Last updated: 26 October 2026 · Owner: kr0
 
 kr0 Game Studio makes small indie games with a crew of AI agents. It runs like a small studio. Directors guard the vision, department leads own their areas, and specialists do the hands-on work. One human, kr0, makes every decision. We plan work in **tokens**, not hours.
 
@@ -16,6 +16,7 @@ This document covers who does what, how work moves between agents, the checks th
 4. **Process to fit the game.** Use the lightest process that works. More documents don't make a better game.
 5. **Every number is data.** Tunable values live in data files and one tuning table, never hard-coded. Each game has a headless deterministic simulation, and tuning changes are backed by its runs: see [simulation and tuning](simulation-and-tuning.md).
 6. **Decisions are written down.** Settled debates go in the decision histories so they stay settled.
+7. **One pipeline for generated art.** Characters, sprites and other generated art go through the studio's Scenario workflows and MCP servers: see [design workflows](design-workflows.md).
 
 ---
 
@@ -313,6 +314,8 @@ Automatic checks run while agents work.
 | data files | Valid, named by convention, follow the schema. |
 | tests | Naming, coverage and fixture rules. |
 | prototypes | Relaxed standards, but a README and a stated hypothesis are required. |
+| feedback | Synthetic (agent) and human feedback are kept apart and never mixed in one file. Each file names its source, date and the build or document it judged. |
+| generated art | Made with the [design workflows](design-workflows.md); every run's inputs and cost saved in `art/<name>/prompts/`. |
 
 ### Memory between sessions
 
@@ -375,7 +378,23 @@ flowchart LR
 
 Keep the three main documents separate. The GDD says "enemies flee below 20% HP". The TDD says how that's built. The pitch says why anyone should care.
 
-### Project layout
+### Game folders in the studio repo
+
+Each game's folder `games/<name>/` holds the seven documents above at the top, plus these folders:
+
+| Folder | Holds | Written by |
+| --- | --- | --- |
+| research/ | Market, genre and reference-game research, technical spikes. Suggestions, not decisions. | Any agent |
+| decisions/ | Decision records too long for a row in a decision history: option papers, trade-off write-ups, kr0's sign-offs. Each is linked from its row in the GDD or TDD decision history. | game-designer, technical-director |
+| simulations/ | The game's headless simulation (for example Metr0niks' `sim.js`), which prototypes and the room server load, plus sweep configs, run outputs and reports that back a tuning change (see [simulation and tuning](simulation-and-tuning.md)). | systems-designer |
+| prototypes/ | Every playable prototype (HTML builds, firing ranges, art tests), with its briefs and change lists. Each has a README or a stated hypothesis. Throwaway builds live here too. | prototyper |
+| feedback/synthetic/ | Feedback from agents: review boards, persona playtests, critiques. | Any agent |
+| feedback/human/ | Feedback from people: playtest notes, survey results, comments from kr0's classmates or players. | kr0, community-manager |
+| artifacts/ | Things made to hand to someone: PDF and print exports, decks, one-pagers, snapshots of published pages, trailer cuts, agent handoff prompts. Art itself stays in `art/<name>/`. | producer |
+
+### Game code project layout
+
+When a game moves to an engine project, its code repo uses this layout.
 
 | Folder | Contents |
 | --- | --- |
@@ -398,3 +417,15 @@ Agents use a few established frameworks when they design and review:
 - **Flow:** keep challenge matched to skill.
 - **Player types:** who the game is for, and whether it serves them.
 - **Verification first:** write the test, then the code.
+
+---
+
+## 13. Design workflows
+
+Generated art follows one pipeline for every game, described in [design workflows](design-workflows.md):
+
+1. **Character sheet** from a brief, approved by kr0.
+2. **Turnaround** of the approved character from six camera angles.
+3. **Action sprites:** a 12-frame sheet and a looping video per action.
+
+Agents run these through the Scenario MCP server, read Scenario's skills before planning a multi-step job, and can use the gemini-creative plugin for quick concept sketches and edits. The technical-artist owns the pipeline; the art-director checks the output against the game's chosen style.

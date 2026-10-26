@@ -2,7 +2,7 @@
 
 Updated Oct 26, 2026 · @kr0 · Earlier versions: [Oct 20](superseded/gdd-2026-10-20.md), [Oct 25 draft](superseded/gdd-2026-10-25-draft.md), [Oct 26 draft](superseded/gdd-2026-10-26-draft.md)
 
-This GDD describes one mode, Excursion, as the prototype plays it plus kr0's decisions of Oct 25 and 26 ([decision history](gdd-decisions.md)). The prototype changes those decisions need are in [prototype changes](prototype-changes.md). Dimensions are in metres; one map cell is one metre. Two sections are marked TBD on kr0's instruction (GDD-D27); everything else has a value.
+This GDD describes one mode, Excursion, as the prototype plays it plus kr0's decisions of Oct 25 and 26 ([decision history](gdd-decisions.md)). The prototype changes those decisions need are in [prototype changes](prototypes/prototype-changes.md). Dimensions are in metres; one map cell is one metre. Two sections are marked TBD on kr0's instruction (GDD-D27); everything else has a value.
 
 ## Overview
 
@@ -435,12 +435,12 @@ Direction: synthwave and retrowave (GDD-D26). Music uses analog-style synth bass
 
 ## Links
 
-- Pitch and firing range: [pitch-and-firing-range/index.html](pitch-and-firing-range/index.html)
+- Pitch and firing range: [pitch-and-firing-range/index.html](prototypes/pitch-and-firing-range/index.html)
 - [TDD](tdd.md) and [TDD decision history](tdd-decisions.md)
 - [GDD decision history](gdd-decisions.md)
 - [Open questions](open-questions.md)
 - [Tuning history](tuning-history.md)
-- [Prototype changes](prototype-changes.md)
-- Prototype: [prototype.html](prototype.html) with the rules in [sim.js](sim.js)
-- Reviews: [reviews/](reviews/SYNTHESIS.md)
+- [Prototype changes](prototypes/prototype-changes.md)
+- Prototype: [prototype.html](prototypes/prototype.html) with the rules in [sim.js](simulations/sim.js)
+- Reviews: [feedback/synthetic/](feedback/synthetic/gdd-review-2026-10-25/SYNTHESIS.md)
 - Art: `art/metr0niks/` (art board, styles, prompts, screenshots)

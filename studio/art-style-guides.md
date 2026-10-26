@@ -1,6 +1,6 @@
 # Art style guides
 
-Last updated: 23 October 2026 · Owner: art-director
+Last updated: 26 October 2026 · Owner: art-director
 
 Each game's art board draws the same subjects in competing styles. kr0 picks one per game; until then the column says "Not chosen".
 
@@ -13,6 +13,7 @@ Each game's art board draws the same subjects in competing styles. kr0 picks one
 
 ## Rules for every game
 
+- Make characters, turnarounds and sprites with the [design workflows](design-workflows.md), fed with art in the game's chosen style.
 - Save every generated image's prompt in `art/<name>/prompts/` and note the tool and model on the art board.
 - Art drawn in code keeps its script in `art/<name>/source/`.
 - Build captures are screenshots of the current prototype, kept in `art/<name>/screenshots/`.

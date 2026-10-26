@@ -1,6 +1,6 @@
 # Metr0niks ink prototype assets
 
-Art and audio for `games/metr0niks/prototype-ink.html` (see `games/metr0niks/ink-prototype.md`).
+Art and audio for `games/metr0niks/prototypes/prototype-ink.html` (see `games/metr0niks/prototypes/ink-prototype.md`).
 
 - `sheets/`: the Scenario sprite sheets as generated (GPT Image 2.5, transparent backgrounds), stored as WebP. Prompts: `../prompts/p_inkproto_*.txt`.
 - `sprites/`: the atlas the prototype loads, built from `sheets/` by `../source/ink_atlas.py` (`atlas.webp`, `atlas.json`, `atlas.js`, plus `ground.webp` and `garage.webp`). Rebuild after changing a sheet.

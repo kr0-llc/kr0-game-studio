@@ -1,6 +1,6 @@
 # Handoff prompt: push the Metr0niks GDD branch and finish the GDD
 
-Oct 26, 2026 · for the next agent · written by Claude for kr0 · Earlier version: [Oct 25](superseded/handoff-gdd-prompt-2026-10-25.md)
+Oct 26, 2026 · for the next agent · written by Claude for kr0 · Earlier version: [Oct 25](../superseded/handoff-gdd-prompt-2026-10-25.md)
 
 Start the next session with `kr0/kr0-game-studio` selected and GitHub connected (https://claude.ai/connect-github, with the Claude GitHub App installed on the repo), so the agent can push. Paste everything below the line into its first message.
 
@@ -24,10 +24,10 @@ The work sits on branch `claude/metr0niks-gdd-review`: 19 commits ahead of `main
 2. `studio/gdd-template.md` and `studio/skills/gdd-designer/SKILL.md`.
 3. `games/metr0niks/gdd.md`.
 4. `games/metr0niks/gdd-decisions.md` (newest first; GDD-D23 to D28 are from Oct 26) and `open-questions.md`.
-5. `games/metr0niks/reviews/2026-10-26-gdd-critique.md`: the latest critique, with fixes not yet applied.
+5. `games/metr0niks/feedback/synthetic/2026-10-26-gdd-critique.md`: the latest critique, with fixes not yet applied.
 6. `games/metr0niks/research/mech-games-2026-10-26.md`: mech-game design research. Its suggestions are not decisions.
-7. `games/metr0niks/prototype-changes.md`, `tdd.md`, `tdd-decisions.md`, `tuning-history.md`.
-8. `sim.js` (the rules; `T` at the top holds every tunable) and `prototype.html` are the ground truth for what the game does today. Read big files by section.
+7. `games/metr0niks/prototypes/prototype-changes.md`, `tdd.md`, `tdd-decisions.md`, `tuning-history.md`.
+8. `simulations/sim.js` (the rules; `T` at the top holds every tunable) and `prototypes/prototype.html` are the ground truth for what the game does today. Read big files by section.
 
 ## 3. Where things stand
 
@@ -35,7 +35,7 @@ The work sits on branch `claude/metr0niks-gdd-review`: 19 commits ahead of `main
 - kr0 accepted every earlier proposal on Oct 26 (GDD-D18, D20, D23) and decided victory at level 50, a paid co-op revive, a settable seed, the pillars and audio (GDD-D24 to D26).
 - **TBDs:** target audience and player fantasy stay TBD on kr0's instruction (GDD-D27); those are the only TBDs allowed. Production milestones and pricing don't belong in the GDD.
 - **Still Proposed:** the revive price (40 × the level's scrap factor) and 30% revive armor, what the victory button does, the level-1-only seed change, and repair in slot order.
-- The prototype is unchanged on purpose. Don't edit `prototype.html` or `sim.js`; changes the GDD needs go in `prototype-changes.md` (sections 1 to 16).
+- The prototype is unchanged on purpose. Don't edit `prototypes/prototype.html` or `simulations/sim.js`; changes the GDD needs go in `prototype-changes.md` (sections 1 to 16).
 
 ## 4. What's waiting on kr0, in this order
 
@@ -47,7 +47,7 @@ Ask one decision at a time, with 2 to 4 options and a recommendation. Write noth
    - inline "(proposed, GDD-Dxx)" tags;
    - one Repair button in slot order;
    - "What makes it fun: TBD (kr0)" and the header's TBD count;
-   - timing windows in seconds from `sim.js` (Perfect ±0.086 s around 1.0 s, Good ±0.31 s, auto-Miss at 1.31 s), with the px sizes kept as a presentation note;
+   - timing windows in seconds from `simulations/sim.js` (Perfect ±0.086 s around 1.0 s, Good ±0.31 s, auto-Miss at 1.31 s), with the px sizes kept as a presentation note;
    - the TDD drift (ring "to 0", Perfect radius for every heavy weapon, collapse scrap, the cut-off line, Godot listed as "Choice", header date, TDD-D1 and D5 wording);
    - the stale open-questions rows, the INDEX rows, the prototype-changes header, `T.level.revive` in sections 2 and 12, and the tuning-history baseline wording.
 2. **Co-op campaign ownership** (critical): which save a room uses, what the guest keeps, what each player's save gets on extract, death and leaving, how "the lower of the two levels" works, who sees victory. The room server is in the private `kr0/blackletter-chronos`; ask kr0 whether you may read it.
@@ -84,7 +84,7 @@ These read-only artifacts still show the Oct 25 versions. Refresh each at its ow
 ## 7. Done means
 
 - The branch is pushed and a pull request is open, with kr0's approval.
-- `gdd.md` contradicts neither itself nor `sim.js`, except for the items in `prototype-changes.md`. The only TBDs are the ones kr0 asked for.
+- `gdd.md` contradicts neither itself nor `simulations/sim.js`, except for the items in `prototype-changes.md`. The only TBDs are the ones kr0 asked for.
 - Every rule from a decision traces to a GDD-D entry, and every Proposed entry is accepted, changed or listed as open.
 - The TDD, decision histories, open questions, tuning history and index agree with the GDD.
 - Your final message says what changed, what's waiting on kr0 and what you couldn't check.

@@ -46,7 +46,7 @@ It plays in the browser on desktop and phone, in English and Latin American Span
 |  |  |
 | --- | --- |
 | Rules | Taken from the Blackletter tabletop game: three units, six upgrade cards, one dice rule. Small enough to balance by simulation |
-| Prototype | A one-screen browser prototype plays a full battle against a simple Sebastion: [prototype.html](prototype.html) |
+| Prototype | A one-screen browser prototype plays a full battle against a simple Sebastion: [prototype.html](prototypes/prototype.html) |
 | Evidence | Self-play of these rules runs 14.5-minute battles over 24 seeded matches, and all three legs of the unit triangle sit in the 65 to 80% target in duels from 8 hexes ([tuning history](tuning-history.md)) |
 | Runtime cost | Every in-match agent is plain code: zero tokens per match, and any battle replays exactly from its seed |
 | Budget | 44.1M development tokens for a 15-week semester, with a 40% rework reserve ([TDD](tdd.md)) |

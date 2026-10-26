@@ -1,4 +1,4 @@
-"""Slice the Scenario sprite sheets in ../ink-proto/sheets into one atlas for games/metr0niks/prototype-ink.html.
+"""Slice the Scenario sprite sheets in ../ink-proto/sheets into one atlas for games/metr0niks/prototypes/prototype-ink.html.
 
 Each sheet has parts drawn apart on a transparent background; connected alpha regions become sprites.
 Run: python3 build_atlas.py   (needs Pillow, numpy, scipy). Writes ../ink-proto/sprites/atlas.webp and atlas.json.

@@ -1,6 +1,6 @@
 # Metr0niks TDD decision history
 
-Newest first. Status is Proposed until kr0 accepts or rejects it. The [TDD](tdd.md) holds the architecture; this file records the options and trade-offs behind it. These are technical-director proposals drawn from what the prototype already does and from the [GDD review](reviews/SYNTHESIS.md); none has been decided by kr0 yet.
+Newest first. Status is Proposed until kr0 accepts or rejects it. The [TDD](tdd.md) holds the architecture; this file records the options and trade-offs behind it. These are technical-director proposals drawn from what the prototype already does and from the [GDD review](feedback/synthetic/gdd-review-2026-10-25/SYNTHESIS.md); none has been decided by kr0 yet.
 
 | ID | Date | Decision | Options considered | Trade-off | Status |
 | --- | --- | --- | --- | --- | --- |

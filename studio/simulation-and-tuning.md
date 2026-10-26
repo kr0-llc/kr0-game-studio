@@ -91,6 +91,6 @@ Observed in the studio repo on 2026-10-23. Each gap is a story for that game, no
 | Game | Simulation today | Gaps against this standard |
 | --- | --- | --- |
 | Blackletter | Deterministic engine with seeded streams and command logs; Node self-play and duel sweeps, paired seeds, replay check; tuning history with sweeps | Seed counts and re-run triggers are spread across the TDD, tuning history and open questions; gather them into one Simulation section |
-| Metr0niks | `games/metr0niks/sim.js`: headless (no DOM, no timers), fixed 1/60 s tick, seeded stream, tunables in `T`; runs in the browser and in Node | No headless runner, metrics record or replay hash check yet; no tuning-history file; no documented seeds or targets |
+| Metr0niks | `games/metr0niks/simulations/sim.js`: headless (no DOM, no timers), fixed 1/60 s tick, seeded stream, tunables in `T`; runs in the browser and in Node | No headless runner, metrics record or replay hash check yet; no tuning-history file; no documented seeds or targets |
 | Dropfront | TDD plans a seeded headless runner playing thousands of matches overnight, target 5 to 8 minutes | Prototype draws from `Math.random`; no runner yet; no tuning-history file |
 | Dual Tech | TDD plans balance runs with simulated perfect, good and 50/50 players, one tuning table | Prototype draws from `Math.random`; no runner yet; no tuning-history file |
