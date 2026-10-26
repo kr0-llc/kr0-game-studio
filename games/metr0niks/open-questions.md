@@ -38,13 +38,13 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | 2026-10-20 | Hybrid combat: real-time movement and light weapons, ATB timing hits for heavy weapons |
 | 2026-10-20 | Single-player against AI first, on one map; PvP later |
 | 2026-10-25 | Co-op (two player mechs) ships in the first version; "no multiplayer" leaves the non-goals (GDD review, issue 1) |
-| 2026-10-25 | The first version stays always-online; the GDD must state why and define disconnects (GDD review, issue 4) |
+| 2026-10-25 | ~~The first version stays always-online; the GDD must state why and define disconnects (GDD review, issue 4)~~ Superseded: server features are in the backlog (GDD-D21) |
 | 2026-10-25 | ~~Zones are an account unlock: extracting opens the next zone for good, never lost on death (GDD review, D3)~~ Superseded the same day: see the level-reset decision below |
 | 2026-10-25 | ~~Gauntlet is practice: its scrap never banks; rewards are mastery goals and test-driving unowned parts (GDD review, D1)~~ Superseded the same day: Excursion is the only mode |
 | 2026-10-25 | No cash-out after the wave-3 boss; scrap stays all-or-nothing until extract (GDD review, D2) |
 | 2026-10-25 | Durability stays in the first version; the rules are GDD-D18 (GDD review, D5) |
 | 2026-10-25 | ~~Metr0niks is a PvP mech game shipping a co-op PvE stage first~~ The PvP wording was dropped with the other modes (GDD-D17) |
-| 2026-10-25 | Disconnect mid-excursion: the player can rejoin within a window and the mech holds until they do (GDD review, issue 2) |
+| 2026-10-25 | ~~Disconnect mid-excursion: the player can rejoin within a window and the mech holds until they do (GDD review, issue 2)~~ Superseded: rejoin is in the backlog (GDD-D21) |
 | 2026-10-25 | Every mech can ram for melee damage, so losing both arm weapons never leaves it helpless (GDD review, adversarial-qa F3) |
 | 2026-10-25 | A disabled weapon's weight still comes off, but the speed gain is capped below a healthy build's and the HUD explains it (GDD review, D4) |
 | 2026-10-25 | Durability floor: starter parts repair free; other parts take durability damage, and repair cost rises with the part's tier (GDD review, D5) |
@@ -55,6 +55,8 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | 2026-10-25 | Co-op Excursion plays at the lower of the two players' levels |
 | 2026-10-25 | Excursion is the only game mode. Gauntlet, Draft Duel and Scrap Rush are removed from the GDD, TDD and prototype (GDD-D17) |
 | 2026-10-25 | The GDD has no TBDs: values come from the prototype, and what the prototype lacks is dropped or given a number (GDD-D18 to GDD-D20) |
+| 2026-10-25 | Server features go to the backlog: rejoin, accounts and server-held saves, online single-player (GDD-D21) |
+| 2026-10-25 | No touch controls: PC with keyboard and mouse only (GDD-D22) |
 
 ## Design questions
 
@@ -73,15 +75,15 @@ These were in the Oct 20 GDD or later drafts and have no counterpart in the prot
 - The Coolant flood and Bolt-on plate pods.
 - Free torso pitch for aiming at upper floors.
 - Enemies that break supports on purpose.
+- Server features: rejoining a match within a window with the mech held (and the match paused in single-player), accounts and server-held saves, an online requirement for single-player, and server validation of results (GDD-D21). They need the room server in the private `kr0/blackletter-chronos` repo.
+- Touch controls (GDD-D22).
 
 ## Technical questions
 
-The engine and voxel scale are deferred; the online backend is new and needed for accounts.
+The engine and voxel scale are deferred.
 
 - [ ] Godot 4 or Unity? Deferred.
 - [ ] Voxel size and chunk size to match the concept art? Deferred.
-- [ ] Which backend handles accounts, mech data and online play?
-- [ ] Does the touch control scheme in the prototype stay, or is the platform keyboard and mouse only? (prototype changes, section 9)
 
 ## Scope and production questions
 

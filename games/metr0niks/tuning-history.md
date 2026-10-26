@@ -25,7 +25,7 @@ Every changed number, why it changed, and the tokens each story spent. No tuning
 - **Re-run when:** any key in `T` changes, a part's stat change or cost changes, the wave table changes, or the durability or repair rule changes.
 - **Caps:** TBD. A run that exceeds the cap is counted and reported, not dropped.
 
-Questions that need sweeps: whether 10% wear and the repair rates let a losing player recover, and whether 60 s is the right rejoin window.
+Question that needs sweeps: whether 10% wear and the repair rates let a losing player recover.
 
 ## Baseline: tuning in the prototype (Oct 25, 2026)
 
@@ -53,7 +53,6 @@ The GDD sets these (GDD-D18 and GDD-D20). They are starting values for the first
 | --- | --- |
 | `durability.share` | 0.10 of armor lost ÷ max armor, as wear on each fitted non-starter part |
 | `durability.repair` | Common 0.25, rare 0.5, epic 0.75 of price × wear |
-| Rejoin window | 60 s |
 | Wave-5 boss | Health × 1.5, fire interval 1.5 s, scrap 18 |
 
 ## Changes

@@ -32,7 +32,7 @@ Decision: the same sniper on waves 3 and 5, harder on wave 5 (GDD-D13).
 
 ## 4. Zone drop-in: lock input and damage
 
-Decision: input is locked and mechs take no damage during the shot (GDD-D4 and the zone rules).
+Decision: input is locked and mechs take no damage during the shot (GDD-D20).
 
 - While `sim.state` is `"drop"` and `introTicks > 0`, ignore `setInput` and skip damage to mechs (S:1067, 1136). The renderer keeps drawing the camera pan.
 
@@ -44,32 +44,23 @@ Decision: input is locked and mechs take no damage during the shot (GDD-D4 and t
 
 Decision: co-op plays at the lower of the two players' levels (GDD-D14).
 
-- The host picks `min(host level, guest level)` for `newSim`. The guest's `ready` message (P:1816) needs to carry its level. The relay server picks the level for online rooms (see section 8).
+- The host picks `min(host level, guest level)` for `newSim`. The guest's `ready` message (P:1816) needs to carry its level. The room server, in the private `kr0/blackletter-chronos` repo, picks the level for online rooms.
 
-## 7. Disconnects: rejoin within 60 s
+## 7. Remove touch controls
 
-Decision: rejoin window, the mech holds (GDD-D10). **New:** window 60 s.
+Decision: the platform is PC with keyboard and mouse only (GDD-D22).
 
-- Today a partner who leaves calls `dropPlayer` (P:1580 to 1583, S:1133) and a lost connection returns you to the menu (P:1737, 1778 to 1785).
-- Needed: the server keeps the match for 60 s; the absent mech stays put, takes no damage and can't act; in single-player the match pauses; a rejoining client gets a full snapshot (the voxel state is already sent to a late joiner, P:1592 to 1599, S:`snapshot(true)`); after 60 s the player counts as destroyed.
-- This needs the room server, which is in the private `kr0/blackletter-chronos` repo (`server/metr0niks.js`).
+- Delete the touch UI: floating twin sticks, the ARM, DASH and Q buttons, the pause and fullscreen buttons, portrait handling and the touch auto-detection (P:323, 334, 1953 to 2049, 2058), the `?touch=1` flag and the touch zoom floor (P:599).
 
-## 8. Always-online single-player
+## 8. Leaving a co-op room
 
-Decision: the first version stays always-online (GDD-D5).
+The GDD says a partner who leaves or loses connection has their mech destroyed and the other player fights on. The prototype already does this (P:1580 to 1583, S:1133); nothing to change.
 
-- Single-player runs fully in the browser today, with the save in `localStorage` as a campaign code (P:1255 to 1285). It needs the server for accounts and saves, and validation of extract and death results on the server (TDD Save data).
-- Server work in `kr0/blackletter-chronos`; the browser keeps the same fields.
-
-## 9. Touch controls
-
-The decided platform is PC with keyboard and mouse. The prototype also has touch controls: floating twin sticks, ARM, DASH and Q buttons, a fullscreen button and portrait handling (P:1953 to 2049, 2058). Either remove them or add touch to the decided platform; the GDD doesn't describe them.
-
-## 10. Smaller text and menu fixes
+## 9. Smaller text and menu fixes
 
 - The death screen hint mentions pasting a campaign code, but the paste box only feeds the co-op host (P:388, 1800 to 1803). Add a single-player paste box or change the hint.
 - The wave-5 boss bar still says "Bounty sniper"; keep it, since the GDD uses the same name.
 
-## 11. Checked, nothing to change
+## 10. Checked, nothing to change
 
 These GDD statements already match the prototype: the controls table, the dimetric camera and cutaway fade, the 35% vignette, the ATB and ring values, heat rules (every grade costs the same heat, an overheat during a ring adds none, the flash-vent ends a lockout, Overclock doubles every fill), the 21 parts and prices, two pod types and the pod rules, the wave table, level scaling, zones and drop-in timing for levels 2 and 3, death resetting the campaign to level 1, and co-op partner-down behaviour.

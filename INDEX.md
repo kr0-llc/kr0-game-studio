@@ -24,6 +24,7 @@ An isometric voxel mech brawler: real-time driving and shooting, heavy weapons o
 | TDD (gallery title "Scrap-Breaker TDD"; the artifact is the Oct 20 version) | `games/metr0niks/tdd.md` (Oct 25 update; Oct 20 version in `games/metr0niks/superseded/tdd-2026-10-20.md`) | https://claude.ai/artifact/XbGJLgDdqYtnVLmsZyrnge | Updated Oct 25, 2026; waiting on kr0 |
 | GDD decision history | `games/metr0niks/gdd-decisions.md` | none | New (Oct 25, 2026) |
 | Prototype changes (what the prototype must change to match the GDD and TDD) | `games/metr0niks/prototype-changes.md` | none | New (Oct 25, 2026); nothing done yet |
+| Handoff prompt for the agent finalizing the GDD | `games/metr0niks/handoff-gdd-prompt.md` | none | New (Oct 25, 2026) |
 | TDD decision history | `games/metr0niks/tdd-decisions.md` | none | New (Oct 25, 2026); all Proposed |
 | Tuning history (Simulation section and prototype baseline) | `games/metr0niks/tuning-history.md` | none | New (Oct 25, 2026); no changes logged yet |
 | Headless game simulation (loaded by the prototype, also runs in Node) | `games/metr0niks/sim.js` | none | Keep next to `prototype.html` |

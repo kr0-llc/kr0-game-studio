@@ -14,11 +14,9 @@ Metr0niks is an isometric voxel mech brawler. You drive and shoot in real time, 
 - **The city is a weapon.** Pillars and overpasses are as deadly as your guns.
 - **Real-time driving, timed heavy hits.** Movement and light guns never pause; the heavy arm weapon rewards a well-timed press.
 
-**Scope:** Excursion, single-player or two-player co-op, on one map (Overpass Sector 4), on PC with keyboard and mouse. All play is online.
+**Scope:** Excursion, single-player or two-player co-op, on one map (Overpass Sector 4), on PC with keyboard and mouse. Single-player runs in the browser; co-op runs through an online room.
 
-**Why online:** progression is tied to the player's account on a server, so co-op partners share one economy and an edited local save can't mint scrap.
-
-**Non-goals:** no PvP, no other game modes, no story, no map damage that carries between matches, no procedural maps.
+**Non-goals:** no PvP, no other game modes, no touch controls, no accounts or server-held saves, no rejoining a match, no story, no map damage that carries between matches, no procedural maps.
 
 **Look:** three art styles that change only how the game looks: Blockout (default), Cinematic and Ink.
 
@@ -39,11 +37,11 @@ An excursion is five waves on one map. It ends when you clear wave 5 or every me
 - **Lose condition:** a mech is destroyed when its armor reaches 0. The excursion is lost when every mech is destroyed.
 - **On death:** you lose all scrap from the match and the campaign goes back to level 1. Parts you own and scrap you banked are never lost. Durability damage is not applied on a death.
 - **Starter mechs:** the starter build (minigun, pile-bunker, vectored jump-jets, Reactor Mk1) is free and can't be lost, so a player with 0 scrap can always deploy.
-- **Progression:** mechs progress only in excursions and are tied to the player's account.
+- **Progression:** mechs progress only in excursions. Your build, owned parts, scrap, wear and level are saved in the browser as one campaign code, which you can copy from the garage.
 
 **Co-op:** two players share one excursion and one map; the host is player 1 (orange) and the guest player 2 (cyan). If one mech is destroyed, the other fights on, and the dead player's camera follows the survivor. Co-op plays at the lower of the two players' levels. Each mech keeps its own scrap wallet from the cubes it picks up. Co-op never pauses.
 
-**Disconnects:** a disconnect is not leaving early. The player has 60 s to rejoin. Their mech stays where it is, takes no damage and can't act until they return. In single-player the match pauses for the 60 s. If the window runs out, the player counts as destroyed.
+**Leaving a co-op room:** if a partner leaves or loses connection, their mech is destroyed and the other player fights on alone. The room closes when the excursion ends. In the garage, a player whose partner left can drop in alone.
 
 **Durability:** when you extract, each fitted part that is not a starter part gains wear equal to 10% of the armor your mech lost in the excursion, divided by its max armor (so losing 100 armor on a 100-armor mech adds 10% wear to every such part). Wear cuts every stat change that helps you (more power, armor or speed, less weight or heat) by that percentage; stat changes that cost you, and special abilities, stay as they are. Starter parts never wear and always repair free. Repairing another part costs its price times its wear times 25% for common parts, 50% for rare and 75% for epic.
 
@@ -180,7 +178,7 @@ The garage is the only place your build changes. Drop pods are one-use boosts in
 - The garage shows the five stats as bars with the selected part's change before you confirm, plus max armor, speed, damage, ATB fill time and cooling.
 - It shows each fitted part's wear and the scrap to repair it. Repair restores worn parts you can afford; starter parts repair free.
 - The campaign code (your save) is shown in the garage and can be copied. Resetting the save wipes it after two clicks.
-- In co-op the garage is shared: both players shop, then both press Drop in.
+- In co-op the garage is shared: both players shop, then both press Drop in. The room's saved campaign replaces each player's local one.
 
 **Drop pods (in the arena)**
 

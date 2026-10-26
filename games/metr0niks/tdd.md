@@ -6,11 +6,11 @@ This TDD matches the [GDD](gdd.md): one mode, Excursion, built the way the proto
 
 ## Goals and constraints
 
-Build for one developer: fake the expensive parts, make everything data-driven, and run every mode online from the start.
+Build for one developer: fake the expensive parts and make everything data-driven. Single-player runs in the browser; co-op runs through an online room.
 
 - **Team:** solo developer.
-- **Mode:** all play is online. Excursion (single-player or two-player co-op) is the only mode. Mechs are tied to the player's account.
-- **Platform:** PC, keyboard and mouse only for now.
+- **Mode:** Excursion, single-player or two-player co-op, is the only mode. Single-player runs entirely in the browser; co-op runs on a room server.
+- **Platform:** PC, keyboard and mouse only. No touch controls.
 - **Performance target:** not set yet; playtesters use high-end PCs.
 - **Destruction:** looks like voxels, but uses pre-split chunks rather than a full per-voxel physics simulation.
 
@@ -39,8 +39,8 @@ The rules are a headless, deterministic simulation with no renderer, as [simulat
 - **Fixed step:** 1/60 s ticks, never the frame clock. Randomness comes from one seeded stream owned by the simulation. `sim.js` has no DOM, no timers and no browser globals.
 - **One tuning table:** every number the rules use is a key in `T`.
 - **Co-op (prototype):** a room server runs the whole simulation. Mech 0 and mech 1 are the two players; the server sends snapshots at 20 per second with voxel diffs, each client sends its input every tick and predicts only its own movement, and a silent partner's keys are released after 0.5 s. A local two-tab transport exists for testing. The server code is not in this repo.
-- **Authority:** the server decides firing, heat, ATB, damage and pod ties. The "same frame" pod rule is "same server tick" online.
-- **Disconnects (to build):** a dropped player can rejoin within 60 s and their mech holds in place, takes no damage and can't act until they do; in single-player the match pauses. After 60 s the player counts as destroyed. The server keeps the match state, including the destroyed-map state, so a rejoin gets a full snapshot. Today a dropped partner is destroyed.
+- **Authority:** in a co-op room the server decides firing, heat, ATB, damage and pod ties. The "same frame" pod rule is "same server tick" online.
+- **Leaving a room:** a partner who leaves or drops is destroyed (`dropPlayer`) and the other mech fights on; the room closes when the excursion ends.
 - **Levels:** each excursion is one campaign level (1 to 50) with its own deterministic seed; a level decides which zones are open and scales enemies. A death resets the level to 1. Co-op runs at the lower of the two players' levels.
 - **Checks still to build:** a headless runner, a metrics record per run and a replay hash check (see the [tuning history](tuning-history.md)).
 
@@ -112,12 +112,13 @@ Heavy loaders patrol, hunt on sight and charge (tell 0.5 s, charge up to 1 s at 
 
 ## Save data
 
-Mech data lives on a server, tied to the player's account; nothing mid-match is saved. The prototype keeps the same fields in the browser (`localStorage`) and as a copyable campaign code; moving them to the server is part of the online backend work.
+The save is one campaign code, base64url JSON, kept in the browser (`localStorage`, key `metr0niks.campaign`) and copyable from the garage. In a co-op room the room's campaign replaces each client's.
 
-- **Saved:** banked scrap, owned parts and their tiers, the equipped build, per-part durability and the campaign level.
+- **Saved:** banked scrap, owned parts, the equipped build, per-part wear, the campaign level and the seed.
 - **Not saved:** match scrap, pod effects and match damage. Dying or leaving early discards them, and a death resets the campaign level to 1 (parts and banked scrap stay).
-- **Write points:** on extract, death and leaving the garage, the client sends the result to the server, which validates it.
-- **Versioning:** a version number on the data, with a small migration step when the format changes.
+- **Validation:** decoding rejects unknown part ids, negative or oversized scrap, wear outside 0 to 1, a level outside 1 to 50 and more than two players.
+- **Write points:** on extract, on death and on leaving the garage.
+- **Versioning:** a version number (`v`) on the data, with a small migration step when the format changes.
 
 ## Technical risks
 
@@ -126,8 +127,6 @@ Destruction performance is the biggest risk; prototype it before anything else.
 | Risk | What could go wrong | Spike to de-risk it |
 | --- | --- | --- |
 | Collapse performance | A big collapse drops the frame rate | Collapse one overpass section with 300 debris pieces and measure |
-| Online backend | Accounts and saves need a server from day one; single-player is not server-backed in the prototype | Pick a backend service and load the same mech on two machines |
-| Rejoin | A dropped player can't resume; the server must hold match state, including the destroyed map | Drop a client mid-collapse and rejoin from a full snapshot |
 | Co-op sync | Voxel diffs and falling clusters drift between clients | Run two clients through a full excursion and compare state hashes |
 | Physics stability | Falling clusters jitter, explode or tunnel through floors | Stress test stacked clusters and fast impacts |
 | Readability | Players can't tell what's about to fall | Playtest the shadow warning with someone new |
