@@ -428,4 +428,4 @@ Generated art follows one pipeline for every game, described in [design workflow
 2. **Turnaround** of the approved character from six camera angles.
 3. **Action sprites:** a 12-frame sheet and a looping video per action.
 
-Agents run these through the Scenario MCP server, read Scenario's skills before planning a multi-step job, and can use the gemini-creative MCP server for quick concept sketches and edits. The technical-artist owns the pipeline; the art-director checks the output against the game's chosen style.
+Agents run these through the Scenario MCP server, read Scenario's skills before planning a multi-step job, and can use the gemini-creative plugin for quick concept sketches and edits. The technical-artist owns the pipeline; the art-director checks the output against the game's chosen style.

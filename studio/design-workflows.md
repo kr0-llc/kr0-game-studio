@@ -2,7 +2,7 @@
 
 Last updated: 26 October 2026 · Owner: art-director, approved by kr0
 
-Every game makes its characters and generated art with the same tools: three Scenario workflows, the Scenario MCP server and its skills, and the gemini-creative MCP server. This page says what each one does, when to use it, and where its output goes. The general art rules are in [art style guides](art-style-guides.md).
+Every game makes its characters and generated art with the same tools: three Scenario workflows, the Scenario MCP server and its skills, and the gemini-creative plugin. This page says what each one does, when to use it, and where its output goes. The general art rules are in [art style guides](art-style-guides.md).
 
 ## The character pipeline
 
@@ -106,12 +106,12 @@ Scenario publishes tested procedures for its tools as skills. Read the one that 
 | `scenario-refine-loop`, `scenario-quality-gate` | Checking an output against the brief and iterating, before it ships. |
 | `scenario-model-training` | Training a style or character model when references stop being enough. |
 
-### gemini-creative MCP
+### gemini-creative plugin
 
-- **What it is:** an MCP server that connects agents to Google Gemini's creative models for image generation and editing (Gemini image, "Nano Banana"). Listing: [mcpmarket.com/server/gemini-creative](https://mcpmarket.com/server/gemini-creative).
+- **What it is:** a Claude Code plugin (marketplace `gemini-creative-marketplace`, repo [2901were/gemini-creative-plugin](https://github.com/2901were/gemini-creative-plugin)) that connects agents to Google Gemini's creative models. Listing: [mcpmarket.com/server/gemini-creative](https://mcpmarket.com/server/gemini-creative). It is third-party code and has not been reviewed by the studio; read it before trusting it with a key.
 - **Use it for:** quick concept sketches and edits, a second opinion beside a Scenario render, and image edits by plain instruction ("make the armour rust red"). Final in-game art still goes through the chosen style and the Scenario pipeline, so one game's art comes from one source.
-- **Setup:** the listing could not be opened from the studio's cloud environment, so its package and install command are not confirmed yet. It is not in `.mcp.json` until they are. It needs a Gemini API key, which kr0 sets in the environment (`GEMINI_API_KEY`), never in the repo. In claude.ai cloud sessions the Gemini API host is already reachable with credentials injected.
-- **Status:** pending setup by kr0.
+- **Setup:** declared in [`.claude/settings.json`](../.claude/settings.json), so Claude Code sessions on this repo offer the marketplace and enable the plugin after the usual trust prompt. By hand: `/plugin marketplace add https://github.com/2901were/gemini-creative-plugin`, then `/plugin install gemini-creative-plugin@gemini-creative-marketplace`. If it needs a Gemini API key, kr0 sets it in the environment, never in the repo. In claude.ai cloud sessions the Gemini API host is already reachable with credentials injected.
+- **Status:** declared, not yet run: the `/plugin` command is not available in the studio's cloud sessions, so nobody has tried it here.
 
 ## Rules
 

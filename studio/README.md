@@ -14,7 +14,7 @@ Everything in `studio/` applies to every game. A game may add its own rules in `
 | `tools/` | Tools shared by every game, such as `chronos-sim`, the simulation and tuning platform (to be built) |
 | `site/` | kr0's game portfolio site (public) and its deploy scripts |
 | `INDEX.md` | Every document and folder, with status and source links |
-| `.mcp.json` | MCP servers that Claude Code sessions on this repo connect to (Scenario) |
+| `.mcp.json`, `.claude/settings.json` | MCP servers and plugins that Claude Code sessions on this repo connect to (Scenario MCP, gemini-creative plugin) |
 
 Games: `blackletter`, `dropfront`, `dual-tech`, `metr0niks`. Folder names are lowercase with hyphens.
 
@@ -49,7 +49,7 @@ Section 11 of [ways of working](ways-of-working.md) says who writes each one. An
 - [ways-of-working.md](ways-of-working.md): crew, chain of command, phases, guardrails, token budgets. `site/ways-of-working.md` is the published copy.
 - [gdd-template.md](gdd-template.md): the default GDD outline.
 - [simulation-and-tuning.md](simulation-and-tuning.md): headless deterministic simulation, evidence-based tuning, and what each game documents.
-- [design-workflows.md](design-workflows.md): the Scenario character workflows (sheet, turnaround, action sprites), the Scenario MCP server and skills, and the gemini-creative MCP server.
+- [design-workflows.md](design-workflows.md): the Scenario character workflows (sheet, turnaround, action sprites), the Scenario MCP server and skills, and the gemini-creative plugin.
 - [brand.md](brand.md): studio brand rules, including the r0 styling.
 - [art-style-guides.md](art-style-guides.md): the candidate looks for each game and which one is chosen.
 - [skills/gdd-designer/SKILL.md](skills/gdd-designer/SKILL.md): the GDD designer skill.

@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "gemini-creative-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "2901were/gemini-creative-plugin"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "gemini-creative-plugin@gemini-creative-marketplace": true
+  }
+}
