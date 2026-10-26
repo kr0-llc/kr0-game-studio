@@ -38,6 +38,10 @@ All three live in kr0's Scenario project (team `team_pG6MaimfJd9b9PTLYKkYR7fQ`, 
 - **Use it for:** the first approved look of any hero, enemy, boss or NPC; the reference sheet the art-director and writer work from; GDD and pitch art.
 - **Don't use it for:** in-game art. The sheet is a reference, not a sprite source.
 - **Tips:** a non-photoreal reference (ink, pixel, 3D) overrides the workflow's realism wording, so always pass the game's chosen-style art as the reference. Put outfit variety in Other Descriptions. If the name comes out wrong, the Name field holds more than the name.
+- **Changes to make before real use** (read from the saved graph on 26 October 2026; no real run yet to confirm):
+  1. *Style.* The four fixed example images and the locked third paragraph ("ultra-realistic cinematic documentary", "luxury fashion campaign") pull every sheet toward a photographic editorial look. A game with a drawn or pixel style needs a per-game copy of the workflow (`workflow_copy`) with that game's style art in the Examples node and the third paragraph reworded, then `workflow_publish`. Until then, always pass reference art in the game's style.
+  2. *Defaults.* The name, description and notes are pre-filled with the Tim-o robot. Every run must set all three text fields, or the sheet is Tim-o.
+  3. *Size.* It renders 3840 × 2160 at high quality, the costliest setting. Lower it for exploration runs.
 
 ### 2. Character turnaround
 
@@ -46,6 +50,11 @@ All three live in kr0's Scenario project (team `team_pG6MaimfJd9b9PTLYKkYR7fQ`, 
 - **Inputs:** `image1` REF 1, Character Reference (the identity and style master).
 - **Use it for:** a model sheet before sprites or 3D; the side profile a side-view game needs; the top-down or isometric angle for Metr0niks; a rear view for an over-the-shoulder camera; image-to-3D inputs.
 - **Tips:** check the neutral front before trusting the other five; if it drifts off-model, everything after it drifts too. To change one view, edit only its angle spec. To add an angle, copy one branch and rewrite its angle spec.
+- **Changes to make before real use** (read from the saved graph on 26 October 2026; no real run yet to confirm):
+  1. *Add the approval gate.* Its README says a run pauses after Step 1 so the neutral front can be checked, but the published flow has no approval node, so a bad neutral front silently feeds all five other angles. Add an approval node after Step 1 in Scenario and publish again, or run Step 1 alone first and judge it.
+  2. *Background.* Every render uses background "auto", so the six views come back on different backdrops. For sprite sources, set a plain or transparent background on all six generators.
+  3. *Angles.* The set is fixed: front, three-quarter, side (camera on the subject's right), rear, low and high. There is no true top-down or isometric view, which Metr0niks may want. Add one by copying a branch and rewriting its angle spec.
+  4. *Wording.* The angle specs talk about eyes, gaze and faces. Check them against mechs and creatures before trusting the output.
 
 ### 3. Action sprite studio
 
@@ -56,6 +65,12 @@ All three live in kr0's Scenario project (team `team_pG6MaimfJd9b9PTLYKkYR7fQ`, 
   - `text2` View & Action: the camera and the move, for example "side view platformer, right hand, overhead hammer swing" or "isometric 3/4 top-down, firing shoulder cannon". It fills the blanks in the animation brief: game view, action, and which hand holds the weapon.
 - **Use it for:** attack, idle, hit and walk cycles for prototypes; animation tests before committing to a rig; reference for hand-drawn or code-drawn animation.
 - **Tips:** one action per run. Check the 12 frames for hand swaps and drift before packing them into an atlas. The white background has to be keyed out for the game; for transparent cut-out parts, use the GPT Image route in the Metr0niks ink prototype instead (`art/metr0niks/source/`).
+- **Changes to make before real use** (read from the saved graph on 26 October 2026; no real run yet to confirm):
+  1. *Always fill View & Action.* The prompt template has blanks (`****`) for the game type, the action and the weapon hand, and the LLM step fills them from this field. Empty, they stay blank. Say the camera (side, top-down, isometric), the move, and which hand.
+  2. *Remove the background.* The sheet is drawn on white with black grid lines and cut into 12 equal cells, so frames keep the white and may keep grid-line edges. Add a background-removal and trim step after the slicer, or key it out afterwards, before building an atlas.
+  3. *Resolution.* The sheet is 1536 × 1024 at "auto" quality, so each frame is about 384 × 341. Raise the quality and size for large sprites; downscale for pixel art.
+  4. *Frame rate.* The preview video is 6 fps. Set the game's own frame rate when exporting.
+  5. *Anchor.* The prompt asks for locked feet, but nothing checks it. Look at the loop for drift and fix it before use.
 
 ### Before running from an agent
 
