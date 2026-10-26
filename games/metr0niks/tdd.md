@@ -1,6 +1,6 @@
 # Metr0niks TDD
 
-Updated Oct 25, 2026 · @kr0 · Earlier version: [Oct 20](superseded/tdd-2026-10-20.md)
+Updated Oct 26, 2026 · @kr0 · Earlier version: [Oct 20](superseded/tdd-2026-10-20.md)
 
 This TDD matches the [GDD](gdd.md): one mode, Excursion, built the way the prototype builds it (`prototype.html`, `sim.js`) plus kr0's decisions of Oct 25 ([GDD decision history](gdd-decisions.md)). Architecture choices that are not yet kr0's decisions are in the [TDD decision history](tdd-decisions.md) as Proposed. What the prototype still has to change is in [prototype changes](prototype-changes.md).
 
@@ -68,6 +68,7 @@ A mech is a frame with six slot sockets; its stats are recalculated from its par
 - **Derived stats:** speed multiplier is `1 / (1 + 0.004 × (weight − 100))`; turn rate and torso tracking scale the same way; heat headroom and drain come from the reactor and heatsinks.
 - **Health:** one armor pool. Hits lower it; at 0 the mech is destroyed.
 - **Durability (to build):** each owned part instance carries a durability value. On extract, each fitted non-starter part gains wear of `0.10 × damage taken ÷ max armor` (capped at 1; none on a death). `deriveStats` multiplies every helpful stat change of a worn part by `1 − wear` and leaves costly changes and hooks alone. Starter parts never wear. Repair price is `ceil(price × wear × rate)` with rate 0.25, 0.5 and 0.75 for common, rare and epic. Armor refills every level. The prototype instead carries one armor value between levels and repairs 3 armor per scrap (see prototype changes).
+- **Weapon upgrades (to build):** each owned weapon instance (Arm-R, Arm-L and the two shoulder actives) carries an upgrade level from 0 to 2 (`T.upgrade`, GDD-D23). Its damage to enemies is multiplied by `1 + 0.10 × level` after power; voxel damage, heat and rates are unchanged. Wear and repair price ignore the level.
 - **Legs:** set the dash (vectored jump-jets and strider legs dash; siege treads don't) and the traction and turn curves.
 
 ## Combat systems
@@ -114,9 +115,9 @@ Heavy loaders patrol, hunt on sight and charge (tell 0.5 s, charge up to 1 s at 
 
 The save is one campaign code, base64url JSON, kept in the browser (`localStorage`, key `metr0niks.campaign`) and copyable from the garage. In a co-op room the room's campaign replaces each client's.
 
-- **Saved:** banked scrap, owned parts, the equipped build, per-part wear, the campaign level and the seed.
+- **Saved:** banked scrap, owned parts, the equipped build, per-part wear, per-weapon upgrade levels, the campaign level and the seed.
 - **Not saved:** match scrap, pod effects and match damage. Dying or leaving early discards them, and a death resets the campaign level to 1 (parts and banked scrap stay).
-- **Validation:** decoding rejects unknown part ids, negative or oversized scrap, wear outside 0 to 1, a level outside 1 to 50 and more than two players.
+- **Validation:** decoding rejects unknown part ids, negative or oversized scrap, wear outside 0 to 1, upgrade levels outside 0 to 2 or on parts that aren't owned weapons, a level outside 1 to 50 and more than two players.
 - **Write points:** on extract, on death and on leaving the garage.
 - **Versioning:** a version number (`v`) on the data, with a small migration step when the format changes.
 

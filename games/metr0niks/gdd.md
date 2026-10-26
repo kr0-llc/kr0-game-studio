@@ -1,8 +1,8 @@
 # Metr0niks GDD
 
-Updated Oct 25, 2026 · @kr0 · Earlier versions: [Oct 20](superseded/gdd-2026-10-20.md), [Oct 25 draft](superseded/gdd-2026-10-25-draft.md)
+Updated Oct 26, 2026 · @kr0 · Earlier versions: [Oct 20](superseded/gdd-2026-10-20.md), [Oct 25 draft](superseded/gdd-2026-10-25-draft.md)
 
-This GDD describes one mode, Excursion, as the prototype plays it plus kr0's decisions of Oct 25 ([decision history](gdd-decisions.md)). The prototype changes those decisions need are in [prototype changes](prototype-changes.md). Dimensions are in metres; one map cell is one metre.
+This GDD describes one mode, Excursion, as the prototype plays it plus kr0's decisions of Oct 25 and 26 ([decision history](gdd-decisions.md)). The prototype changes those decisions need are in [prototype changes](prototype-changes.md). Dimensions are in metres; one map cell is one metre.
 
 ## Overview
 
@@ -73,7 +73,7 @@ Combat runs on two layers: the right-arm light gun fires in real time, the left-
 
 **Light weapons (real time, left mouse)**
 
-- Fire while held; each shot adds heat. Damage is multiplied by power ÷ 100.
+- Fire while held; each shot adds heat. Damage is multiplied by power ÷ 100 and by the weapon's upgrade level (see Weapon upgrades). The same holds for heavy weapons and shoulder actives.
 - Light weapons: minigun, shotgun, plasma cutter, rail rifle.
 
 **Heavy weapons (ATB, right mouse)**
@@ -124,7 +124,7 @@ Combat runs on two layers: the right-arm light gun fires in real time, the left-
 
 ## Mech building
 
-A mech is a frame with six slots: Core, Arm-R, Arm-L, Shoulder, Legs and Reactor. Every part changes five stats.
+A mech is a frame with six slots: Core, Arm-R, Arm-L, Shoulder, Legs and Reactor. The frame sets the base stats and every part changes them. There are no raw stat upgrades: a mech gets stronger by fitting different parts and by upgrading its weapons (see Weapon upgrades).
 
 | Stat | What it controls |
 | --- | --- |
@@ -139,6 +139,23 @@ A mech is a frame with six slots: Core, Arm-R, Arm-L, Shoulder, Legs and Reactor
 - **Armor:** one pool per mech. The Nanite repair core restores 2 armor per second after 3 s without damage.
 - **Legs and ability:** the legs set the dash. Vectored jump-jets dash in your drive direction. Siege treads have no dash and are immune to loader shoves and recoil.
 - **Damage regions:** not part of the game. A mech has one armor pool and its weapons are never disabled.
+
+### Weapon upgrades
+
+Each weapon can be upgraded twice, from Mk I to Mk III, for scrap (GDD-D23, proposed values).
+
+- **Weapons:** the four Arm-R guns, the three Arm-L heavy weapons, and the two shoulder actives (siege mortar and Cryo flash-vent): nine parts. The Cryo-vent heatsink and Salvage magnet deal no damage and have no levels.
+- **Effect:** every level adds 10% of the weapon's damage to enemies, on top of power: Mk II deals 110% and Mk III 120%. Heat, rate of fire, range, cooldowns and damage to voxels don't change.
+- **Ownership:** a part is bought at Mk I. Its level belongs to the owned part, so it stays when you swap the part out and back, and it is never lost, not on a death either. Starter weapons can be upgraded.
+- **Wear:** wear doesn't reduce upgrade levels, and upgrade levels don't change a part's repair price.
+
+| Rarity | Mk I to Mk II | Mk II to Mk III |
+| --- | --- | --- |
+| Common | 20 | 40 |
+| Rare | 35 | 70 |
+| Epic | 60 | 120 |
+
+Upgrading all nine weapons to Mk III costs 1,005 scrap.
 
 ## Parts list
 
@@ -176,6 +193,7 @@ The garage is the only place your build changes. Drop pods are one-use boosts in
 
 - Buying a part pays its full price from your banked scrap and you own it for good. Swapping back to a part you own is free. There is no selling or refunds. Core and Shoulder can be left empty; the other slots always hold a part.
 - The garage shows the five stats as bars with the selected part's change before you confirm, plus max armor, speed, damage, ATB fill time and cooling.
+- It upgrades the selected weapon one level at a time and shows its level and the price of the next one.
 - It shows each fitted part's wear and the scrap to repair it. Repair restores worn parts you can afford; starter parts repair free.
 - The campaign code (your save) is shown in the garage and can be copied. Resetting the save wipes it after two clicks.
 - In co-op the garage is shared: both players shop, then both press Drop in. The room's saved campaign replaces each player's local one.
@@ -215,10 +233,11 @@ Every source is multiplied by 1 + 0.10 × (level − 1) and rounded.
 | Scrap sink | Cost | Repeatable |
 | --- | --- | --- |
 | Buy a part | 15 to 140 by part (see Parts list) | No |
+| Upgrade a weapon | 20 to 120 by rarity and level (see Weapon upgrades) | Twice per weapon |
 | Repair a worn part | Price × wear × 25%, 50% or 75% by rarity; free for starter parts | Yes |
 
 - Roof loot drops to street level.
-- Repairs keep scrap useful once every part is owned.
+- Weapon upgrades and repairs keep scrap useful once every part is owned.
 
 ## Destruction and environment
 

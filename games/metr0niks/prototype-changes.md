@@ -61,6 +61,16 @@ The GDD says a partner who leaves or loses connection has their mech destroyed a
 - The death screen hint mentions pasting a campaign code, but the paste box only feeds the co-op host (P:388, 1800 to 1803). Add a single-player paste box or change the hint.
 - The wave-5 boss bar still says "Bounty sniper"; keep it, since the GDD uses the same name.
 
-## 10. Checked, nothing to change
+## 10. Weapon upgrade levels
+
+Decision: scrap buys parts, weapon upgrades and repairs; no raw stat upgrades (GDD-D23).
+
+- **New:** `T.upgrade = { levels: 2, dmg: 0.10, cost: { common: [20, 40], rare: [35, 70], epic: [60, 120] } }`. Weapons are the parts with a `gun`, `pile` or `q` hook: minigun, shotgun, plasma, rail, pile, buster, winch, mortar, vent.
+- Save format: each campaign player gets `up`, an object of part id to level 0 to 2 (0 = Mk I). Validation rejects unknown ids, non-weapons, ids not owned and levels outside 0 to 2. Old saves load with every weapon at Mk I.
+- `create` takes each mech's upgrade levels next to its build. Damage to enemies from that weapon is multiplied by `1 + dmg × level`: light shots (S:719), the heavy weapon (S:771, 789, 810), the mortar (S:840) and the flash-vent (S:850). Voxel damage, heat, rates and cooldowns are unchanged.
+- Garage: show the selected weapon's level and an Upgrade button with the next price; buying pays from banked scrap. Show the level on the slot tile. Wear and the repair price ignore the level.
+- Co-op: the guest's `ready` message (P:1816) carries its upgrade levels.
+
+## 11. Checked, nothing to change
 
 These GDD statements already match the prototype: the controls table, the dimetric camera and cutaway fade, the 35% vignette, the ATB and ring values, heat rules (every grade costs the same heat, an overheat during a ring adds none, the flash-vent ends a lockout, Overclock doubles every fill), the 21 parts and prices, two pod types and the pod rules, the wave table, level scaling, zones and drop-in timing for levels 2 and 3, death resetting the campaign to level 1, and co-op partner-down behaviour.

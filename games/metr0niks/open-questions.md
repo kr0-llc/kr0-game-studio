@@ -1,6 +1,6 @@
 # Metr0niks open questions
 
-Oct 20, 2026 · updated Oct 25, 2026 · @kr0
+Oct 20, 2026 · updated Oct 26, 2026 · @kr0
 
 ## Decided so far
 
@@ -21,7 +21,7 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | 2026-10-20 | ~~Damage disables regions (left weapon, right weapon, legs). A disabled weapon's weight is removed, and speed follows weight~~ Superseded: deferred (GDD-D12) |
 | 2026-10-20 | The mech is destroyed when its health runs out |
 | 2026-10-20 | ~~Enemies break supports on purpose~~ Superseded: dropped (GDD-D19) |
-| 2026-10-20 | ~~Scrap buys parts, stat upgrades, higher-tier weapons and repairs~~ Superseded: scrap buys parts and repairs (GDD-D16) |
+| 2026-10-20 | ~~Scrap buys parts, stat upgrades, higher-tier weapons and repairs~~ Changed: scrap buys parts, weapon upgrade levels and repairs; no stat upgrades (GDD-D23) |
 | 2026-10-20 | Starter mechs have basic loadouts; a player with 0 scrap can always deploy |
 | 2026-10-20 | Bosses on waves 3 and 5; leaving an excursion early counts as a loss |
 | 2026-10-20 | After an excursion, part of the damage becomes durability damage that lowers max health and heat tolerance until repaired in the garage |
@@ -57,10 +57,22 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | 2026-10-25 | The GDD has no TBDs: values come from the prototype, and what the prototype lacks is dropped or given a number (GDD-D18 to GDD-D20) |
 | 2026-10-25 | Server features go to the backlog: rejoin, accounts and server-held saves, online single-player (GDD-D21) |
 | 2026-10-25 | No touch controls: PC with keyboard and mouse only (GDD-D22) |
+| 2026-10-26 | Scrap buys parts, weapon upgrades (Mk I to Mk III, nine weapons including the shoulder actives) and repairs; no raw stat upgrades (GDD-D23). Upgrade values are proposed and wait on a sweep |
 
 ## Design questions
 
-All design questions are answered. Values that need sweeps (the wear share and repair rates) are in the [tuning history](tuning-history.md).
+Values that need sweeps (the wear share, the repair rates and the weapon upgrade values of GDD-D23) are in the [tuning history](tuning-history.md). The questions still open from the Oct 26 review are listed below until kr0 answers them.
+
+Still Proposed in the [decision history](gdd-decisions.md): the wear and repair numbers and armor refilling every level (GDD-D18), the wave-5 boss values, the zone drop-in lock and the co-op level (GDD-D20), and the weapon upgrade values (GDD-D23).
+
+Raised by the Oct 26 review of the GDD against the prototype; each needs kr0's answer before the GDD can state a rule:
+
+- [ ] What happens after extracting level 50? The prototype keeps the campaign at level 50.
+- [ ] In co-op, a partner who died before the team extracts still banks the scrap they picked up (prototype). Does that mech's fitted parts take wear?
+- [ ] Wear basis: total damage taken (counting damage later healed by pods or the Nanite core) or net armor lost? Does wear add up across extracts, capped at 100%? When the wallet can't cover every repair, which part is repaired first? Is the repair price rounded up?
+- [ ] Every campaign uses the same seed, so each level's wave-1 pod times and types repeat on every climb. Intended?
+- [ ] A fourth pillar: the pitch has "Scrap only counts if you get out"; the GDD has three pillars. Add it?
+- [ ] Missing GDD sections with no source yet: what makes it fun, player fantasy, target audience, difficulty targets, audio (the prototype has none), production milestones and dependencies, positioning, comparables and price. Write them, or state in the GDD that they are out of scope for now?
 
 ## Backlog: dropped from the GDD, to bring back only by decision
 

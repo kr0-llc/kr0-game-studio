@@ -1,6 +1,6 @@
 # Metr0niks tuning history
 
-Oct 25, 2026 · @kr0 · kept by the systems-designer
+Oct 25, 2026 · updated Oct 26, 2026 · @kr0 · kept by the systems-designer
 
 Every changed number, why it changed, and the tokens each story spent. No tuning change has been logged yet. This file opens with the Simulation section the [studio standard](../../studio/simulation-and-tuning.md) requires and the baseline values the prototype ships with. Until the unset rows below are filled in, sweeps are exploratory and can't close a tuning story.
 
@@ -20,12 +20,17 @@ Every changed number, why it changed, and the tokens each story spent. No tuning
   | Scrap per extract, by level | TBD | GDD Economy lists the sources; no target set |
   | Runs to afford each part tier | TBD | No target set |
   | Wear per extract (share of armor lost) | 0.10 as a starting value | GDD-D18 |
+  | Extracts to take one weapon to Mk III, by rarity | TBD | GDD-D23; no target set |
+  | Wave time to kill at Mk I, Mk II and Mk III | TBD | GDD-D23; no target set |
   | Rejected inputs and errors | 0 | Standard |
 
 - **Re-run when:** any key in `T` changes, a part's stat change or cost changes, the wave table changes, or the durability or repair rule changes.
 - **Caps:** TBD. A run that exceeds the cap is counted and reported, not dropped.
 
-Question that needs sweeps: whether 10% wear and the repair rates let a losing player recover.
+Questions that need sweeps:
+
+- Whether 10% wear and the repair rates let a losing player recover.
+- Weapon upgrades (GDD-D23): how many extracts it takes to take a weapon to Mk III, and how much each level shortens a wave. Planned variants: damage per level 0.05, 0.10 and 0.15, crossed with upgrade cost ×0.5, ×1 and ×2, on paired seeds at level 1 and level 3, single-player, the starter build and one rare build. Needs the runner and kr0's targets first.
 
 ## Baseline: tuning in the prototype (Oct 25, 2026)
 
@@ -47,13 +52,16 @@ The values in `sim.js` `T` and `PARTS`, carried over unchanged. They are the pro
 
 ## Values proposed for the prototype, not yet in it
 
-The GDD sets these (GDD-D18 and GDD-D20). They are starting values for the first sweeps, not tuned.
+The GDD sets these (GDD-D18, GDD-D20 and GDD-D23). They are starting values for the first sweeps, not tuned.
 
 | Key | Value |
 | --- | --- |
 | `durability.share` | 0.10 of armor lost ÷ max armor, as wear on each fitted non-starter part |
 | `durability.repair` | Common 0.25, rare 0.5, epic 0.75 of price × wear |
 | Wave-5 boss | Health × 1.5, fire interval 1.5 s, scrap 18 |
+| `upgrade.levels` | 2 (Mk I to Mk III) on the nine weapons: four Arm-R guns, three Arm-L heavy weapons, siege mortar, Cryo flash-vent |
+| `upgrade.dmg` | 0.10 of the weapon's damage to enemies per level |
+| `upgrade.cost` | Common 20 and 40, rare 35 and 70, epic 60 and 120 scrap for Mk II and Mk III |
 
 ## Changes
 
