@@ -37,4 +37,5 @@ Pitch, GDD, TDD, open questions, tuning history, GDD decision history, TDD decis
 - [brand.md](brand.md): studio brand rules, including the r0 styling.
 - [art-style-guides.md](art-style-guides.md): the candidate looks for each game and which one is chosen.
 - [skills/gdd-designer/SKILL.md](skills/gdd-designer/SKILL.md): the GDD designer skill.
+- [skills/design-system/SKILL.md](skills/design-system/SKILL.md): section-by-section GDD authoring for one system. It points at `references/` files, a `hooks/yaml-helper.sh` script and `.claude/docs/` config files that aren't in this repo yet, so it can't run here until they are added.
 - [project-instructions-draft.md](project-instructions-draft.md): draft project instructions, waiting for kr0's approval.
