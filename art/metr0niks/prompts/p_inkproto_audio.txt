@@ -1,0 +1,32 @@
+Tool: Scenario. SFX: Sonilo V1.1 Text to SFX (model_sonilo-v1-1-text-to-sound-effects, 3 credits each, commercial use). Music: Google Lyria 3 Clip (6 credits) and Lyria 3 Pro (12 credits; battle track).
+Date: 2026-10-26. Post-processing: trim silence, loudness-normalize to -16 LUFS, mono 96 kbps for SFX (ffmpeg).
+
+sfx minigun (1s): single short punchy shot from a small rotary minigun, cartoon game sound, dry, crisp tick with a tiny metallic ring, no reverb, isolated
+sfx pile (1.5s): heavy hydraulic pile-driver punch: pneumatic hiss then a huge metal spike slam thunk with a clank, cartoon game sound, punchy, isolated
+sfx perfect (1.5s): bright cheerful perfect-timing success stinger: a rising two-note marimba ding with a sparkle chime, game UI sound, isolated
+sfx ring (1s): rising mechanical charge-up whir, servo spinning up over one second, cartoon game sound, isolated
+sfx enemy_shot (1s): small cannon pop, thumpy cartoon toy-like cannon shot, game sound effect, isolated
+sfx explode (2s): cartoon explosion boom with crunchy metal debris and springs bouncing, punchy, short tail, game sound effect
+sfx collapse (3s): building collapsing: adobe bricks crumbling, corrugated tin clattering and wooden planks cracking, rumble, game sound effect
+sfx hit_building (1s): short dull thud of bullets hitting adobe and tin wall, cartoon, isolated
+sfx scrap (1s): cheerful metallic coin pickup clink, small gear and bolts jingle, game pickup sound, isolated
+sfx step (1s): heavy cute robot footstep: soft metal stomp with a tiny servo squeak, isolated, dry
+sfx dash (1s): short pneumatic jet whoosh burst, cartoon dash sound, isolated
+sfx hurt (1s): robot taking damage: hollow metal clang and a sputtering electrical fizz, cartoon game sound, isolated
+sfx overheat (2s): steam valve venting with a warning beep, cartoon overheating machine, game sound, isolated
+sfx ui_click (1s): soft wooden toggle click for a game menu button, isolated, dry
+sfx ui_confirm (1s): satisfying chunky mechanical lever clunk plus a little bell ding, game menu confirm, isolated
+sfx drop (2s): heavy mech landing from a drop: whoosh then big ground thud with dust and metal creak, cartoon game sound
+sfx enemy_die (1.5s): small robot breaking apart: pop, springs boing, bolts scattering, cartoon game sound effect
+sfx claw (1s): giant metal crab claw snapping shut with a heavy clack and hydraulic hiss, cartoon game sound, isolated
+sfx jump_land (2s): big robot jumping with a spring boing then crashing down with a heavy ground slam, cartoon game sound
+
+music_battle.mp3 [model_lyria-3-pro]: Battle loop, 112 BPM, driving but playful, steady groove that loops cleanly, builds energy without big drops, ends on the downbeat so it can loop. sunny lo-fi desert funk for a cute comic-book mech game: warm analog synths, wah guitar, slap-free mellow bass, light dusty breakbeat drums, a little Moebius-era 1970s French sci-fi prog flavour, kalimba and vibraphone accents, sun-bleached and optimistic, instrumental, no vocals
+music_garage.mp3 [model_lyria-3-clip]: Garage menu loop, 84 BPM, relaxed workshop groove, calm and cosy, loops cleanly. sunny lo-fi desert funk for a cute comic-book mech game: warm analog synths, wah guitar, slap-free mellow bass, light dusty breakbeat drums, a little Moebius-era 1970s French sci-fi prog flavour, kalimba and vibraphone accents, sun-bleached and optimistic, instrumental, no vocals
+music_extract.mp3 [model_lyria-3-clip]: Short triumphant victory fanfare for extracting with the loot, 6 to 10 seconds of brass-like synth fanfare and a happy groove then silence. sunny lo-fi desert funk for a cute comic-book mech game: warm analog synths, wah guitar, slap-free mellow bass, light dusty breakbeat drums, a little Moebius-era 1970s French sci-fi prog flavour, kalimba and vibraphone accents, sun-bleached and optimistic, instrumental, no vocals
+music_wrecked.mp3 [model_lyria-3-clip]: Short sad-funny defeat jingle when the mech gets wrecked: deflating wah guitar slide down and a slow tired groove, 6 to 10 seconds then silence. sunny lo-fi desert funk for a cute comic-book mech game: warm analog synths, wah guitar, slap-free mellow bass, light dusty breakbeat drums, a little Moebius-era 1970s French sci-fi prog flavour, kalimba and vibraphone accents, sun-bleached and optimistic, instrumental, no vocals
+music_battle.mp3 final take [model_lyria-3-pro, reference asset_o8A7wQ8JAtXMHoTFkrDQC3YW]: Battle music loop for a top-down action game, 112 BPM, about 90 seconds, driving but playful steady groove, builds energy without big drops, ends on the downbeat so it can loop. (same style text). The first take with the Tim-o sheet as reference failed on Scenario's side.
+
+Synthwave alternative (GDD-D26 direction), for comparison in the prototype's garage music toggle:
+synth_battle.mp3 [model_lyria-3-pro]: Combat loop for a top-down mech action game, 118 BPM, about 90 seconds, driving bass and gated drums, steady energy, ends on the downbeat so it can loop. synthwave and retrowave for a cute comic-book mech brawler: analog-style synth bass, gated reverb drums, arpeggiated leads and neon pads, warm and sunny rather than dark, instrumental, no vocals
+synth_garage.mp3 [model_lyria-3-clip]: Title and garage theme, mid-tempo 90 BPM, warm pads and arpeggios, cosy workshop mood, loops cleanly. (same style text)

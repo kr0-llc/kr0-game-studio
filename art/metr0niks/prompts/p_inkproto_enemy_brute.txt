@@ -1,0 +1,6 @@
+Tool: Scenario, model GPT Image 2.5 Sunburst (model_openai-gpt-image-2-5-sunburst), quality medium, 1536x1024, background transparent.
+Reference images (Scenario asset ids): asset_TuQurpmMdYvpBoeLbA3Mz5XW, asset_2mdcbkDumyxgbg9onwp5iR75
+Date: 2026-10-26
+
+Game sprite parts sheet for a big heavy ENEMY siege crab mech (a boss-sized brute), rival faction: dusty slate-blue (#6f86a6) armor with coral (#e07a5f) and mustard (#d9a441) panels, painted skull-gear insignia, chunky and comedic. Draw each part SEPARATELY with generous empty transparent space between parts so they can be cut apart, none touching or overlapping, in a neat grid. 1) its wide dome hull seen from a three-quarter top-down view (camera about 35 degrees above, facing down-right) with a twin-pod mortar launcher on top, without legs or claws; 2) one stubby armored crab leg; 3) one giant pincer claw pointing horizontally to the right. ART STYLE: sun-bleached ligne-claire comic ink, like the reference character: confident clean black ink outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0), dusty coral and pale teal, very simple soft cel shading, slightly whimsical and cute, rounded chunky shapes. No voxels, no cubes, no text, no labels, no ground shadow, no background scenery.
+
