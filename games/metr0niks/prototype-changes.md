@@ -6,7 +6,7 @@ What `prototype.html` and `sim.js` must change to match the [GDD](gdd.md) and [T
 
 ## 1. Remove Gauntlet
 
-Decision: Excursion is the only mode (GDD-D17).
+Decision: Excursion is the only mode (GDD-D17, confirmed by kr0 on Oct 26, GDD-D29).
 
 - Delete the Gauntlet button and its note (P:407, 409), the `gauntletBtn` wiring (P:1878, 1889, 1905) and the start-a-campaign-from-Gauntlet path.
 - Remove the `mode` value `"gauntlet"` everywhere: `newSim` (P:506), the HUD label (P:1242), the campaign save and `curCampaign` (P:1266, 1269), the garage mode label (P:1424), co-op host and welcome messages (P:1612, 1739, 1757, 1761), the console hook (P:2078) and Continue (P:1903).
@@ -32,7 +32,7 @@ Decision: the same sniper on waves 3 and 5, harder on wave 5 (GDD-D13).
 
 ## 4. Zone drop-in: lock input and damage
 
-Decision: input is locked and mechs take no damage during the shot (GDD-D20).
+Decision: input is locked and mechs take no damage during the shot (GDD-D20, confirmed by kr0 on Oct 26, GDD-D29).
 
 - While `sim.state` is `"drop"` and `introTicks > 0`, ignore `setInput` and skip damage to mechs (S:1067, 1136). The renderer keeps drawing the camera pan.
 
@@ -48,7 +48,7 @@ Decision: co-op plays at the lower of the two players' levels (GDD-D14).
 
 ## 7. Remove touch controls
 
-Decision: the platform is PC with keyboard and mouse only (GDD-D22).
+Decision: the platform is PC with keyboard and mouse only (GDD-D22, confirmed by kr0 on Oct 26 over the Oct 22 mobile request, GDD-D29).
 
 - Delete the touch UI: floating twin sticks, the ARM, DASH and Q buttons, the pause and fullscreen buttons, portrait handling and the touch auto-detection (P:323, 334, 1953 to 2049, 2058), the `?touch=1` flag and the touch zoom floor (P:599).
 
