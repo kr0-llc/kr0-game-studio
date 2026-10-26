@@ -8,6 +8,17 @@ Paste everything below the line into the next agent's first message.
 
 You are taking over the Metr0niks GDD for kr0 Game Studio. The goal of this session is to finalize `games/metr0niks/gdd.md` so it is ready to drive the next phase of development (technical setup, then pre-production, per `studio/ways-of-working.md` section 5). kr0 is the only decision maker. You propose and draft; kr0 approves.
 
+## Where the work lives (read this before anything else)
+
+The work is **not in the studio repo yet**. It sits on an unpushed branch, `claude/metr0niks-gdd-review`, several commits ahead of `main`, in a container that no longer exists. You cannot assume `github.com/kr0/kr0-game-studio` has any of it, and the session that wrote it could not push. Until kr0 can push, the working copy is this private artifact:
+
+**Metr0niks Repo Sync: https://claude.ai/artifact/Ti35254yyvzkEC8L7VeyUv**
+
+- Read any file with the Artifact tool's read action on that link, setting `path` to the repo path (for example `games/metr0niks/gdd.md`). Every text file that differs from `main` is published there as exact markdown, plus `sync/metr0niks-gdd-review.patch.txt`.
+- To work in a checkout, clone the public repo, run `git checkout -b claude/metr0niks-gdd-review`, save the patch from the artifact and run `git am` on it. That was tested and reproduces the work exactly. Files that are not in the artifact (`prototype.html`, `sim.js`, the rest of `studio/`) are already in `main` and unchanged.
+- **After you change anything, republish the sync artifact at the same link** with the changed files and a fresh patch (`git format-patch origin/main..HEAD --stdout`), so the next session can continue from your work. Say in your final message that you did. Do not create a second sync artifact.
+- Where the studio rules say the repo is the source of truth, this is the exception for as long as the branch is unpushed. When kr0 pushes, the repo takes over again and the sync artifact is no longer needed.
+
 ## Read first, in this order
 
 1. `studio/README.md`, then `studio/ways-of-working.md` (sections 1, 4, 8 and 11) and `studio/simulation-and-tuning.md`. Follow them.
@@ -25,8 +36,8 @@ Read big files by section (find headings with Grep, then Read ranges). `prototyp
 - The GDD describes one mode, Excursion (single-player or two-player co-op), on one map. It has no TBDs. Every number is either from `sim.js` or is a value the decision history marks Proposed (GDD-D18 durability and repair rates, GDD-D20 wave-5 boss values).
 - Dropped on kr0's instruction and listed in the open-questions backlog: Gauntlet, Draft Duel, Scrap Rush, damage regions, accessibility options, remappable keys, the overheat steam zone, later maps, two pods, server features (rejoin, accounts, server-held saves, online single-player) and touch controls.
 - The prototype is unchanged. Do not edit `prototype.html` or `sim.js`. Any change the GDD needs from them goes into `prototype-changes.md`.
-- Branch `claude/metr0niks-gdd-review` holds 15 local commits and has not been pushed: the session had no GitHub write access. Keep committing to it. Do not open a pull request, push, deploy, create repos or delete files without asking kr0. The repo is public at `github.com/kr0/kr0-game-studio`; `kr0/blackletter-chronos` (the room server) is private and not readable.
-- Private artifact copies of every document exist for kr0's review (links below). The repo is the source of truth; do not treat an artifact as newer than the repo.
+- Keep committing to the branch in your checkout. Do not open a pull request, push, deploy, create repos or delete files without asking kr0. The studio repo is public at `github.com/kr0/kr0-game-studio`; `kr0/blackletter-chronos` (the room server) is private and not readable.
+- Rendered, read-only artifact copies of the main documents exist for kr0's review (links below). They are made from the repo markdown; the sync artifact above is the source if the two differ.
 
 ## What to do
 
@@ -53,10 +64,13 @@ The `design-system` skill in `studio/skills/design-system/` is for authoring one
 - `gdd.md` has no TBDs and no statement that contradicts `sim.js`, except the decisions listed in `prototype-changes.md`.
 - Every GDD rule that came from a decision traces to a `GDD-D` entry; every Proposed entry is either accepted, changed or listed as open for kr0.
 - The TDD, decision histories, open questions, tuning history and index agree with the GDD.
-- All work is committed on the branch, and you tell kr0 what changed, what is waiting on them and what you could not check.
+- All work is committed on the branch, the sync artifact is republished with it, and you tell kr0 what changed, what is waiting on them and what you could not check.
 
-## Artifacts (private, for kr0)
+## Rendered artifacts (private, for kr0 to read)
 
+Republish these too if you change the document they show (same link each time); the sync artifact comes first.
+
+- Repo Sync https://claude.ai/artifact/Ti35254yyvzkEC8L7VeyUv
 - GDD https://claude.ai/artifact/M7D1pXj1xeQyX9vYJYiFHV
 - TDD https://claude.ai/artifact/VHJnkAA6kdJxgtKfNBHyzL
 - GDD decisions https://claude.ai/artifact/5Mws5MsJf4ENVboy7oLvpK
