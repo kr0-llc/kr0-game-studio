@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# kr0-home: start and look after the studio's local services (Docker).
+# Same commands as kr0-home.ps1 on Windows. Run `kr0-home help`.
+set -euo pipefail
+
+HOME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="$HOME_DIR/.env"
+SERVICE="asset-desk"
+
+compose() { docker compose --project-directory "$HOME_DIR" -f "$HOME_DIR/compose.yaml" "$@"; }
+
+env_value() {  # env_value NAME DEFAULT: read a setting from .env
+  local line
+  line="$(grep -E "^$1=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
+  line="${line#*=}"; line="${line%\"}"; line="${line#\"}"
+  echo "${line:-$2}"
+}
+
+port() { env_value KR0_ASSET_DESK_PORT 8765; }
+url() { echo "http://127.0.0.1:$(port)"; }
+
+open_url() {
+  if command -v xdg-open >/dev/null; then xdg-open "$1" >/dev/null 2>&1 &
+  elif command -v open >/dev/null; then open "$1"
+  elif command -v explorer.exe >/dev/null; then explorer.exe "$1"
+  else echo "Open $1"; fi
+}
+
+need_env() {
+  if [[ ! -f "$ENV_FILE" ]]; then
+    echo "No settings yet. Run: kr0-home init" >&2; exit 1
+  fi
+}
+
+client() { compose exec -T "$SERVICE" python asset_desk.py --client "$1"; }
+
+wait_healthy() {
+  local i
+  for i in $(seq 1 30); do
+    if compose exec -T "$SERVICE" python asset_desk.py --client ping >/dev/null 2>&1; then return 0; fi
+    sleep 1
+  done
+  echo "Asset Desk didn't come up. See: kr0-home logs" >&2; return 1
+}
+
+cmd_init() {
+  if [[ -f "$ENV_FILE" ]]; then echo "Settings already exist: $ENV_FILE"; return; fi
+  cp "$HOME_DIR/.env.example" "$ENV_FILE"
+  local drive key secret
+  read -r -p "Drive art folder [$(env_value KR0_DRIVE_ART '')]: " drive || true
+  read -r -p "Scenario API key (Enter to skip): " key || true
+  if [[ -n "$key" ]]; then read -r -s -p "Scenario API secret: " secret || true; echo; fi
+  local tmp; tmp="$(mktemp)"
+  while IFS= read -r line; do
+    case "$line" in
+      KR0_DRIVE_ART=*) [[ -n "$drive" ]] && line="KR0_DRIVE_ART=$drive" ;;
+      SCENARIO_API_KEY=*) [[ -n "$key" ]] && line="SCENARIO_API_KEY=$key" ;;
+      SCENARIO_API_SECRET=*) [[ -n "${secret:-}" ]] && line="SCENARIO_API_SECRET=$secret" ;;
+    esac
+    printf '%s\n' "$line"
+  done < "$ENV_FILE" > "$tmp"
+  mv "$tmp" "$ENV_FILE"; chmod 600 "$ENV_FILE"
+  echo "Saved $ENV_FILE. Next: kr0-home up"
+}
+
+cmd_up() {
+  need_env
+  compose up -d --build "$SERVICE"
+  wait_healthy
+  echo "Asset Desk is running at $(url)"
+  client scan >/dev/null && echo "Scanned the folders."
+  [[ "${1:-}" == "--no-open" ]] || open_url "$(url)"
+}
+
+cmd_status() {
+  need_env
+  compose ps
+  client status || true
+}
+
+cmd_doctor() {
+  local ok=1
+  check() { if eval "$2" >/dev/null 2>&1; then echo "  ok    $1"; else echo "  FAIL  $1${3:+: $3}"; ok=0; fi; }
+  echo "kr0-home doctor"
+  check "Docker installed" "command -v docker" "install Docker Desktop"
+  check "Docker running" "docker info" "start Docker Desktop"
+  check "Docker Compose v2" "docker compose version"
+  check "Settings file" "test -f '$ENV_FILE'" "run kr0-home init"
+  if [[ -f "$ENV_FILE" ]]; then
+    local drive; drive="$(env_value KR0_DRIVE_ART '')"
+    check "Drive folder set" "test -n '$drive'" "set KR0_DRIVE_ART in .env"
+    if [[ "$drive" =~ ^[A-Za-z]:\\ ]]; then
+      echo "  --    Drive folder is a Windows path; check it from kr0-home.ps1"
+    else
+      check "Drive folder exists ($drive)" "test -d '$drive'" "is Drive for Desktop running?"
+    fi
+    check "Scenario key set" "test -n '$(env_value SCENARIO_API_KEY '')'" "Sync Scenario will fail without it"
+  fi
+  if compose ps --status running -q "$SERVICE" 2>/dev/null | grep -q .; then
+    check "Asset Desk answering at $(url)" "client ping"
+    local seen
+    seen="$(client folders 2>/dev/null | tr -d ' \n' | grep -o '"drive":{[^}]*"mediaFiles":[0-9]*' | grep -o '[0-9]*$' || echo 0)"
+    check "Drive folder visible inside the container ($seen files)" "test '$seen' -gt 0" \
+      "Docker can't see the folder; see README, 'If the container sees an empty Drive folder'"
+  else
+    echo "  --    Asset Desk not running (kr0-home up)"
+  fi
+  [[ $ok == 1 ]] && echo "All good." || return 1
+}
+
+usage() {
+  cat <<EOF
+kr0-home: the studio's local services, in Docker.
+
+  kr0-home init              create settings (.env): Drive folder, Scenario key
+  kr0-home up [--no-open]    build and start Asset Desk, scan, open the browser
+  kr0-home down              stop it
+  kr0-home restart           restart it
+  kr0-home status            what's running, folders, asset and grade counts
+  kr0-home open              open Asset Desk in the browser
+  kr0-home logs [-f]         show the service log
+  kr0-home scan              re-read the art folders
+  kr0-home sync              pull the Scenario library
+  kr0-home manifest <game>   write art/<game>/manifest.jsonl from approved assets
+  kr0-home doctor            check Docker, settings and the Drive folder
+  kr0-home build             rebuild the image from the repo
+EOF
+}
+
+case "${1:-help}" in
+  init) cmd_init ;;
+  up) cmd_up "${2:-}" ;;
+  down) compose down ;;
+  restart) need_env; compose restart "$SERVICE" ;;
+  status) cmd_status ;;
+  open) open_url "$(url)" ;;
+  logs) shift; compose logs "$@" "$SERVICE" ;;
+  scan) client scan ;;
+  sync) client sync ;;
+  manifest) [[ -n "${2:-}" ]] || { echo "Usage: kr0-home manifest <game>" >&2; exit 2; }; client "manifest:$2" ;;
+  doctor) cmd_doctor ;;
+  build) need_env; compose build --pull "$SERVICE" ;;
+  help|-h|--help) usage ;;
+  *) echo "Unknown command: $1" >&2; usage; exit 2 ;;
+esac

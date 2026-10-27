@@ -14,3 +14,4 @@ Tools used by every kr0 game live here, one folder per tool. A tool that only on
 | --- | --- | --- |
 | `chronos-sim`: simulation and tuning platform for every game (runners, results, Tune Lab, tuning history) | `tools/chronos-sim/` | Not built yet; [project plan](chronos-sim/project-plan.md) is a draft for kr0's review |
 | `asset-desk`: grade, tag and trace the provenance of studio art across the Drive folder, the repo and Scenario | `tools/asset-desk/` | Version 0.1 ([README](asset-desk/README.md), [feature list](asset-desk/FEATURES.md)) |
+| `kr0-home`: CLI that runs the studio's local services (Asset Desk today) in Docker on kr0's machine | `tools/kr0-home/` | First version ([README](kr0-home/README.md)) |

@@ -12,7 +12,11 @@ Used by every game. The planned features are in [FEATURES.md](FEATURES.md).
 
 Google Drive for Desktop puts the art folder on kr0's PC as `G:\My Drive\…`, and only that machine can see it. A browser page can't read a folder on its own, so a small local service does it: a single Python file, standard library only, that serves the app at `http://127.0.0.1:8765` and only answers requests from the same machine.
 
-## Run it (Windows)
+## Run it in Docker (recommended)
+
+Install Docker Desktop, then use [kr0-home](../kr0-home/README.md): `kr0-home init` once, then `kr0-home up`. No Python needed on your machine.
+
+## Run it without Docker (Windows)
 
 1. Install Python 3.9 or newer from python.org (tick "Add to PATH").
 2. Set your Scenario API key once as user environment variables `SCENARIO_API_KEY` and `SCENARIO_API_SECRET` (Scenario: Settings, API keys). Without them the app still works on folders; Sync Scenario will fail.

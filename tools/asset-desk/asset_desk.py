@@ -588,6 +588,13 @@ class App:
         secret = os.environ.get("SCENARIO_API_SECRET")
         self.scenario = Scenario(args.scenario_project, key, secret) if not args.no_scenario else None
         self.who = args.who
+        # How each folder is named on the host, for display when running in a
+        # container (where the Drive folder is mounted at /art/drive).
+        self.shown = {k: str(v) for k, v in self.roots.items()}
+        for spec in getattr(args, "show_as", None) or []:
+            label, _, path = spec.partition("=")
+            if norm_tag(label) in self.shown and path:
+                self.shown[norm_tag(label)] = path
 
     def file_path(self, root_label, rel):
         root = self.roots.get(root_label)
@@ -671,10 +678,22 @@ def make_handler(app):
                 if route == "/api/config":
                     return self._json({
                         "version": VERSION, "games": GAMES, "origins": ORIGINS,
-                        "roots": {k: str(v) for k, v in app.roots.items()},
+                        "roots": app.shown,
                         "catalog": str(app.catalog.dir), "scenario": bool(app.scenario),
                         "scenarioAuth": bool(app.scenario and app.scenario.auth), "who": app.who,
                     })
+                if route == "/api/folders":
+                    # How many media files each folder holds right now, read from disk.
+                    # kr0-home doctor uses it to tell whether Docker can see the Drive.
+                    counts = {}
+                    for label, root in app.roots.items():
+                        n = 0
+                        if root.is_dir():
+                            for dirpath, dirnames, filenames in os.walk(root):
+                                dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+                                n += sum(1 for f in filenames if os.path.splitext(f)[1].lower() in MEDIA_EXT)
+                        counts[label] = {"path": app.shown[label], "exists": root.is_dir(), "mediaFiles": n}
+                    return self._json({"folders": counts})
                 if route == "/api/assets":
                     return self._json({"assets": list(app.catalog.assets.values())})
                 if route == "/api/tags":
@@ -764,7 +783,7 @@ def make_handler(app):
                     target.parent.mkdir(parents=True, exist_ok=True)
                     target.write_text(text, encoding="utf-8")
                     app.catalog.event(game, "write-manifest", {"path": str(target), "assets": count}, app.who)
-                    return self._json({"path": str(target), "assets": count, "heldUnknownOrigin": held})
+                    return self._json({"path": "art/%s/manifest.jsonl" % game, "assets": count, "heldUnknownOrigin": held})
                 if route == "/api/push-tags":
                     rec = app.catalog.assets.get(body.get("id", ""))
                     if not rec or rec.get("source") != "scenario" or not app.scenario:
@@ -789,6 +808,51 @@ def make_handler(app):
     return Handler
 
 
+def client(action, port):
+    """Run one action against a running server and print the result. Used by kr0-home."""
+    base = "http://127.0.0.1:%d" % port
+    routes = {"scan": "/api/scan", "sync": "/api/sync/scenario"}
+    try:
+        if action == "ping":
+            with urllib.request.urlopen(base + "/api/config", timeout=5) as resp:
+                out = {"ok": resp.status == 200}
+        elif action == "folders":
+            with urllib.request.urlopen(base + "/api/folders", timeout=120) as resp:
+                out = json.loads(resp.read())["folders"]
+        elif action == "status":
+            with urllib.request.urlopen(base + "/api/config", timeout=10) as resp:
+                config = json.loads(resp.read())
+            with urllib.request.urlopen(base + "/api/assets", timeout=60) as resp:
+                assets = json.loads(resp.read())["assets"]
+            counts = collections.Counter(a.get("source") for a in assets)
+            graded = sum(1 for a in assets if a.get("grade"))
+            out = {"version": config["version"], "catalog": config["catalog"], "folders": config["roots"],
+                   "scenarioKey": config["scenarioAuth"], "assets": dict(counts), "graded": graded}
+            for label in config["roots"]:
+                out.setdefault("folderAssets", {})[label] = sum(1 for a in assets if a.get("root") == label)
+        else:
+            body = {}
+            if action.startswith("manifest:"):
+                route, body = "/api/manifest/write", {"game": action.split(":", 1)[1]}
+            elif action in routes:
+                route = routes[action]
+            else:
+                print("unknown action: " + action, file=sys.stderr)
+                return 2
+            req = urllib.request.Request(base + route, data=json.dumps(body).encode(),
+                                         headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=600) as resp:
+                out = json.loads(resp.read())
+    except urllib.error.HTTPError as exc:
+        print(exc.read().decode("utf-8", "replace"), file=sys.stderr)
+        return 1
+    except OSError as exc:
+        print("Asset Desk isn't answering on %s (%s)" % (base, exc), file=sys.stderr)
+        return 1
+    print(json.dumps(out, indent=1))
+    return 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="kr0 Asset Desk: grade, tag and trace studio art.")
     parser.add_argument("--root", action="append", default=[],
@@ -799,14 +863,22 @@ def main(argv=None):
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--who", default="kr0", help="Name recorded on every grade and edit")
     parser.add_argument("--scan", action="store_true", help="Scan the folders on start")
+    parser.add_argument("--host", default="127.0.0.1",
+                        help="Address to listen on. Use 0.0.0.0 only inside a container whose port is published to 127.0.0.1")
+    parser.add_argument("--show-as", action="append", default=[],
+                        help="Show a folder by its host path, as label=path (for containers)")
+    parser.add_argument("--client", metavar="ACTION",
+                        help="Talk to a running Asset Desk instead of starting one: ping, status, folders, scan, sync, or manifest:<game>")
     args = parser.parse_args(argv)
+    if args.client:
+        return client(args.client, args.port)
     app = App(args)
     if args.scan:
         for label, path in app.roots.items():
             print(scan_root(app.catalog, path, label))
         app.catalog.save()
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(app))
-    print("kr0 Asset Desk %s on http://127.0.0.1:%d  (catalog: %s)" % (VERSION, args.port, app.catalog.dir))
+    server = ThreadingHTTPServer((args.host, args.port), make_handler(app))
+    print("kr0 Asset Desk %s listening on %s:%d  (catalog: %s)" % (VERSION, args.host, args.port, app.catalog.dir), flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -814,4 +886,4 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
