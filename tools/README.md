@@ -1,6 +1,6 @@
 # kr0 Game Studio: tools
 
-Last updated: 23 October 2026 · Owner: kr0
+Last updated: 27 October 2026 · Owner: kr0
 
 Tools used by every kr0 game live here, one folder per tool. A tool that only one game uses stays in that game's own folder or build.
 
@@ -13,3 +13,4 @@ Tools used by every kr0 game live here, one folder per tool. A tool that only on
 | Tool | Folder | Status |
 | --- | --- | --- |
 | `chronos-sim`: simulation and tuning platform for every game (runners, results, Tune Lab, tuning history) | `tools/chronos-sim/` | Not built yet; [project plan](chronos-sim/project-plan.md) is a draft for kr0's review |
+| `asset-desk`: grade, tag and trace the provenance of studio art across the Drive folder, the repo and Scenario | `tools/asset-desk/` | Version 0.1 ([README](asset-desk/README.md), [feature list](asset-desk/FEATURES.md)) |
