@@ -70,7 +70,7 @@ Rules:
 
 ## The repo manifest
 
-Each game has `art/<game>/manifest.jsonl`: one JSON object per line, one line per asset that is graded `up` and used by the game. Each line is the record above plus `previewPath`, the preview's path in the repo. The asset grading app exports it from the catalog. Commit it on a branch like any other change.
+Each game has `art/<game>/manifest.jsonl`: one JSON object per line, one line per asset of that game that is graded `up` and not in `_retired/`. Assets with `origin: unknown` are held back until their origin is filled in. Each line is the record above plus `previewPath`, the preview's path in the repo. The asset grading app exports it from the catalog. Commit it on a branch like any other change.
 
 ## Moving new art in
 
