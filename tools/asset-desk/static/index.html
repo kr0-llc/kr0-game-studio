@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kr0 Asset Desk</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">kr<span class="r0">0</span> Asset Desk</div>
+  <input id="q" type="search" placeholder="Search name, tag, prompt, caption  ( / )" autocomplete="off">
+  <div class="actions">
+    <button id="scan" title="Re-read the art folders">Scan folders</button>
+    <button id="sync" title="Pull the Scenario library">Sync Scenario</button>
+    <button id="export" title="Download a manifest of what's shown">Export</button>
+    <button id="manifest" title="Write art/&lt;game&gt;/manifest.jsonl in the repo from the approved assets">Write manifest</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="side">
+    <section>
+      <h3>Grade</h3>
+      <div class="seg" data-filter="grade">
+        <button data-v="">All</button><button data-v="none" class="on">To grade</button><button data-v="up">👍</button><button data-v="down">👎</button>
+      </div>
+    </section>
+    <section>
+      <h3>Source</h3>
+      <div class="seg" data-filter="source">
+        <button data-v="" class="on">All</button><button data-v="scenario">Scenario</button><button data-v="file">Folders</button>
+      </div>
+    </section>
+    <section>
+      <h3>Origin</h3>
+      <div class="seg wrap" data-filter="origin">
+        <button data-v="" class="on">All</button><button data-v="synthetic">Synthetic</button><button data-v="human">Human</button><button data-v="hybrid">Hybrid</button><button data-v="unknown">Unknown</button>
+      </div>
+    </section>
+    <section>
+      <h3>Game</h3>
+      <select id="game"><option value="">All games</option></select>
+    </section>
+    <section>
+      <h3>Folders</h3>
+      <div id="tree" class="tree"></div>
+    </section>
+    <section>
+      <h3>Tags</h3>
+      <div id="tagcloud" class="cloud"></div>
+    </section>
+  </aside>
+
+  <main>
+    <div class="bar">
+      <span id="count"></span>
+      <span class="sel" id="selinfo" hidden>
+        <b id="selcount"></b> selected ·
+        <button data-bulk="up">👍 all</button><button data-bulk="down">👎 all</button>
+        <input id="bulktag" placeholder="add tag to all" list="taglist">
+        <select id="bulkorigin"><option value="">set origin…</option><option>synthetic</option><option>human</option><option>hybrid</option><option>unknown</option></select><button id="bulkclear">Clear</button>
+      </span>
+      <span class="keys">← → move · <kbd>U</kbd> 👍 · <kbd>D</kbd> 👎 · <kbd>0</kbd> clear · <kbd>T</kbd> tag · <kbd>1</kbd>-<kbd>9</kbd> suggested tag · <kbd>X</kbd> select</span>
+    </div>
+    <div id="grid" class="grid"></div>
+  </main>
+
+  <aside id="detail" class="detail" hidden>
+    <div class="preview" id="preview"></div>
+    <div class="grade-row">
+      <button class="thumb up" data-grade="up" title="Thumbs up (U)">👍</button>
+      <button class="thumb down" data-grade="down" title="Thumbs down (D)">👎</button>
+      <span id="dname" class="dname"></span>
+    </div>
+    <h4>Tags</h4>
+    <div id="dtags" class="chips"></div>
+    <input id="tagin" placeholder="Add tag, Enter to save (T)" list="taglist" autocomplete="off">
+    <div id="suggest" class="chips suggest"></div>
+    <h4>Provenance</h4>
+    <form id="prov" class="prov"></form>
+    <h4>Where it lives</h4>
+    <div id="where" class="where"></div>
+    <details><summary>History</summary><div id="history" class="history"></div></details>
+  </aside>
+</div>
+<datalist id="taglist"></datalist>
+<div id="toast" class="toast" hidden></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

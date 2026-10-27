@@ -100,6 +100,8 @@ Studio site page: https://storage.googleapis.com/kr0-game-studio-site/index.html
 | What belongs in `tools/` | `tools/README.md` | Current |
 | `chronos-sim`: simulation and tuning platform for every game | `tools/chronos-sim/` | Not built yet |
 | chronos-sim project plan | `tools/chronos-sim/project-plan.md` | Draft, awaiting kr0's review |
+| `asset-desk`: local app to grade, tag and trace the provenance of studio art (Drive folder, repo art, Scenario library) | `tools/asset-desk/` | Version 0.1, awaiting kr0's review |
+| asset-desk feature list | `tools/asset-desk/FEATURES.md` | Draft, awaiting kr0's review |
 
 ## Site
 
