@@ -1,6 +1,6 @@
 # kr0 Game Studio: studio guide
 
-Last updated: 26 October 2026 · Owner: kr0
+Last updated: 27 October 2026 · Owner: kr0
 
 Everything in `studio/` applies to every game. A game may add its own rules in `games/<name>/`, but it never contradicts this folder without a written decision in that game's decision history.
 
@@ -24,7 +24,7 @@ Games: `blackletter`, `dropfront`, `dual-tech`, `metr0niks`. Folder names are lo
 2. **The repo is the source of truth.** Documents and art live here, not in chat or in a single project's files. Change it through a branch and a pull request so drift shows up as a diff.
 3. **kr0 decides.** Agents propose and draft; kr0 approves. See [ways of working](ways-of-working.md).
 4. **Old versions move to `superseded/`,** never deleted, and `INDEX.md` marks them.
-5. **New art** goes in `art/<name>/<style or kind>/`, with its prompt saved in `art/<name>/prompts/`. Characters and sprites are made with the [design workflows](design-workflows.md) and go in `art/<name>/characters/<character>/`.
+5. **New art** goes in `art/<name>/<style or kind>/`, with its prompt saved in `art/<name>/prompts/`. Characters and sprites are made with the [design workflows](design-workflows.md) and go in `art/<name>/characters/<character>/`. Full-resolution masters live in the **kr0 Studio Art** Google Drive folder, and the repo keeps previews and a manifest: see [asset management](asset-management.md).
 
 ## Documents every game has
 

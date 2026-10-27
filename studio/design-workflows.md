@@ -88,7 +88,7 @@ All three live in kr0's Scenario project (team `team_pG6MaimfJd9b9PTLYKkYR7fQ`, 
 | Sprite sheets, frames and loop videos | `art/<game>/characters/<character>/sprites/<action>/` (`sheet.png`, `frame-01.png` to `frame-12.png`, `loop.mp4`) |
 | Inputs for every run (brief text, view and action, reference asset ids, workflow id, cost) | `art/<game>/prompts/<character>-<step>.txt` |
 
-Note the workflow and model on the art board, as for any generated image. Raw runs and rejected takes stay in Scenario; only picked outputs come into the repo.
+Note the workflow and model on the art board, as for any generated image. Raw runs and rejected takes stay in Scenario. Picked outputs go to the same paths in the **kr0 Studio Art** Google Drive folder as full-resolution masters, with a provenance record. The repo gets a web-size preview and a `manifest.jsonl` row: see [asset management](asset-management.md).
 
 Each game keeps its reference art in one Scenario collection, and passes images from it as the reference input to every run. The picked images are copied to `art/<game>/characters/<character>/` with a README listing their asset ids.
 

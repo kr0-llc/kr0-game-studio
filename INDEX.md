@@ -80,6 +80,7 @@ Studio site page: https://storage.googleapis.com/kr0-game-studio-site/index.html
 | Brand rules (r0 styling) | `studio/brand.md` |
 | Art style guides per game | `studio/art-style-guides.md` |
 | Design workflows: Scenario character sheet, turnaround and action-sprite workflows; Scenario MCP and skills; gemini-creative plugin | `studio/design-workflows.md` |
+| Asset management: kr0 Studio Art Drive folder for masters, repo previews and manifest, provenance record | `studio/asset-management.md` |
 | MCP servers and plugins for Claude Code sessions on this repo (Scenario MCP; gemini-creative plugin) | `.mcp.json`, `.claude/settings.json` |
 | GDD designer skill | `studio/skills/gdd-designer/SKILL.md` |
 | Draft project instructions (awaiting kr0's approval) | `studio/project-instructions-draft.md` |
