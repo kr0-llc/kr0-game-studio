@@ -91,7 +91,14 @@ class ServerTests(unittest.TestCase):
         (root / "dual-tech").mkdir(parents=True)
         (root / "dual-tech" / "hero.png").write_bytes(PNG_1PX)
         (Path(cls.tmp.name) / "secret.txt").write_text("no")
-        args = ad.argparse.Namespace(root=["drive=%s" % root], catalog=None, scenario_project="p",
+        cls.repo = Path(cls.tmp.name) / "repo-art"
+        (cls.repo / "metr0niks" / "characters" / "tim-o").mkdir(parents=True)
+        (cls.repo / "metr0niks" / "characters" / "tim-o" / "sheet.jpg").write_bytes(b"preview")
+        (root / "metr0niks" / "characters" / "tim-o").mkdir(parents=True)
+        (root / "metr0niks" / "characters" / "tim-o" / "sheet.png").write_bytes(PNG_1PX)
+        (root / "metr0niks" / "_retired").mkdir(parents=True)
+        (root / "metr0niks" / "_retired" / "old.png").write_bytes(PNG_1PX)
+        args = ad.argparse.Namespace(root=["drive=%s" % root, "repo=%s" % cls.repo], catalog=None, scenario_project="p",
                                      no_scenario=True, who="tester")
         cls.app = ad.App(args)
         cls.server = ThreadingHTTPServer(("127.0.0.1", 0), ad.make_handler(cls.app))
@@ -113,13 +120,27 @@ class ServerTests(unittest.TestCase):
 
     def test_scan_grade_and_serve(self):
         self.call("/api/scan", {})
-        assets = self.call("/api/assets")["assets"]
-        self.assertEqual([a["id"] for a in assets], ["file:drive:dual-tech/hero.png"])
-        self.assertEqual(assets[0]["game"], "dual-tech")
-        rec = self.call("/api/asset", {"id": assets[0]["id"], "patch": {"grade": "down"}})["asset"]
+        assets = {a["id"]: a for a in self.call("/api/assets")["assets"]}
+        self.assertEqual(assets["file:drive:dual-tech/hero.png"]["game"], "dual-tech")
+        self.assertEqual(assets["file:drive:dual-tech/hero.png"]["drivePath"], "dual-tech/hero.png")
+        rec = self.call("/api/asset", {"id": "file:drive:dual-tech/hero.png", "patch": {"grade": "down"}})["asset"]
         self.assertEqual(rec["gradedBy"], "tester")
         with urllib.request.urlopen(self.base + "/api/file?root=drive&path=dual-tech/hero.png") as resp:
             self.assertEqual(resp.read(), PNG_1PX)
+
+    def test_manifest_lists_approved_masters_with_preview(self):
+        self.call("/api/scan", {})
+        for asset_id in ("file:drive:metr0niks/characters/tim-o/sheet.png", "file:drive:metr0niks/_retired/old.png",
+                         "file:repo:metr0niks/characters/tim-o/sheet.jpg"):
+            self.call("/api/asset", {"id": asset_id, "patch": {"grade": "up"}})
+        out = self.call("/api/manifest/write", {"game": "metr0niks"})
+        self.assertEqual(out["assets"], 1)
+        lines = [json.loads(l) for l in (self.repo / "metr0niks" / "manifest.jsonl").read_text().splitlines()]
+        self.assertEqual(len(lines), 1)
+        line = lines[0]
+        self.assertEqual(line["drivePath"], "metr0niks/characters/tim-o/sheet.png")
+        self.assertEqual(line["previewPath"], "art/metr0niks/characters/tim-o/sheet.jpg")
+        self.assertEqual(line["sha256"], ad.hashlib.sha256(PNG_1PX).hexdigest())
 
     def test_path_traversal_and_cross_site_refused(self):
         with self.assertRaises(urllib.error.HTTPError) as err:

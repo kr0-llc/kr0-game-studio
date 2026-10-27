@@ -27,7 +27,8 @@ Any other system: `python asset_desk.py --root drive="/path/to/kr0 Studio Art" -
 - `T` adds a tag. Suggested tags appear under the box; press `1` to `9` to accept one. Hover a suggestion to see why it was offered.
 - Provenance fields fill themselves where Scenario or the file says something (marked "auto"). Anything you type is yours and is never overwritten by a later sync.
 - `X` or shift-click selects several assets for bulk grading, tagging or setting origin.
-- **Export** downloads a JSON manifest of what's on screen.
+- **Export** downloads a JSON list of what's on screen.
+- **Write manifest** (pick a game first) writes `art/<game>/manifest.jsonl` in the repo: one line per thumbs-up asset of that game that isn't in `_retired/`, with its Drive path, sha256, the repo preview at the same path (any image type), tags and provenance. Commit that file on a branch as usual. It needs the repo's `art/` folder added as `--root repo=…`, which the launcher does.
 - **Push tags and grade to Scenario** (on a Scenario asset) adds the local tags plus `kr0-up` or `kr0-down` to the asset in Scenario. It's only done when you press it.
 
 ## Where the data lives
@@ -39,7 +40,9 @@ The catalog sits next to the art so Drive syncs and versions it:
 | `<Drive art folder>/_catalog/catalog.json` | Current grade, tags, game and provenance of every asset |
 | `<Drive art folder>/_catalog/events.jsonl` | Every change, one JSON line each: time, who, asset, before and after |
 
-Asset ids are `scn:<Scenario asset id>` or `file:<folder label>:<path inside that folder>`. Provenance fields: `origin` (synthetic, human, hybrid, unknown), `creator`, `tool`, `model`, `workflowId`, `jobId`, `parentIds`, `prompt`, `sourceUrl`, `createdAt`, `costCU`, `license`, `c2pa`, `c2paSigner`, `notes`. The studio-wide asset rules and manifest format are being written in the Drive storage work; this app follows them once they land.
+The Drive folder (`kr0 Studio Art`, one folder per game plus `_inbox` for new files awaiting grading) mirrors the repo's `art/<game>/` layout; retired art goes to `<game>/_retired/` and is marked retired, never deleted.
+
+Asset ids are `scn:<Scenario asset id>` or `file:<folder label>:<path inside that folder>`. Provenance fields: `origin` (synthetic, human, hybrid, unknown), `creator`, `tool`, `model`, `workflowId`, `jobId`, `parentIds`, `prompt`, `sourceUrl`, `createdAt`, `costCU`, `license`, `c2pa`, `c2paSigner`, `notes`. Records also carry `drivePath` and, once an asset is approved or put in a manifest, its `sha256` (hashed on demand, since reading a streamed Drive file downloads it). This is the format the studio asset rules (`studio/asset-management.md`) adopt.
 
 **About C2PA:** files that went through Claude's file store carry a Content Credentials stamp signed by Anthropic that says "Claude provided this file". That records custody, not who made it, so the app shows the signer but doesn't set the origin from it.
 

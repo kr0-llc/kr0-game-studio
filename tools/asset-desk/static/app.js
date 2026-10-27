@@ -137,6 +137,8 @@ async function renderDetail() {
   } else {
     where.push(`${esc(state.config.roots[a.root] || a.root)}${state.config.roots[a.root]?.includes("\\") ? "\\" : "/"}${esc(a.path)}`);
     if (a.size) where.push(`${(a.size / 1048576).toFixed(2)} MB`);
+    if (a.sha256) where.push("sha256 " + esc(a.sha256.slice(0, 16)) + "…");
+    if (a.retired) where.push("Retired");
   }
   if (a.width) where.push(`${a.width} × ${a.height}`);
   $("#where").innerHTML = where.map((w) => `<div>${w}</div>`).join("");
@@ -259,6 +261,12 @@ function wire() {
       const link = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `asset-manifest${state.filters.game ? "-" + state.filters.game : ""}.json` });
       link.click();
     });
+  };
+  $("#manifest").onclick = async () => {
+    const game = state.filters.game;
+    if (!game) return toast("Pick a game first");
+    try { const r = await api("/api/manifest/write", { game }); toast(`Wrote ${r.assets} assets to ${r.path}`); }
+    catch (err) { toast(err.message); }
   };
   document.querySelectorAll("[data-bulk]").forEach((b) => (b.onclick = () => bulk({ patch: { grade: b.dataset.bulk } })));
   $("#bulktag").onkeydown = (e) => { if (e.key === "Enter" && e.target.value.trim()) { bulk({ addTags: [e.target.value] }); e.target.value = ""; } };

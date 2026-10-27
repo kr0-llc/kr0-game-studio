@@ -14,6 +14,7 @@ Python 3.9+ standard library only. Run `python asset_desk.py --help`.
 
 import argparse
 import base64
+import hashlib
 import collections
 import json
 import mimetypes
@@ -212,16 +213,18 @@ def sniff_file(path, limit=2_000_000):
         # A C2PA (Content Credentials) manifest. It's CBOR, so read the signer from
         # its readable strings rather than parsing it fully.
         found["c2pa"] = True
-        signers = [name.decode() for name in C2PA_SIGNERS if name in head]
+        start = head.find(b"jumdc2pa")
+        manifest = head[start:start + 200_000]  # XMP outside the manifest also names Adobe
+        signers = [name.decode() for name in C2PA_SIGNERS if name in manifest]
         if signers:
             found["c2paSigner"] = ", ".join(signers)
         # Files that passed through Claude's file store are stamped "Claude provided
         # this file": that is custody, not authorship, so it says nothing about origin.
-        if b"compositeWithTrainedAlgorithmicMedia" in head:
+        if b"compositeWithTrainedAlgorithmicMedia" in manifest:
             found["origin"] = "hybrid"
-        elif b"trainedAlgorithmicMedia" in head:
+        elif b"trainedAlgorithmicMedia" in manifest:
             found["origin"] = "synthetic"
-        elif b"digitalCapture" in head or b"humanEdits" in head:
+        elif b"digitalCapture" in manifest or b"humanEdits" in manifest:
             found["origin"] = "human"
     if head[:8] == b"\x89PNG\r\n\x1a\n":
         for key in (b"parameters", b"prompt", b"Software", b"Description"):
@@ -267,6 +270,8 @@ def scan_root(catalog, root, label):
                 "source": "file", "root": label, "path": rel, "name": name,
                 "kind": kind, "size": stat.st_size, "mtime": int(stat.st_mtime),
                 "folder": Path(rel).parent.as_posix(),
+                "drivePath": rel if label == "drive" else None,
+                "retired": "/_retired/" in "/" + rel,
             }, auto)
             seen += 1
     return {"root": str(root), "label": label, "files": seen}
@@ -488,6 +493,64 @@ def suggest_tags(catalog, asset_id, limit=12):
 # Export
 
 
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def ensure_sha256(app, rec):
+    """Hash a file asset once per version. Done on demand, not on scan, because
+    reading a streamed Drive file downloads it."""
+    if rec.get("source") != "file":
+        return rec.get("sha256")
+    stamp = [rec.get("size"), rec.get("mtime")]
+    if rec.get("sha256") and rec.get("sha256Of") == stamp:
+        return rec["sha256"]
+    target = app.file_path(rec.get("root"), rec.get("path", ""))
+    if target is None:
+        return rec.get("sha256")
+    rec["sha256"] = sha256_file(target)
+    rec["sha256Of"] = stamp
+    return rec["sha256"]
+
+
+def repo_preview(catalog, rec):
+    """The repo's web-size copy of a Drive master: same path under art/, any image type."""
+    if rec.get("root") == "repo":
+        return "art/" + rec["path"]
+    stem = os.path.splitext(rec.get("path") or "")[0]
+    for other in catalog.assets.values():
+        if other.get("root") == "repo" and os.path.splitext(other.get("path", ""))[0] == stem:
+            return "art/" + other["path"]
+    return None
+
+
+def manifest_lines(app, game):
+    """art/<game>/manifest.jsonl: one line per approved (thumbs up), unretired
+    asset of the game. The format is set in studio/asset-management.md."""
+    lines = []
+    for rec in sorted(app.catalog.assets.values(), key=lambda r: r["id"]):
+        if rec.get("game") != game or rec.get("grade") != "up" or rec.get("retired"):
+            continue
+        if rec.get("root") == "repo" and any(
+                o.get("root") == "drive" and repo_preview(app.catalog, o) == "art/" + rec["path"]
+                for o in app.catalog.assets.values()):
+            continue  # the Drive master's line already covers this preview
+        lines.append({
+            "id": rec["id"], "source": rec.get("source"), "scenarioId": rec.get("scenarioId"),
+            "drivePath": rec.get("drivePath"), "sha256": ensure_sha256(app, rec),
+            "previewPath": repo_preview(app.catalog, rec) if rec.get("source") == "file" else None,
+            "game": game, "grade": rec["grade"], "gradedAt": rec.get("gradedAt"),
+            "gradedBy": rec.get("gradedBy"), "tags": rec.get("tags", []),
+            "provenance": rec.get("provenance", {}),
+        })
+    app.catalog.save()
+    return "".join(json.dumps(line, ensure_ascii=False, sort_keys=True) + "\n" for line in lines), len(lines)
+
+
 def export_manifest(catalog, game=None, graded_only=False):
     rows = []
     for rec in sorted(catalog.assets.values(), key=lambda r: r["id"]):
@@ -498,6 +561,7 @@ def export_manifest(catalog, game=None, graded_only=False):
         rows.append({
             "id": rec["id"], "source": rec.get("source"), "path": rec.get("path"),
             "root": rec.get("root"), "scenarioId": rec.get("scenarioId"), "game": rec.get("game"),
+            "drivePath": rec.get("drivePath"), "sha256": rec.get("sha256"),
             "grade": rec.get("grade"), "tags": rec.get("tags", []), "provenance": rec.get("provenance", {}),
         })
     return {"version": 1, "exportedAt": now_iso(), "game": game, "assets": rows}
@@ -620,6 +684,19 @@ def make_handler(app):
                 if route == "/api/export":
                     game = q.get("game", [None])[0]
                     return self._json(export_manifest(app.catalog, game, q.get("graded", ["0"])[0] == "1"))
+                if route == "/api/manifest":
+                    game = q.get("game", [""])[0]
+                    if game not in GAMES:
+                        return self._json({"error": "pick a game"}, 400)
+                    text, _ = manifest_lines(app, game)
+                    body = text.encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
+                    self.send_header("Content-Disposition", 'attachment; filename="manifest-%s.jsonl"' % game)
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                    return
                 if route == "/api/history":
                     asset = q.get("id", [""])[0]
                     lines = []
@@ -652,6 +729,9 @@ def make_handler(app):
                     return self._json(sync_scenario(app.catalog, app.scenario, app.who))
                 if route == "/api/asset":
                     rec = app.catalog.update(body["id"], body.get("patch", {}), app.who)
+                    if rec.get("grade") == "up" and rec.get("source") == "file":
+                        ensure_sha256(app, rec)
+                        app.catalog.save()
                     return self._json({"asset": rec})
                 if route == "/api/bulk":
                     out = []
@@ -669,6 +749,17 @@ def make_handler(app):
                             patch["tags"] = [t for t in tags if norm_tag(t) not in drop]
                         out.append(app.catalog.update(asset_id, patch, app.who)["id"])
                     return self._json({"updated": out})
+                if route == "/api/manifest/write":
+                    game = body.get("game")
+                    repo = app.roots.get("repo")
+                    if game not in GAMES or repo is None:
+                        return self._json({"error": "needs a game and a folder labelled repo (the repo's art/)"}, 400)
+                    text, count = manifest_lines(app, game)
+                    target = repo / game / "manifest.jsonl"
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_text(text, encoding="utf-8")
+                    app.catalog.event(game, "write-manifest", {"path": str(target), "assets": count}, app.who)
+                    return self._json({"path": str(target), "assets": count})
                 if route == "/api/push-tags":
                     rec = app.catalog.assets.get(body.get("id", ""))
                     if not rec or rec.get("source") != "scenario" or not app.scenario:

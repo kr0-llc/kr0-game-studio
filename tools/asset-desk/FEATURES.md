@@ -51,7 +51,7 @@ A brainstorm of what a lightweight file explorer and asset grading app for the s
 | One grid over the Drive folder, the repo's `art/` and the Scenario library, with a folder tree and counts | Built |
 | Filters: grade, source, origin, game, folder, tag, free-text search over names, captions, prompts and notes | Built |
 | Preview images, video and audio; keyboard navigation | Built |
-| Export a manifest (JSON) of what's shown, for the repo | Built |
+| Export a JSON list of what's shown; write `art/<game>/manifest.jsonl` (approved assets with Drive path, sha256 and repo preview) for the repo | Built |
 | Duplicate finder (same checksum or near-identical image) | Proposed |
 | "Promote" an approved asset: copy it into the right `art/<game>/` folder in Drive and add it to the manifest | Proposed |
 | Sprite sheet and frame-sequence viewer that plays frames as a loop | Proposed |
