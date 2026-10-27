@@ -1,10 +1,10 @@
 # Metr0niks prototype changes
 
-Oct 25, 2026 · @kr0 · kept by the producer
+Oct 25, 2026 · updated Oct 27, 2026 · @kr0 · kept by the producer
 
-What `prototypes/prototype.html` and `simulations/sim.js` must change to match the [GDD](../gdd.md) and [TDD](../tdd.md). Nothing here has been done. The prototype is unchanged; line numbers are for the files as of Oct 25, 2026 (P = `prototypes/prototype.html`, S = `simulations/sim.js`). Values marked **new** are numbers the GDD sets that the prototype doesn't have yet; kr0 hasn't approved them.
+What `prototypes/prototype.html` (the voxel prototype, prototype 1) and `simulations/sim.js` must change to match the [GDD](../gdd.md) and [TDD](../tdd.md). Sections 1 and 7 were done on Oct 27, 2026; the rest is not done. Line numbers are for the files as of Oct 25, 2026 (P = `prototypes/prototype.html`, S = `simulations/sim.js`) and have shifted since the Oct 27 removals. Values marked **new** are numbers the GDD sets that the prototype doesn't have yet; each says whether kr0 has accepted it (GDD-D18, D20 and D23 values were accepted on Oct 26 as starting values; the revive values are Proposed). The ink prototype (`prototype-ink.html`, prototype 2) is separate and not covered here (GDD-D32).
 
-## 1. Remove Gauntlet
+## 1. Remove Gauntlet (done Oct 27)
 
 Decision: Excursion is the only mode (GDD-D17, confirmed by kr0 on Oct 26, GDD-D29).
 
@@ -12,6 +12,7 @@ Decision: Excursion is the only mode (GDD-D17, confirmed by kr0 on Oct 26, GDD-D
 - Remove the `mode` value `"gauntlet"` everywhere: `newSim` (P:506), the HUD label (P:1242), the campaign save and `curCampaign` (P:1266, 1269), the garage mode label (P:1424), co-op host and welcome messages (P:1612, 1739, 1757, 1761), the console hook (P:2078) and Continue (P:1903).
 - Remove the banking branch on death (P:702 and P:1767) and `deathScreen`'s Gauntlet case (P:705 to 707).
 - In `simulations/sim.js`: drop the `mode` option and the Gauntlet branch of `lossCheck` (S:5, 30, 250, 893 to 895), the `sim.mode` getter (S:1148) and the `mode` field of the campaign save (S:1165, 1176, 1199). Keep decoding old saves by ignoring a `mode` field.
+- Done: all of the above. `Campaign.make` keeps its three-argument signature and ignores the old mode argument, and the client no longer sends `mode` to the room server. The room server (private `kr0/blackletter-chronos`) was not checked; if it still sends a `mode` or banks scrap on a death, the client now ignores both.
 
 ## 2. Per-part durability replaces the carried armor
 
@@ -42,15 +43,16 @@ Decision: input is locked and mechs take no damage during the shot (GDD-D20, con
 
 ## 6. Co-op level
 
-Decision: co-op plays at the lower of the two players' levels (GDD-D14).
+Decision: co-op plays at the lower of the two players' levels (GDD-D14). GDD-D31 proposes that the room plays the host's campaign instead; if kr0 accepts it, this section is replaced by: the room uses the host's level and seed, and the guest's save receives only its scrap and wear.
 
 - The host picks `min(host level, guest level)` for `newSim`. The guest's `ready` message (P:1816) needs to carry its level. The room server, in the private `kr0/blackletter-chronos` repo, picks the level for online rooms.
 
-## 7. Remove touch controls
+## 7. Remove touch controls (done Oct 27)
 
 Decision: the platform is PC with keyboard and mouse only (GDD-D22, confirmed by kr0 on Oct 26 over the Oct 22 mobile request, GDD-D29).
 
 - Delete the touch UI: floating twin sticks, the ARM, DASH and Q buttons, the pause and fullscreen buttons, portrait handling and the touch auto-detection (P:323, 334, 1953 to 2049, 2058), the `?touch=1` flag and the touch zoom floor (P:599).
+- Done: all of the above, plus the touch rows of the controls table, the touch CSS and the phone web-app meta tags. The page no longer blocks pinch zoom.
 
 ## 8. Leaving a co-op room
 
@@ -81,7 +83,7 @@ Decision: extracting level 50 wins the campaign (GDD-D24).
 
 Decision: GDD-D24.
 
-- **New:** `T.coop = { revivePrice: 40, reviveArmor: 0.3 }` (use `T.level.revive` for the armor if it stays).
+- **New (proposed, GDD-D24):** `T.coop = { revivePrice: 40, reviveArmor: 0.3 }`. Section 2 deletes `T.level.revive`, so the revive armor lives here.
 - In `updateWave` (S:556 to 558), when a wave below the last clears and one mech is down: if the survivor's `scrap` wallet holds `round(revivePrice × lvm("scrap"))`, take it from that wallet (and from `sim.scrap`), set the downed mech's hp to `reviveArmor × maxHp` beside the survivor, reset its heat, ATB and timers, and emit a toast and an event for audio.
 - The damage-taken total of section 2 keeps counting across the revive; the extract event sends it for every mech, alive or not, and wear applies to all of them. A downed mech's wallet already banks at extract (S:564).
 

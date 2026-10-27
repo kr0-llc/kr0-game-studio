@@ -1,8 +1,8 @@
 # Metr0niks TDD
 
-Updated Oct 26, 2026 · @kr0 · Earlier version: [Oct 20](superseded/tdd-2026-10-20.md)
+Updated Oct 27, 2026 · @kr0 · Earlier versions: [Oct 20](superseded/tdd-2026-10-20.md), [Oct 26](superseded/tdd-2026-10-26.md)
 
-This TDD matches the [GDD](gdd.md): one mode, Excursion, built the way the prototype builds it (`prototype.html`, `sim.js`) plus kr0's decisions of Oct 25 ([GDD decision history](gdd-decisions.md)). Architecture choices that are not yet kr0's decisions are in the [TDD decision history](tdd-decisions.md) as Proposed. What the prototype still has to change is in [prototype changes](prototypes/prototype-changes.md).
+This TDD matches the [GDD](gdd.md): one mode, Excursion, built the way the prototype builds it (`prototype.html`, `sim.js`) plus kr0's decisions of Oct 25 to 27 ([GDD decision history](gdd-decisions.md)). Architecture choices that are not yet kr0's decisions are in the [TDD decision history](tdd-decisions.md) as Proposed. What the prototype still has to change is in [prototype changes](prototypes/prototype-changes.md).
 
 ## Goals and constraints
 
@@ -18,10 +18,10 @@ Build for one developer: fake the expensive parts and make everything data-drive
 
 The engine choice is deferred. Godot 4 with Jolt physics and Unity are the two options; prior experience matters more than the engine. The prototype is not on either: it is plain JavaScript, with the rules in `sim.js` (runs in the browser and in Node) and a canvas renderer in `prototype.html`.
 
-| Need | Choice | Why |
+| Need | Option | Why |
 | --- | --- | --- |
-| Engine | Godot 4 (Jolt physics) | Free, fast to iterate, stable rigid bodies for falling chunks |
-| Alternative | Unity | More voxel and destruction assets on its store |
+| Engine (option 1, not chosen) | Godot 4 (Jolt physics) | Free, fast to iterate, stable rigid bodies for falling chunks |
+| Engine (option 2, not chosen) | Unity | More voxel and destruction assets on its store |
 | Voxel art | MagicaVoxel | Free; models for mech parts and building chunks |
 | Data | JSON or engine resource files | Parts, pods, enemies and waves tuned without code changes |
 | Version control | Git with LFS | Voxel models and textures are binary |
@@ -41,7 +41,7 @@ The rules are a headless, deterministic simulation with no renderer, as [simulat
 - **Co-op (prototype):** a room server runs the whole simulation. Mech 0 and mech 1 are the two players; the server sends snapshots at 20 per second with voxel diffs, each client sends its input every tick and predicts only its own movement, and a silent partner's keys are released after 0.5 s. A local two-tab transport exists for testing. The server code is not in this repo.
 - **Authority:** in a co-op room the server decides firing, heat, ATB, damage and pod ties. The "same frame" pod rule is "same server tick" online.
 - **Leaving a room:** a partner who leaves or drops is destroyed (`dropPlayer`) and the other mech fights on; the room closes when the excursion ends.
-- **Levels:** each excursion is one campaign level (1 to 50) with its own deterministic seed, derived from the campaign seed (settable at level 1, GDD-D25); a level decides which zones are open and scales enemies. A death, or leaving mid-match, resets the level to 1 and is saved at once. Extracting level 50 ends the campaign with a victory screen. Co-op runs at the lower of the two players' levels.
+- **Levels:** each excursion is one campaign level (1 to 50) with its own deterministic seed, derived from the campaign seed (settable at level 1, GDD-D25); a level decides which zones are open and scales enemies. A death, or leaving mid-match, resets the level to 1 and is saved at once. Extracting level 50 ends the campaign with a victory screen. Co-op runs at the lower of the two players' levels (GDD-D14); GDD-D31 proposes the host's campaign instead.
 - **Co-op revive:** when a wave below the last clears, the sim revives a downed mech if the survivor's wallet covers `T.coop.revivePrice` scaled by level, at `T.coop.reviveArmor` (GDD-D24). Damage-taken totals carry across the revive, and every mech's total goes in the extract event for wear.
 - **Checks still to build:** a headless runner, a metrics record per run and a replay hash check (see the [tuning history](tuning-history.md)).
 
@@ -54,7 +54,7 @@ Buildings are pre-split into chunks linked by a support graph. When supports bre
 3. **Damage:** weapons remove voxels from a chunk. Below a threshold the chunk breaks into debris and leaves the graph.
 4. **Collapse check:** after a break, flood-fill from the anchors. Anything not reached is a loose cluster.
 5. **Fall:** each loose cluster becomes one rigid body. Show a ground shadow under it before it lands.
-6. **Impact:** on landing, damage whatever is under it, then break the cluster into debris and scrap cubes.
+6. **Impact:** on landing, damage whatever is under it. Landing voxels at street level may stay as rubble; the rest breaks into debris, and a piece of more than 6 voxels scatters 2 to 4 scrap cubes.
 
 - **Rendering:** each chunk is one greedy-meshed mesh; rebuild only the chunks that changed.
 - **Budget:** cap live debris pieces (start at 300) and fade the oldest first.
@@ -77,12 +77,12 @@ A mech is a frame with six slot sockets; its stats are recalculated from its par
 Each heavy weapon owns a small state machine; light weapons and heat run every physics tick.
 
 - **ATB timer:** per heavy weapon, states Charging → Ready → Ring → Charging. Fill rate = base rate × power × pod multiplier (Overclock = 2).
-- **Timing ring:** on press, the ring shrinks from its start radius to 0 over its duration (start at 1.0 s). On release, score the distance to the target ring: Perfect, Good or Miss. The ring closing counts as a Miss.
+- **Timing ring:** on press, a ring timer starts; the ring reaches its target at `T.ring.duration` (1.0 s). On release, grade the time from the target: Perfect within ± 0.086 s, Good within ± 0.31 s, else Miss. Still held at 1.31 s fires a Miss. `sim.js` stores the windows as shares of the 72 px start radius shrinking to a 30 px target (`T.ring`), which reduce to those times; the pixel sizes are presentation only.
 - **Input:** press and hold the weapon's button to start the ring and release to lock it; movement and aiming are never blocked.
 - **Heat:** one value per mech, 0–100. Shots and abilities add heat; it drains each tick. At 100, lock light guns, dashes and the mortar for 3 s. Every timing result adds the same heat. An overheat during a ring cancels it as a Miss and adds no heat. The Cryo flash-vent sets heat to 0 and ends the lockout.
 - **Overclock:** multiplies every ATB fill for 15 s; a running ring is unaffected.
 - **Projectiles:** every light shot, shell and mortar round is a moving object stepped each tick; shells and mortar rounds arc and blast a 3×3×3 voxel volume.
-- **Damage:** a hit on a mech lowers its single armor pool; a hit on a building removes voxels from the chunk. Perfect hits use a larger removal radius, which is what coring through walls means in practice.
+- **Damage:** a hit on a mech lowers its single armor pool; a hit on a building removes voxels from the chunk. A Perfect pile-bunker hit uses a wider strip and cores two voxels deep (GDD-D28); other heavy weapons carve the same hole at any grade.
 
 ## Camera and rendering
 
@@ -91,7 +91,7 @@ One camera at a fixed 2:1 dimetric angle (20 px by 10 px per cell, 22 px per hei
 - **Zoom:** set from the window size (between 0.9 and 2.4), never from the build. Low health adds an edge-darkening vignette, drawn under the collapse shadows and pod markers.
 - **Cutaway:** voxels in front of the mech inside an ellipse around it draw at 16% opacity.
 - **Aim height:** the aim point is the first solid wall face under the cursor (up to about 2 m), or an enemy under the cursor within 34 px, which is how the rooftop sniper is targeted.
-- **Collapse warning:** project a shadow decal under each falling cluster, above the vignette and the cutaway. A cluster creaks for `T.collapse.warn` (0.9 s) before it falls; 
+- **Collapse warning:** project a shadow decal under each falling cluster, above the vignette and the cutaway. A cluster creaks for `T.collapse.warn` (0.9 s) before it falls.
 - **Zone drop-in:** the shutter-and-camera shot runs on the simulation clock for 5.5 s. Input is locked and mechs take no damage during it.
 - **Look:** flat-shaded voxels, one directional light, and emissive heat glow on vents and barrels.
 

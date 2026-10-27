@@ -1,6 +1,6 @@
 # Metr0niks open questions
 
-Oct 20, 2026 · updated Oct 26, 2026 · @kr0
+Oct 20, 2026 · updated Oct 27, 2026 · @kr0
 
 ## Decided so far
 
@@ -9,10 +9,10 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | Date | Decision |
 | --- | --- |
 | 2026-10-20 | The game is named Metr0niks |
-| 2026-10-20 | Timing ring: press a heavy weapon's or ability's button to start the ring, release at the right time |
+| 2026-10-20 | ~~Timing ring: press a heavy weapon's or ability's button to start the ring, release at the right time~~ Changed: only heavy weapons use the ring; shoulder actives have none (GDD Combat) |
 | 2026-10-20 | Drop pods: a marker and countdown show where one will land; at least one per wave, at a random time |
 | 2026-10-20 | ~~Light weapons: minigun, plasma cutter and shotgun~~ Changed: the rail rifle is a fourth light weapon (GDD parts list) |
-| 2026-10-20 | Reactors come in tiers and set speed and thrust time in the air |
+| 2026-10-20 | ~~Reactors come in tiers and set speed and thrust time in the air~~ Changed: reactors set power, speed, weight and heat; there is no thrust time (GDD parts list) |
 | 2026-10-20 | ~~Rarity tiers: white, green, blue, purple, orange. Higher tiers have better stats and cost more scrap~~ Superseded: three tiers, common, rare and epic (GDD-D16) |
 | 2026-10-20 | Scrap is the only currency |
 | 2026-10-20 | PC only, keyboard and mouse only for now |
@@ -24,7 +24,7 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | 2026-10-20 | ~~Scrap buys parts, stat upgrades, higher-tier weapons and repairs~~ Changed: scrap buys parts, weapon upgrade levels and repairs; no stat upgrades (GDD-D23) |
 | 2026-10-20 | Starter mechs have basic loadouts; a player with 0 scrap can always deploy |
 | 2026-10-20 | Bosses on waves 3 and 5; leaving an excursion early counts as a loss |
-| 2026-10-20 | After an excursion, part of the damage becomes durability damage that lowers max health and heat tolerance until repaired in the garage |
+| 2026-10-20 | ~~After an excursion, part of the damage becomes durability damage that lowers max health and heat tolerance until repaired in the garage~~ Changed: wear cuts a part's helpful stat changes until repaired (GDD-D18) |
 | 2026-10-20 | ~~Mechs progress only in excursions and are tied to the player's account~~ Changed: saved in the browser as a campaign code (GDD-D21) |
 | 2026-10-20 | ~~All play is online: single-player Excursion and Gauntlet first, multiplayer after~~ Superseded: GDD-D17 and GDD-D21 |
 | 2026-10-20 | Art is made by AI agents and approved by the owner |
@@ -45,16 +45,16 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | 2026-10-25 | Durability stays in the first version; the rules are GDD-D18 (GDD review, D5) |
 | 2026-10-25 | ~~Metr0niks is a PvP mech game shipping a co-op PvE stage first~~ The PvP wording was dropped with the other modes (GDD-D17) |
 | 2026-10-25 | ~~Disconnect mid-excursion: the player can rejoin within a window and the mech holds until they do (GDD review, issue 2)~~ Superseded: rejoin is in the backlog (GDD-D21) |
-| 2026-10-25 | Every mech can ram for melee damage, so losing both arm weapons never leaves it helpless (GDD review, adversarial-qa F3) |
-| 2026-10-25 | A disabled weapon's weight still comes off, but the speed gain is capped below a healthy build's and the HUD explains it (GDD review, D4) |
+| 2026-10-25 | ~~Every mech can ram for melee damage, so losing both arm weapons never leaves it helpless (GDD review, adversarial-qa F3)~~ Deferred with damage regions (backlog) |
+| 2026-10-25 | ~~A disabled weapon's weight still comes off, but the speed gain is capped below a healthy build's and the HUD explains it (GDD review, D4)~~ Deferred with damage regions (backlog) |
 | 2026-10-25 | Durability floor: starter parts repair free; other parts take durability damage, and repair cost rises with the part's tier (GDD review, D5) |
 | 2026-10-25 | Damage regions are deferred: the first version keeps one armor pool, as prototyped. The ram fallback and the capped weight gain wait with them (prototype reconciliation) |
 | 2026-10-25 | Bosses: the same sniper on waves 3 and 5; wave 5 is a harder variant on the wrecked skyline (GDD review, D6) |
 | 2026-10-25 | Excursion is the game's main mode, played single-player or co-op; it is not called "story mode", since other modes may come later. Dying in an Excursion resets the campaign to level 1 (parts and scrap stay), so zones reopen as you climb again; this is what the prototype does (prototype reconciliation) |
 | 2026-10-25 | ~~Gauntlet also resets to level 1~~ Superseded: no Gauntlet |
-| 2026-10-25 | Co-op Excursion plays at the lower of the two players' levels |
+| 2026-10-25 | Co-op Excursion plays at the lower of the two players' levels (GDD-D31 proposes the host's campaign instead) |
 | 2026-10-25 | Excursion is the only game mode. Gauntlet, Draft Duel and Scrap Rush are removed from the GDD, TDD and prototype (GDD-D17) |
-| 2026-10-25 | The GDD has no TBDs: values come from the prototype, and what the prototype lacks is dropped or given a number (GDD-D18 to GDD-D20) |
+| 2026-10-25 | ~~The GDD has no TBDs: values come from the prototype, and what the prototype lacks is dropped or given a number (GDD-D18 to GDD-D20)~~ Superseded: audience, player fantasy and what makes it fun are TBD on kr0's instruction (GDD-D27) |
 | 2026-10-25 | Server features go to the backlog: rejoin, accounts and server-held saves, online single-player (GDD-D21) |
 | 2026-10-25 | No touch controls: PC with keyboard and mouse only (GDD-D22) |
 | 2026-10-26 | Accepted: wear and repair numbers and armor refill (GDD-D18), wave-5 boss, drop-in lock and co-op level (GDD-D20), weapon upgrade values (GDD-D23) |
@@ -64,17 +64,20 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | 2026-10-26 | Audience and player fantasy stay TBD; production milestones and pricing are not in the GDD (GDD-D27) |
 | 2026-10-26 | GDD corrected against the prototype and its gaps filled (GDD-D28) |
 | 2026-10-26 | Scrap buys parts, weapon upgrades (Mk I to Mk III, nine weapons including the shoulder actives) and repairs; no raw stat upgrades (GDD-D23). Upgrade values are starting values for a sweep |
+| 2026-10-26 | Gauntlet and touch controls confirmed gone (GDD-D29); removed from the voxel prototype on 2026-10-27 |
+| 2026-10-27 | Oct 26 critique fixes applied to the GDD, TDD and companion files (corrections only, no new rules) |
+| 2026-10-27 | The voxel prototype (prototype 1) and the ink prototype (prototype 2) stay separate while kr0 compares directions (GDD-D32) |
 
 ## Design questions
 
 Values that need sweeps (the wear share, the repair rates and the weapon upgrade values of GDD-D23) are in the [tuning history](tuning-history.md).
 
-Still Proposed in the [decision history](gdd-decisions.md): the revive price and the 30% revive armor, what the victory button does (GDD-D24), limiting seed changes to level 1 (GDD-D25) and repair in slot order (GDD-D28).
+Still Proposed in the [decision history](gdd-decisions.md): the revive price and the 30% revive armor, what the victory button does (GDD-D24), limiting seed changes to level 1 (GDD-D25), repair in slot order (GDD-D28) and the host owning the co-op campaign (GDD-D31).
 
-- [ ] Target audience and player fantasy: TBD in the GDD on kr0's instruction (GDD-D27).
+- [ ] Target audience, player fantasy and what makes it fun: TBD in the GDD on kr0's instruction (GDD-D27). The mech-game research of Oct 26 may feed the last one.
 - [ ] Where production milestones live, since they are not part of the GDD (GDD-D27). The producer's documents and the phases in ways of working section 5 are the candidates.
 - [ ] The death screen offers the campaign code from before the run, and pasting it as a co-op host restores that level, which gets around the reset on death. Keep it as a deliberate retry, or remove it? (Prototype changes section 9 currently suggests adding a single-player paste box.)
-- [ ] What makes it fun: the GDD's overview has no paragraph on it yet. The mech-game research of Oct 26 may feed it.
+- [ ] Co-op campaign (GDD-D31, proposed): confirm that the host owns the room's campaign. If yes: what happens when the host leaves mid-match (the guest fights on and the host's campaign resets as a death, or the room ends for both)?
 
 ## Backlog: dropped from the GDD, to bring back only by decision
 

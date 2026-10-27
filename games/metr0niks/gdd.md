@@ -1,8 +1,8 @@
 # Metr0niks GDD
 
-Updated Oct 26, 2026 · @kr0 · Earlier versions: [Oct 20](superseded/gdd-2026-10-20.md), [Oct 25 draft](superseded/gdd-2026-10-25-draft.md), [Oct 26 draft](superseded/gdd-2026-10-26-draft.md)
+Updated Oct 27, 2026 · @kr0 · Earlier versions: [Oct 20](superseded/gdd-2026-10-20.md), [Oct 25 draft](superseded/gdd-2026-10-25-draft.md), [Oct 26 draft](superseded/gdd-2026-10-26-draft.md), [Oct 26](superseded/gdd-2026-10-26.md)
 
-This GDD describes one mode, Excursion, as the prototype plays it plus kr0's decisions of Oct 25 and 26 ([decision history](gdd-decisions.md)). The prototype changes those decisions need are in [prototype changes](prototypes/prototype-changes.md). Dimensions are in metres; one map cell is one metre. Two sections are marked TBD on kr0's instruction (GDD-D27); everything else has a value.
+This GDD describes one mode, Excursion, as the prototype plays it plus kr0's decisions of Oct 25 to 27 ([decision history](gdd-decisions.md)). The prototype changes those decisions need are in [prototype changes](prototypes/prototype-changes.md). Dimensions are in metres; one map cell is one metre. Three items are TBD on kr0's instruction (GDD-D27): target audience, player fantasy and what makes it fun. Everything else has a value; values kr0 has not accepted yet are tagged "(proposed, GDD-Dxx)" where they appear.
 
 ## Overview
 
@@ -11,7 +11,7 @@ Metr0niks is an isometric voxel mech brawler. You drive and shoot in real time, 
 **Pillars** (GDD-D26)
 
 - **Every part is a tradeoff.** Each part changes power, armor, speed, weight and heat, so a bigger gun makes you slower and hotter. Upgrades sharpen a weapon; they never add raw stats.
-- **The city is a weapon.** Pillars, overpass spans and rubble are as deadly as your guns, and a collapse hits you as hard as it hits them.
+- **The city is a weapon.** Pillars, overpass spans and rubble are as deadly as your guns, and a collapse can hit you too.
 - **Drive in real time, hit on the beat.** Movement and light guns never pause; the heavy weapon charges on its own and rewards a well-timed release.
 - **Scrap only counts if you get out.** A match's scrap is banked only when you extract, and enemies race you for the drop pods that keep you alive.
 - **Lose the run, keep the garage.** Dying sends the campaign back to level 1, but parts, upgrades and banked scrap stay, so every climb starts stronger.
@@ -21,6 +21,8 @@ Metr0niks is an isometric voxel mech brawler. You drive and shoot in real time, 
 **Target audience:** TBD (kr0).
 
 **Player fantasy:** TBD (kr0).
+
+**What makes it fun:** TBD (kr0).
 
 **Non-goals:** no PvP, no other game modes, no touch controls, no accounts or server-held saves, no rejoining a match, no story, no map damage that carries between matches, no procedural maps, no accessibility options or remappable keys in this version (backlog, GDD-D19). Production milestones and pricing are not part of this GDD (GDD-D27).
 
@@ -36,19 +38,19 @@ Metr0niks is an isometric voxel mech brawler. You drive and shoot in real time, 
 An excursion is five waves on one map. It ends when you clear wave 5 or every mech is destroyed. Excursion is the game's only mode and the main one.
 
 - **Waves:** each excursion is 5 waves: 3 bots; 4 bots and 1 loader; 4 bots and the boss; 6 bots and 2 loaders; 5 bots, 1 loader and the boss. Bosses come on waves 3 and 5. This is the only place the wave structure is defined.
-- **Wave pacing:** enemies drop in one every 0.8 s, the boss first, then loaders, then bots. Each lands on an open street cell more than 10 m from every living mech when one can be found. A wave is clear when its queue is empty and no enemy is left; the next wave starts after a 3 s breather.
+- **Wave pacing:** enemies drop in one every 0.8 s, the boss first, then loaders, then bots. Each loader and bot lands on an open street cell more than 10 m from every living mech when one can be found; the boss lands as Boss placement (Enemies and AI) says. A wave is clear when its queue is empty and no enemy is left; the next wave starts after a 3 s breather.
 - **Levels:** each excursion is one campaign level, from 1 to 50. Per level above 1, a value grows by a fixed share of its level-1 value: bot and loader counts by 25% (rounded), enemy health by 15%, enemy damage by 15% and scrap drops by 10% (rounded). So level L has 1 + 0.25 × (L − 1) times the level-1 count. The boss count does not change.
 - **Zones:** level 1 opens the Underpass only, level 2 also opens the Freight Yard, level 3 and up open the whole sector (see Map).
 - **Extract:** 1.4 s after wave 5 clears you extract automatically. Scrap cubes still on the floor go to the nearest living mech. Your scrap is banked and the next level opens. There is no cash-out earlier: scrap is all-or-nothing until you extract. Leaving early, including closing the game mid-match, counts as a death.
-- **Victory:** extracting level 50 wins the campaign and shows a victory screen. Its button starts a new campaign at level 1 with every part, upgrade and banked scrap kept (GDD-D24).
+- **Victory:** extracting level 50 wins the campaign and shows a victory screen (GDD-D24). Its button starts a new campaign at level 1 with every part, upgrade and banked scrap kept (proposed, GDD-D24).
 - **Armor:** every level starts with every mech at full armor.
 - **Lose condition:** a mech is destroyed when its armor reaches 0. The excursion is lost when every mech is destroyed.
 - **On death:** you lose all scrap from the match and the campaign goes back to level 1, saved at once. Parts you own, weapon upgrades and scrap you banked are never lost. No wear is applied on a death.
 - **Starter mechs:** the starter build (minigun, pile-bunker, vectored jump-jets, Reactor Mk1) is free and can't be lost, so a player with 0 scrap can always deploy.
 - **Progression:** mechs progress only in excursions. Your build, owned parts, upgrade levels, scrap, wear, level and seed are saved in the browser as one campaign code, which you can copy from the garage.
-- **Seed:** a campaign has a seed that decides where enemies land, pod times and types, and other random draws; the map itself never changes. A new campaign uses seed 7. While the campaign is at level 1, the garage lets you type a different seed (a whole number from 1 to 2,147,483,000) (GDD-D25).
+- **Seed:** a campaign has a seed that decides where enemies land, pod times and types, and other random draws; the map itself never changes. A new campaign uses seed 7. The garage lets you type a different seed, a whole number from 1 to 2,147,483,000 (GDD-D25), only while the campaign is at level 1 (proposed, GDD-D25).
 
-**Co-op:** two players share one excursion and one map; the host is player 1 (orange) and the guest player 2 (cyan). There is no friendly fire: player weapons, the mortar and the flash-vent only hurt enemies, and only collapses hurt mechs from your own side. Co-op plays at the lower of the two players' levels. Each mech keeps its own scrap wallet from the cubes it picks up. Co-op never pauses.
+**Co-op:** two players share one excursion and one map; the host is player 1 (orange) and the guest player 2 (cyan). There is no friendly fire: player weapons, the mortar and the flash-vent only hurt enemies, and only collapses hurt mechs from your own side. Co-op plays at the lower of the two players' levels (GDD-D14; GDD-D31 proposes replacing this with the host's campaign, see Co-op campaign). Each mech keeps its own scrap wallet from the cubes it picks up. Co-op never pauses.
 
 **Partner down and revive** (GDD-D24, proposed values): if one mech is destroyed, the other fights on, and the dead player's camera follows the survivor.
 
@@ -59,13 +61,22 @@ An excursion is five waves on one map. It ends when you clear wave 5 or every me
 
 **Leaving a co-op room:** if a partner leaves or loses connection, their mech is destroyed and the other player fights on alone. The room closes when the excursion ends. In the garage, a player whose partner left can drop in alone.
 
+**Co-op campaign** (proposed, GDD-D31): the host owns the room's campaign.
+
+- The room plays the host's campaign: the host's level, seed and open zones. The guest brings their own build, owned parts, upgrade levels and banked scrap.
+- On extract, the host's campaign advances one level. Each player banks the scrap they picked up into their own save, and wear goes on each player's own parts. The guest's own campaign level and seed don't change.
+- On a death (every mech destroyed), the host's campaign goes back to level 1. The guest loses their match scrap; the guest's own level doesn't change.
+- A guest who leaves mid-match loses their match scrap and nothing else. A host who leaves mid-match: open question (see [open questions](open-questions.md)).
+- Victory: extracting the host's level 50 wins the host's campaign. Both players see the victory screen; only the host's campaign restarts.
+
 **Durability** (GDD-D18):
 
 - When you extract, each fitted part that is not a starter part gains wear equal to 10% of the damage your mech took in the excursion, divided by its max armor. Damage counts when it is taken, even if a pod or the Nanite core heals it later. Losing 100 armor on a 100-armor mech adds 10% wear to every such part.
 - Wear adds up across extracts and stops at 100%.
 - Wear cuts every stat change that helps you (more power, armor or speed, less weight or heat) by that percentage; stat changes that cost you, special abilities and weapon upgrade levels stay as they are.
 - Starter parts never wear and always repair free.
-- Repairing a part restores it fully and costs its price × its wear × 25% for common parts, 50% for rare and 75% for epic, rounded up. Repair works through the fitted parts in slot order (Core, Arm-R, Arm-L, Shoulder, Legs, Reactor) and skips a part the banked scrap can't cover.
+- Repairing a part restores it fully and costs its price × its wear × 25% for common parts, 50% for rare and 75% for epic, rounded up.
+- The garage has one Repair button. It repairs worn fitted parts in slot order (Core, Arm-R, Arm-L, Shoulder, Legs, Reactor), and skips a part the banked scrap can't cover (proposed, GDD-D28).
 
 ## Controls and camera
 
@@ -99,14 +110,16 @@ Combat runs on two layers: the right-arm light gun fires in real time, the left-
 **Heavy weapons (ATB, right mouse)**
 
 - The pile-bunker, bunker-buster cannon and mag-winch share one ATB bar. It fills in 6 s divided by power ÷ 100 (doubled while overclocked).
-- When full, press and hold the right mouse button to start the timing ring: it shrinks from a 72 px radius toward a 30 px target ring over 1 s. Release to lock it. If you hold past the ring closing (about 1.3 s), it fires as a Miss.
+- When full, press and hold the right mouse button to start the timing ring. The ring reaches its target 1.0 s after the press. Release to lock it: the grade comes from how far the release is from 1.0 s. If you are still holding 1.31 s after the press, it fires as a Miss.
 - You keep driving and aiming while the ring runs.
 
-| Timing result | Window (share of the 72 px start radius, around the target) | Damage | Heat |
+| Timing result | Release time after the press | Damage | Heat |
 | --- | --- | --- | --- |
-| Perfect | within 5% | 200% | 28 |
-| Good | within 18% | 100% | 28 |
-| Miss or ring closes | outside 18% | 50% | 28 |
+| Perfect | 1.0 s ± 0.086 s | 200% | 28 |
+| Good | 1.0 s ± 0.31 s, outside Perfect | 100% | 28 |
+| Miss or ring closes | earlier than 0.69 s, or still held at 1.31 s | 50% | 28 |
+
+- **Presentation:** the ring is drawn shrinking from 72 px to a 30 px target ring at the default zoom. The windows above are times, so they hold at any zoom.
 
 - **Pile-bunker by grade:** its voxel damage scales the same way (200%, 100%, 50%), and a Perfect also hits a wider strip and cores two voxels deep. It knocks enemies back 3 m on a Perfect, 1 m on a Good and not at all on a Miss.
 - **Bunker-buster and mag-winch by grade:** the grade changes their damage to enemies only. The bunker-buster's blast always carves the same 3×3×3 hole. The mag-winch reaches 10 m instead of 8 m on a Perfect and tears out a pillar's base only on a Perfect.
@@ -132,8 +145,8 @@ Combat runs on two layers: the right-arm light gun fires in real time, the left-
 | --- | --- |
 | Tick | 1/60 s |
 | ATB base fill time | 6 s |
-| Timing ring | 1 s, 72 px start, 30 px target |
-| Perfect and Good windows | 5% and 18% of the start radius |
+| Timing ring | target at 1.0 s; auto-Miss at 1.31 s |
+| Perfect and Good windows | ± 0.086 s and ± 0.31 s around 1.0 s |
 | Timing multipliers | 2, 1, 0.5 |
 | Heat per heavy shot | 28 |
 | Minigun heat per shot | 3.2 |
@@ -221,7 +234,7 @@ The garage is the only place your build changes. Drop pods are one-use boosts in
 - Buying a part pays its full price from your banked scrap and you own it for good. Swapping back to a part you own is free. There is no selling or refunds. Core and Shoulder can be left empty; the other slots always hold a part.
 - The garage shows the five stats as bars with the selected part's change before you confirm, plus max armor, speed, damage, ATB fill time and cooling.
 - It upgrades the selected weapon one level at a time and shows its level and the price of the next one.
-- It shows each fitted part's wear and the scrap to repair it. Repair follows the Durability rules; starter parts repair free.
+- It shows each fitted part's wear and the scrap to repair it, and one Repair button that follows the Durability rules; starter parts repair free.
 - The campaign code (your save) is shown in the garage and can be copied. At level 1 the garage also shows the seed and lets you change it. Resetting the save wipes it after two clicks.
 - In co-op the garage is shared: both players shop, then both press Drop in. The room's saved campaign replaces each player's local one.
 
