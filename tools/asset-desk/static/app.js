@@ -265,7 +265,7 @@ function wire() {
   $("#manifest").onclick = async () => {
     const game = state.filters.game;
     if (!game) return toast("Pick a game first");
-    try { const r = await api("/api/manifest/write", { game }); toast(`Wrote ${r.assets} assets to ${r.path}`); }
+    try { const r = await api("/api/manifest/write", { game }); toast(`Wrote ${r.assets} assets to ${r.path}` + (r.heldUnknownOrigin.length ? ` · held back ${r.heldUnknownOrigin.length} with unknown origin (set it, then write again)` : "")); }
     catch (err) { toast(err.message); }
   };
   document.querySelectorAll("[data-bulk]").forEach((b) => (b.onclick = () => bulk({ patch: { grade: b.dataset.bulk } })));

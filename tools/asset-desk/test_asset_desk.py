@@ -133,6 +133,10 @@ class ServerTests(unittest.TestCase):
         for asset_id in ("file:drive:metr0niks/characters/tim-o/sheet.png", "file:drive:metr0niks/_retired/old.png",
                          "file:repo:metr0niks/characters/tim-o/sheet.jpg"):
             self.call("/api/asset", {"id": asset_id, "patch": {"grade": "up"}})
+        master = "file:drive:metr0niks/characters/tim-o/sheet.png"
+        out = self.call("/api/manifest/write", {"game": "metr0niks"})
+        self.assertEqual((out["assets"], out["heldUnknownOrigin"]), (0, [master]))
+        self.call("/api/asset", {"id": master, "patch": {"provenance": {"origin": "synthetic"}}})
         out = self.call("/api/manifest/write", {"game": "metr0niks"})
         self.assertEqual(out["assets"], 1)
         lines = [json.loads(l) for l in (self.repo / "metr0niks" / "manifest.jsonl").read_text().splitlines()]

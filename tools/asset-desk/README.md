@@ -28,7 +28,7 @@ Any other system: `python asset_desk.py --root drive="/path/to/kr0 Studio Art" -
 - Provenance fields fill themselves where Scenario or the file says something (marked "auto"). Anything you type is yours and is never overwritten by a later sync.
 - `X` or shift-click selects several assets for bulk grading, tagging or setting origin.
 - **Export** downloads a JSON list of what's on screen.
-- **Write manifest** (pick a game first) writes `art/<game>/manifest.jsonl` in the repo: one line per thumbs-up asset of that game that isn't in `_retired/`, with its Drive path, sha256, the repo preview at the same path (any image type), tags and provenance. Commit that file on a branch as usual. It needs the repo's `art/` folder added as `--root repo=…`, which the launcher does.
+- **Write manifest** (pick a game first) writes `art/<game>/manifest.jsonl` in the repo: one line per thumbs-up asset of that game that isn't in `_retired/`, with its Drive path, sha256, the repo preview at the same path (any image type), tags and provenance. Assets whose origin is still unknown are held back, since the studio rule says they can't ship; the app tells you how many. Commit that file on a branch as usual. It needs the repo's `art/` folder added as `--root repo=…`, which the launcher does.
 - **Push tags and grade to Scenario** (on a Scenario asset) adds the local tags plus `kr0-up` or `kr0-down` to the asset in Scenario. It's only done when you press it.
 
 ## Where the data lives

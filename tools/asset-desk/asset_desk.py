@@ -530,8 +530,9 @@ def repo_preview(catalog, rec):
 
 def manifest_lines(app, game):
     """art/<game>/manifest.jsonl: one line per approved (thumbs up), unretired
-    asset of the game. The format is set in studio/asset-management.md."""
-    lines = []
+    asset of the game. The format is set in studio/asset-management.md, which
+    also says an asset of unknown origin can't ship: those are held back."""
+    lines, held = [], []
     for rec in sorted(app.catalog.assets.values(), key=lambda r: r["id"]):
         if rec.get("game") != game or rec.get("grade") != "up" or rec.get("retired"):
             continue
@@ -539,6 +540,9 @@ def manifest_lines(app, game):
                 o.get("root") == "drive" and repo_preview(app.catalog, o) == "art/" + rec["path"]
                 for o in app.catalog.assets.values()):
             continue  # the Drive master's line already covers this preview
+        if (rec.get("provenance") or {}).get("origin", "unknown") == "unknown":
+            held.append(rec["id"])
+            continue
         lines.append({
             "id": rec["id"], "source": rec.get("source"), "scenarioId": rec.get("scenarioId"),
             "drivePath": rec.get("drivePath"), "sha256": ensure_sha256(app, rec),
@@ -548,7 +552,8 @@ def manifest_lines(app, game):
             "provenance": rec.get("provenance", {}),
         })
     app.catalog.save()
-    return "".join(json.dumps(line, ensure_ascii=False, sort_keys=True) + "\n" for line in lines), len(lines)
+    text = "".join(json.dumps(line, ensure_ascii=False, sort_keys=True) + "\n" for line in lines)
+    return text, len(lines), held
 
 
 def export_manifest(catalog, game=None, graded_only=False):
@@ -688,7 +693,7 @@ def make_handler(app):
                     game = q.get("game", [""])[0]
                     if game not in GAMES:
                         return self._json({"error": "pick a game"}, 400)
-                    text, _ = manifest_lines(app, game)
+                    text, _, _ = manifest_lines(app, game)
                     body = text.encode("utf-8")
                     self.send_response(200)
                     self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
@@ -754,12 +759,12 @@ def make_handler(app):
                     repo = app.roots.get("repo")
                     if game not in GAMES or repo is None:
                         return self._json({"error": "needs a game and a folder labelled repo (the repo's art/)"}, 400)
-                    text, count = manifest_lines(app, game)
+                    text, count, held = manifest_lines(app, game)
                     target = repo / game / "manifest.jsonl"
                     target.parent.mkdir(parents=True, exist_ok=True)
                     target.write_text(text, encoding="utf-8")
                     app.catalog.event(game, "write-manifest", {"path": str(target), "assets": count}, app.who)
-                    return self._json({"path": str(target), "assets": count})
+                    return self._json({"path": str(target), "assets": count, "heldUnknownOrigin": held})
                 if route == "/api/push-tags":
                     rec = app.catalog.assets.get(body.get("id", ""))
                     if not rec or rec.get("source") != "scenario" or not app.scenario:
