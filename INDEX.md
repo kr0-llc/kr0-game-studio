@@ -32,8 +32,8 @@ An isometric voxel mech brawler: real-time driving and shooting, heavy weapons o
 | Headless game simulation (loaded by the prototype, also runs in Node) | `games/metr0niks/simulations/sim.js` | none | The prototypes load it from `../simulations/sim.js` |
 | Open questions (gallery title "Scrap-Breaker open questions") | `games/metr0niks/open-questions.md` | https://claude.ai/artifact/MUiquZomvsgbswqEjYxt4v | Imported |
 | Playable prototype (drive, shoot, patrol bots, small Overpass Sector 4 map) | `games/metr0niks/prototypes/prototype.html` | https://storage.googleapis.com/kr0-game-studio-site/play/metr0niks/index.html | New (Oct 21, 2026); source of truth is studio-site/static/play/metr0niks/index.html in kr0/blackletter-chronos |
-| Ink prototype: art style C as 2D cut-out puppets, three enemy types, collapsing buildings, Scenario music and sound effects (loads `simulations/sim.js` and `art/metr0niks/ink-proto/`) | `games/metr0niks/prototypes/prototype-ink.html` | https://claude.ai/artifact/79WTMgYErJNqwFX5NsL64f | New (Oct 26, 2026); exploration, GDD-D30 Proposed |
-| Ink prototype brief: how the art is made, the audio made so far, what the full game still needs, decisions for kr0 | `games/metr0niks/prototypes/ink-prototype.md` | none | New (Oct 26, 2026) |
+| Ink prototype: art style C as 2D cut-out puppets, three enemy types, collapsing buildings, Scenario music and sound effects; IK legs, cast ink shadows, chunked building damage and ground decals (loads `simulations/sim.js` and `art/metr0niks/ink-proto/`) | `games/metr0niks/prototypes/prototype-ink.html` | https://claude.ai/artifact/79WTMgYErJNqwFX5NsL64f | Updated Oct 27, 2026; exploration, GDD-D30 and D34 Proposed |
+| Ink prototype brief: how the art is made, the renderer, the audio made so far (and the desert rock set still to make), what the full game still needs, decisions for kr0 | `games/metr0niks/prototypes/ink-prototype.md` | none | Updated Oct 27, 2026 |
 | GDD review (six-reviewer board, method from GixGosu/gdd-review-kit): one file per reviewer, plus `SYNTHESIS.md` (round 3) and `prototype-reconciliation.md` | `games/metr0niks/feedback/synthetic/gdd-review-2026-10-25/` (moved from `reviews/` on Oct 26, 2026) | none | Review done (Oct 25, 2026): rounds 1–3; GDD changes waiting on kr0 |
 
 ## Dropfront (formerly Basin Command)
@@ -91,7 +91,7 @@ Studio site page: https://storage.googleapis.com/kr0-game-studio-site/index.html
 | --- | --- | --- |
 | Blackletter | `art/blackletter/` | Cards, illustrations, battle sprites, brand masks, concept art, screenshots (see `README.md`) |
 | Dual Tech | `art/dual-tech/` | Art board (`board/index.html`), three styles (`prototype/`, `pitch/`, `glass/`), `prompts/`, Python drawing kits in `source/` |
-| Metr0niks | `art/metr0niks/` | Art board (`board/index.html`), styles (`prototype/`, `pitch/`, `ink/`), prototype `themes/`, `prompts/`, zone-unlock and ink-prototype `screenshots/`; ink prototype sheets, sprite atlas and audio in `ink-proto/`, atlas builder and Scenario script in `source/`; Tim-o reference mech (sheet, turnaround, cutaway poster, cut-out, garage mock-up) from kr0's Scenario "metr0niks" collection in `characters/tim-o/` (added Oct 26, 2026) |
+| Metr0niks | `art/metr0niks/` | Art board (`board/index.html`), styles (`prototype/`, `pitch/`, `ink/`), prototype `themes/`, `prompts/`, zone-unlock and ink-prototype `screenshots/` (renderer shots `ink-05`, `ink-06` added Oct 27, 2026); ink prototype sheets, sprite atlas and audio in `ink-proto/`, atlas builder and Scenario script in `source/`; Tim-o reference mech (sheet, turnaround, cutaway poster, cut-out, garage mock-up) from kr0's Scenario "metr0niks" collection in `characters/tim-o/` (added Oct 26, 2026) |
 | Dropfront | none yet | The core loop diagram lives in `games/dropfront/gdd.pdf` |
 
 ## Tools (shared by every game)
