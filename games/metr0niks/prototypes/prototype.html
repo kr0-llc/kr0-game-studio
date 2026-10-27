@@ -2,9 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0f1218">
 <title>Metr0niks Prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -174,60 +172,6 @@ body.ing canvas{cursor:default}
 #links button:hover,#links button:focus-visible{color:var(--fg);border-color:var(--muted)}
 @media(max-width:640px){.themes{grid-template-columns:1fr}.card .thm{display:grid;grid-template-columns:40% 1fr;gap:2px 10px;align-items:start}.card .thm img{grid-row:1/4}}
 
-/* ===== Touch (phones, tablets): body.touch is set by the first touch, or at load on a coarse pointer.
-   The sticks float: a thumb lands anywhere on its half and the stick centres there. ===== */
-.tch{display:none}
-body.touch .tch{display:revert}
-body.touch .kbd{display:none}
-#links button.tch{display:none}
-body.touch #links button.tch{display:inline-block}
-#tc{display:none}
-body.touch.playing #tc{display:block;position:fixed;inset:0;z-index:2;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-body.touch canvas{touch-action:none}
-body.touch{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-#tcPad{position:absolute;inset:0}
-.stk{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(233,230,224,.35);background:rgba(10,12,16,.22);pointer-events:none;opacity:0;transition:opacity .15s}
-.stk.on{opacity:1}
-.stk i{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(233,230,224,.4);border:2px solid rgba(233,230,224,.7)}
-#tcR i{background:rgba(224,112,43,.45);border-color:var(--rust)}
-#tcR.fire{border-color:var(--rust)}
-.tb{position:absolute;display:grid;place-items:center;border-radius:50%;font:700 13px var(--display);letter-spacing:.08em;color:var(--fg);background:rgba(10,14,20,.55);border:2px solid rgba(63,214,232,.65);padding:0;touch-action:none;-webkit-user-select:none;user-select:none}
-.tb.on{background:rgba(63,214,232,.4)}
-.tb[hidden]{display:none}
-#tcPile{width:84px;height:84px;right:calc(18px + env(safe-area-inset-right));bottom:calc(22px + env(safe-area-inset-bottom));font-size:15px;overflow:hidden}
-#tcPile em{position:absolute;left:0;right:0;bottom:0;height:0;background:rgba(63,214,232,.28);pointer-events:none}
-#tcPile.ready{border-color:var(--hazard);box-shadow:0 0 14px rgba(242,194,48,.55)}
-#tcPile.ready em{background:rgba(242,194,48,.3)}
-#tcPile.ring{border-color:var(--good);box-shadow:0 0 18px rgba(127,220,106,.7)}
-#tcPile.bad{border-color:var(--bad)}
-#tcDash{width:62px;height:62px;right:calc(116px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom))}
-#tcQ{width:58px;height:58px;right:calc(30px + env(safe-area-inset-right));bottom:calc(122px + env(safe-area-inset-bottom))}
-#tcHint,#tcRot{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));max-width:52vw;text-align:center;pointer-events:none;font:500 11px var(--mono);color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:5px 9px;transition:opacity .6s}
-#tcHint{bottom:auto;top:64%}
-#tcHint.off{opacity:0}
-#tcRot{display:none;bottom:auto;top:calc(50% - 16px)}
-@media(orientation:portrait){body.touch.playing #tcRot{display:block}#tcRot.off{display:none!important}}
-body.touch #stats{top:calc(8px + env(safe-area-inset-top));left:calc(8px + env(safe-area-inset-left));width:180px;padding:6px 8px;gap:4px;font-size:10px}
-body.touch #stats .bar{height:7px}
-body.touch #stats .bl{margin-bottom:1px}
-body.touch #score{top:calc(8px + env(safe-area-inset-top));right:calc(8px + env(safe-area-inset-right));left:auto;bottom:auto;gap:10px;padding:6px 8px;font-size:10px}
-body.touch #score b{font-size:15px}
-body.touch #keys{display:none}
-body.touch #bossBar{top:calc(8px + env(safe-area-inset-top));width:min(240px,30vw);padding:5px 8px;font-size:10px}
-body.touch #links{position:fixed;z-index:3;top:calc(62px + env(safe-area-inset-top));bottom:auto;right:calc(8px + env(safe-area-inset-right));gap:6px}
-body.touch #links a{display:none}
-body.touch:not(.playing) #links{display:none}
-body.touch #links button{padding:8px 10px;font-size:11px}
-body.touch #toast{font-size:18px}
-@media(max-width:560px){
-  body.touch #stats{width:46vw}
-  body.touch #score{max-width:48vw;flex-wrap:wrap;gap:4px 10px;justify-content:flex-end}
-  body.touch #score b{font-size:13px}
-  body.touch #links{top:auto;bottom:calc(150px + env(safe-area-inset-bottom))}
-  body.touch #bossBar{top:auto;bottom:calc(120px + env(safe-area-inset-bottom));width:60vw}
-}
-body.touch .card{padding:18px 18px}
-body.touch .gbar a{padding:6px 2px}
 @media(max-height:520px){
   .card{padding:16px 18px;gap:10px}
   .card h1{font-size:30px}
@@ -320,19 +264,8 @@ body[data-theme="ink"] #gDrop{border:2px solid var(--line);color:#fffaf0;box-sha
 <div class="hud" id="keys"><b>WASD</b> drive · <b>Mouse</b> aim torso · <b>Left click</b> minigun · <b>Right mouse</b> pile-bunker: hold when the bar is full, release on the green ring · <b>Space</b> dash · <b>Esc</b> pause · Touch cyan drop pods before the bots do · Break two pillars in a row to drop the road</div>
 <div class="hud" id="toast"></div>
 <div id="netToast" role="alert" hidden></div>
-<nav id="links"><button id="hudPause" class="tch" type="button" aria-label="Pause">Pause</button><button id="hudFs" class="tch" type="button" aria-label="Full screen">Full screen</button><button id="hudSet" type="button">Settings</button><a href="pitch.html">Pitch and firing range</a><a href="../../index.html#metr0niks">Design brief</a></nav>
+<nav id="links"><button id="hudSet" type="button">Settings</button><a href="pitch-and-firing-range/index.html">Pitch and firing range</a><a href="../../../site/index.html#metr0niks">Design brief</a></nav>
 
-<!-- Touch: floating twin sticks (left drives, right aims and fires) and the arm, dash and Q buttons. Shown on phones and tablets. -->
-<div id="tc" aria-hidden="true">
-  <div id="tcPad"></div>
-  <div class="stk" id="tcL"><i></i></div>
-  <div class="stk" id="tcR"><i></i></div>
-  <button id="tcPile" class="tb" type="button" tabindex="-1">ARM<em></em></button>
-  <button id="tcDash" class="tb" type="button" tabindex="-1">DASH</button>
-  <button id="tcQ" class="tb" type="button" tabindex="-1" hidden>Q</button>
-  <div id="tcHint">Left thumb drives · right thumb aims and fires</div>
-  <div id="tcRot">Turn your phone sideways for a wider view</div>
-</div>
 <div id="garage" hidden>
   <div class="gl">
     <div class="gp gtitle">Garage &amp; Upgrade<small id="gMode">Excursion</small></div>
@@ -371,12 +304,12 @@ body[data-theme="ink"] #gDrop{border:2px solid var(--line);color:#fffaf0;box-sha
     <p id="ovText">Prototype: Overpass Sector 4, a few blocks under the highway. Patrol bots drop in and hunt you. Drive with your legs, aim with your torso, and keep the minigun from overheating. The city is a weapon: break two pillars in a row and the road between them falls on whoever is underneath. A run is five waves with a Bounty sniper on waves 3 and 5: clear wave 5 to extract and bank your scrap, die and the match's scrap is gone. Drop pods land with a cyan marker: touch one for armor or a faster pile-bunker, but the bots want them too. Heavy loaders do not shoot: they telegraph, then ram in a straight line, plowing through barriers and containers. The minigun barely scratches their armor; the pile-bunker does not.</p>
     <span class="note" id="bankTxt">Banked: 0</span>
     <table>
-      <tr><td><span class="kbd">WASD</span><span class="tch">Left thumb</span></td><td>Legs: drive with momentum</td></tr>
-      <tr><td><span class="kbd">Mouse</span><span class="tch">Right thumb</span></td><td>Torso: aim independently of the legs</td></tr>
-      <tr><td><span class="kbd">Left mouse</span><span class="tch">Push it out</span></td><td id="tdL">Minigun. Each shot adds heat; 100% locks guns for 3 s</td></tr>
-      <tr><td><span class="kbd">Right mouse</span><span class="tch">ARM</span></td><td id="tdR">Pile-bunker. Hold when the bar is full, release on the green ring</td></tr>
-      <tr><td><span class="kbd">Space</span><span class="tch">DASH</span></td><td id="tdS">Dash. Use it to clear a red collapse shadow</td></tr>
-      <tr id="tdQRow" hidden><td><span class="kbd">Q</span><span class="tch">Q</span></td><td id="tdQ"></td></tr>
+      <tr><td>WASD</td><td>Legs: drive with momentum</td></tr>
+      <tr><td>Mouse</td><td>Torso: aim independently of the legs</td></tr>
+      <tr><td>Left mouse</td><td id="tdL">Minigun. Each shot adds heat; 100% locks guns for 3 s</td></tr>
+      <tr><td>Right mouse</td><td id="tdR">Pile-bunker. Hold when the bar is full, release on the green ring</td></tr>
+      <tr><td>Space</td><td id="tdS">Dash. Use it to clear a red collapse shadow</td></tr>
+      <tr id="tdQRow" hidden><td>Q</td><td id="tdQ"></td></tr>
     </table>
     <div class="coop friend" id="friendRow">
       <b class="fh">Play with a friend</b>
@@ -404,9 +337,8 @@ body[data-theme="ink"] #gDrop{border:2px solid var(--line);color:#fffaf0;box-sha
     <div class="coop" id="ovCodeRow" hidden><span class="note">Campaign code: paste it under Resume from code to retry from your last garage</span><input id="ovCode" class="codeIn" type="text" readonly aria-label="Campaign code" spellcheck="false"><button id="ovCopy" class="alt" type="button">Copy</button></div>
     <button id="contBtn" type="button" hidden>Continue campaign</button>
     <button id="go" type="button">Drop in</button>
-    <button id="gauntlet" class="alt" type="button">Gauntlet</button>
     <button id="ovSet" class="alt" type="button">Settings</button>
-    <span class="note">Gauntlet: same waves, but dying keeps your scrap and banks it. Keyboard and mouse. Everything except the outer wall is voxels and can be shot apart.</span>
+    <span class="note">Keyboard and mouse. Everything except the outer wall is voxels and can be shot apart.</span>
   </div>
 </div>
 
@@ -487,8 +419,8 @@ var sim=null,vox,owner,vdmg,structures,meshRev=-1;
 var player,players=[],bots=[],pods=[],shots=[],scraps=[],debris=[],clusters=[],parts=[],floats=[],run={wave:1,queue:[],breather:0};
 var state="menu",time=0,scrap=0,kills=0,toastT=0,shake=0;
 var mouse={x:0,y:0,down:false,rdown:false,rpress:false},keys={};
-var mode="run",banked=0;   /* banked = this player's wallet */
-var Camp=MetroSim.Campaign,CAMP={level:1,seed:7,mode:"run"},ARMOR=null,LASTCODE="",OVER={newCamp:false};   /* ARMOR: null = full, else absolute armor carried into the next level */
+var banked=0;   /* banked = this player's wallet */
+var Camp=MetroSim.Campaign,CAMP={level:1,seed:7},ARMOR=null,LASTCODE="",OVER={newCamp:false};   /* ARMOR: null = full, else absolute armor carried into the next level */
 function saveBank(){saveCampaign()}
 function vi(x,y,z){return x+y*W+z*W*D}
 function inB(x,y,z){return x>=0&&y>=0&&z>=0&&x<W&&y<D&&z<H}
@@ -503,7 +435,7 @@ function colorOf(id,s){
   return id===7?[c[0]*.72,c[1]*.72,c[2]*.72]:c;
 }
 function newSim(builds,armor){
-  return MetroSim.create({seed:Camp.levelSeed({seed:CAMP.seed,level:CAMP.level}),level:CAMP.level,armor:armor,mode:mode==="gauntlet"?"gauntlet":"excursion",builds:builds,colorOf:colorOf,clock:function(){return performance.now()}});
+  return MetroSim.create({seed:Camp.levelSeed({seed:CAMP.seed,level:CAMP.level}),level:CAMP.level,armor:armor,builds:builds,colorOf:colorOf,clock:function(){return performance.now()}});
 }
 function lvHp(base){return Math.round(base*(1+T.level.hp*(CAMP.level-1)))}   /* enemy hp scales with the level (the guest only gets hp numbers) */
 /* Point the renderer at a sim; its arrays are mutated in place, so they are bound once. */
@@ -591,12 +523,12 @@ function unproject(sx,sy,z){
   var bx=(sx-cw/2)/zoom+camX,by=(sy-ch/2)/zoom+camY;
   var u=bx/HW,v=(by+z*VH)/HH;return [(u+v)/2,(v-u)/2];
 }
-var dprCap=2,touchUI=false;   /* a phone starts at 1.5 and steps down while frames run slow (see perfTick) */
+var dprCap=2;   /* steps down while frames run slow (see perfTick) */
 function resize(){
   dpr=Math.min(dprCap,window.devicePixelRatio||1);
   cw=innerWidth;ch=innerHeight;cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  baseZoom=zoom=Math.max(touchUI?.5:.9,Math.min(2.4,Math.min(cw/660,ch/430)));   /* a phone held upright zooms out further to see the street */
+  baseZoom=zoom=Math.max(.9,Math.min(2.4,Math.min(cw/660,ch/430)));
 }
 addEventListener("resize",resize);resize();
 
@@ -699,12 +631,10 @@ function runOver(e){
     adoptCampaign(Camp.advance(curCampaign(),d),0);saveCampaign();
     showOverlay("Extracted",msg,"Garage");return;
   }
-  if(d.scrap){banked+=d.scrap[0]|0;ARMOR=null;saveCampaign()}   /* gauntlet keeps its scrap */
   deathScreen(msg,d.level||CAMP.level);
 }
-/* Excursion death ends the campaign run: the code is the garage it began from. Gauntlet just goes back to the garage. */
+/* A death ends the campaign run: the code is the garage it began from. */
 function deathScreen(msg,lv){
-  if(mode==="gauntlet"){setTimeout(function(){showOverlay("Mech destroyed",msg,"Garage")},900);return}
   OVER.newCamp=true;
   setTimeout(function(){showOverlay("Campaign over at level "+lv,msg,"New campaign",LASTCODE)},900);
 }
@@ -763,12 +693,11 @@ function updateCam(dt){
     tx=hx+(px(zx,zy,0)-hx)*u;ty=hy+(py(zx,zy,0)-hy)*u;zm=1-.5*u}
   var k=1-Math.exp(-dt*6);camX+=(tx-camX)*k;camY+=(ty-camY)*k;zoom=baseZoom*zm;
 }
-function keyBits(){return (keys.KeyW||keys.ArrowUp?1:0)|(keys.KeyA||keys.ArrowLeft?2:0)|(keys.KeyS||keys.ArrowDown?4:0)|(keys.KeyD||keys.ArrowRight?8:0)|(keys.Space?16:0)|(keys.KeyQ?32:0)|tcBits()}
+function keyBits(){return (keys.KeyW||keys.ArrowUp?1:0)|(keys.KeyA||keys.ArrowLeft?2:0)|(keys.KeyS||keys.ArrowDown?4:0)|(keys.KeyD||keys.ArrowRight?8:0)|(keys.Space?16:0)|(keys.KeyQ?32:0)}
 /* Torso: aim at the geometry under the cursor (walls, pillars, cover), else at bot height,
    snapping to a bot under the cursor. The snap takes the bot's own height. */
 var aim={ax:16,ay:16,az:.6};
 function aimFromMouse(){
-  if(touchUI)tcAim();
   var a=unproject(mouse.x,mouse.y,.6);aim.ax=a[0];aim.ay=a[1];aim.az=.6;
   for(var z=1.98;z>.6;z-=.06){var g=unproject(mouse.x,mouse.y,z);if(solidAt(g[0],g[1],z)){aim.ax=g[0];aim.ay=g[1];aim.az=z;break}}
   var best=34*zoom;
@@ -1239,7 +1168,7 @@ function hud(){
   hudEls.oc.hidden=!(p.oc>0);if(p.oc>0)hudEls.oc.textContent="OVERCLOCK "+Math.ceil(p.oc)+"s";
   hudEls.s.textContent=scrap;hudEls.k.textContent=kills;hudEls.lv.textContent=CAMP.level;
   var R=run,br=R.breather>0,bs=null;
-  hudEls.w.textContent=R.wave+" / "+T.waves.length;hudEls.wl.textContent=mode==="gauntlet"?"Wave · gauntlet":"Wave";
+  hudEls.w.textContent=R.wave+" / "+T.waves.length;hudEls.wl.textContent="Wave";
   hudEls.el.textContent=br?"Next wave in":"Enemies";hudEls.e.textContent=br?R.breather.toFixed(1)+"s":enemyCount();
   bots.forEach(function(b){if(b.boss&&b.hp>0)bs=b});
   hudEls.bb.hidden=!bs;if(bs){hudEls.bbT.textContent=Math.ceil(bs.hp);hudEls.bbI.style.width=Math.max(0,bs.hp/bs.maxHp*100)+"%"}
@@ -1257,16 +1186,16 @@ function myPlayer(){return Camp.player(BUILD,Object.keys(OWNED),banked,ARMOR)}
 function adoptCampaign(c,seat){
   var p=c.players[seat]||c.players[0];
   BUILD=cloneBuild(p.build);OWNED={};p.owned.forEach(function(id){OWNED[id]=1});banked=p.scrap;ARMOR=p.armor;
-  CAMP.level=c.level;CAMP.seed=c.seed;CAMP.mode=c.mode;
+  CAMP.level=c.level;CAMP.seed=c.seed;
 }
 /* the whole campaign as this client knows it: in a room both seats, otherwise just this player */
 function curCampaign(){
   var ps=[myPlayer()];
   if(Net.online&&Net.camp){ps=Net.camp.players.map(function(p){return JSON.parse(JSON.stringify(p))});ps[Net.idx]=myPlayer()}
-  return {v:1,seed:CAMP.seed,level:CAMP.level,mode:mode==="gauntlet"?"gauntlet":"run",players:ps};
+  return {v:1,seed:CAMP.seed,level:CAMP.level,players:ps};
 }
 function saveCampaign(){
-  try{localStorage.setItem("metr0niks.campaign",Camp.encode({v:1,seed:CAMP.seed,level:CAMP.level,mode:mode==="gauntlet"?"gauntlet":"run",players:[myPlayer()]}))}catch(e){}
+  try{localStorage.setItem("metr0niks.campaign",Camp.encode({v:1,seed:CAMP.seed,level:CAMP.level,players:[myPlayer()]}))}catch(e){}
 }
 function newCampaign(){CAMP.level=1;ARMOR=null;saveCampaign()}   /* parts and scrap stay: only the level starts over */
 function hasProgress(){return CAMP.level>1}
@@ -1421,7 +1350,7 @@ function refreshGarage(){
   gEl.gScrap.textContent=banked;
   var pending=G.sel!==cur;
   gEl.gStatus.textContent=pending?"Upgrade in progress\nEquipping "+(sel?sel.name:"empty slot"):G.msgT>0?G.msg:"Build ready";gEl.gStatus.style.whiteSpace="pre-line";
-  gEl.gMode.textContent="Level "+CAMP.level+" · "+(mode==="gauntlet"?"Gauntlet":"Excursion");
+  gEl.gMode.textContent="Level "+CAMP.level+" · Excursion";
   var ma=maxArmor(),rn=repairNeed();
   gEl.gArmor.textContent=Math.ceil(curArmor())+"/"+ma;
   gEl.gRepair.textContent="Repair ("+rn+" scrap)";gEl.gRepair.disabled=rn<=0;
@@ -1590,7 +1519,7 @@ Net.hostInput=function(m){
 };
 /* Lobby answer, or (when a run is on) the full state a late joiner needs: voxel grid, wave, builds and the guest's index. */
 Net.sendWelcome=function(){
-  var inRun=state==="play",m={t:"welcome",to:Net.peer,idx:1,st:inRun?"play":"lobby",mode:mode,builds:[inRun?players[0].v:cloneBuild(BUILD),Net.peerBuild]};
+  var inRun=state==="play",m={t:"welcome",to:Net.peer,idx:1,st:inRun?"play":"lobby",builds:[inRun?players[0].v:cloneBuild(BUILD),Net.peerBuild]};
   if(inRun){
     if(!players[1])sim.applyBuild(1,Net.peerBuild);
     m.builds=[players[0].v,players[1].v];m.wave=run.wave;
@@ -1609,7 +1538,7 @@ Net.sendSnap=function(){
 Net.guestRecv=function(m){
   if(m.t==="welcome"){
     if(m.to!==Net.id)return;
-    Net.lobby=true;Net.idx=m.idx;Net.peer=m.from;mode=m.mode==="gauntlet"?"gauntlet":"run";
+    Net.lobby=true;Net.idx=m.idx;Net.peer=m.from;
     if(m.st==="play"&&!Net.live)Net.enter(m);
     refreshCoop();return;
   }
@@ -1736,7 +1665,7 @@ Net.openOnline=function(role,code,tr){
     if(s==="open"){Net.opened=true;setNetStatus("Connected to the server");return}
     if(s==="closed"||s==="error"){if(Net.on&&Net.online&&s==="closed")leaveOnline(Net.opened?"Disconnected from the server":"Could not reach the server")}
   });
-  if(role==="host")Net.send({t:"host",build:cloneBuild(BUILD),mode:mode==="gauntlet"?"gauntlet":"run",campaign:Net.pendingResume||undefined});
+  if(role==="host")Net.send({t:"host",build:cloneBuild(BUILD),campaign:Net.pendingResume||undefined});
   else Net.send({t:"join",code:code,build:cloneBuild(BUILD)});
   setNetStatus("Connecting...");friendRender();refreshCoop();
 };
@@ -1754,17 +1683,16 @@ Net.onlineRecv=function(m){
       friendRender();refreshCoop();break;
     case "garage":   /* the shared garage: the server's campaign (next level, wallets, armor) replaces what this client had */
       Net.camp=m.campaign;Net.live=false;Net.lobby=true;Net.inGarage=true;Net.peerReady=false;
-      mode=m.campaign.mode==="gauntlet"?"gauntlet":"run";adoptCampaign(m.campaign,Net.idx);saveCampaign();
+      adoptCampaign(m.campaign,Net.idx);saveCampaign();
       openGarage();refreshGarage();friendRender();break;
     case "level":CAMP.level=m.level;break;
     case "welcome":
-      Net.lobby=true;Net.peer=true;Net.idx=m.seat;mode=m.mode==="gauntlet"?"gauntlet":"run";CAMP.level=m.level||1;Net.enter(m);break;
+      Net.lobby=true;Net.peer=true;Net.idx=m.seat;CAMP.level=m.level||1;Net.enter(m);break;
     case "snap":if(Net.live)Net.snap(m);break;
     case "over":
       if(!Net.live)return;
       Net.live=false;
       if(m.result==="extracted"){state="extracted";showToast("Level "+m.level+" cleared: to the garage","var(--good)");break}   /* the garage message follows */
-      if(m.scrap){banked+=m.scrap[Net.idx]|0;ARMOR=null;saveCampaign()}   /* gauntlet keeps its scrap */
       if(m.code)LASTCODE=m.code;
       state="dead";deathScreen(m.msg,m.level||CAMP.level);
       Net.close();break;   /* the room is finished: the garage after this is single-player until a new room */
@@ -1799,7 +1727,6 @@ function friendInit(){
     if(role==="guest"&&!c){netErr("Type your friend's room code first.");inp.focus();return}
     var rc=role==="host"?$("friendResume").value.trim():"";
     if(rc&&!Camp.decode(rc)){netErr("That campaign code is not valid.");$("friendResume").focus();return}
-    mode=rc?Camp.decode(rc).mode:"run";
     if(!rc&&hasProgress())newCampaign();   /* no code: a new campaign (your parts and scrap stay) */
     Net.pendingResume=rc;
     try{Net.open(role,c,"relay")}catch(e){netErr("Online play unavailable: "+e.message)}
@@ -1842,7 +1769,7 @@ function coopInit(){
     var c=inp.value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,12);
     if(!c){note.textContent="Type a room code first.";inp.focus();return}
     try{Net.open(role,c)}catch(e){note.textContent="Co-op unavailable: "+e.message;return}
-    mode="run";openGarage();
+    openGarage();
   }
   $("coopHost").addEventListener("click",function(){go("host")});
   $("coopJoin").addEventListener("click",function(){go("guest")});
@@ -1864,7 +1791,7 @@ function frame(now){
   pump(now);tickToast(fdt);
   if(Net.guest&&Net.live)guestView();else{scrap=sim.scrap;kills=sim.kills}
   if(sim.world.rev!==meshRev){meshRev=sim.world.rev;meshDirty=true}
-  render();hud();tcHud();perfTick(fdt);
+  render();hud();perfTick(fdt);
   requestAnimationFrame(frame);
 }
 /* A co-op tab that is not on screen gets no animation frames, which would freeze the host's world (or the guest's inputs).
@@ -1875,7 +1802,7 @@ function frame(now){
     w.onmessage=function(){var now=performance.now();if(Net.live&&now-lastFrame>80)pump(now)};
   }catch(e){}
 })();
-var overlay=$("overlay"),goBtn=$("go"),gauntletBtn=$("gauntlet"),coopRow=$("coopRow");
+var overlay=$("overlay"),goBtn=$("go"),coopRow=$("coopRow");
 var contBtn=$("contBtn");
 /* With a saved campaign past level 1 the menu offers Continue; Drop in then means a new campaign. */
 function menuButtons(menu,btn){
@@ -1886,7 +1813,7 @@ function menuButtons(menu,btn){
 function showOverlay(title,text,btn,code){
   overlay.querySelector("h1").innerHTML=title==="Metr0niks"?"Metr<span>0</span>niks":title;
   $("ovCodeRow").hidden=!code;$("ovCode").value=code||"";
-  $("ovText").textContent=text;menuButtons(title==="Metr0niks",btn);hudEls.bank.textContent="Banked: "+banked;gauntletBtn.hidden=title!=="Metr0niks";coopRow.hidden=!LOCAL||title!=="Metr0niks"||Net.on;overlay.hidden=false;for(var k in keys)keys[k]=false;tcReset();mouse.down=false;mouse.rdown=false;mouse.rpress=false;if(player)player.ring=-1;
+  $("ovText").textContent=text;menuButtons(title==="Metr0niks",btn);hudEls.bank.textContent="Banked: "+banked;coopRow.hidden=!LOCAL||title!=="Metr0niks"||Net.on;overlay.hidden=false;for(var k in keys)keys[k]=false;mouse.down=false;mouse.rdown=false;mouse.rpress=false;if(player)player.ring=-1;
   if(state==="play")state="paused";goBtn.focus();friendRender();
 }
 function start(){
@@ -1896,13 +1823,12 @@ function start(){
 }
 /* Menu, death and extraction lead to the garage; only the garage (or Resume) starts a run. */
 goBtn.addEventListener("click",function(){
-  if(state==="menu"){mode="run";if(hasProgress())newCampaign();openGarage()}
+  if(state==="menu"){if(hasProgress())newCampaign();openGarage()}
   else if(state==="dead"||state==="extracted"){if(OVER.newCamp){OVER.newCamp=false;newCampaign()}openGarage()}
   else start();
 });
-contBtn.addEventListener("click",function(){mode=CAMP.mode==="gauntlet"?"gauntlet":"run";openGarage()});
+contBtn.addEventListener("click",function(){openGarage()});
 $("ovCopy").addEventListener("click",function(){copyCode($("ovCode"),$("ovCopy"))});
-gauntletBtn.addEventListener("click",function(){mode="gauntlet";if(hasProgress())newCampaign();openGarage()});
 /* Settings: the art style switcher. Opening it mid-run pauses first. */
 var setEl=$("settings"),setFrom=null;
 function setTheme(id,save){
@@ -1917,7 +1843,7 @@ function buildThemes(){
   var box=$("themes");
   Object.keys(THEMES).forEach(function(id){var t=THEMES[id],b=document.createElement("button");
     b.type="button";b.className="thm";b.dataset.id=id;b.setAttribute("role","radio");
-    b.innerHTML="<img alt=\"\" src=\"art/themes/"+id+".jpg\"><b>"+t.name+"</b><span>"+t.tag+"</span><small>"+t.desc+"</small>";
+    b.innerHTML="<img alt=\"\" src=\"../../../art/metr0niks/themes/"+id+".jpg\"><b>"+t.name+"</b><span>"+t.tag+"</span><small>"+t.desc+"</small>";
     b.addEventListener("click",function(){setTheme(id,true)});box.appendChild(b)});
   box.addEventListener("keydown",function(e){   /* arrow keys move through the radio group */
     var ids=Object.keys(THEMES),k=ids.indexOf(themeId),d=e.code==="ArrowRight"||e.code==="ArrowDown"?1:e.code==="ArrowLeft"||e.code==="ArrowUp"?-1:0;
@@ -1925,7 +1851,7 @@ function buildThemes(){
 }
 function openSettings(){
   if(state==="play"&&!Net.on)showOverlay("Paused","Take a breather. The bots wait for you.","Resume");   /* a co-op run never pauses */
-  setFrom=document.activeElement;setEl.hidden=false;for(var k in keys)keys[k]=false;tcReset();
+  setFrom=document.activeElement;setEl.hidden=false;for(var k in keys)keys[k]=false;
   var on=setEl.querySelector("[aria-checked=true]");(on||$("setDone")).focus();
 }
 function closeSettings(){setEl.hidden=true;if(setFrom&&setFrom.focus&&document.contains(setFrom)&&setFrom.offsetParent!==null)setFrom.focus();else if(!overlay.hidden)goBtn.focus()}
@@ -1950,103 +1876,6 @@ addEventListener("mouseup",function(e){if(e.button===0)mouse.down=false;else if(
 cv.addEventListener("contextmenu",function(e){e.preventDefault()});
 cv.tabIndex=0;
 
-/* ===== Touch: twin sticks and buttons for phones and tablets =====
-   The left thumb drives (a floating stick, eight directions like WASD), the right thumb aims the torso and fires once
-   pushed past half way; ARM is the right mouse button, DASH is Space, Q is Q. Everything lands in the same keys, mouse
-   and key bits the desktop uses, so the sim, the co-op host and the online input see no difference. */
-var TC={mv:null,am:null,bits:0,dash:false,q:false,dx:0,dy:-1,mag:0,fire:false,hintT:0},STK_R=52,stkL=$("tcL"),stkR=$("tcR"),tcPile=$("tcPile"),tcDash=$("tcDash"),tcQ=$("tcQ");
-function setTouch(on){
-  if(touchUI===on)return;touchUI=on;document.body.classList.toggle("touch",on);
-  dprCap=on?1.5:2;resize();if(!on){tcReset();mouse.x=innerWidth*.62;mouse.y=innerHeight*.45}
-}
-function tcBits(){return touchUI?TC.bits|(TC.dash?16:0)|(TC.q?32:0):0}
-function tcReset(){
-  if(!stkL)return;   /* called by showOverlay before this block has run */
-  TC.mv=TC.am=null;TC.bits=0;TC.dash=TC.q=TC.fire=false;
-  if(touchUI){mouse.down=false;mouse.rdown=false}
-  stkL.className="stk";stkR.className="stk";[tcPile,tcDash,tcQ].forEach(function(b){b.classList.remove("on")});
-}
-/* the eight WASD directions from a stick vector in screen space */
-var DIR8=[8,8|4,4,2|4,2,2|1,1,1|8];
-function stickBits(dx,dy){var m=Math.hypot(dx,dy)/STK_R;if(m<.28)return 0;var a=Math.atan2(dy,dx);return DIR8[(Math.round(a/(Math.PI/4))+8)%8]}
-function placeStick(el,s,x,y){
-  var dx=x-s.x,dy=y-s.y,m=Math.hypot(dx,dy);
-  if(m>STK_R*1.6){s.x+=dx*(1-STK_R*1.6/m);s.y+=dy*(1-STK_R*1.6/m);dx=x-s.x;dy=y-s.y;m=Math.hypot(dx,dy)}   /* the base trails a thumb that runs off it */
-  var k=m>STK_R?STK_R/m:1;el.style.left=s.x+"px";el.style.top=s.y+"px";el.firstChild.style.transform="translate("+(dx*k)+"px,"+(dy*k)+"px)";
-  return [dx,dy];
-}
-function tcMove(e){
-  if(TC.mv&&e.pointerId===TC.mv.id){var v=placeStick(stkL,TC.mv,e.clientX,e.clientY);TC.bits=stickBits(v[0],v[1])}
-  else if(TC.am&&e.pointerId===TC.am.id){
-    var w=placeStick(stkR,TC.am,e.clientX,e.clientY),m=Math.hypot(w[0],w[1])/STK_R;
-    if(m>.2){TC.dx=w[0];TC.dy=w[1];TC.mag=Math.min(1,m)}
-    TC.fire=m>.5;mouse.down=TC.fire;stkR.classList.toggle("fire",TC.fire);
-  }
-}
-function tcUp(e){
-  if(TC.mv&&e.pointerId===TC.mv.id){TC.mv=null;TC.bits=0;stkL.className="stk"}
-  else if(TC.am&&e.pointerId===TC.am.id){TC.am=null;TC.fire=false;mouse.down=false;stkR.className="stk"}
-}
-var pad=$("tcPad");
-pad.addEventListener("pointerdown",function(e){
-  e.preventDefault();if(state!=="play")return;
-  var s={id:e.pointerId,x:e.clientX,y:e.clientY};
-  if(e.clientX<cw*.45){if(!TC.mv){TC.mv=s;stkL.className="stk on";placeStick(stkL,s,e.clientX,e.clientY)}}
-  else if(!TC.am){TC.am=s;stkR.className="stk on";placeStick(stkR,s,e.clientX,e.clientY)}
-  try{pad.setPointerCapture(e.pointerId)}catch(x){}
-  if(TC.hintT===0)TC.hintT=1;
-});
-pad.addEventListener("pointermove",tcMove);
-pad.addEventListener("pointerup",tcUp);pad.addEventListener("pointercancel",tcUp);
-/* hold buttons: pressed while a finger is on them */
-function holdBtn(el,down,up){
-  el.addEventListener("pointerdown",function(e){e.preventDefault();try{el.setPointerCapture(e.pointerId)}catch(x){}el.classList.add("on");down()});
-  function rel(e){if(!el.classList.contains("on"))return;el.classList.remove("on");up()}
-  el.addEventListener("pointerup",rel);el.addEventListener("pointercancel",rel);el.addEventListener("lostpointercapture",rel);
-  el.addEventListener("contextmenu",function(e){e.preventDefault()});
-}
-holdBtn(tcPile,function(){mouse.rdown=true;mouse.rpress=true},function(){mouse.rdown=false});
-holdBtn(tcDash,function(){TC.dash=true},function(){TC.dash=false});
-holdBtn(tcQ,function(){TC.q=true},function(){TC.q=false});
-/* The torso aims where the right stick points, at a reach set by how far it is pushed. A bot close to that line
-   (about 17 degrees, within 13 tiles) takes the aim, since a thumb is far less precise than a mouse.
-   With the stick released the aim keeps its direction and travels with the mech. */
-function tcAim(){
-  var p=player;if(!p||p.hp<=0)return;
-  var sx=SX(p.x,p.y,.8),sy=SY(p.x,p.y,.8),l=Math.hypot(TC.dx,TC.dy)||1,ux=TC.dx/l,uy=TC.dy/l,reach=(90+TC.mag*170)*zoom;
-  mouse.x=sx+ux*reach;mouse.y=sy+uy*reach;
-  if(!TC.am)return;
-  var best=.3,tgt=null;
-  bots.forEach(function(b){if(b.dropping||b.hp<=0)return;var wd=Math.hypot(b.x-p.x,b.y-p.y);if(wd>13)return;
-    var bx=SX(b.x,b.y,b.z+.55)-sx,by=SY(b.x,b.y,b.z+.55)-sy,bl=Math.hypot(bx,by)||1,d=Math.acos(Math.max(-1,Math.min(1,(bx*ux+by*uy)/bl)));
-    if(d<best){best=d;tgt=[bx+sx,by+sy]}});
-  if(tgt){mouse.x=tgt[0];mouse.y=tgt[1]}
-}
-/* ARM button mirrors the pile bar; Q shows only with a shoulder part; the hint fades after the first touches */
-var ARM_BTN={pile:"PILE",buster:"BUSTER",winch:"WINCH"},tcPileEm=tcPile.querySelector("em"),tcQShown=null,playingOn=null;
-function tcHud(){
-  var on=state==="play"&&overlay.hidden&&setEl.hidden;
-  if(on!==playingOn){playingOn=on;document.body.classList.toggle("playing",on);if(!on&&touchUI)tcReset()}
-  if(!touchUI||!on)return;
-  var p=player,f=p.retract>0?1-p.retract/T.pile.retract:p.atb/T.atb.fill;
-  tcPileEm.style.height=Math.round(Math.min(1,f)*100)+"%";
-  tcPile.classList.toggle("ready",p.ring<0&&p.retract<=0&&f>=1);tcPile.classList.toggle("ring",p.ring>=0);tcPile.classList.toggle("bad",p.retract>0);
-  var lb=ARM_BTN[p.pileKind]||"ARM";if(tcPile.firstChild.nodeValue!==lb)tcPile.firstChild.nodeValue=lb;
-  if(tcQShown!==!!p.q){tcQShown=!!p.q;tcQ.hidden=!p.q}
-  tcDash.disabled=!!p.noDash;tcDash.style.opacity=p.noDash?.35:p.dashCd>0?.6:1;
-  if(TC.hintT>0){TC.hintT+=1/60;if(TC.hintT>5){TC.hintT=-1;$("tcHint").classList.add("off");$("tcRot").classList.add("off")}}
-}
-/* Phones get the touch layout at load; a laptop with a touch screen switches on the first touch and back on a mouse move */
-addEventListener("pointerdown",function(e){if(e.pointerType==="touch"||e.pointerType==="pen")setTouch(true)},true);
-cv.addEventListener("pointermove",function(e){if(e.pointerType==="mouse"&&touchUI&&(Math.abs(e.movementX)+Math.abs(e.movementY))>2)setTouch(false)});
-$("hudPause").addEventListener("click",function(){if(state==="play"&&!Net.on)showOverlay("Paused","Take a breather. The bots wait for you.","Resume");else openSettings()});
-$("hudFs").addEventListener("click",function(){
-  var d=document,el=d.documentElement;
-  if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d);return}
-  var r=el.requestFullscreen||el.webkitRequestFullscreen;if(!r)return;
-  try{var pr=r.call(el,{navigationUI:"hide"});if(pr&&pr.then)pr.then(function(){try{screen.orientation.lock("landscape").catch(function(){})}catch(x){}}).catch(function(){})}catch(x){}
-});
-if(!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen))$("hudFs").remove();
 document.addEventListener("visibilitychange",function(){if(document.hidden&&state==="play"&&!Net.on)showOverlay("Paused","The game paused while it was in the background.","Resume")});
 /* Performance: when frames run long for two seconds, render at a lower resolution, then with fewer embers. */
 var lowFx=false,perfAcc=0,perfN=0;
@@ -2055,7 +1884,6 @@ function perfTick(dt){
   var avg=perfAcc/perfN;perfAcc=0;perfN=0;
   if(avg>.024){if(dpr>1.01){dprCap=Math.max(1,dpr-.25);resize()}else lowFx=true}
 }
-if(/[?&]touch=1/.test(location.search)||(matchMedia&&matchMedia("(pointer:coarse)").matches&&!matchMedia("(pointer:fine)").matches))setTouch(true);
 
 garageInit();coopInit();friendInit();hudEls.bank.textContent="Banked: "+banked;menuButtons(true,"Drop in");
 buildThemes();
@@ -2068,16 +1896,16 @@ requestAnimationFrame(frame);
 window.__m={T:T,net:Net,get sim(){return sim},get players(){return players},voxSum:voxSum,setTheme:function(id){setTheme(id,false)},theme:function(){return themeId},
   get level(){return CAMP.level},get armor(){return ARMOR},get lastCode(){return LASTCODE},campaign:function(){return curCampaign()},
   garage:{repair:garageRepair,armor:curArmor,maxArmor:maxArmor,setArmor:function(a){ARMOR=a;saveCampaign();refreshGarage()},select:garageSelect,equip:garageEquip,open:openGarage,preview:function(){var q=pvStats();return {cur:q.cur,pv:q.pv,d:q.d,sel:G.sel,slot:G.slot}},build:function(){return cloneBuild(BUILD)},owned:function(){return Object.keys(OWNED)},derive:derive,setBanked:function(n){banked=n;saveBank();refreshGarage()},reset:function(){G.confirm=true;resetSave()}},
-  get shots(){return shots},get pods(){return pods},get run(){return run},get banked(){return banked},get mode(){return mode},get scraps(){return scraps},get chunks(){return sim.world.chunks},get chk(){return sim.chk},
+  get shots(){return shots},get pods(){return pods},get run(){return run},get banked(){return banked},get scraps(){return scraps},get chunks(){return sim.world.chunks},get chk(){return sim.chk},
   get player(){return player},get bots(){return bots},get state(){return state},get floats(){return floats},get pickups(){return scraps.length},
   get kills(){return Net.guest&&Net.live?kills:sim.kills},get scrap(){return Net.guest&&Net.live?scrap:sim.scrap},keys:keys,mouse:mouse,start:start,mesh:function(){return mesh.length},
   spawnPod:function(){return sim.spawnPod.apply(sim,arguments)},spawnLoader:function(x,y){return sim.spawnLoader(x,y)},perches:function(){return sim.perches()},los3:function(){return sim.los3.apply(sim,arguments)},
   blocked:blockedCell,damage:function(e,d,x,y,z){sim.damage(e,d,x,y,z)},setVox:function(x,y,z,m){sim.setVox(x,y,z,m)},hit:function(x,y,z,d){sim.hitVoxel(x,y,z,d)},killAll:function(){sim.killAll()},dbg:function(){return sim.dbg()},
   proj:function(x,y,z){return [SX(x,y,z),SY(x,y,z)]},
   /* zones: rebind a single-player sim at level l (its drop-in intro plays if a zone opens), read the camera */
-  level:function(l){bind(MetroSim.create({seed:7,mode:mode==="gauntlet"?"gauntlet":"excursion",builds:[BUILD],colorOf:colorOf,level:l}));camX=px(player.x,player.y,0);camY=py(player.x,player.y,0);zoneFx={k:-1,t:9};return sim.zone},
+  level:function(l){bind(MetroSim.create({seed:7,builds:[BUILD],colorOf:colorOf,level:l}));camX=px(player.x,player.y,0);camY=py(player.x,player.y,0);zoneFx={k:-1,t:9};return sim.zone},
   get cam(){return {x:camX,y:camY,zoom:zoom,base:baseZoom,cine:cineAt()}},
-  touch:{set:setTouch,get on(){return touchUI},get bits(){return tcBits()},get dpr(){return dpr},get lowFx(){return lowFx}}};window.__proj=window.__m.proj;
+  get dpr(){return dpr},get lowFx(){return lowFx}};window.__proj=window.__m.proj;
 })();
 </script>
 </body>

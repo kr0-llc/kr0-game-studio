@@ -2,7 +2,7 @@
    classic <script src="../simulations/sim.js">) and in Node (`import './simulations/sim.js'`, then globalThis.MetroSim). No DOM, no timers,
    no browser globals: time comes in as fixed ticks, and everything a renderer needs that is not state is an event.
 
-   MetroSim.create({seed, mode:'excursion'|'gauntlet', builds:[build,...], level?, armor?, colorOf?, clock?}) -> sim
+   MetroSim.create({seed, builds:[build,...], level?, armor?, colorOf?, clock?}) -> sim
      level    campaign level 1..T.level.max (default 1); enemy counts, hp, damage and scrap scale with it (T.level), sim.level
      armor    per mech: null = full, a number < 1 = fraction of max armor, >= 1 = absolute armor (clamped to 1..max)
      builds   one garage build per mech ({core,armR,armL,shoulder,legs,reactor}, null = empty); builds[1] is the co-op partner
@@ -13,7 +13,7 @@
                          get(x,y,z), solidAt(x,y,z), blockedCell(cx,cy), rebuildWalk()}
    sim.players, bots, shots, pods, scraps, clusters, debris   live arrays (mutated in place, never replaced)
    sim.run {wave,queue,breather,done,...}   sim.wave (number)   sim.state 'play'|'dead'|'extracted'
-   sim.tick             completed steps   sim.scrap (shared run total, for the HUD), sim.kills, sim.mode, sim.shake (0..1, decays)
+   sim.tick             completed steps   sim.scrap (shared run total, for the HUD), sim.kills, sim.shake (0..1, decays)
                         each mech also has player.scrap: the cubes it picked up (the wallet that banks at extraction)
    sim.state            'drop' (until sim.tick >= sim.introTicks: no spawns, no pods; set introTicks right after create(), default 0),
                         then 'play', then 'dead' | 'extracted'
@@ -27,7 +27,7 @@
                         ["k",amount]              screen shake       ["p",x,y] drop pod landed
                         ["c",id,voxelIdx[],packedColours[]]  falling cluster created
                         ["o","dead"|"extracted",message,scrapBanked,detail]  run over; detail = {result,level,scrap:[per mech],armor:[per mech]}
-                        (extracted: scrap and armor to carry on; dead: scrap only in gauntlet, which keeps it)
+                        (extracted: scrap and armor to carry on; dead: nothing carries on)
                         ["z",zoneIndex,name]      a sealed zone's gate fell: the map grew (also sent to guests)
    sim.snapshot(full)   co-op host snapshot {t:"snap",tk,ack,sc,k,sh,w,p,b,s,sr,pd,cl,vx,ev}; full=true also carries copies of
                         vox and owner (for a joining guest), clears queued events and resets the diff baseline
@@ -247,7 +247,6 @@ function create(opts){
   var chunks=[],chunkOf=new Int16Array(N),walk=new Uint8Array(W*D),wbox=null,reachC=new Uint8Array(0);
   var players=[],bots=[],pods=[],shots=[],scraps=[],debris=[],clusters=[],events=[],netEv=[],inputs=[];
   var run={wave:1,queue:[],spawnT:0,breather:0,done:false,exitT:0,waveT:0,podAt:[]};
-  var mode=opts.mode==="gauntlet"?"gauntlet":"excursion";
   var level=Math.max(1,Math.min(T.level.max,Math.floor(+opts.level)||1));
   function lvm(k){return 1+T.level[k]*(level-1)}
   var tick=0,state="drop",scrap=0,kills=0,shake=0,fieldsDirty=true,fieldT=0,supportDirty=false,pillarsDown=0,bigFall=false;
@@ -890,9 +889,8 @@ function create(opts){
     if(players.some(function(q){return q.hp>0}))return;
     var lost=scrap,w="wave "+run.wave+" of "+T.waves.length,msg;scrap=0;state="dead";
     var det={result:"dead",level:level};
-    if(mode==="gauntlet"){msg="Mech destroyed on "+w+". Gauntlet: you keep the "+lost+" scrap from this match and it is banked.";det.scrap=players.map(function(q){return q.scrap})}
-    else msg="Mech destroyed on "+w+". You lost "+lost+" scrap from this match. Parts you own are never lost; scrap only counts once you extract.";
-    emit(["o","dead",msg,mode==="gauntlet"?lost:0,det]);
+    msg="Mech destroyed on "+w+". You lost "+lost+" scrap from this match. Parts you own are never lost; scrap only counts once you extract.";
+    emit(["o","dead",msg,0,det]);
   }
 
   /* ----- update ----- */
@@ -1145,7 +1143,7 @@ function create(opts){
   Object.defineProperties(sim,{
     tick:{get:function(){return tick}},state:{get:function(){return state}},wave:{get:function(){return run.wave}},
     scrap:{get:function(){return scrap},set:function(v){scrap=v}},kills:{get:function(){return kills}},
-    mode:{get:function(){return mode}},level:{get:function(){return level}},shake:{get:function(){return shake}},
+    level:{get:function(){return level}},shake:{get:function(){return shake}},
     zone:{get:function(){return zone}}
   });
   sim.markOpen=function(k){if(zone.open<k+1)zone.open=k+1;if(zone.opening===k)zone.opening=-1;spawnCells=openCells()};
@@ -1162,8 +1160,9 @@ function create(opts){
   return sim;
 }
 
-/* ===== Campaign: the save. {v:1, seed, level, mode:'run'|'gauntlet', players:[{build, owned:[ids], scrap, armor}]}.
-   players[0] is the host / single player. armor: null = full, else absolute armor points. encode() is JSON as base64url (the
+/* ===== Campaign: the save. {v:1, seed, level, players:[{build, owned:[ids], scrap, armor}]}.
+   players[0] is the host / single player. A mode field in saves from before Gauntlet was cut (GDD-D29) is ignored.
+   armor: null = full, else absolute armor points. encode() is JSON as base64url (the
    "campaign code"); decode() returns a clean campaign or null when anything is off (unknown part ids, negative scrap, level outside 1..max). ===== */
 var Campaign=(function(){
   var SCRAP_MAX=10000000;
@@ -1173,7 +1172,7 @@ var Campaign=(function(){
     (owned||[]).concat(SLOTS.map(function(sl){return b[sl[0]]})).forEach(function(id){if(id&&PART[id]&&o.indexOf(id)<0)o.push(id)});
     return {build:b,owned:o,scrap:scrap|0,armor:armor===undefined?null:armor};
   }
-  function make(builds,mode,seed){return {v:1,seed:seed||7,level:1,mode:mode==="gauntlet"?"gauntlet":"run",players:(builds||[STARTER]).map(function(b){return player(b)})}}
+  function make(builds,_mode,seed){return {v:1,seed:seed||7,level:1,players:(builds||[STARTER]).map(function(b){return player(b)})}}
   function cleanPlayer(p){
     if(!p||typeof p!=="object"||!p.build||typeof p.build!=="object"||!Array.isArray(p.owned))return null;
     var owned=[],i,id;
@@ -1196,7 +1195,7 @@ var Campaign=(function(){
     if(typeof sd!=="number"||sd!==Math.floor(sd)||sd<1||sd>2147483000)return null;
     var ps=[];
     for(var i=0;i<c.players.length;i++){var p=cleanPlayer(c.players[i]);if(!p)return null;ps.push(p)}
-    return {v:1,seed:sd,level:lv,mode:c.mode==="gauntlet"?"gauntlet":"run",players:ps};
+    return {v:1,seed:sd,level:lv,players:ps};
   }
   function toB64(str){return (typeof btoa==="function"?btoa(str):Buffer.from(str,"binary").toString("base64")).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
   function fromB64(s){

@@ -6,6 +6,8 @@ Reviewed: `gdd.md` at commit "accept D18, D20, D23; victory, co-op revive, seed,
 
 The three critical findings were checked against `sim.js` by the session that commissioned the review, and hold. Nothing below has been applied yet; fixes wait on kr0 (see the [handoff prompt](../../artifacts/handoff-gdd-prompt.md)).
 
+**Status, Oct 27:** kr0 asked for the fixes. The corrections are applied (GDD-D33), and kr0 decided the host owns the co-op campaign (GDD-D31). Still open: the late-game intent, the edge cases, the revive wallet in the HUD and the polish items.
+
 ## Summary
 
 The GDD can be checked against the prototype. Its numbers trace to decision IDs, and the arithmetic checked holds: 47 buildings and 16 barriers, weight 60 + 40 = 100, 1,005 scrap to take all nine weapons to Mk III, about 6.6 s of minigun fire before a lockout, and Ablative plating about 30% slower. What stops two engineers building the same game is co-op. The rules on whose save and which level a co-op room uses contradict each other, and the most important fix is one co-op campaign rule covering ownership, level, death and victory. A few rules also contradict each other across sections, and the companion files have drifted from the GDD.

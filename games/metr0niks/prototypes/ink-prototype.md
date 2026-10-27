@@ -2,7 +2,7 @@
 
 Last updated: 27 October 2026 · Requested by kr0 · Status: exploration, nothing here is a GDD rule yet
 
-The ink prototype (`prototypes/prototype-ink.html`) tests whether the game can look like art board style C, sun-bleached ink, instead of voxels. It is a second, separate prototype (prototype 2): `prototypes/prototype.html` (prototype 1, voxels) and `simulations/sim.js` are unchanged, and the two stay separate builds while kr0 compares the directions (GDD-D32). It also carries the first music and sound effects the game has had, made cheaply on Scenario.
+The ink prototype (`prototypes/prototype-ink.html`) tests whether the game can look like art board style C, sun-bleached ink, instead of voxels. It is a second, separate prototype (prototype 2): `prototypes/prototype.html` is prototype 1 (voxels). The two stay separate builds while kr0 compares the directions, but both observe the same rules: the GDD, keyboard and mouse only, no Gauntlet, and the numbers in `simulations/sim.js` (GDD-D32). It also carries the first music and sound effects the game has had, made cheaply on Scenario.
 
 Play it: open `games/metr0niks/prototypes/prototype-ink.html` from a local web server at the repo root (it loads `simulations/sim.js` and the art in `art/metr0niks/ink-proto/`), or use the published copy linked in INDEX.md.
 
@@ -16,7 +16,7 @@ One playable excursion in a 2D, three-quarter top-down view:
 - **Destruction:** every building and prop takes damage, shakes, shows ink cracks, then collapses into flying debris, dust and a rubble pile and drops scrap. Big buildings crush enemies beside them; barrels, canisters and cars explode.
 - **Extract or wreck:** clear wave 5 and the mech jets out with its scrap, which is banked (browser storage). Get wrecked and the scrap is lost.
 
-The numbers (speeds, weapon damage, heat, ring timings, enemy stats, waves) are read from `sim.js` at load, so they match the main prototype. The world is a simple 2D stand-in: there are no voxels, zones, pods, parts shop, levels or co-op.
+The numbers (speeds, weapon damage, heat, ring timings, enemy stats, waves) are read from `sim.js` at load, so they match the main prototype. The world is a simple 2D stand-in: there are no voxels, zones, pods, parts shop, levels or co-op. Those are gaps against the shared rules, not different rules: when one is added, it follows the GDD and `sim.js`.
 
 ## How the art is made
 

@@ -1,12 +1,12 @@
 # Metr0niks tuning history
 
-Oct 25, 2026 · updated Oct 26, 2026 · @kr0 · kept by the systems-designer
+Oct 25, 2026 · updated Oct 27, 2026 · @kr0 · kept by the systems-designer
 
 Every changed number, why it changed, and the tokens each story spent. No tuning change has been logged yet. This file opens with the Simulation section the [studio standard](../../studio/simulation-and-tuning.md) requires and the baseline values the prototype ships with. Until the unset rows below are filled in, sweeps are exploratory and can't close a tuning story.
 
 ## Simulation
 
-- **Runner:** none yet. The rules are `simulations/sim.js`; in Node, `import './simulations/sim.js'` from this folder then `globalThis.MetroSim.create({seed, mode, builds, level})`, and `sim.step()` advances one tick. A runner that plays whole excursions and writes a metrics record per run is to be built. Results will land in `games/metr0niks/tuning-runs/` (proposed).
+- **Runner:** none yet. The rules are `simulations/sim.js`; in Node, `import './simulations/sim.js'` from this folder then `globalThis.MetroSim.create({seed, builds, level})`, and `sim.step()` advances one tick. A runner that plays whole excursions and writes a metrics record per run is to be built. Results will land in `games/metr0niks/tuning-runs/` (proposed).
 - **Determinism:** the simulation draws from one seeded stream, steps in fixed 1/60 s ticks and has no DOM, timers or browser globals. `MetroSim.hash` exists. The replay check (a seed, the tuning version and the input log reproducing one state hash) is not built.
 - **Scenarios:** to be set by kr0. Likely: Excursion level 1 and level 3 (all zones open), single-player and two-player co-op, Overpass Sector 4.
 - **Players:** none yet. A scripted bot has to drive a mech through five waves; co-op needs a second bot.
@@ -19,7 +19,6 @@ Every changed number, why it changed, and the tokens each story spent. No tuning
   | Extract rate for a starter mech at level 1 | TBD | No target set |
   | Scrap per extract, by level | TBD | GDD Economy lists the sources; no target set |
   | Runs to afford each part tier | TBD | No target set |
-  | Wear per extract (share of armor lost) | 0.10 as a starting value | GDD-D18 |
   | Extracts to take one weapon to Mk III, by rarity | TBD | GDD-D23; no target set |
   | Wave time to kill at Mk I, Mk II and Mk III | TBD | GDD-D23; no target set |
   | Rejected inputs and errors | 0 | Standard |
@@ -40,8 +39,8 @@ The values in `sim.js` `T` and `PARTS`, carried over unchanged. They are the pro
 | Group | Values |
 | --- | --- |
 | Clock | 1/60 s fixed tick; ATB fill 6 s; timing ring 1.0 s, start radius 72, target 30 |
-| Timing | Perfect window 5% and Good window 18% of the start radius; damage ×2, ×1, ×0.5 for Perfect, Good, Miss |
-| Heat | Drain 20 per second; overheat lockout 3 s; pile-bunker 28 per heavy shot; minigun 3.2 per shot; dash 10 |
+| Timing | Perfect window 5% and Good window 18% of the start radius (release within ± 0.086 s and ± 0.31 s of 1.0 s; auto-Miss at 1.31 s); damage ×2, ×1, ×0.5 for Perfect, Good, Miss |
+| Heat | Drain 20 per second; overheat lockout 3 s; 28 per heavy shot (every heavy weapon, every grade); minigun 3.2 per shot; dash 10 |
 | Mech | Armor 100; speed 4.4; dash 12 for 0.15 s, 1.3 s cooldown; weight slows by 1/(1 + 0.004 × (weight − 100)) |
 | Waves | 3 bots; 4 bots and 1 loader; 4 bots and the boss; 6 bots and 2 loaders; 5 bots, 1 loader and the boss |
 | Enemies | Bot hp 60; loader hp 160; boss hp 180, 18 damage |
@@ -57,7 +56,7 @@ The GDD sets these (GDD-D18, GDD-D20, GDD-D23 and GDD-D24). kr0 accepted the GDD
 
 | Key | Value |
 | --- | --- |
-| `durability.share` | 0.10 of armor lost ÷ max armor, as wear on each fitted non-starter part |
+| `durability.share` | 0.10 of armor lost ÷ max armor, as wear on each fitted non-starter part (a starting value for the sweep below, not a target) |
 | `durability.repair` | Common 0.25, rare 0.5, epic 0.75 of price × wear |
 | Wave-5 boss | Health × 1.5, fire interval 1.5 s, scrap 18 |
 | `upgrade.levels` | 2 (Mk I to Mk III) on the nine weapons: four Arm-R guns, three Arm-L heavy weapons, siege mortar, Cryo flash-vent |

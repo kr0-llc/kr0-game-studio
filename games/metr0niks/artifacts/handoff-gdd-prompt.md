@@ -35,7 +35,7 @@ The work sits on branch `claude/metr0niks-gdd-review`: 19 commits ahead of `main
 - kr0 accepted every earlier proposal on Oct 26 (GDD-D18, D20, D23) and decided victory at level 50, a paid co-op revive, a settable seed, the pillars and audio (GDD-D24 to D26).
 - **TBDs:** target audience and player fantasy stay TBD on kr0's instruction (GDD-D27); those are the only TBDs allowed. Production milestones and pricing don't belong in the GDD.
 - **Still Proposed:** the revive price (40 × the level's scrap factor) and 30% revive armor, what the victory button does, the level-1-only seed change, and repair in slot order.
-- The prototype is unchanged on purpose. Don't edit `prototypes/prototype.html` or `simulations/sim.js`; changes the GDD needs go in `prototype-changes.md` (sections 1 to 16).
+- The prototype is unchanged on purpose. Don't edit `prototypes/prototype.html` or `simulations/sim.js`; changes the GDD needs go in `prototype-changes.md` (sections 1 to 16). *Update Oct 27: kr0 asked for sections 1 (Gauntlet) and 7 (touch) to be done, and they are. The Oct 26 critique fixes in section 4 item 1 are applied (GDD-D33), and co-op ownership in item 2 is proposed as GDD-D31.*
 
 ## 4. What's waiting on kr0, in this order
 
