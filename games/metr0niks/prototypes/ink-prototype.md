@@ -1,8 +1,8 @@
 # Metr0niks ink prototype: art and audio
 
-Last updated: 26 October 2026 · Requested by kr0 · Status: exploration, nothing here is a GDD rule yet
+Last updated: 27 October 2026 · Requested by kr0 · Status: exploration, nothing here is a GDD rule yet
 
-The ink prototype (`prototypes/prototype-ink.html`) tests whether the game can look like art board style C, sun-bleached ink, instead of voxels. It is a second, separate prototype: `prototypes/prototype.html` and `simulations/sim.js` are unchanged. It also carries the first music and sound effects the game has had, made cheaply on Scenario.
+The ink prototype (`prototypes/prototype-ink.html`) tests whether the game can look like art board style C, sun-bleached ink, instead of voxels. It is a second, separate prototype (prototype 2): `prototypes/prototype.html` (prototype 1, voxels) and `simulations/sim.js` are unchanged, and the two stay separate builds while kr0 compares the directions (GDD-D32). It also carries the first music and sound effects the game has had, made cheaply on Scenario.
 
 Play it: open `games/metr0niks/prototypes/prototype-ink.html` from a local web server at the repo root (it loads `simulations/sim.js` and the art in `art/metr0niks/ink-proto/`), or use the published copy linked in INDEX.md.
 
@@ -10,7 +10,7 @@ Play it: open `games/metr0niks/prototypes/prototype-ink.html` from a local web s
 
 One playable excursion in a 2D, three-quarter top-down view:
 
-- **Garage:** the Scenario garage background with the mech idling on the lift and aiming at the mouse; the six slots with the starter build; banked scrap; Drop in. A music toggle switches between the two directions below.
+- **Garage:** the Scenario garage background with the mech idling on the lift and aiming at the mouse; the six slots with the starter build; banked scrap; Drop in. A music toggle cycles through the music directions below.
 - **Battle:** five waves on one desert-slum map under the overpass (3 bots; 4 bots and a loader; 4 bots and the boss; 6 bots and 2 loaders; 5 bots, a loader and the boss). The boss is the jumper/sniper role, drawn as the spider scuttler.
 - **Player:** WASD drive, mouse aim, left click minigun with heat and overheat lockout, right click hold and release on the timing ring for the pile bunker (Perfect, Good, Miss), Space dash. Keyboard and mouse only (GDD-D29).
 - **Destruction:** every building and prop takes damage, shakes, shows ink cracks, then collapses into flying debris, dust and a rubble pile and drops scrap. Big buildings crush enemies beside them; barrels, canisters and cars explode.
@@ -32,7 +32,23 @@ Part generated, part drawn in code, as kr0 asked.
 
 Prompts are in `art/metr0niks/prompts/p_inkproto_*.txt`. Enemies use a rival palette (slate blue, coral, mustard, a skull-gear insignia) so they read apart from the peach and sage player at a glance.
 
-**Known art gaps.** The mechs are drawn facing one way and mirrored, so there is no back view when walking up the screen. Legs are rigid pieces, so knees bend only a little. Only the starter parts (minigun, pile bunker, jump jets) have art; the other 18 parts need sheets. Buildings have one damaged state (cracks drawn in code) and one rubble sprite.
+**Known art gaps.** The mechs are drawn facing one way and mirrored, so there is no back view when walking up the screen. The arms are flat cut-outs, so their drawn aim is limited to about 45° up and 55° down; past that they would read as detached (the shots still go where you aim). Only the starter parts (minigun, pile bunker, jump jets) have art; the other 18 parts need sheets. Buildings have one damaged state (cracks drawn in code) and one rubble sprite.
+
+## Renderer (27 October 2026)
+
+kr0 decided the ink renderer stays in this prototype and is built out here, not ported onto the voxel build (GDD-D32). This round adds, all in code in `prototype-ink.html`:
+
+| Feature | What it does |
+| --- | --- |
+| Bending legs | Two-bone IK on the mechs' legs: feet plant and slide back in stance, lift forward in swing, knees bend forward, and stride is sized from the gait so feet don't skate. Walking backwards swings the feet the other way. Legs dangle during the drop-in |
+| Cast ink shadows | Sun from the upper left. Every standing prop and mech throws its silhouette onto the ground toward the lower right, gathered in one layer so overlaps don't double up, then filled with an ink cross-hatch |
+| Chunked building damage | Big buildings lose bites from their roofline at 40% and 70% damage: holes with a dark inner rim and an ink edge, plus a spray of debris. The cut copy also casts the shadow, so the shadow loses the same bites |
+| Ground decals | Scorch marks with ink splatter at explosions and wrecks, a dust stain where a building fell, a cracked crater where the boss lands, and footprints from every walking mech. They stay for the whole run |
+| Comic bursts | CRASH! and KA-BOOM! pop in on a spiky coral burst |
+| Line boil | Ink cracks redraw slightly six times a second, like hand-drawn animation |
+| Arm aim limits | The drawn arm angle is clamped so cut-out arms stay attached to the shoulder |
+
+Still open in the renderer: a back view for walking up the screen, bending legs for the crab and spider enemies, and art for the other 18 parts. Tim-O's animation sets are a separate piece of work, after Asset Desk ships.
 
 ## Audio
 
@@ -46,8 +62,15 @@ All from Scenario on 26 October 2026, about 119 credits in total including the a
 | Desert funk music: garage loop, extract sting, wrecked sting | Google Lyria 3 Clip | 6 credits | music_garage, music_extract, music_wrecked |
 | Desert funk combat loop (2 min 27 s; intro plays once, then 16 s to 144 s loops) | Google Lyria 3 Pro | 12 credits | music_battle |
 | Synthwave garage and combat loops | Lyria 3 Clip and Pro | 6 and 12 credits | synth_garage, synth_battle |
+| Desert rock / stoner metal: combat loop, garage loop, extract and wrecked stings | Lyria 3 Pro and Clip | 12 and 6 credits | rock_battle, rock_garage, rock_extract, rock_wrecked: **not made yet** (see below) |
 
 Sound effects are trimmed, loudness-normalized and mono; prompts are in `art/metr0niks/prompts/p_inkproto_audio.txt`. Other cheap options on Scenario: MM Audio 2 sound effects at 2 credits and Meta MusicGen. ElevenLabs sound effects and music cost 30 credits each. No open-source packs were used; the usual CC0 sources (Kenney, OpenGameArt, Freesound) are blocked from this environment, so pulling those would have to happen on kr0's machine.
+
+### Desert rock / stoner metal (27 October 2026)
+
+kr0 asked to try another music style, desert rock or stoner metal. The prompts are written (fuzzed down-tuned guitars, overdriven bass, big roomy drums, slow heavy swagger, Kyuss and Queens of the Stone Age as reference, kept warm and fun rather than dark) and saved in `art/metr0niks/prompts/p_inkproto_audio.txt`. Scenario refused the jobs on 27 October because the team has used its plan's 5,000 creative units for the period, so the four tracks still need to be generated, for about 30 credits.
+
+The prototype is ready for them: the garage toggle offers "desert rock" as a third option as soon as `audio/rock_garage.mp3` exists, and uses `rock_battle`, `rock_extract` and `rock_wrecked` for the other cues. Until then the toggle shows only desert funk and synthwave.
 
 ### The music question for kr0
 
@@ -73,5 +96,5 @@ That is roughly 40 more sounds and 3 more music cues. At Sonilo and Lyria prices
 ## Decisions to make
 
 1. Pick the Metr0niks art style (art board: A blockout voxels, B pitch micro-voxels, C sun-bleached ink). If C, the voxel destruction rules in the GDD need a 2D equivalent.
-2. Pick the music direction: synthwave (GDD-D26) or desert funk.
-3. Whether the ink prototype should move onto `sim.js` (a 2D renderer over the real sim) or stay an art test.
+2. Pick the music direction: synthwave (GDD-D26), desert funk, or desert rock / stoner metal (GDD-D34, once its tracks exist).
+3. ~~Whether the ink prototype should move onto `sim.js` or stay an art test.~~ Settled: the two prototypes stay separate and the ink renderer is built out here (GDD-D32).
