@@ -90,6 +90,12 @@ All three live in kr0's Scenario project (team `team_pG6MaimfJd9b9PTLYKkYR7fQ`, 
 
 Note the workflow and model on the art board, as for any generated image. Raw runs and rejected takes stay in Scenario; only picked outputs come into the repo.
 
+Each game keeps its reference art in one Scenario collection, and passes images from it as the reference input to every run. The picked images are copied to `art/<game>/characters/<character>/` with a README listing their asset ids.
+
+| Game | Scenario collection | In the repo |
+| --- | --- | --- |
+| Metr0niks | metr0niks (`col_W6fWcvXfsTcw3oBejXVTmJJX`), the Tim-o mech | `art/metr0niks/characters/tim-o/` |
+
 ## MCP servers
 
 ### Scenario MCP
