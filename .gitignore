@@ -2,4 +2,3 @@ uploads/
 .DS_Store
 __pycache__/
 _catalog/
-tools/kr0-home/.env

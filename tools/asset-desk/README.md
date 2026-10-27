@@ -14,7 +14,7 @@ Google Drive for Desktop puts the art folder on kr0's PC as `G:\My Drive\…`, a
 
 ## Run it in Docker (recommended)
 
-Install Docker Desktop, then use [kr0-home](../kr0-home/README.md): `kr0-home init` once, then `kr0-home up`. No Python needed on your machine.
+Asset Desk runs as the `asset-desk` service in kr0's homelab stack, [kr0-llc/kr0-home](https://github.com/kr0-llc/kr0-home) (WSL2 + Docker). Clone this repo next to kr0-home, then `kr0 up -s asset-desk --build`, `kr0 assets doctor` and `kr0 assets open`. Setup, the G: drive mount in WSL and the `kr0 assets` commands are in kr0-home's `asset-desk/README.md`. The image is built from the `Dockerfile` in this folder.
 
 ## Run it without Docker (Windows)
 
