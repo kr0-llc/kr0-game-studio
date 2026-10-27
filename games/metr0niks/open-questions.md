@@ -52,7 +52,7 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | 2026-10-25 | Bosses: the same sniper on waves 3 and 5; wave 5 is a harder variant on the wrecked skyline (GDD review, D6) |
 | 2026-10-25 | Excursion is the game's main mode, played single-player or co-op; it is not called "story mode", since other modes may come later. Dying in an Excursion resets the campaign to level 1 (parts and scrap stay), so zones reopen as you climb again; this is what the prototype does (prototype reconciliation) |
 | 2026-10-25 | ~~Gauntlet also resets to level 1~~ Superseded: no Gauntlet |
-| 2026-10-25 | Co-op Excursion plays at the lower of the two players' levels (GDD-D31 proposes the host's campaign instead) |
+| 2026-10-25 | ~~Co-op Excursion plays at the lower of the two players' levels~~ Changed: the room plays the host's campaign (GDD-D31) |
 | 2026-10-25 | Excursion is the only game mode. Gauntlet, Draft Duel and Scrap Rush are removed from the GDD, TDD and prototype (GDD-D17) |
 | 2026-10-25 | ~~The GDD has no TBDs: values come from the prototype, and what the prototype lacks is dropped or given a number (GDD-D18 to GDD-D20)~~ Superseded: audience, player fantasy and what makes it fun are TBD on kr0's instruction (GDD-D27) |
 | 2026-10-25 | Server features go to the backlog: rejoin, accounts and server-held saves, online single-player (GDD-D21) |
@@ -65,6 +65,7 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 | 2026-10-26 | GDD corrected against the prototype and its gaps filled (GDD-D28) |
 | 2026-10-26 | Scrap buys parts, weapon upgrades (Mk I to Mk III, nine weapons including the shoulder actives) and repairs; no raw stat upgrades (GDD-D23). Upgrade values are starting values for a sweep |
 | 2026-10-26 | Gauntlet and touch controls confirmed gone (GDD-D29); removed from the voxel prototype on 2026-10-27 |
+| 2026-10-27 | The host owns the co-op campaign: the room plays the host's level and seed; the guest keeps their own level and banks their own scrap and wear (GDD-D31) |
 | 2026-10-27 | Oct 26 critique fixes applied to the GDD, TDD and companion files (corrections only, no new rules) |
 | 2026-10-27 | The voxel prototype (prototype 1) and the ink prototype (prototype 2) stay separate while kr0 compares directions (GDD-D32) |
 
@@ -72,12 +73,12 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 
 Values that need sweeps (the wear share, the repair rates and the weapon upgrade values of GDD-D23) are in the [tuning history](tuning-history.md).
 
-Still Proposed in the [decision history](gdd-decisions.md): the revive price and the 30% revive armor, what the victory button does (GDD-D24), limiting seed changes to level 1 (GDD-D25), repair in slot order (GDD-D28) and the host owning the co-op campaign (GDD-D31).
+Still Proposed in the [decision history](gdd-decisions.md): the revive price and the 30% revive armor, what the victory button does (GDD-D24), limiting seed changes to level 1 (GDD-D25), and repair in slot order (GDD-D28).
 
 - [ ] Target audience, player fantasy and what makes it fun: TBD in the GDD on kr0's instruction (GDD-D27). The mech-game research of Oct 26 may feed the last one.
 - [ ] Where production milestones live, since they are not part of the GDD (GDD-D27). The producer's documents and the phases in ways of working section 5 are the candidates.
 - [ ] The death screen offers the campaign code from before the run, and pasting it as a co-op host restores that level, which gets around the reset on death. Keep it as a deliberate retry, or remove it? (Prototype changes section 9 currently suggests adding a single-player paste box.)
-- [ ] Co-op campaign (GDD-D31, proposed): confirm that the host owns the room's campaign. If yes: what happens when the host leaves mid-match (the guest fights on and the host's campaign resets as a death, or the room ends for both)?
+- [ ] Co-op campaign (GDD-D31, accepted Oct 27: the host owns it): what happens when the host leaves mid-match (the guest fights on and the host's campaign resets as a death, or the room ends for both)?
 
 ## Backlog: dropped from the GDD, to bring back only by decision
 

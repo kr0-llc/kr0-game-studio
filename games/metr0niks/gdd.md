@@ -50,7 +50,7 @@ An excursion is five waves on one map. It ends when you clear wave 5 or every me
 - **Progression:** mechs progress only in excursions. Your build, owned parts, upgrade levels, scrap, wear, level and seed are saved in the browser as one campaign code, which you can copy from the garage.
 - **Seed:** a campaign has a seed that decides where enemies land, pod times and types, and other random draws; the map itself never changes. A new campaign uses seed 7. The garage lets you type a different seed, a whole number from 1 to 2,147,483,000 (GDD-D25), only while the campaign is at level 1 (proposed, GDD-D25).
 
-**Co-op:** two players share one excursion and one map; the host is player 1 (orange) and the guest player 2 (cyan). There is no friendly fire: player weapons, the mortar and the flash-vent only hurt enemies, and only collapses hurt mechs from your own side. Co-op plays at the lower of the two players' levels (GDD-D14; GDD-D31 proposes replacing this with the host's campaign, see Co-op campaign). Each mech keeps its own scrap wallet from the cubes it picks up. Co-op never pauses.
+**Co-op:** two players share one excursion and one map; the host is player 1 (orange) and the guest player 2 (cyan). There is no friendly fire: player weapons, the mortar and the flash-vent only hurt enemies, and only collapses hurt mechs from your own side. Co-op plays the host's campaign (GDD-D31, see Co-op campaign). Each mech keeps its own scrap wallet from the cubes it picks up. Co-op never pauses.
 
 **Partner down and revive** (GDD-D24, proposed values): if one mech is destroyed, the other fights on, and the dead player's camera follows the survivor.
 
@@ -61,7 +61,7 @@ An excursion is five waves on one map. It ends when you clear wave 5 or every me
 
 **Leaving a co-op room:** if a partner leaves or loses connection, their mech is destroyed and the other player fights on alone. The room closes when the excursion ends. In the garage, a player whose partner left can drop in alone.
 
-**Co-op campaign** (proposed, GDD-D31): the host owns the room's campaign.
+**Co-op campaign** (GDD-D31): the host owns the room's campaign. This replaces "the lower of the two players' levels" (GDD-D14, GDD-D20).
 
 - The room plays the host's campaign: the host's level, seed and open zones. The guest brings their own build, owned parts, upgrade levels and banked scrap.
 - On extract, the host's campaign advances one level. Each player banks the scrap they picked up into their own save, and wear goes on each player's own parts. The guest's own campaign level and seed don't change.
@@ -236,7 +236,7 @@ The garage is the only place your build changes. Drop pods are one-use boosts in
 - It upgrades the selected weapon one level at a time and shows its level and the price of the next one.
 - It shows each fitted part's wear and the scrap to repair it, and one Repair button that follows the Durability rules; starter parts repair free.
 - The campaign code (your save) is shown in the garage and can be copied. At level 1 the garage also shows the seed and lets you change it. Resetting the save wipes it after two clicks.
-- In co-op the garage is shared: both players shop, then both press Drop in. The room's saved campaign replaces each player's local one.
+- In co-op the garage is shared: both players shop, then both press Drop in. The room plays the host's campaign; each player's own save receives only their scrap and wear (see Co-op campaign).
 
 **Drop pods (in the arena)**
 

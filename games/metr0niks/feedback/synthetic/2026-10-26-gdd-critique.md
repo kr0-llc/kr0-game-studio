@@ -6,7 +6,7 @@ Reviewed: `gdd.md` at commit "accept D18, D20, D23; victory, co-op revive, seed,
 
 The three critical findings were checked against `sim.js` by the session that commissioned the review, and hold. Nothing below has been applied yet; fixes wait on kr0 (see the [handoff prompt](../../artifacts/handoff-gdd-prompt.md)).
 
-**Status, Oct 27:** kr0 asked for the fixes. The corrections are applied (GDD-D33), and the co-op campaign is proposed as GDD-D31. Still open: the late-game intent, the edge cases, the revive wallet in the HUD and the polish items.
+**Status, Oct 27:** kr0 asked for the fixes. The corrections are applied (GDD-D33), and kr0 decided the host owns the co-op campaign (GDD-D31). Still open: the late-game intent, the edge cases, the revive wallet in the HUD and the polish items.
 
 ## Summary
 

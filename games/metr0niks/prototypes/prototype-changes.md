@@ -43,9 +43,12 @@ Decision: input is locked and mechs take no damage during the shot (GDD-D20, con
 
 ## 6. Co-op level
 
-Decision: co-op plays at the lower of the two players' levels (GDD-D14). GDD-D31 proposes that the room plays the host's campaign instead; if kr0 accepts it, this section is replaced by: the room uses the host's level and seed, and the guest's save receives only its scrap and wear.
+Decision: the room plays the host's campaign (GDD-D31, accepted Oct 27; replaces the lower-of-two-levels rule of GDD-D14).
 
-- The host picks `min(host level, guest level)` for `newSim`. The guest's `ready` message (P:1816) needs to carry its level. The room server, in the private `kr0/blackletter-chronos` repo, picks the level for online rooms.
+- The host already builds `newSim` from its own level and seed; keep that.
+- The guest must stop adopting the room's campaign as its own: on the `garage` message (and the local-test equivalent) the guest takes only its own player entry (build, owned, scrap, wear, upgrades) and keeps its own `CAMP.level` and `CAMP.seed` in its save. The level shown in the guest's garage and HUD during the room is the host's.
+- On a death the guest's save is not reset; only the host's is.
+- The room server, in the private `kr0/blackletter-chronos` repo, must send the guest's player entry without overwriting the guest's level. Not checked from here.
 
 ## 7. Remove touch controls (done Oct 27)
 
