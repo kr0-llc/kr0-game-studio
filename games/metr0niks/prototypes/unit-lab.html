@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Metr0niks Units Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Metr0niks units lab: the voxel prototype (prototype.html) in the frame on the left, on the real sim.js, with waves off.
+   Spawn each enemy, let its own AI run or hold it idle, trigger one behaviour at a time, and slow the clock down to
+   watch the animation. Every number comes from MetroSim.T inside the frame. */
+:root{
+  color-scheme:dark;
+  --bg:#121316; --panel:#17181c; --panel2:#1d1f24; --line:#30343b;
+  --fg:#e9e6e0; --muted:#a39d93;
+  --rust:#e0702b; --cyan:#3fd6e8; --hazard:#f2c230; --good:#7fdc6a; --bad:#ff5a4a;
+  --r0-pink:#ff4f9a; /* placeholder until kr0 sets the brand pink (studio/brand.md) */
+  --display:"Chakra Petch","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:12px/1.45 var(--mono)}
+body{display:grid;grid-template-columns:minmax(0,1fr) 420px;height:100%;overflow:hidden}
+#stage{position:relative;min-width:0;border-right:1px solid var(--line)}
+#game{display:block;width:100%;height:100%;border:0;background:#0f1218}
+#err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--muted)}
+#panel{overflow-y:auto;background:var(--panel);padding:14px 14px 40px}
+h1{font:700 20px/1.1 var(--display);text-transform:uppercase;margin:0 0 4px;letter-spacing:.02em}
+.r0{color:var(--r0-pink)}
+.sub{color:var(--muted);margin:0 0 10px}
+h2{font:700 12px var(--display);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:16px 0 6px;display:flex;justify-content:space-between;align-items:baseline}
+h2 small{font:500 10px var(--mono);letter-spacing:.04em;text-transform:none}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.tab{all:unset;cursor:pointer;padding:7px 8px;border:1px solid var(--line);border-radius:3px;background:var(--panel2);display:flex;flex-direction:column;gap:2px}
+.tab b{font:700 13px var(--display);text-transform:uppercase}
+.tab span{font-size:10px;color:var(--muted)}
+.tab[aria-pressed=true]{border-color:var(--rust);background:#2a1d15}
+.tab:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+.card{border:1px solid var(--line);border-radius:4px;background:var(--panel2);padding:10px 11px;margin-top:8px}
+.card p{margin:0 0 6px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px}
+.act{all:unset;cursor:pointer;padding:6px 8px;border:1px solid var(--line);border-radius:3px;background:#0e0f12;display:flex;flex-direction:column;gap:1px}
+.act:hover{border-color:#4a505a}
+.act b{font:700 11px var(--mono)}
+.act span{font-size:10px;color:var(--muted);line-height:1.3}
+.row{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:6px}
+button.b{background:#0e0f12;color:var(--fg);border:1px solid var(--line);border-radius:3px;padding:5px 8px;font:500 11px var(--mono);cursor:pointer}
+button.b:hover{border-color:#4a505a}
+button.b[aria-pressed=true],button.b.hot{border-color:var(--rust);color:var(--rust)}
+.tog{display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer}
+.tog input{accent-color:var(--rust)}
+.tog small{color:var(--muted)}
+select,input[type=number]{background:#0e0f12;color:var(--fg);border:1px solid var(--line);border-radius:3px;padding:4px 5px;font:500 11px var(--mono)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:3px 4px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+th{color:var(--muted);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+td:first-child,th:first-child{text-align:left}
+.kv td{text-align:left}.kv td:first-child{color:var(--muted);width:44%}
+.st{display:inline-block;padding:0 6px;border-radius:9px;font-size:10px;border:1px solid var(--line)}
+.st.idle{color:var(--muted)}.st.calm{color:var(--cyan);border-color:rgba(63,214,232,.4)}.st.warn{color:var(--hazard);border-color:rgba(242,194,48,.45)}.st.hot{color:var(--bad);border-color:rgba(255,90,74,.45)}.st.cool{color:#96e8f0;border-color:rgba(150,232,240,.45)}
+.log{font-size:11px;color:var(--muted);max-height:110px;overflow:hidden;margin-top:6px}
+.log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.good{color:var(--good)}.bad{color:var(--bad)}.haz{color:var(--hazard)}.cy{color:var(--cyan)}
+.note{color:var(--muted);font-size:11px;margin-top:6px}
+@media (max-width:900px){body{grid-template-columns:1fr;grid-template-rows:62vh auto;overflow:auto;height:auto}#stage{height:62vh;border-right:0;border-bottom:1px solid var(--line)}#panel{overflow:visible}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <iframe id="game" title="Metr0niks voxel prototype"></iframe>
+  <div id="err"></div>
+</div>
+<div id="panel">
+  <h1>Metr<span class="r0">0</span>niks units lab</h1>
+  <p class="sub">Every enemy in the voxel prototype, on the real sim.js. Spawn one, let its AI run or hold it still, trigger a behaviour, and slow time down to watch it move.</p>
+
+  <h2>Unit</h2>
+  <div class="tabs" id="tabs"></div>
+  <div class="card" id="unitCard"></div>
+
+  <h2>Time <small id="tick"></small></h2>
+  <div class="row" style="margin-top:0" id="speeds"></div>
+  <div class="row"><button class="b" id="stepBtn" type="button">Step 1 frame</button><button class="b" id="step10" type="button">Step 10 frames</button></div>
+
+  <h2>Live <small>every unit on the field</small></h2>
+  <table id="live"></table>
+  <div class="log" id="log" aria-live="polite"></div>
+
+  <h2>Field</h2>
+  <label class="tog"><input type="checkbox" id="oAi"> Enemy AI <small>off: units idle until you trigger a behaviour</small></label>
+  <label class="tog"><input type="checkbox" id="oGod" checked> Can't die <small>your armor stops at 1</small></label>
+  <label class="tog"><input type="checkbox" id="oGhost"> Hold your fire position <small>your mech stays put, so units always come to the same spot</small></label>
+  <div class="row">
+    <button class="b" id="lineup" type="button">Line-up: one of each</button>
+    <button class="b" data-wave="1" type="button">Wave 1</button><button class="b" data-wave="2" type="button">Wave 2</button><button class="b" data-wave="3" type="button">Wave 3</button><button class="b" data-wave="4" type="button">Wave 4</button><button class="b" data-wave="5" type="button">Wave 5</button>
+    <button class="b" id="clear" type="button">Clear</button>
+  </div>
+  <div class="row">
+    <label for="lv" style="color:var(--muted)">Level</label><input id="lv" type="number" min="1" max="50" value="1" style="width:60px">
+    <label for="theme" style="color:var(--muted);margin-left:8px">Art style</label>
+    <select id="theme"><option value="blockout">Blockout</option><option value="cinematic">Cinematic</option><option value="ink">Ink</option></select>
+  </div>
+  <p class="note">Waves and random pods are off; Wave buttons drop that wave's real mix at the current level with live AI. Each unit's numbers scale with the level as in the game. Nothing is written to your campaign save.</p>
+</div>
+
+<script>
+(function(){
+"use strict";
+var PROTO="prototype.html";   /* the voxel prototype, next to this file */
+var $=function(id){return document.getElementById(id)};
+var frame=$("game"),G=null,M=null,T=null,patched=null;
+var opt={ai:false,god:true,ghost:false},level=1,speed=1,stepQ=0,acc=0,unit="bot";
+var HOME=[7.5,6.5];   /* your mech: the north street of the Underpass, open from x 1 to 30 */
+
+/* ----- units and the behaviours each can be asked for ----- */
+var U={
+  bot:{name:"Patrol bot",tag:"60 hp · shoots",
+    about:"Drops in from 9 m, patrols between street cells, engages when it sees you within 10 m, strafes at range and fires orbs. Below half armor it runs for a drop pod.",
+    acts:[["drop","Drop in","falls from 9 m; a red ring marks the spot; 10 damage if it lands on you"],
+      ["patrol","Patrol","wanders between street cells at 55% speed"],
+      ["engage","Engage and fire","closes to 6.5 m, strafes, fires every 1.25 s"],
+      ["pod","Go for a pod","a repair pod lands; the bot is at 30% armor"],
+      ["freeze","Freeze","flash-vent slow: moves and fires at 40% for 3 s"],
+      ["hit","Hit flash","takes 10 damage: white flash and armor bar"],
+      ["kill","Destroy","debris, sparks and 3 to 5 scrap"]]},
+  loader:{name:"Heavy loader",tag:"160 hp · rams",
+    about:"Hauls ore between two waypoints. When it sees you within 2.2 m it shakes for 0.5 s (the tell), rams in a straight line for up to 1 s, then stops to recover. Plows through barriers and containers; bullets do half damage.",
+    acts:[["drop","Drop in","falls from 9 m with a wide red ring"],
+      ["patrol","Haul route","drives between its two waypoints at 70% speed"],
+      ["tell","Tell and charge","0.5 s shake, then a 5 m/s ram at you; 22 damage and a 1.5 m shove"],
+      ["chase","Engage","drives at you and charges whenever it is close"],
+      ["freeze","Freeze","tell, charge and cooldown all run at 40% for 3 s"],
+      ["hit","Hit flash","takes 20 damage"],
+      ["kill","Destroy","debris and 8 to 10 scrap"]]},
+  sniper:{name:"Bounty sniper",tag:"180 hp · roofs",
+    about:"Perches on roof edges. When it sees you within 15 m it paints a red aim line for 0.6 s, then fires an 18 damage shot. Every 6 to 9 s, or after 1.5 s without sight of you, it jumps to another roof. If its roof is shot away it falls; a fall of 1.5 m stuns it for 2 s and deals 60.",
+    acts:[["perch","Perch","sits on a roof edge facing you, idle"],
+      ["aim","Aim and fire","0.6 s red aim line, then the shot"],
+      ["jump","Jump","arcs to another roof; a cyan ring marks the landing"],
+      ["fall","Knock off the roof","falls to the street, stunned for 2 s, takes 60"],
+      ["freeze","Freeze","fire and jump timers run at 40% for 3 s"],
+      ["hit","Hit flash","takes 20 damage"],
+      ["kill","Destroy","debris and 12 scrap at street level"]]}
+};
+
+function showErr(msg){var e=$("err");e.style.display="flex";e.textContent=msg}
+frame.addEventListener("load",function(){
+  try{G=frame.contentWindow;M=G.MetroSim;if(!G.__m||!M)throw 0}
+  catch(x){showErr("The prototype frame did not load or is blocked. Open this file from a local web server next to prototype.html (for example: python3 -m http.server in games/metr0niks).");return}
+  T=M.T;
+  try{$("theme").value=G.__m.theme()}catch(x){}
+  if(G.__m.state==="menu")G.__m.start();
+  fresh();renderTabs();pickUnit("bot");lineup();
+  requestAnimationFrame(loop);
+});
+frame.src=PROTO;
+
+/* ----- the hook: time control around step(), waves off, unit holds ----- */
+function patch(s){
+  if(s.__lab)return;s.__lab=true;patched=s;
+  var step=s.step,drain=s.drainEvents;
+  s.step=function(){
+    if(stepQ>0){stepQ--;one()}
+    else if(speed>0){acc+=speed;while(acc>=1){acc-=1;one()}}
+  };
+  function one(){pre(s);step();post(s)}
+  s.drainEvents=function(){
+    return drain().filter(function(e){
+      if(e[0]==="o")return false;   /* the lab never ends the run: nothing banks, nothing saves */
+      if(e[0]==="t"&&/took a pod|Sniper|sniper|Pillar|Collapse/.test(e[1]))note(e[1],"haz");
+      return true;
+    });
+  };
+}
+function lvm(k){return 1+T.level[k]*(level-1)}
+function pre(s){
+  var R=s.run;R.queue.length=0;R.podAt.length=0;R.breather=0;R.done=true;R.exitT=1e9;s.introTicks=0;
+  var Z=s.zone;if(Z.opening>=0)Z.openAt=0;Z.intro=0;
+  var p=s.players[0];M_.hp=p.hp;
+  if(opt.ghost){p.x=HOME[0];p.y=HOME[1];p.vx=p.vy=0}
+  s.bots.forEach(function(b){
+    if(b.until&&s.tick>=b.until)b.until=0;
+    if(opt.ai||b.until||b.dropping)return;   /* AI off: hold each unit idle unless a behaviour is playing */
+    if(b.boss){if(b.mode==="perch"){b.cd=Math.max(b.cd,.5);b.jumpCd=Math.max(b.jumpCd,.5);b.blind=0;b.tell=0}}
+    else if(b.loader){b.state="recover";b.t=1;b.vx=b.vy=0}
+    else{b.state="idle";b.vx=b.vy=0}
+  });
+}
+var M_={hp:0};
+function post(s){
+  var p=s.players[0];
+  if(p.hp<=0&&opt.god){p.hp=1;note("A hit that would have destroyed you (Can't die is on)","bad")}
+  else if(M_.hp-p.hp>0)note("You took "+Math.round(M_.hp-p.hp),"bad");
+  s.bots.forEach(function(b){
+    var k=b.boss?b.mode+(b.tell>0?"-tell":"")+(b.stun>0?"-stun":""):b.dropping?"drop":b.state;
+    if(b.lastK!==k){if(b.lastK)note(name(b)+": "+label(b,k),"cy");b.lastK=k}
+    if(b.hp<=0&&!b.gone){b.gone=true;note(name(b)+" destroyed","good")}
+  });
+}
+
+/* ----- spawning, using the sim's own unit shapes ----- */
+var nid=0;
+function free(s,x,y){
+  for(var r=0;r<6;r++)for(var dy=-r;dy<=r;dy++)for(var dx=-r;dx<=r;dx++){
+    if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
+    var cx=Math.floor(x)+dx,cy=Math.floor(y)+dy;if(!s.world.blockedCell(cx,cy))return r?[cx+.5,cy+.5]:[x,y];
+  }
+  return [x,y];
+}
+function face(s,x,y){var p=s.players[0];return Math.atan2(p.y-y,p.x-x)}
+function mkBot(s,x,y,drop){
+  var B=T.bot,c=free(s,x,y),a=face(s,c[0],c[1]),hp=Math.round(B.hp*lvm("hp"));
+  var b={team:1,x:c[0],y:c[1],z:drop?B.dropHeight:0,vz:0,dropping:!!drop,vx:0,vy:0,r:B.radius,h:B.height,hp:hp,maxHp:hp,head:a,aim:a,
+    state:"patrol",wp:null,wpField:null,cd:1+Math.random(),lost:0,flash:0,strafe:Math.random()<.5?1:-1,strafeT:0,step:0,lid:++nid};
+  s.bots.push(b);return b;
+}
+function mkLoader(s,x,y,drop){
+  var c=free(s,x,y),b=s.spawnLoader(c[0],c[1]);b.head=face(s,b.x,b.y);b.lid=++nid;
+  if(drop){b.z=T.bot.dropHeight;b.dropping=true}
+  return b;
+}
+function mkSniper(s,near){
+  var B=T.boss,p=s.players[0],best=null,bd=1e9,hp=Math.round(B.hp*lvm("hp"));
+  s.perches().forEach(function(c){var d=Math.hypot(c[0]-p.x,c[1]-p.y);if(d<5||d>13)return;
+    if(near&&Math.hypot(c[0]-near[0],c[1]-near[1])<2)return;
+    var sc=Math.abs(d-8)+(s.los3(c[0],c[1],c[2]+.8,p.x,p.y,.9)?0:6)+(s.bots.some(function(o){return o.boss&&Math.hypot(o.x-c[0],o.y-c[1])<2})?20:0);if(sc<bd){bd=sc;best=c}});
+  if(!best)return null;
+  var b={team:1,boss:true,x:best[0],y:best[1],z:best[2],vz:0,dropping:false,vx:0,vy:0,r:B.radius,h:B.height,hp:hp,maxHp:hp,
+    head:face(s,best[0],best[1]),aim:face(s,best[0],best[1]),state:"boss",flash:0,step:0,mode:"perch",cd:1.5,tell:0,blind:0,stun:0,jt:0,fallZ:0,
+    jumpCd:B.jump[0]+Math.random()*(B.jump[1]-B.jump[0]),lid:++nid};
+  s.bots.push(b);return b;
+}
+function spawn(kind,drop){
+  var s=G.__m.sim,x=13+Math.random()*6,y=HOME[1]+(Math.random()-.5);
+  return kind==="sniper"?mkSniper(s):kind==="loader"?mkLoader(s,x,y,drop):mkBot(s,x,y,drop);
+}
+function units(kind){return G.__m.sim.bots.filter(function(b){return b.hp>0&&(kind==="sniper"?b.boss:kind==="loader"?b.loader:!b.boss&&!b.loader)})}
+function target(kind){var u=units(kind);return u.length?u[u.length-1]:spawn(kind)}
+function name(b){return (b.boss?"Sniper":b.loader?"Loader":"Bot")+" "+b.lid}
+function label(b,k){
+  var L={idle:"idle",patrol:b.loader?"hauling":"patrolling",engage:"engaging",seekpod:"going for a pod",tell:"tell (about to ram)",charge:"charging",recover:"recovering",drop:"dropping in",
+    perch:b.z>.05?"perched":"on the street","perch-tell":"aiming","perch-stun":"stunned",jump:"jumping",fall:"falling"};
+  return L[k]||k;
+}
+
+/* ----- behaviours: each sets the sim's own state and lets the unit play it out ----- */
+function act(a){
+  var s=G.__m.sim,p=s.players[0],b,B=T.bot,L=T.loader,S=T.boss,hold=function(b,sec){b.until=s.tick+Math.round(sec*60)};
+  if(a==="drop"){b=spawn(unit==="sniper"?"bot":unit,true);hold(b,2);note(name(b)+": dropping in","cy");return resume()}
+  b=target(unit);if(!b){note("No roof in range for a sniper here","bad");return resume()}
+  switch(a){
+    case "patrol":if(b.loader){b.state="patrol";b.wp=null}else{b.state="patrol";b.wp=null}hold(b,6);break;
+    case "engage":b.state="engage";b.lost=0;b.cd=.3;placeInSight(s,b,5.5);hold(b,5);break;
+    case "pod":b.hp=Math.round(b.maxHp*.3);var c=free(s,b.x+(p.x-b.x)*.35,b.y+(p.y-b.y)*.35+1.5);s.spawnPod("repair",c[0],c[1],true);b.state="patrol";hold(b,9);break;
+    case "tell":placeInSight(s,b,2);var d=Math.hypot(p.x-b.x,p.y-b.y)||1;b.state="tell";b.t=L.tell;b.cx=(p.x-b.x)/d;b.cy=(p.y-b.y)/d;hold(b,L.tell+L.charge+L.recover+.2);break;
+    case "chase":b.state="engage";b.lost=0;b.cd=0;hold(b,8);break;
+    case "perch":if(b.mode!=="perch"){b.mode="perch"}b.tell=0;b.stun=0;break;
+    case "aim":b.cd=0;b.blind=0;b.jumpCd=Math.max(b.jumpCd,3);hold(b,S.tell+.6);break;
+    case "jump":b.jumpCd=0;b.cd=Math.max(b.cd,2);hold(b,S.jumpTime+.5);break;
+    case "fall":   /* like a winch yank: pulled off the edge toward you until nothing is under it */
+      if(b.mode==="perch"&&b.z>.05){var W=s.world,ux=Math.cos(b.aim),uy=Math.sin(b.aim);
+        for(var k=0;k<16&&W.solidAt(b.x,b.y,b.z-.5);k++){b.x+=ux*.25;b.y+=uy*.25}
+        b.mode="fall";b.vz=0;b.fallZ=b.z;b.tell=0;hold(b,S.stun+1.5)}
+      else note("The sniper is already on the street","bad");break;
+    case "freeze":b.slow=T.vent.slow;hold(b,T.vent.slow);if(b.loader&&b.state!=="charge"){act2tell(s,b)}else if(!b.boss&&!b.loader){b.state="engage";b.cd=0}break;
+    case "hit":s.damage(b,b.loader||b.boss?20:10,b.x,b.y,(b.z||0)+.8);break;
+    case "kill":s.damage(b,1e6,b.x,b.y,(b.z||0)+.8);break;
+  }
+  resume();
+}
+function act2tell(s,b){var p=s.players[0],L=T.loader;placeInSight(s,b,2);var d=Math.hypot(p.x-b.x,p.y-b.y)||1;b.state="tell";b.t=L.tell;b.cx=(p.x-b.x)/d;b.cy=(p.y-b.y)/d;b.until=s.tick+Math.round((L.tell+L.charge+L.recover)/T.vent.slowMul*60)}
+/* a unit that is too far or behind a wall is moved into the open street, the given distance east of you */
+function placeInSight(s,b,dist){
+  var p=s.players[0],d=Math.hypot(p.x-b.x,p.y-b.y);
+  if(d<=dist+1&&s.los3(b.x,b.y,.8,p.x,p.y,.8))return;
+  var c=free(s,p.x+dist,p.y);b.x=c[0];b.y=c[1];b.z=0;b.vx=b.vy=0;b.head=b.aim=face(s,b.x,b.y);
+}
+function lineup(){
+  var s=G.__m.sim;s.bots.length=0;s.pods.length=0;
+  mkBot(s,11,HOME[1]-.5);mkLoader(s,14.5,HOME[1]);mkSniper(s);
+  note("Line-up: a patrol bot, a heavy loader and a sniper","cy");
+}
+function wave(n){
+  var s=G.__m.sim,w=T.waves[n-1],k,nl=Math.round((w.loaders||0)*lvm("count")),nb=Math.round(w.bots*lvm("count"));
+  for(k=0;k<(w.boss||0);k++)mkSniper(s);
+  for(k=0;k<nl;k++)mkLoader(s,9+Math.random()*20,4+Math.random()*24,true);
+  for(k=0;k<nb;k++)mkBot(s,2+Math.random()*27,2+Math.random()*28,true);
+  if(!opt.ai){opt.ai=true;$("oAi").checked=true}
+  note("Wave "+n+" at level "+level+": "+nb+" bots, "+nl+" loaders"+(w.boss?", a sniper":"")+" (AI on)","cy");
+}
+function fresh(){
+  G.__m.level(level);var s=G.__m.sim;patch(s);
+  var p=s.players[0];p.x=HOME[0];p.y=HOME[1];p.vx=p.vy=0;p.leg=p.aim=0;
+}
+
+/* ----- panel ----- */
+function renderTabs(){
+  $("tabs").innerHTML=Object.keys(U).map(function(k){return '<button class="tab" type="button" data-u="'+k+'" aria-pressed="'+(k===unit)+'"><b>'+U[k].name+"</b><span>"+U[k].tag+"</span></button>"}).join("");
+}
+$("tabs").addEventListener("click",function(e){var t=e.target.closest(".tab");if(t){pickUnit(t.dataset.u);if(!units(unit).length)spawn(unit);resume()}});
+function pickUnit(k){
+  unit=k;renderTabs();var u=U[k];
+  $("unitCard").innerHTML="<p>"+u.about+'</p><div class="acts">'+u.acts.map(function(a){return '<button class="act" type="button" data-a="'+a[0]+'"><b>'+a[1]+"</b><span>"+a[2]+"</span></button>"}).join("")+'</div><table class="kv" style="margin-top:8px">'+stats(k)+"</table>";
+}
+$("unitCard").addEventListener("click",function(e){var a=e.target.closest(".act");if(a)act(a.dataset.a)});
+function f(n,k){return (+n).toFixed(k===undefined?1:k).replace(/\.0+$/,"")}
+function stats(k){
+  var B=T.bot,L=T.loader,S=T.boss,hp=lvm("hp"),dm=lvm("dmg"),r;
+  if(k==="bot")r=[["Armor",Math.round(B.hp*hp)],["Speed",B.speed+" m/s (patrol "+f(B.speed*.55,2)+")"],["Sight / range",B.sight+" m / "+B.range+" m"],["Shot",f(B.shotDmg*dm)+" damage, every "+B.fireEvery+" s, "+B.shotSpeed+" m/s"],["Turret turn",B.turretTurn+" rad/s"],["Drop",B.dropHeight+" m, 10 damage on landing"],["Scrap",B.scrap.join(" to ")]];
+  else if(k==="loader")r=[["Armor",Math.round(L.hp*hp)+" (bullets × "+L.minigunMult+")"],["Speed",L.speed+" m/s (hauling "+f(L.speed*L.patrol,2)+")"],["Charge","within "+L.engage+" m: tell "+L.tell+" s, ram "+L.chargeSpeed+" m/s for "+L.charge+" s"],["Ram",f(L.dmg*dm)+" damage, "+L.shove+" m shove"],["After",L.recover+" s recover, "+L.cooldown+" s cooldown"],["Plows","barriers, containers, windows ("+L.voxDmg+" voxel damage)"],["Scrap",L.scrap.join(" to ")]];
+  else r=[["Armor",Math.round(S.hp*hp)],["Shot",f(S.dmg*dm)+" damage after a "+S.tell+" s tell, every "+S.fireEvery+" s"],["Sight",S.sight+" m"],["Jumps","every "+S.jump.join(" to ")+" s, up to "+S.jumpRange+" m, "+S.jumpTime+" s in the air"],["Fall",S.fallMin+" m or more: "+S.fallDmg+" damage, "+S.stun+" s stun"],["Scrap",S.scrap]];
+  return r.map(function(x){return "<tr><td>"+x[0]+"</td><td>"+x[1]+"</td></tr>"}).join("");
+}
+var SPEEDS=[[0,"Pause"],[.1,"0.1×"],[.25,"0.25×"],[.5,"0.5×"],[1,"1×"]];
+$("speeds").innerHTML=SPEEDS.map(function(x){return '<button class="b" type="button" data-sp="'+x[0]+'" aria-pressed="'+(x[0]===1)+'">'+x[1]+"</button>"}).join("");
+$("speeds").addEventListener("click",function(e){var b=e.target.closest("[data-sp]");if(!b)return;speed=+b.dataset.sp;acc=0;
+  [].forEach.call($("speeds").children,function(x){x.setAttribute("aria-pressed",x===b)});resume()});
+$("stepBtn").addEventListener("click",function(){stepQ+=1;resume()});
+$("step10").addEventListener("click",function(){stepQ+=10;resume()});
+$("oAi").addEventListener("change",function(e){opt.ai=e.target.checked;resume()});
+$("oGod").addEventListener("change",function(e){opt.god=e.target.checked;resume()});
+$("oGhost").addEventListener("change",function(e){opt.ghost=e.target.checked;resume()});
+$("lineup").addEventListener("click",function(){lineup();resume()});
+$("clear").addEventListener("click",function(){var s=G.__m.sim;s.bots.length=0;s.pods.length=0;s.shots.length=0;resume()});
+document.querySelectorAll("[data-wave]").forEach(function(b){b.addEventListener("click",function(){wave(+b.dataset.wave);resume()})});
+$("lv").addEventListener("change",function(e){level=Math.max(1,Math.min(50,Math.round(+e.target.value)||1));e.target.value=level;fresh();lineup();pickUnit(unit);resume()});
+$("theme").addEventListener("change",function(e){G.__m.setTheme(e.target.value);resume()});
+
+var logLines=[];
+function note(t,c){logLines.unshift([t,c||""]);if(logLines.length>7)logLines.length=7;$("log").innerHTML=logLines.map(function(l){return '<div class="'+l[1]+'">'+esc(l[0])+"</div>"}).join("")}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function cls(k){return /tell|charge|aim|engage/.test(k)?"hot":/seekpod|jump|fall|stun|drop/.test(k)?"warn":/idle|recover/.test(k)?"idle":"calm"}
+function renderLive(){
+  var s=G.__m.sim,p=s.players[0],rows=s.bots.filter(function(b){return b.hp>0}).map(function(b){
+    var k=b.boss?b.mode+(b.tell>0?"-tell":"")+(b.stun>0?"-stun":""):b.dropping?"drop":b.state,t="";
+    if(b.boss)t=b.tell>0?"shot in "+f(b.tell,2)+" s":b.stun>0?"stun "+f(b.stun,1)+" s":b.mode==="perch"?"fire "+f(Math.max(0,b.cd),1)+" · jump "+f(Math.max(0,b.jumpCd),1):"";
+    else if(b.loader)t=b.state==="tell"||b.state==="charge"||b.state==="recover"?f(Math.max(0,b.t),2)+" s left":"cooldown "+f(Math.max(0,b.cd),1);
+    else t=b.state==="engage"?"next shot "+f(Math.max(0,b.cd),2)+" s":"";
+    if(b.slow>0)t+=(t?" · ":"")+'<span class="cy">frozen '+f(b.slow,1)+"</span>";
+    return "<tr><td>"+name(b)+'</td><td><span class="st '+(b.slow>0?"cool":cls(k))+'">'+label(b,k)+"</span></td><td>"+Math.ceil(b.hp)+"/"+b.maxHp+"</td><td>"+f(Math.hypot(b.x-p.x,b.y-p.y))+" m</td><td>"+t+"</td></tr>"});
+  $("live").innerHTML=rows.length?"<tr><th>Unit</th><th>State</th><th>Armor</th><th>Dist</th><th>Timers</th></tr>"+rows.join(""):'<tr><td class="note">No units. Pick one above or press Line-up.</td></tr>';
+  $("tick").textContent="tick "+s.tick+(speed===1?"":" · "+(speed?speed+"×":"paused"));
+}
+/* clicking this panel blurs the frame and the prototype pauses itself: carry on unless the player pressed Esc */
+function resume(){if(G&&G.__m.state==="paused")G.__m.start()}
+var lastPanel=0;
+function loop(now){
+  requestAnimationFrame(loop);if(!G||!G.__m)return;
+  var s=G.__m.sim;if(s&&s!==patched)patch(s);
+  if(G.__m.state==="paused"){var ov=G.document.getElementById("ovText"),ae=document.activeElement;
+    if(ov&&/lost focus/.test(ov.textContent)&&!(ae&&/SELECT|INPUT/.test(ae.tagName))&&G.document.getElementById("settings").hidden)G.__m.start()}
+  if(now-lastPanel>100){lastPanel=now;renderLive()}
+}
+})();
+</script>
+</body>
+</html>

@@ -1,12 +1,12 @@
 # Metr0niks tuning history
 
-Oct 25, 2026 · updated Oct 27, 2026 · @kr0 · kept by the systems-designer
+Oct 25, 2026 · updated Oct 28, 2026 · @kr0 · kept by the systems-designer
 
 Every changed number, why it changed, and the tokens each story spent. No tuning change has been logged yet. This file opens with the Simulation section the [studio standard](../../studio/simulation-and-tuning.md) requires and the baseline values the prototype ships with. Until the unset rows below are filled in, sweeps are exploratory and can't close a tuning story.
 
 ## Simulation
 
-- **Runner:** none yet. The rules are `simulations/sim.js`; in Node, `import './simulations/sim.js'` from this folder then `globalThis.MetroSim.create({seed, builds, level})`, and `sim.step()` advances one tick. A runner that plays whole excursions and writes a metrics record per run is to be built. Results will land in `games/metr0niks/tuning-runs/` (proposed).
+- **Runner:** none yet. The rules are `simulations/sim.js`; in Node, `import './simulations/sim.js'` from this folder then `globalThis.MetroSim.create({seed, builds, level})`, and `sim.step()` advances one tick. A runner that plays whole excursions and writes a metrics record per run is to be built (TDD-D17, phase 0 of the [implementation plan](decisions/2026-10-28-fun-pass-implementation-plan.md)). Results will land in `games/metr0niks/tuning-runs/` (proposed).
 - **Determinism:** the simulation draws from one seeded stream, steps in fixed 1/60 s ticks and has no DOM, timers or browser globals. `MetroSim.hash` exists. The replay check (a seed, the tuning version and the input log reproducing one state hash) is not built.
 - **Scenarios:** to be set by kr0. Likely: Excursion level 1 and level 3 (all zones open), single-player and two-player co-op, Overpass Sector 4.
 - **Players:** none yet. A scripted bot has to drive a mech through five waves; co-op needs a second bot.
@@ -32,6 +32,8 @@ Questions that need sweeps:
 - Co-op revive (GDD-D24): how often a survivor can afford the revive price by wave, by level. Needs the runner, a two-bot scenario and kr0's target.
 - Weapon upgrades (GDD-D23): how many extracts it takes to take a weapon to Mk III, and how much each level shortens a wave. Planned variants: damage per level 0.05, 0.10 and 0.15, crossed with upgrade cost ×0.5, ×1 and ×2, on paired seeds at level 1 and level 3, single-player, the starter build and one rare build. Needs the runner and kr0's targets first.
 
+- Fun pass (GDD-D35 to GDD-D55, Oct 28): every number in it is a starting value. Before kr0 fixes the values, the runner should answer: how often a bot-driven player reaches a ×4 combo (step 10%, decay 12 s); how much armor a Redline vent costs per use (5 s, cap 130, 0.5 armor per heat); the extract rate and scrap per run with and without Overtime at levels 1, 3 and 5 (×1.5 drops after the GDD-D54 trim); how much scrap call-ins absorb per climb, and whether the GDD-D55 trims (combo +10% a step, demolition +15%, Elites ×1.5, contract 15, Scrap cache 8) leave buying a part feeling earned; whether scaled collapse damage keeps a span drop lethal to bots at level 5; how long the Warden fight takes with and without leg breaks; how often a player sees a multi-kill; the scrap curve with every kill bonus stacked (combo, demolition, Elite, Overtime) against what there is to buy; whether each zone's enemy raises the death rate by a step rather than a cliff; and whether a 5-level climb is the right length. PR #12 scales the map 1.5× in both directions (216 × 48 m) so two mechs fit side by side, but leaves the waves as they are, so the same enemies spread over about 2.25× the floor. The sweep should check the wave counts on the larger map, in single-player and co-op, before the level-1 counts are fixed. The GDD-D50 stats record is the metrics record the runner needs. Needs the runner, a scripted player that uses the ring, and kr0's targets.
+
 ## Baseline: tuning in the prototype (Oct 25, 2026)
 
 The values in `sim.js` `T` and `PARTS`, carried over unchanged. They are the prototype's, not targets.
@@ -45,7 +47,7 @@ The values in `sim.js` `T` and `PARTS`, carried over unchanged. They are the pro
 | Waves | 3 bots; 4 bots and 1 loader; 4 bots and the boss; 6 bots and 2 loaders; 5 bots, 1 loader and the boss |
 | Enemies | Bot hp 60; loader hp 160; boss hp 180, 18 damage |
 | Pods | 1 per wave plus 0.4 extra; Field repair heals 40%; Overclock ×2 for 15 s |
-| Levels | Per level above 1: enemy count +25%, hp +15%, damage +15%, scrap +10%; maximum level 50; a downed co-op mech returns with 30% armor |
+| Levels | Per level above 1: enemy count +25%, hp +15%, damage +15%, scrap +10%; maximum level 50 (5 accepted, GDD-D47); a downed co-op mech returns with 30% armor |
 | Repair | 3 armor restored per scrap |
 | Collapse | Warning 0.9 s; bot damage 80; player damage 40; debris cap 300 |
 | Parts | 21 parts; prices 0 to 140 scrap across three rarity tiers (see the GDD parts list) |

@@ -41,7 +41,7 @@
    sim.markOpen(k)      bookkeeping only (a guest applying the ["z",k,name] event): zone k counts as open
    Debug hooks (tests): killAll(), damage(e,dmg,x,y,z), hitVoxel(x,y,z,dmg), setVox(x,y,z,m), spawnPod(type,x,y,counting),
                         spawnLoader(x,y), perches(), los3(...), collide(e), flowField(), chk, dbg(), stepDebris(dt), debrisPiece(...)
-   Statics: MetroSim.PARTS, PART, SLOTS, STARTER, MAP, MAT, T, hash, W, D, H, deriveStats(build[,T]), moveMech(mech,input,T,dt,pred),
+   Statics: MetroSim.PARTS, PART, SLOTS, STARTER, MAP, MAT, WINDOW, T, hash, W, D, H, deriveStats(build[,T]), moveMech(mech,input,T,dt,pred),
             clusterGeom(idx,cols), cleanBuild(build), cloneBuild(build), statsOf(build), Campaign (save state, see below) */
 (function(root){
 "use strict";
@@ -99,10 +99,19 @@ var MAT={
   7:{name:"roof",col:null,hp:12},
   8:{name:"container",col:null,hp:14},
   9:{name:"edge",col:[118,116,110],hp:Infinity},
-  10:{name:"rubble",col:[104,100,94],hp:8}
+  10:{name:"rubble",col:[104,100,94],hp:8},
+  11:{name:"steel",col:[214,170,52],hp:20},           /* crane, tower and gallery legs and beams */
+  12:{name:"lamp",col:[240,190,90],hp:4,glow:1},      /* Freight Yard windows: sodium light */
+  13:{name:"furnace",col:[255,140,60],hp:4,glow:1},   /* Smelter Row windows: furnace light */
+  14:{name:"canvas",col:null,hp:3},                   /* market awnings, coloured by their structure */
+  15:{name:"tank",col:[92,104,120],hp:12},            /* the Underpass water tower */
+  16:{name:"iron",col:[78,70,66],hp:14},              /* slag vats and chimneys */
+  17:{name:"slag",col:[255,120,40],hp:6,glow:1},      /* molten top of a slag vat */
+  18:{name:"neon",col:[255,79,163],hp:4,glow:1}       /* Glass Quarter windows: pink neon */
 };
+var WINDOW={6:1,12:1,13:1,18:1};   /* window materials: the loader plows them, the renderer lights them */
 
-var W=80,D=32,H=8,N=W*D*H;   /* three zones of streets along one overpass; MAP.zones says where each begins */
+var W=216,D=48,H=8,N=W*D*H;   /* five zones of streets along one overpass; MAP.zones says where each begins */
 var SHOT_KIND={bullet:0,shell:1,orb:2,plasma:3,rail:4,mortar:5};   /* snapshot codes */
 var NB6=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
 var N8=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
@@ -113,35 +122,68 @@ function r2(v){return Math.round(v*100)/100}
 function packCol(c){return (Math.min(255,Math.round(c[0]))<<16)|(Math.min(255,Math.round(c[1]))<<8)|Math.min(255,Math.round(c[2]))}
 function angTo(a,b,rate,dt){var d=Math.atan2(Math.sin(b-a),Math.cos(b-a)),m=rate*dt;return a+Math.max(-m,Math.min(m,d))}
 
-/* Map: Overpass Sector 4 (a slice). A raised highway deck on four pillar pairs, slum blocks either side. */
+/* Map: Overpass Sector 4. A raised highway deck on ten pillars over three districts (level design, Oct 28 2026:
+   games/metr0niks/level-design.md). Each zone has its own building shapes, colours and window light, and one landmark
+   that falls under the same support rule as the deck: the water tower, the gantry crane and the slag gallery. */
 var MAP={
   /* Sector 4 is one long overpass. The streets under it come in zones: level 1 plays in the first, each level after
-     opens the next (its gate wall falls during the drop-in), until the whole sector is one battlefield. */
-  zones:[{name:"Underpass",x0:0,x1:31},{name:"Freight Yard",x0:32,x1:55},{name:"Smelter Row",x0:56,x1:79}],
-  overpass:{y0:13,y1:18,z:5,pillarsX:[3,11,19,27,35,43,51,59,67,75]},
-  blocks:[ /* x,y,w,d,h */
-    [2,2,4,3,4],[8,1,3,4,3],[13,2,5,3,5],[21,1,3,3,2],[25,2,5,4,4],
-    [3,8,3,2,2],[10,8,4,3,3],[18,7,3,4,4],[24,9,4,2,2],
-    [2,21,3,4,3],[7,24,4,4,5],[14,21,4,3,2],[20,23,5,3,4],[27,21,3,5,3],
-    [2,28,4,2,2],[13,27,5,3,3],[22,28,4,2,2],
-    /* Freight Yard: low sheds and a long warehouse on the north side, tenements south */
-    [34,2,5,3,3],[41,1,4,4,4],[48,2,4,3,2],[52,1,3,3,3],
-    [35,8,3,3,2],[44,8,4,2,3],[50,9,3,2,2],
-    [33,21,4,3,3],[39,23,5,4,4],[46,21,3,3,2],[51,22,4,4,3],
-    [34,28,5,2,2],[42,28,4,2,2],[49,27,5,3,3],
-    /* Smelter Row: taller, denser, a furnace hall in the south */
-    [58,2,4,4,5],[64,1,5,3,3],[71,2,4,3,4],[76,1,2,4,2],
-    [58,8,3,2,2],[63,9,4,3,3],[70,8,3,3,2],[75,9,3,2,2],
-    [58,21,4,4,4],[64,23,5,3,5],[71,21,3,4,3],[76,22,2,4,2],
-    [58,28,4,2,2],[63,28,5,2,2],[70,27,4,3,3],[76,28,2,2,2]
+     opens the next (its gate wall falls during the drop-in), until the whole sector is one battlefield.
+     win: the window material of the zone's buildings; ground: a tint for the street under it. */
+  zones:[{name:"Underpass",x0:0,x1:47,win:6,ground:[1,1,1]},{name:"Freight Yard",x0:48,x1:83,win:12,ground:[1.22,1.2,1.12]},{name:"Smelter Row",x0:84,x1:119,win:13,ground:[1.12,.9,.84]},
+    {name:"Glass Quarter",x0:120,x1:167,win:18,ground:[.94,.98,1.12]},{name:"Terminus Yard",x0:168,x1:215,win:12,ground:[1.16,1.08,.96],arena:{x:192,y:24,r:12}}],
+  /* the deck ends at x1, over the Terminus Yard's entrance: the last zone is open sky, room for a big fight */
+  spawn:[[23.5,17.5],[26,17.5]],   /* drop-in points of player 1 and 2, at the Underpass plaza */
+  overpass:{y0:20,y1:27,z:5,x1:167,pillarsX:[5,17,29,41,53,65,77,89,101,113,125,137,149,161]},
+  blocks:[ /* x,y,w,d,h,hue (MAP.hues) */
+    /* Underpass, shanty market: shacks of 2 to 4 m on 2 m alleys; the plaza in the middle is the water tower's */
+    [3,2,5,4,2,0],[11,2,3,4,3,1],[3,9,3,3,3,3],[9,9,5,3,2,2],
+    [32,2,3,4,3,1],[38,2,3,3,4,0],[44,2,3,4,2,2],[32,9,3,5,3,2],[36,8,5,4,2,3],[44,9,3,3,3,1],
+    [3,30,5,5,2,1],[11,30,3,3,3,2],[17,32,4,3,2,3],[24,30,5,5,4,0],[32,32,3,3,2,1],[38,30,4,3,3,2],[44,32,3,3,2,3],
+    [3,39,3,5,3,2],[9,38,5,4,2,0],[17,39,3,5,3,1],[23,39,4,3,2,2],[30,38,5,4,5,3],[38,39,3,5,2,0],[42,38,5,4,3,1],
+    /* Freight Yard, container yard: one long warehouse and two sheds north, a shed south */
+    [51,2,18,6,4,7],[72,2,6,4,2,6],[80,3,3,3,3,6],[80,38,3,4,2,8],
+    /* Smelter Row, furnace canyons: one long smelter hall north, tall halls on 3 m canyons south */
+    [86,2,31,6,6,10],[92,15,4,3,2,11],[107,15,4,3,2,9],
+    [86,30,7,6,5,11],[96,30,9,6,7,10],[108,30,9,5,4,9],
+    [86,39,6,6,3,9],[95,41,7,4,4,11],[105,39,5,6,6,10],[113,39,4,6,3,11],
+    /* Glass Quarter, financial district: glass towers of 4 to 7 m in a grid of 2 to 3 m streets, with a plaza in
+       the north half under the billboard */
+    [123,2,8,7,7,14],[135,2,6,6,6,15],[146,2,9,6,7,16],[158,2,7,7,6,14],[123,12,5,5,4,17],[155,12,6,5,4,15],
+    [123,30,6,6,6,16],[132,32,5,4,5,17],[140,30,7,6,7,14],[150,30,5,5,4,15],[158,30,7,8,6,16],
+    [123,39,9,6,4,15],[137,39,6,6,6,14],[146,39,4,6,3,17],[153,41,12,4,5,16],
+    /* Terminus Yard, the arena: four pylons in the corners and two bunkers mid-wall around an open floor */
+    [171,3,5,5,6,18],[209,3,4,5,6,18],[171,41,5,4,6,18],[209,41,4,4,6,18],[189,2,6,3,3,19],[189,44,6,3,3,19]
   ],
-  barriers:[[6,14,1,2],[15,17,2,1],[23,14,1,2],[8,11,2,1],[16,19,2,1],[29,12,1,1],
-    [38,14,1,2],[47,17,2,1],[54,14,1,2],[40,11,2,1],[48,19,2,1],
-    [62,14,1,2],[71,17,2,1],[78,13,1,1],[64,11,2,1],[72,19,2,1]],
-  containers:[[15,9,2,1,[176,74,44]],[5,19,1,2,[52,108,132]],[25,18,2,1,[106,128,64]],[11,29,2,1,[150,62,40]],
-    [36,11,2,1,[52,108,132]],[45,19,2,1,[176,74,44]],[53,10,1,2,[150,62,40]],[37,19,1,2,[106,128,64]],[43,11,2,1,[176,74,44]],[33,25,2,1,[52,108,132]],
-    [60,11,2,1,[150,62,40]],[69,11,1,2,[106,128,64]],[61,19,2,1,[52,108,132]],[77,19,1,2,[176,74,44]]],
-  hues:[[150,92,64],[112,122,112],[172,150,116],[96,108,124],[140,70,56],[120,104,88]]
+  barriers:[ /* x,y,w,d: 1 m high; the Underpass ones are market stalls */
+    [9,21,1,1],[12,26,1,1],[21,21,3,1],[24,26,1,1],[33,21,1,1],[36,26,3,1],[44,21,1,1],[15,5,1,1],[27,5,1,1],[15,14,1,1],
+    [57,21,1,3],[71,26,3,1],[81,21,1,3],
+    [93,21,1,3],[107,26,3,1],[117,20,1,1],
+    [134,11,3,1],[149,17,1,1],[141,18,3,1],[129,21,1,3],[143,26,3,1],[155,21,1,3],[165,24,1,1],
+    [177,9,3,1],[204,9,3,1],[177,38,3,1],[204,38,3,1]],
+  containers:[ /* x,y,w,d,colour,stack: a stack of 2 or 3 falls when its bottom box is shot out or plowed */
+    [6,44,3,1,[176,74,44],1],
+    [53,12,6,1,[176,74,44],2],[62,12,6,1,[52,108,132],3],[71,12,6,1,[106,128,64],2],[78,14,3,1,[150,62,40],1],[53,15,3,1,[52,108,132],1],[68,15,3,1,[150,62,40],2],
+    [59,32,4,1,[106,128,64],2],[72,32,5,1,[176,74,44],3],[59,39,4,1,[150,62,40],3],[72,39,5,1,[52,108,132],2],
+    [51,32,3,1,[176,74,44],1],[80,33,1,3,[106,128,64],2],[51,44,5,1,[52,108,132],1],
+    [176,14,3,1,[176,74,44],2],[206,14,3,1,[52,108,132],1],[176,33,3,1,[106,128,64],1],[206,33,3,1,[150,62,40],2]],
+  rubble:[ /* x,y,w,d,h: scrap heaps, block walking and can be shot away */
+    [174,21,3,5,1],[210,21,3,5,2],[192,8,3,1,1],[192,39,3,1,1]],
+  billboard:{legs:[[138,14],[146,14]],legH:4,sign:[137,14,12,3,3]},   /* Glass Quarter: a neon sign on two legs over the plaza */
+  awnings:[ /* x,y,w,d,z,colour: canvas strung between shack walls; you walk under it */
+    [8,3,3,3,2,[196,84,60]],[35,3,3,3,2,[214,170,70]],[41,9,3,3,2,[52,140,136]],
+    [14,32,3,3,2,[214,170,70]],[29,32,3,3,2,[52,140,136]],[6,39,3,3,2,[196,84,60]],[35,36,3,3,2,[214,170,70]]],
+  /* Landmarks: legs stand on the street and hold what sits on them. Break every leg and the rest falls as a collapse. */
+  tower:{legs:[[18,6],[25,6],[18,13],[25,13]],legH:4,tank:[18,6,8,8,3]},          /* Underpass: tank x,y,w,d,h on 4 m legs */
+  crane:{x0:56,y0:30,x1:79,y1:44,h:6,trolleyX:66,load:[66,36,4,3]},              /* Freight Yard: frame at 6 m, a container on the hook */
+  gallery:{x:89,y:9,w:24,d:5,z:3,legs:[[90,11],[99,11],[108,11]],vats:[[91,10],[96,11],[102,10],[108,11]]},   /* Smelter Row: slag vats on a gallery */
+  vats:[[102,17],[93,36],[110,36]],   /* standalone slag vats on a leg frame */
+  chimneys:[[87,15,8],[117,15,8],[105,33,8]],
+  hues:[ /* 0-5 Underpass brick and ochre, 6-8 Freight Yard sheds, 9-13 Smelter Row iron and soot, 14-17 Glass Quarter glass and stone, 18-19 Terminus Yard */
+    [150,92,64],[172,150,116],[96,108,124],[140,70,56],[120,104,88],[112,122,112],
+    [128,126,120],[104,116,108],[136,112,92],
+    [70,66,64],[88,76,68],[118,66,50],[104,100,96],[96,60,48],
+    [70,96,120],[52,60,72],[140,146,152],[196,192,182],
+    [150,110,50],[96,92,88]]
 };
 
 /* ===== Garage data: build model and derived stats ===== */
@@ -296,24 +338,50 @@ function create(opts){
     /* The deck is cast in spans with expansion joints over the pillars: each pillar holds the two spans that
        meet on it, so losing one pillar leaves both spans cantilevered and losing two neighbours drops the span. */
     var o=MAP.overpass,cuts=[0];
-    o.pillarsX.forEach(function(x){cuts.push(x+1)});cuts.push(W);
+    o.pillarsX.forEach(function(x){cuts.push(x+1)});cuts.push(o.x1!==undefined?o.x1+1:W);
     for(var k=0;k<cuts.length-1;k++){
       var sp=structure("deck",null);sp.span=true;var w=cuts[k+1]-cuts[k];
       fill(cuts[k],o.y0,o.z,w,o.y1-o.y0+1,1,3,sp);
       fill(cuts[k],o.y0,o.z+1,w,1,1,4,sp);fill(cuts[k],o.y1,o.z+1,w,1,1,4,sp);
     }
-    o.pillarsX.forEach(function(px){var p=structure("pillar",null,true);p.x=px;p.y=15;fill(px,15,0,2,2,o.z,1,p)});
-    MAP.blocks.forEach(function(b,k){
-      var col=MAP.hues[k%MAP.hues.length],s=structure("building",col);s.hue=k%MAP.hues.length;
+    o.pillarsX.forEach(function(px){var p=structure("pillar",null,true);p.x=px;var py=Math.floor((o.y0+o.y1)/2);p.y=py;fill(px,py,0,2,2,o.z,1,p)});
+    function zoneAt(x){for(var k=0;k<ZS.length;k++)if(x<=ZS[k].x1)return ZS[k];return ZS[ZS.length-1]}
+    MAP.blocks.forEach(function(b){
+      var hue=b[5]%MAP.hues.length,s=structure("building",MAP.hues[hue]),win=zoneAt(b[0]).win||6;s.hue=hue;
       fill(b[0],b[1],0,b[2],b[3],b[4],2,s);
       fill(b[0],b[1],b[4]-1,b[2],b[3],1,7,s);
       for(var z=1;z<b[4]-1;z++)for(var y=b[1];y<b[1]+b[3];y++)for(var x=b[0];x<b[0]+b[2];x++){
         var face=(x===b[0]+b[2]-1)||(y===b[1]+b[3]-1);
-        if(face&&hash(x,y,z)<.28)vox[vi(x,y,z)]=6;
+        if(face&&hash(x,y,z)<.28)vox[vi(x,y,z)]=win;
       }
     });
     MAP.barriers.forEach(function(b){fill(b[0],b[1],0,b[2],b[3],1,5,structure("barrier",null))});
-    MAP.containers.forEach(function(c,k){var s=structure("container",c[4]);s.ci=k;fill(c[0],c[1],0,c[2],c[3],2,8,s)});
+    var ci=0;
+    MAP.containers.forEach(function(c){for(var n=0;n<(c[5]||1);n++){var s=structure("container",c[4]);s.ci=ci++;fill(c[0],c[1],n*2,c[2],c[3],2,8,s)}});
+    MAP.awnings.forEach(function(a){fill(a[0],a[1],a[4],a[2],a[3],1,14,structure("awning",a[5]))});
+    /* water tower: each leg is its own structure, so the tank stands while any leg does */
+    var tw=MAP.tower;
+    tw.legs.forEach(function(l){fill(l[0],l[1],0,1,1,tw.legH,11,structure("leg",null))});
+    var tank=structure("tank",null);fill(tw.tank[0],tw.tank[1],tw.legH,tw.tank[2],tw.tank[3],tw.tank[4],15,tank);
+    fill(tw.tank[0]+1,tw.tank[1]+1,tw.legH+tw.tank[4]-1,tw.tank[2]-2,tw.tank[3]-2,1,11,tank);
+    /* gantry crane: four legs, a frame and a trolley beam, and a container hanging from the hook; one structure, so
+       the load hangs from the frame (load only hangs inside one structure) and falls with it */
+    var C=MAP.crane,cr=structure("crane",[106,128,64]);cr.ci=ci++;
+    [[C.x0,C.y0],[C.x1,C.y0],[C.x0,C.y1],[C.x1,C.y1]].forEach(function(l){fill(l[0],l[1],0,1,1,C.h,11,cr)});
+    fill(C.x0,C.y0,C.h,C.x1-C.x0+1,1,1,11,cr);fill(C.x0,C.y1,C.h,C.x1-C.x0+1,1,1,11,cr);
+    fill(C.trolleyX,C.y0+1,C.h,2,C.y1-C.y0-1,1,11,cr);
+    var L=C.load;fill(L[0]+1,L[1],4,1,1,C.h-4,11,cr);fill(L[0],L[1],2,L[2],L[3],2,8,cr);
+    /* slag gallery: a deck on legs over the street with vats on top */
+    var G=MAP.gallery,gl=structure("gallery",null);
+    G.legs.forEach(function(l){fill(l[0],l[1],0,1,1,G.z,11,structure("leg",null))});
+    fill(G.x,G.y,G.z,G.w,G.d,1,16,gl);
+    G.vats.forEach(function(v){var s=structure("vat",null);fill(v[0],v[1],G.z+1,2,2,1,16,s);fill(v[0],v[1],G.z+2,2,2,1,17,s)});
+    /* standalone vats: a 2x2 leg frame at street level, the vat on top; shoot the frame and the vat drops */
+    MAP.vats.forEach(function(v){fill(v[0],v[1],0,2,2,1,11,structure("leg",null));var s=structure("vat",null);fill(v[0],v[1],1,2,2,1,16,s);fill(v[0],v[1],2,2,2,1,17,s)});
+    (MAP.rubble||[]).forEach(function(r){fill(r[0],r[1],0,r[2],r[3],r[4],10,structure("rubble",null))});
+    var BB=MAP.billboard;if(BB){BB.legs.forEach(function(l){fill(l[0],l[1],0,1,1,BB.legH,11,structure("leg",null))});
+      var sg=structure("sign",[255,79,163]),S=BB.sign;fill(S[0],S[1],BB.legH,S[2],S[3],S[4],18,sg);fill(S[0],S[1],BB.legH,S[2],S[3],1,16,sg)}
+    MAP.chimneys.forEach(function(c){var s=structure("chimney",null);fill(c[0],c[1],0,1,1,c[2],16,s)});
     /* Gate walls seal every zone that is not open yet: a blast shutter across the street, under the deck. */
     for(var k=zone.open;k<ZS.length;k++){var g=structure("gate",null);g.zone=k;gates[k]=g;fill(ZS[k].x0,1,0,1,D-2,T.zone.gateH,9,g)}
   }
@@ -391,7 +459,7 @@ function create(opts){
   function carries(a,b,dz){return dz>0||owner[a]===owner[b]||(dz===0&&linked(a,b))}
   function buildChunks(){
     var key={},x,y,z,i,c;chunks.length=0;chunkOf.fill(-1);
-    function ck(cx,cy,cz,s){return (cx+cy*CXN+cz*CXN*CYN)*128+s}
+    function ck(cx,cy,cz,s){return (cx+cy*CXN+cz*CXN*CYN)*65536+s}
     for(z=0;z<H;z++)for(y=0;y<D;y++)for(x=0;x<W;x++){
       i=vi(x,y,z);if(!vox[i])continue;
       var cx=(x/CS)|0,cy=(y/CS)|0,cz=(z/CS)|0,k=ck(cx,cy,cz,owner[i]);c=key[k];
@@ -500,7 +568,7 @@ function create(opts){
   /* ----- entities. Player and bots share one shape: position, velocity, armor, radius, height, team. ----- */
   function newPlayer(build,idx){
     var d=deriveStats(build,T);
-    return {team:0,idx:idx||0,x:idx?17:15.5,y:11,z:0,vx:0,vy:0,r:T.player.radius,h:T.player.height,hp:d.maxHp,maxHp:d.maxHp,scrap:0,
+    return {team:0,idx:idx||0,x:MAP.spawn[idx?1:0][0],y:MAP.spawn[idx?1:0][1],z:0,vx:0,vy:0,r:T.player.radius,h:T.player.height,hp:d.maxHp,maxHp:d.maxHp,scrap:0,
       v:cloneBuild(build),spd:d.spd,acc:d.acc,legT:d.legT,torT:d.torT,dmgMul:d.dmgMul,atbRate:d.atbRate,drain:d.drain,heatMul:d.heatMul,gun:d.gun,pileKind:d.pile,noDash:d.noDash,immune:d.immune,
       q:d.q,sq:0,qPrev:false,magnet:d.magnet,dashMul:d.dashMul,dashHeat:d.dashHeat,regen:d.regen,calm:0,
       leg:Math.PI*.75,aim:Math.PI*.75,step:0,heat:0,over:0,cool:0,dash:0,dashCd:0,flash:0,muzzle:0,ax:16,ay:16,az:.6,
@@ -905,7 +973,7 @@ function create(opts){
     if(p.over){p.over-=dt;p.heat=Math.max(0,p.heat-dt*100/T.heat.lockout);if(rnd()<.3)smoke(p.x,p.y,1.4,1,[200,200,200]);if(p.over<=0){p.over=0;toast("Cooled down","var(--good)",p.idx)}}
     else p.heat=Math.max(0,p.heat-p.drain*dt);
     p.cool-=dt;
-    if(inp.l&&!p.over&&p.cool<=0){fireMinigun(p);var gg=T[p.gun];p.cool=gg.every||1/gg.rate}
+    if(inp.l&&!p.over&&p.cool<=0){fireMinigun(p);var gg=T[p.gun];p.cool=Math.max(p.cool,-dt)+(gg.every||1/gg.rate)}   /* carry the tick's leftover so rates match T on 60 Hz ticks */
     var press=inp.rp||(inp.r&&!p.rPrev);p.rPrev=inp.r;inp.rp=false;p.rDown=inp.r;
     updatePile(p,dt,press);
     p.muzzle-=dt;p.flash-=dt;if(p.oc>0)p.oc=Math.max(0,p.oc-dt);
@@ -1002,7 +1070,7 @@ function create(opts){
     var L=T.loader,sx=-b.cy,sy=b.cx;
     [-.5,0,.5].forEach(function(o){
       var ax=b.x+b.cx*(b.r+.25)+sx*o*b.r,ay=b.y+b.cy*(b.r+.25)+sy*o*b.r;
-      [.3,1.0].forEach(function(z){var m=solidAt(ax,ay,z);if(m===5||m===6||m===8)hitVoxel(ax,ay,z,L.voxDmg,ax,ay,z)});
+      [.3,1.0].forEach(function(z){var m=solidAt(ax,ay,z);if(m===5||WINDOW[m]||m===8||m===14)hitVoxel(ax,ay,z,L.voxDmg,ax,ay,z)});
     });
   }
   function updateShots(dt){
@@ -1219,6 +1287,6 @@ var Campaign=(function(){
   return {make:make,player:player,validate:validate,encode:encode,decode:decode,advance:advance,levelSeed:levelSeed,starterOwned:starterOwned};
 })();
 
-root.MetroSim={create:create,Campaign:Campaign,T:T,SHOT_KIND:SHOT_KIND,MAT:MAT,MAP:MAP,PARTS:PARTS,PART:PART,SLOTS:SLOTS,STARTER:STARTER,BASE:BASE,W:W,D:D,H:H,hash:hash,
+root.MetroSim={create:create,Campaign:Campaign,T:T,SHOT_KIND:SHOT_KIND,MAT:MAT,WINDOW:WINDOW,MAP:MAP,PARTS:PARTS,PART:PART,SLOTS:SLOTS,STARTER:STARTER,BASE:BASE,W:W,D:D,H:H,hash:hash,
   deriveStats:deriveStats,moveMech:moveMech,clusterGeom:clusterGeom,cleanBuild:cleanBuild,cloneBuild:cloneBuild,statsOf:statsOf};
 })(typeof globalThis!=='undefined'?globalThis:this);
