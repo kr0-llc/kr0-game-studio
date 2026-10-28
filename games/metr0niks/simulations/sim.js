@@ -14,13 +14,15 @@
    sim.world            {vox,owner,vdmg (typed arrays), W,D,H, structures, chunks, walk, rev (bumps when voxels change),
                          get(x,y,z), solidAt(x,y,z), blockedCell(cx,cy), rebuildWalk()}
    sim.players, bots, shots, pods, scraps, clusters, debris, pools   live arrays (mutated in place, never replaced)
-   sim.run {wave,queue,breather,done,...}   sim.wave (number)   sim.state 'play'|'dead'|'extracted'|'victory'
+   sim.run {wave,queue,breather,done,...}   sim.wave (number; 6 = Overtime)   sim.state 'play'|'choose'|'overtime'|'dead'|'extracted'|'victory'
    sim.tick             completed steps   sim.scrap (shared run total, for the HUD), sim.kills, sim.shake (0..1, decays)
                         each mech also has player.scrap: the cubes it picked up (the wallet that banks at extraction)
                         and player.taken: armor lost this match, counted when taken even if healed later (wear on extract)
    sim.state            'drop' (until sim.tick >= sim.introTicks: no spawns, no pods; set introTicks right after create(), default 0),
-                        then 'play', then 'dead' | 'extracted' | 'victory' (extracting level T.level.max)
-   sim.setInput(i, {k,ax,ay,az,l,r,rp,seq})   k bitmask W=1 A=2 S=4 D=8 Space=16; ax,ay,az world aim point;
+                        then 'play', then 'choose' (wave 5 cleared: T.overtime.choose s to pick Extract or Overtime, GDD-D37),
+                        'overtime' (the sixth wave), then 'dead' | 'extracted' | 'victory' (extracting level T.level.max)
+   sim.setInput(i, {k,ax,ay,az,l,r,rp,seq})   k bitmask W=1 A=2 S=4 D=8 Space=16 Q=32 F=64 (call Overtime) Enter/R=128 (extract now;
+                        F and Enter/R are read from mech 0 only: the host chooses in co-op, TDD-D15); ax,ay,az world aim point;
                         l / r held buttons (left arm gun / ATB arm); rp true = right button pressed since the last tick;
                         seq (network inputs only): such an input is released after T.net.inputStale s of silence
    sim.step()           one fixed 1/60 s tick
@@ -29,16 +31,22 @@
                         ["f",x,y,z,text,css]      floating number    ["s",x,y,z,n,[r,g,b]] sparks   ["m",x,y,z,n,[r,g,b]] smoke
                         ["k",amount]              screen shake       ["p",x,y] drop pod landed
                         ["c",id,voxelIdx[],packedColours[]]  falling cluster created
-                        ["o","dead"|"extracted"|"victory",message,scrapBanked,detail]  run over; detail = {result,level,scrap:[per mech],damage:[per mech],stats}
+                        ["o","dead"|"extracted"|"victory",message,scrapBanked,detail]  run over; detail = {result,level,scrap:[per mech],damage:[per mech],stats,
+                          records,contract,condition,overtime:{called,cleared},revives}
                         (extracted and victory: scrap to bank, damage taken for wear; dead: detail {result,level}, nothing carries on)
                         ["cb",mech,combo,broken]  combo changed (GDD-D35)   ["sg",x,y,z] an enemy was staggered
                         ["mk",mech,count]         multi-kill (GDD-D53)      ["x",type,mech|-1,sourceKind,cubes] an enemy died (kill credit, GDD-D48)
                         ["w",wave,[stats per mech]]  wave cleared, with that wave's GDD-D50 stats
                         ["cr",id,kills,x,y,mech|-1,"collapse"|"slag"]  CRUSHED: the kills of one landed piece or one slag pool (phase 5)
                         ["sd",clusterId,x,y,mech|-1]  a deck span landed (SPAN DOWN)   ["sp",poolId,x,y,mech|-1]  a slag vat spilled
+                        ["ct",id,progress,goal,state,reward]  contract progress (GDD-D38); state 0 running, 1 done, -1 failed;
+                                                  reward = scrap each living mech got on completion
+                        ["ch","prompt",seconds] | ["ch","overtime"] | ["ch","extract"]  the choose prompt after wave 5 (GDD-D37)
+                        ["rv",mech,payer,price]   a downed mech was revived at a wave's end (GDD-D24)
                         ["z",zoneIndex,name]      a sealed zone's gate fell: the map grew (also sent to guests)
                         ["sb",x,y]                a Perfect broke a Bulwark's shield (phase 4)
-   sim.snapshot(full)   co-op host snapshot {t:"snap",tk,ack,sc,k,sh,w,p,b,s,sr,pd,cl,sl,vx,ev}; sl = slag pools [id,x0,y0,x1,y1,z,secondsLeft].
+   sim.snapshot(full)   co-op host snapshot {t:"snap",tk,ack,sc,k,sh,w,p,b,s,sr,pd,cl,sl,vx,ev,st,ch,ct}; sl = slag pools [id,x0,y0,x1,y1,z,secondsLeft];
+                        st = sim.state, ch = [prompt seconds left, Overtime called 0|1], ct = [contract progress, goal, state] (no contract: absent).
                         Bot rows [id,kind,x,y,z,head,aim,hp,flags,...]: kind 0 bot, 1 loader, 2 boss,
                         3 Scuttler, 4 Bulwark, 5 Wrecker, 6 Wrecker charge (kinds 3+ add one timer: flash, plant, fuse, broken shield);
                         flags 1 dropping, 2 hit flash, 4 tell, 8 charge, 16 jump, 32 slowed, 64 staggered, 128 Elite,
@@ -51,7 +59,12 @@
    sim.stats            [mech][wave] match stats (GDD-D50): kills by type and source, damage dealt and taken, voxels, grades,
                         best combo, spans, props brought down, most kills from one collapse or pool, multi-kills, pods, scrap by source, overheats, wave time
    sim.level            the level this sim was created for (opts.level, default 1)
-   sim.plan             opts.plan or null: this level's sector condition, contract and bosses (read by the HUD only until phase 3)
+   sim.plan             opts.plan or null: this level's sector condition, contract and bosses. Its condition's tuning override
+                        (condTune) is merged over the run's T after opts.tune; its contract is tracked as sim.contract
+   sim.cond             {id, night, light}: the sector condition and the view's flags (Blackout: night, lit within `light` m)
+   sim.contract         null or {id, name, progress, goal, state (0 running, 1 done, -1 failed), reward}
+   run.overtime         true once Overtime is called; run.choose: seconds left on the prompt; run.clock: seconds since wave 1 began;
+                        run.asWave: the wave whose make-up this one uses (Overtime: T.overtime.wave), for the zone threats table
    sim.introTicks       set by create(): ticks of drop-in cinematic before anything may spawn, 0 unless a zone opens this level
    sim.zone             {open, opening, target, openAt, intro}: zones MAP.zones[0..open-1] are open; `opening` is the zone
                         whose gate falls at tick openAt (-1 once it has), `target` that same zone for the whole intro
@@ -154,6 +167,14 @@ var T={
   zone:{intro:5.5,open:2.6,gateH:3},   /* drop-in cinematic when a zone opens: seconds of intro before spawns, second the gate falls, gate wall height */
   net:{rate:20,delay:100,snapErr:.3,snapFar:2.5,diffMax:800,inputStale:.5,shotMax:120,scrapMax:80,eventMax:200}   /* snapshots per second; render delay ms; prediction error (units) before a gentle pull / a hard snap; (unused) voxel changes per snapshot; seconds before a silent partner's keys are released */
 };
+/* ===== Phase 3, match flow: tuning keys (GDD-D37 Overtime, GDD-D38 contracts, GDD-D39 sector conditions, GDD-D24 revive) ===== */
+T.overtime={choose:6,scrap:1.5,wave:4,loaders:1};   /* prompt seconds after wave 5; drops x1.5 while it runs; Overtime = wave 4 plus 1 loader, no boss */
+T.contract={scrap:15,crush:3,spans:2,evictions:2,combo:4,pods:5,untouchable:.2,closeShave:.15,blitz:75,voxels:400,repo:2};   /* reward x the level's scrap scale; each contract's target */
+T.revive={price:40,armor:.3};   /* GDD-D24: price x the level's scrap scale, paid from the survivor's wallet; back at 30% of max armor */
+T.cond={brittle:.12,reinforced:.3,reinforcedScrap:2,heatWave:.3,coldFront:.3,coldFrontPods:1,scrapStorm:.3,scrapStormBots:1,
+        blackout:.3,blackoutLight:12,podRain:2,loose:.15,nest:1};   /* the nine conditions' numbers; condTune() turns one into an override */
+T.match={scrapMul:1,extraBots:0,podSeekAny:0,looseShare:0,extraSnipers:0,night:0,light:0};   /* flags a condition sets; all off by default */
+T.net.hostLost=3;   /* view: seconds without a host snapshot before a co-op guest treats the host as gone (GDD-D52) */
 /* Per-run tuning (TDD-D11): tuneFor(over) returns T itself, or a deep copy of T with `over` merged in (objects merge,
    anything else replaces). create({tune}) uses it, so sector conditions and sweep variants never touch MetroSim.T. */
 function mergeTune(base,over){
@@ -164,6 +185,22 @@ function mergeTune(base,over){
   return o;
 }
 function tuneFor(over){return over&&Object.keys(over).length?mergeTune(T,over):T}
+/* Sector conditions (GDD-D39, phase 3): the override condition `id` merges over a run's tuning TT. Numbers are relative to
+   TT, so a sweep's override and a condition stack. Flags go in TT.match, which the sim and the view read. */
+function condTune(TT,id){
+  var C=TT.cond,o={},k;
+  function brk(lost){o.chunk={breakAt:1-lost,pillarBreakAt:1-lost}}
+  if(id==="brittle")brk(C.brittle);
+  else if(id==="reinforced"){brk(C.reinforced);o.collapse={scrap:TT.collapse.scrap.map(function(v){return v*C.reinforcedScrap})}}
+  else if(id==="loosePillars")o.match={looseShare:C.loose};
+  else if(id==="heatWave")o.heat={drain:TT.heat.drain*(1-C.heatWave)};
+  else if(id==="coldFront"){o.heat={drain:TT.heat.drain*(1+C.coldFront)};o.pods={perWave:C.coldFrontPods,extra:0}}
+  else if(id==="scrapStorm")o.match={scrapMul:1+C.scrapStorm,extraBots:C.scrapStormBots};
+  else if(id==="blackout"){k=1-C.blackout;o.bot={sight:TT.bot.sight*k};o.loader={sight:TT.loader.sight*k};o.boss={sight:TT.boss.sight*k};o.match={night:1,light:C.blackoutLight}}
+  else if(id==="podRain"){o.pods={perWave:C.podRain,extra:0};o.match={podSeekAny:1}}
+  else if(id==="snipersNest")o.match={extraSnipers:C.nest};
+  return o;
+}
 /* FNV-1a over a list of numbers and strings: state hashes for the replay check, and the tuning hash. */
 function fnv(list){var h=2166136261>>>0;for(var i=0;i<list.length;i++){var v=list[i],s=typeof v==="number"?(Math.round(v*1000)|0).toString(36):String(v);
   for(var j=0;j<s.length;j++){h^=s.charCodeAt(j);h=Math.imul(h,16777619)>>>0}h^=44;h=Math.imul(h,16777619)>>>0}return ("0000000"+h.toString(16)).slice(-8)}
@@ -409,6 +446,8 @@ function defaultColor(id,s){
 function create(opts){
   opts=opts||{};
   var T=tuneFor(opts.tune);   /* this run's tuning: MetroSim.T unless opts.tune overrides some keys */
+  var condId=opts.plan&&opts.plan.condition;   /* phase 3: the level's sector condition merges over the run's tuning (GDD-D39) */
+  if(condId&&CONDITIONS.some(function(x){return x.id===condId}))T=mergeTune(T,condTune(T,condId));else condId=null;
   var seed=(opts.seed|0)||7;if(seed<=0)seed=7;
   var colorOf=opts.colorOf||defaultColor,clock=opts.clock||function(){return 0};
   function rnd(){seed=(seed*16807)%2147483647;return (seed-1)/2147483646}
@@ -417,7 +456,8 @@ function create(opts){
   var structures=[null],CS=T.chunk.size,CXN=Math.ceil(W/CS),CYN=Math.ceil(D/CS);
   var chunks=[],chunkOf=new Int16Array(N),walk=new Uint8Array(W*D),wbox=null,reachC=new Uint8Array(0);
   var players=[],bots=[],pods=[],shots=[],scraps=[],debris=[],clusters=[],events=[],netEv=[],inputs=[];
-  var run={wave:1,queue:[],spawnT:0,breather:0,done:false,exitT:0,waveT:0,podAt:[]};
+  var run={wave:1,queue:[],spawnT:0,breather:0,done:false,exitT:0,waveT:0,podAt:[],
+    overtime:false,otCleared:false,choose:0,clock:0,podsDropped:0,podsTaken:0,podsLost:0,revives:0};   /* phase 3 fields */
   var level=Math.max(1,Math.min(T.level.max,Math.floor(+opts.level)||1));
   function lvm(k){return 1+T.level[k]*(level-1)}
   var tick=0,state="drop",scrap=0,kills=0,shake=0,fieldsDirty=true,fieldT=0,supportDirty=false,pillarsDown=0,bigFall=false;
@@ -430,7 +470,8 @@ function create(opts){
   var chk={last:0,max:0,n:0};
   var world={vox:vox,owner:owner,vdmg:vdmg,W:W,D:D,H:H,structures:structures,walk:walk,rev:0,
     get chunks(){return chunks},get:get,solidAt:solidAt,blockedCell:blockedCell,rebuildWalk:rebuildWalk,vi:vi};
-  var sim={T:T,introTicks:0,world:world,players:players,bots:bots,shots:shots,pods:pods,scraps:scraps,clusters:clusters,debris:debris,run:run,chk:chk,plan:opts.plan||null};
+  var sim={T:T,introTicks:0,world:world,players:players,bots:bots,shots:shots,pods:pods,scraps:scraps,clusters:clusters,debris:debris,run:run,chk:chk,plan:opts.plan||null,
+    cond:{id:condId,night:!!T.match.night,light:T.match.light}};
   var wearOf=(opts.wear||[]).slice(),upgOf=(opts.upgrades||[]).slice();   /* per mech, by index: {partId: wear}, {partId: Mk level} */
 
   function get(x,y,z){return inB(x,y,z)?vox[vi(x,y,z)]:0}
@@ -574,7 +615,7 @@ function create(opts){
     if(vdmg[i]>=MAT[m].hp)removeVoxel(i,x,y,z);
   }
   function removeVoxel(i,x,y,z){
-    var c=voxColor(i),ci=chunkOf[i];vox[i]=0;owner[i]=0;vdmg[i]=0;chunkOf[i]=-1;touch(i);
+    var c=voxColor(i),ci=chunkOf[i];vox[i]=0;owner[i]=0;vdmg[i]=0;chunkOf[i]=-1;touch(i);goneBy[i]=curBy;
     if(curBy>=0){var vs=st(curBy);if(vs)vs.voxels++}
     if(z<=1)markWalk(x,y);
     for(var k=0;k<3;k++)debrisPiece(x+.5,y+.5,z+.5,c);
@@ -622,7 +663,7 @@ function create(opts){
       var i=c.v[k];if(!vox[i]||chunkOf[i]!==c.id)continue;
       var x=i%W,y=((i/W)|0)%D,z=(i/(W*D))|0,col=voxColor(i);
       for(var d=0;d<2&&debris.length<T.debrisCap;d++)debrisPiece(x+.5,y+.5,z+.5,col);
-      vox[i]=0;owner[i]=0;vdmg[i]=0;chunkOf[i]=-1;touch(i);if(z<=1)markWalk(x,y);
+      vox[i]=0;owner[i]=0;vdmg[i]=0;chunkOf[i]=-1;touch(i);if(z<=1)markWalk(x,y);goneBy[i]=curBy;
       n++;fx+=x;fy+=y;fz+=z;
     }
     c.count=0;supportDirty=true;lastBreakBy=curBy;
@@ -661,7 +702,7 @@ function create(opts){
     var hz=hazardInfo(idx);   /* phase 5: read the props in the piece before its voxels are cleared */
     var cols=idx.map(function(i){return voxColor(i)}),g=clusterGeom(idx,cols),span=idx.some(function(i){var o=structures[owner[i]];return o&&o.span});
     idx.forEach(function(i){var z=(i/(W*D))|0;if(z<=1)markWalk(i%W,((i/W)|0)%D)});
-    idx.forEach(function(i){vox[i]=0;owner[i]=0;vdmg[i]=0;chunkOf[i]=-1;touch(i)});
+    idx.forEach(function(i){vox[i]=0;owner[i]=0;vdmg[i]=0;chunkOf[i]=-1;touch(i);goneBy[i]=lastBreakBy});
     var c={id:++cid,vs:g.vs,foot:g.foot,off:0,vz:0,creak:T.collapse.warn,t:0,by:lastBreakBy};clusters.push(c);
     var cs=c.by>=0&&st(c.by);if(cs&&span)cs.spans++;
     hazardCluster(c,hz,span);   /* phase 5 */
@@ -698,8 +739,8 @@ function create(opts){
       } else if(rnd()<.55)debrisPiece(v.x+.5,v.y+.5,z+.5,v.col);
       if(rnd()<.25)smoke(v.x+.5,v.y+.5,z+.3,1,[150,140,125]);
     });
-    var mid=c.vs[(c.vs.length/2)|0],n=C.scrap[0]+((rnd()*(C.scrap[1]-C.scrap[0]+1))|0);
-    for(var k=0;k<n&&c.vs.length>6;k++)scraps.push({x:mid.x+.5,y:mid.y+.5,z:.6,vx:(rnd()-.5)*5,vy:(rnd()-.5)*5,vz:3+rnd()*2,t:0,spin:rnd()*6,src:"collapse"});
+    var mid=c.vs[(c.vs.length/2)|0],n=Math.round((C.scrap[0]+((rnd()*(C.scrap[1]-C.scrap[0]+1))|0))*dropMul());
+    for(var k=0;k<n&&c.vs.length>6;k++)scraps.push({x:mid.x+.5,y:mid.y+.5,z:.6,vx:(rnd()-.5)*5,vy:(rnd()-.5)*5,vz:3+rnd()*2,t:0,spin:rnd()*6,src:run.overtime?"overtime":"collapse"});
     world.rev++;c.foot.forEach(function(f){markWalk(f%W,(f/W)|0)});
     hazardLanded(c,L,crushed);   /* phase 5: CRUSHED, SPAN DOWN, slag spill */
   }
@@ -822,39 +863,45 @@ function create(opts){
 
   /* Waves: a wave is a queue of drops released one stagger apart; it is cleared when the queue is empty and nobody is alive. */
   function beginWave(n,quiet){
-    var w=T.waves[n-1],q=[],np;run.wave=n;run.breather=0;run.spawnT=0;run.done=false;
-    for(var k=0;k<(w.boss||0);k++)q.push("boss");
-    var nl=Math.round((w.loaders||0)*lvm("count")),nb=Math.round(w.bots*lvm("count"));
+    var ot=n>T.waves.length,w=ot?overtimeWave():T.waves[n-1],q=[],np;run.wave=n;run.asWave=ot?T.overtime.wave:n;run.breather=0;run.spawnT=0;run.done=false;
+    var nboss=(w.boss||0)+(w.boss?T.match.extraSnipers:0);   /* Sniper's nest: one more Bounty sniper on each boss wave (GDD-D39) */
+    for(var k=0;k<nboss;k++)q.push("boss");
+    var nl=Math.round((w.loaders||0)*lvm("count")),nb=Math.round(w.bots*lvm("count"))+T.match.extraBots;   /* Scrap storm: one more bot */
     for(k=0;k<nl;k++)q.push("loader");
     for(k=0;k<nb;k++)q.push("bot");
-    zoneSlots(q,n);   /* phase 4: zone threats swap slots and set the drop order */
+    zoneSlots(q,run.asWave);   /* phase 4: zone threats swap slots and set the drop order (Overtime uses wave 4's rows) */
     run.queue=q;run.waveT=0;run.podAt=[];
     for(k=0,np=T.pods.perWave+(rnd()<T.pods.extra?1:0);k<np;k++)run.podAt.push(T.pods.window[0]+rnd()*(T.pods.window[1]-T.pods.window[0]));
     run.podAt.sort(function(a,b){return a-b});
-    if(!quiet)toast(w.boss?"Wave "+n+": Bounty sniper":"Wave "+n,w.boss?"var(--cyan)":"var(--fg)");
+    if(!quiet)toast(ot?"Overtime: drops x"+T.overtime.scrap+", clear it to extract":w.boss?"Wave "+n+": Bounty sniper"+(nboss>1?" x"+nboss:""):"Wave "+n,ot?"var(--hazard)":w.boss?"var(--cyan)":"var(--fg)");
   }
   function updateWave(dt){
     var R=run;
     if(R.done){if((R.exitT-=dt)<=0)extract();return}
+    R.clock+=dt;
     if(R.breather>0){if((R.breather-=dt)<=0)beginWave(R.wave+1);return}
     R.waveT+=dt;
     while(R.podAt.length&&R.waveT>=R.podAt[0]){R.podAt.shift();randomPod()}
     if(R.queue.length){
       if((R.spawnT-=dt)<=0){R.spawnT=T.wave.stagger;var kind=R.queue.shift();if(!spawnZone(kind))bots.push(kind==="boss"?newBoss():kind==="loader"?newLoader():newBot())}
     } else if(!bots.length){
-      toast("Wave "+R.wave+" cleared","var(--good)");
+      toast(R.wave>T.waves.length?"Overtime cleared":"Wave "+R.wave+" cleared","var(--good)");
       players.forEach(function(q){var s=st(q.idx);if(s)s.time=Math.round(R.waveT*10)/10});
       emitNet(["w",R.wave,players.map(function(q){return st(q.idx)})]);
-      if(R.wave>=T.waves.length){R.done=true;R.exitT=T.wave.exit}else R.breather=T.wave.breather;
+      contractWave(R.wave);
+      if(R.wave>T.waves.length){R.otCleared=true;R.done=true;R.exitT=T.wave.exit}   /* Overtime cleared: extract, no revive after it */
+      else if(R.wave>=T.waves.length)enterChoose();   /* wave 5: Extract or Overtime (GDD-D37) */
+      else{R.breather=T.wave.breather;revive()}
     }
   }
   function extract(){
+    contractEnd();   /* Close shave and Clean sweep are decided here; a contract still open fails */
     scraps.forEach(function(s){nearestPlayer(s.x,s.y).scrap++});   /* whatever is still on the floor goes to the nearest mech */
     scrap+=scraps.length;scraps.length=0;
     var got=scrap,per=players.map(function(q){return q.scrap}),dmg=players.map(function(q){return Math.round(q.taken)}),win=level>=T.level.max;
     scrap=0;state=win?"victory":"extracted";   /* extracting the last level wins the campaign (GDD-D47); it banks like an extract */
     emit(["o",state,(win?"Level "+level+" cleared: the sector is yours. You banked ":"Level "+level+" cleared. You banked ")+got+" scrap"+(players.length>1?" ("+per.join(" + ")+")":"")+
-      (win?". Parts, upgrades and banked scrap stay for the next climb.":". Repair and shop in the garage, then drop into level "+(level+1)+"."),got,{result:state,level:level,scrap:per,damage:dmg,stats:stats,records:players.map(function(q){return recordsOf(q.idx)}),callins:callinReport(false)}]);
+      (win?". Parts, upgrades and banked scrap stay for the next climb.":". Repair and shop in the garage, then drop into level "+(level+1)+"."),got,matchDetail({result:state,level:level,scrap:per,damage:dmg,stats:stats,records:players.map(function(q){return recordsOf(q.idx)}),callins:callinReport(false)})]);
   }
   /* Drop pods: a marker and countdown, then the crate falls like a bot does and waits to be touched. */
   function spawnPod(type,x,y,counting){
@@ -864,7 +911,8 @@ function create(opts){
   function randomPod(){
     var cs=openCells().filter(function(c){return players.every(function(q){return q.hp<=0||Math.hypot(c[0]-q.x,c[1]-q.y)>=T.pods.minDist})});
     if(!cs.length)return;
-    var c=cs[(rnd()*cs.length)|0];spawnPod(drawPodType(),c[0],c[1],true);
+    var c=cs[(rnd()*cs.length)|0],o=spawnPod(drawPodType(),c[0],c[1],true);
+    if(o){o.wave=1;run.podsDropped++}   /* a wave pod: Clean sweep counts these */
   }
   function applyPod(o,e){
     var P=T.pods,amt=Math.round(e.maxHp*P.heal);
@@ -874,6 +922,7 @@ function create(opts){
     sparks(o.x,o.y,.5,12,[63,214,232]);
     /* a called-in pod taken by an enemy counts as stolen from the mech that called it */
     if(e.team===0){var ps=st(e.idx);if(ps)ps.pods.taken++}else{e.podCarrier=true;var ns=st(o.by>=0?o.by:nearestPlayer(e.x,e.y).idx);if(ns)ns.pods.stolen++}
+    if(o.wave){if(e.team===0)run.podsTaken++;else run.podsLost++}
     if(e.team===0)toast(o.type==="repair"?"Field repair: +"+amt+" armor":o.type==="overclock"?"Overclock: ATB x"+P.overclock.mult+" for "+P.overclock.time+" s":podToast(o),"var(--cyan)",e.idx);
     else toast((e.label||(e.loader?"Loader":"Patrol bot"))+(o.type==="strike"?" took a Strike beacon: get clear of the line":o.type==="cache"?" took a Scrap cache: it carries the cubes":" took a pod"),"var(--hazard)");
   }
@@ -895,7 +944,7 @@ function create(opts){
     }
   }
   function podFor(b){
-    var best=null,bd=1e9,low=b.hp<b.maxHp*.5;
+    var best=null,bd=1e9,low=b.hp<b.maxHp*.5||!!T.match.podSeekAny;   /* Pod rain: patrol bots go for a pod at any health */
     pods.forEach(function(o){if(!o.landed||!o.field)return;var d=Math.hypot(o.x-b.x,o.y-b.y),np=nearestPlayer(o.x,o.y);
       if(d<bd&&(low||d<Math.hypot(o.x-np.x,o.y-np.y))){bd=d;best=o}});
     return best;
@@ -956,7 +1005,7 @@ function create(opts){
       return;
     }
     /* perched: the voxel under its feet is gone, so it falls */
-    if(b.z>.05&&!solidAt(b.x,b.y,b.z-.5)){b.mode="fall";b.vz=0;b.fallZ=b.z;b.tell=0;return}
+    if(b.z>.05&&!solidAt(b.x,b.y,b.z-.5)){b.mode="fall";b.vz=0;b.fallZ=b.z;b.tell=0;evicted(perchBy(b));return}
     if(alive)b.aim=angTo(b.aim,Math.atan2(p.y-b.y,p.x-b.x),6,dt);
     if(b.stun>0)return;
     var sees=alive&&dist<B.sight&&los3(b.x,b.y,b.z+.8,p.x,p.y,.9);
@@ -1068,7 +1117,7 @@ function create(opts){
     multi:{2:0,3:0,4:0,5:0},pods:{taken:0,stolen:0,stolenBack:0},scrap:{},overheats:0,time:0,redline:0,callins:0}}   /* redline: seconds in Redline; callins: call-ins used */
   function st(i){if(!(i>=0)||!players[i])return null;var w=stats[i]||(stats[i]=[]);return w[run.wave-1]||(w[run.wave-1]=newStats())}
   /* lifetime record fields this match feeds (Campaign.advance reads detail.records); contracts and Overtimes come with phase 3 */
-  function recordsOf(i){var r={combo:1,spans:0,contracts:0,overtimes:0};(stats[i]||[]).forEach(function(w){if(!w)return;if(w.bestCombo>r.combo)r.combo=w.bestCombo;r.spans+=w.spans});return r}
+  function recordsOf(i){var r={combo:1,spans:0,contracts:players[i]&&players[i].ctDone?1:0,overtimes:run.otCleared?1:0};(stats[i]||[]).forEach(function(w){if(!w)return;if(w.bestCombo>r.combo)r.combo=w.bestCombo;r.spans+=w.spans});return r}
   function setCombo(p,n){
     var was=p.combo;p.combo=n;if(n===was)return;
     emitNet(["cb",p.idx,n,n<was?1:0]);
@@ -1085,6 +1134,7 @@ function create(opts){
     var mul=lvm("scrap"),pct=0;
     if(src.kind==="heavy"&&src.grade==="Perfect"&&src.w==="pile")mul*=2;   /* killed by a Perfect pile-bunker hit */
     if(run.overtime&&T.overtime)mul*=T.overtime.scrap;
+    if(T.match&&T.match.scrapMul)mul*=T.match.scrapMul;   /* Scrap storm (GDD-D39) */
     if(b.elite&&T.elite)mul*=T.elite.scrap;
     if(pl&&pl.combo>1)pct+=T.combo.step*(pl.combo-1);
     if(src.kind==="collapse"||src.kind==="hazard"||src.kind==="pod"&&src.by===-1)pct+=T.demolition;   /* an enemy-taken Strike beacon counts as demolition too (TDD kill credit) */
@@ -1099,7 +1149,7 @@ function create(opts){
     emitNet(["x",type,by,tag,n]);
     if(aloft(b)){var g=groundNear(b.x,b.y);sx=g[0];sy=g[1];sz=1.5}   /* roof loot drops to street level */
     if(b.boss)toast("Bounty sniper down","var(--hazard)");
-    for(k=0;k<n;k++)scraps.push({x:sx,y:sy,z:sz,vx:(rnd()-.5)*4,vy:(rnd()-.5)*4,vz:3+rnd()*2,t:0,spin:rnd()*6,src:tag});
+    for(k=0;k<n;k++)scraps.push({x:sx,y:sy,z:sz,vx:(rnd()-.5)*4,vy:(rnd()-.5)*4,vz:3+rnd()*2,t:0,spin:rnd()*6,src:run.overtime?"overtime":tag});
     if(b.cache)burstCubes(sx,sy,sz,b.cache);   /* a carried Scrap cache drops with it (GDD-D43) */
     zoneDeath(b);   /* phase 4: a Scuttler's blast, a Wrecker's dropped charge, an Elite's pod */
   }
@@ -1175,7 +1225,7 @@ function create(opts){
     if(hitB){
       var b=hitB;hitEnemy(b,Wn.dmg,src,b.x,b.y,b.z+.8);if(b.hp<=0)return;
       if(aloft(b)){   /* yanked off the roof: it falls, and a long fall stuns and hurts it */
-        b.mode="fall";b.vz=0;b.fallZ=b.z;b.tell=0;b.x-=px*1.2;b.y-=py*1.2;toast("Sniper yanked off the roof","var(--hazard)");
+        b.mode="fall";b.vz=0;b.fallZ=b.z;b.tell=0;b.x-=px*1.2;b.y-=py*1.2;toast("Sniper yanked off the roof","var(--hazard)");evicted(p.idx);
       } else if(b.loader||b.heavy){winchPull(p,px,py,pl-b.r-p.r-.15)}
       else {knockBot(b,-px,-py,Math.max(0,pl-b.r-p.r-.2),false);if(b.state==="patrol")b.state="engage"}
       return;
@@ -1256,7 +1306,7 @@ function create(opts){
   function lossCheck(){
     if(players.some(function(q){return q.hp>0}))return;
     var lost=scrap,w="wave "+run.wave+" of "+T.waves.length,msg;scrap=0;state="dead";
-    var det={result:"dead",level:level,stats:stats,callins:callinReport(true)};
+    var det=matchDetail({result:"dead",level:level,stats:stats,callins:callinReport(true)});
     msg="Mech destroyed on "+w+". You lost "+lost+" scrap from this match. Parts you own are never lost; scrap only counts once you extract.";
     emit(["o","dead",msg,0,det]);
   }
@@ -1956,12 +2006,124 @@ function create(opts){
     for(i=0;i<bots.length;i++)if(!aloft(bots[i]))collide(bots[i]);
     for(i=0;i<pl.length;i++)if(pl[i].hp>0)collide(pl[i]);
     for(i=bots.length-1;i>=0;i--)if(bots[i].hp<=0)bots.splice(i,1);
-    if(state==="play")updateWave(dt);
+    if(state==="play"||state==="overtime")updateWave(dt);else if(state==="choose")updateChoose(dt);
     if(state!=="drop")updatePods(dt);updateShots(dt);curBy=-1;updateScraps(dt);stepDebris(dt);
     updateBp(dt);curBy=-1;   /* phase 6: Strike beacon shells, Breach charges */
     if(supportDirty)checkSupports();
     updateClusters(dt);updatePools(dt);flushWalk();
+    if(contract)contractTick();
     tick++;
+  }
+
+  /* ===== Phase 3: match flow. Contracts (GDD-D38), the choose prompt and Overtime (GDD-D37), the revive check (GDD-D24)
+     and the build-time half of the sector conditions (GDD-D39; the rest is condTune). It reads the phase 1 stats record
+     and the run, and never changes a hit. Stat fields later phases add are read defensively. ===== */
+  var goneBy=new Int8Array(N).fill(-1);   /* the mech that destroyed each voxel (-1: nobody); Eviction looks under a sniper's feet */
+  function perchBy(b){var x=Math.floor(b.x),y=Math.floor(b.y),z=Math.floor(b.z-.5);return inB(x,y,z)?goneBy[vi(x,y,z)]:-1}
+  function evicted(by){var s=by>=0&&st(by);if(s)s.evictions=(s.evictions||0)+1}   /* a sniper knocked off its perch by mech `by` */
+  function eachStat(f){stats.forEach(function(w){(w||[]).forEach(function(x){if(x)f(x)})})}
+  function sumStat(f){var n=0;eachStat(function(x){n+=f(x)||0});return n}
+  function maxStat(f){var n=0;eachStat(function(x){var v=f(x)||0;if(v>n)n=v});return n}
+  function living(){return players.filter(function(q){return q.hp>0})}
+  function lostIn(q,wave){var w=stats[q.idx]&&stats[q.idx][wave-1],n=0;if(w)for(var k in w.taken)n+=w.taken[k];return n/q.maxHp}   /* share of max armor lost that wave */
+  function dropMul(){return (run.overtime?T.overtime.scrap:1)*(T.match.scrapMul||1)}   /* non-kill drops (collapse landings): Overtime, Scrap storm */
+  /* Each contract: goal() and prog() (the HUD's "prog of goal"); count = done the tick prog reaches goal; fail() = failed early;
+     wave(n) = decided when wave n clears (1 done, -1 failed, 0 not yet); end() = decided at extract. Open at extract = failed. */
+  var CHECKS={
+    crush:{count:1,goal:function(){return T.contract.crush},prog:function(){return maxStat(function(x){return x.bestCrush})}},
+    bringItDown:{count:1,goal:function(){return T.contract.spans},prog:function(){return sumStat(function(x){return x.spans})}},
+    eviction:{count:1,goal:function(){return T.contract.evictions},prog:function(){return sumStat(function(x){return x.evictions})}},
+    fullCombo:{count:1,goal:function(){return T.contract.combo},prog:function(){return maxStat(function(x){return x.bestCombo})}},
+    wreckingCrew:{count:1,goal:function(){return T.contract.voxels},prog:function(){return sumStat(function(x){return x.voxels})}},
+    repoMan:{count:1,goal:function(){return T.contract.repo},prog:function(){return sumStat(function(x){return x.pods&&x.pods.stolenBack})}},
+    cleanSweep:{goal:function(){return Math.max(T.contract.pods,run.podsDropped)},prog:function(){return run.podsTaken},
+      fail:function(){return run.podsLost>0},
+      end:function(){return run.podsLost===0&&run.podsTaken>=run.podsDropped&&run.podsTaken>=T.contract.pods&&!pods.some(function(o){return o.wave})}},
+    untouchable:{goal:function(){return Math.round(T.contract.untouchable*100)},   /* progress: % of max armor lost in wave 3, lowest living mech */
+      prog:function(){if(run.wave<3)return 0;var l=living();return l.length?Math.min.apply(null,l.map(function(q){return Math.round(lostIn(q,3)*100)})):100},
+      wave:function(n){return n!==3?0:living().some(function(q){return lostIn(q,3)<T.contract.untouchable})?1:-1}},
+    closeShave:{goal:function(){return Math.round(T.contract.closeShave*100)},   /* progress: lowest living armor, % of max */
+      prog:function(){var l=living();return l.length?Math.min.apply(null,l.map(function(q){return Math.ceil(q.hp/q.maxHp*100)})):0},
+      end:function(){return living().some(function(q){return q.hp<q.maxHp*T.contract.closeShave})}},
+    blitz:{goal:function(){return T.contract.blitz},prog:function(){return run.clock},   /* progress: seconds since wave 1 began */
+      fail:function(){return run.clock>T.contract.blitz},wave:function(n){return n!==2?0:run.clock<=T.contract.blitz?1:-1}}
+  };
+  var contract=null;
+  function contractSetup(){
+    var id=sim.plan&&sim.plan.contract,K=id&&CHECKS[id];if(!K)return;
+    var def=CONTRACTS.filter(function(x){return x.id===id})[0];
+    contract={id:id,name:def?def.name:id,progress:0,goal:K.goal(),state:0,reward:0};
+  }
+  function contractTick(){
+    var c=contract;if(!c||c.state)return;var K=CHECKS[c.id],g=K.goal(),p=Math.floor(K.prog()+1e-9);
+    if(K.count&&p>=g){c.goal=g;contractDone(p);return}
+    if(K.fail&&K.fail()){c.goal=g;contractFail(p,true);return}
+    if(p!==c.progress||g!==c.goal){c.progress=p;c.goal=g;emitNet(["ct",c.id,p,g,0,0])}
+  }
+  function contractWave(n){
+    var c=contract;if(!c||c.state)return;contractTick();if(c.state)return;
+    var K=CHECKS[c.id],r=K.wave?K.wave(n):0;if(r>0)contractDone(c.progress);else if(r<0)contractFail(c.progress,true);
+  }
+  function contractEnd(){
+    var c=contract;if(!c||c.state)return;contractTick();if(c.state)return;
+    var K=CHECKS[c.id];if(K.end&&K.end())contractDone(c.progress);else contractFail(c.progress,false);
+  }
+  /* Done: T.contract.scrap x the level's scrap scale into each living mech's match scrap, at once (GDD-D38). */
+  function contractDone(p){
+    var c=contract,amt=Math.round(T.contract.scrap*lvm("scrap"));c.state=1;c.progress=p;c.reward=amt;
+    living().forEach(function(q){q.scrap+=amt;scrap+=amt;q.ctDone=true;var s=st(q.idx);if(s)s.scrap.contract=(s.scrap.contract||0)+amt;floatText(q.x,q.y,2.2,"+"+amt+" contract","#f2c230")});
+    emitNet(["ct",c.id,p,c.goal,1,amt]);toast("Contract done: "+c.name+", +"+amt+" scrap","var(--good)");
+  }
+  function contractFail(p,say){
+    var c=contract;c.state=-1;c.progress=p;emitNet(["ct",c.id,p,c.goal,-1,0]);
+    if(say)toast("Contract failed: "+c.name,"var(--muted)");
+  }
+  /* The run-over detail's phase 3 fields. */
+  function matchDetail(d){
+    d.contract=contract?{id:contract.id,name:contract.name,progress:contract.progress,goal:contract.goal,state:contract.state,reward:contract.reward}:null;
+    d.condition=sim.cond.id;d.overtime={called:run.overtime,cleared:run.otCleared};d.revives=run.revives;
+    return d;
+  }
+  /* Choose (GDD-D37): T.overtime.choose s after wave 5. Mech 0's F calls Overtime, its Enter or R extracts, the timer extracts. */
+  function enterChoose(){
+    state="choose";run.choose=T.overtime.choose;
+    emitNet(["ch","prompt",T.overtime.choose]);toast("Wave "+run.wave+" cleared: Extract (Enter or R) or Overtime (F)","var(--good)");
+  }
+  function updateChoose(dt){
+    var k=inputs[0]?inputs[0].k:0;
+    if(k&64){callOvertime();return}
+    if(k&128||(run.choose-=dt)<=0){run.choose=0;emitNet(["ch","extract"]);extract()}
+  }
+  /* Overtime: the revive check runs, then a 3 s breather, then wave 6 = wave 4 plus T.overtime.loaders loaders, no boss. */
+  function callOvertime(){
+    state="overtime";run.overtime=true;run.choose=0;run.breather=T.wave.breather;
+    emitNet(["ch","overtime"]);toast("Overtime called: drops x"+T.overtime.scrap+" until it's cleared","var(--hazard)");
+    revive();
+  }
+  function overtimeWave(){var b=T.waves[T.overtime.wave-1];return {bots:b.bots,loaders:(b.loaders||0)+T.overtime.loaders}}
+  /* Revive (GDD-D24): at a wave's end, each downed mech comes back beside a survivor whose wallet covers the price. */
+  function revive(){
+    var price=Math.round(T.revive.price*lvm("scrap"));
+    players.forEach(function(d){
+      if(d.hp>0)return;var s=null;
+      players.forEach(function(q){if(q.hp>0&&q.scrap>=price&&(!s||q.scrap>s.scrap))s=q});
+      if(!s){toast("Partner still down: "+price+" scrap revives them at the next wave's end","var(--hazard)");return}
+      s.scrap-=price;scrap-=price;run.revives++;
+      var ss=st(s.idx);if(ss)ss.reviveSpent=(ss.reviveSpent||0)+price;
+      var g=groundNear(s.x+Math.cos(s.leg+1.57)*1.4,s.y+Math.sin(s.leg+1.57)*1.4);
+      d.x=g[0];d.y=g[1];d.vx=d.vy=0;d.dash=0;d.hp=Math.max(1,Math.round(d.maxHp*T.revive.armor));
+      d.heat=0;d.over=0;d.ring=-1;d.retract=0;d.calm=0;d.oc=0;d.atb=0;setCombo(d,1);fieldsDirty=true;
+      sparks(d.x,d.y,1,20,[127,220,106]);smoke(d.x,d.y,.5,8,[200,240,220]);
+      emitNet(["rv",d.idx,s.idx,price]);toast("Partner revived for "+price+" scrap","var(--good)");
+    });
+  }
+  /* Loose pillars (GDD-D39): at build, each pillar's lowest chunks start T.match.looseShare short of their voxels (bottom first),
+     never so many that they break: a hit or two finishes them. */
+  function loosenPillars(){
+    var share=T.match.looseShare;if(!(share>0))return;
+    structures.forEach(function(s){if(!s||s.kind!=="pillar")return;
+      s.gc.forEach(function(ci){var c=chunks[ci],keep=Math.ceil(T.chunk.pillarBreakAt*c.init-1e-9),n=Math.min(Math.round(c.init*share),c.init-keep);
+        for(var k=0;k<c.v.length&&n>0;k++){var i=c.v[k];if(!vox[i]||chunkOf[i]!==c.id)continue;vox[i]=0;owner[i]=0;chunkOf[i]=-1;c.count--;n--}})});
   }
 
   /* ----- co-op host snapshots ----- */
@@ -1990,6 +2152,7 @@ function create(opts){
     s.q=players.map(function(q){return r2(q.sq||0)});   /* shoulder recharge per seat */
     s.sl=pools.map(function(o){return [o.id,o.x0,o.y0,o.x1,o.y1,o.z,r2(o.t)]});   /* phase 5: slag pools */
     bpSnap(s);   /* phase 6: Breach charges and pending Strike beacons as compact arrays */
+    s.st=state;s.ch=[r2(run.choose),run.overtime?1:0];if(contract)s.ct=[contract.progress,contract.goal,contract.state];   /* phase 3: prompt timer, contract */
     if(full){s.full=true;s.vox=vox.slice();s.owner=owner.slice();s.vx=[];s.ev=[];netEv.length=0}
     else{s.vx=voxelDiffSince(snapBase);s.ev=netEv.splice(0,60)}
     snapBase=tick;
@@ -2011,9 +2174,9 @@ function create(opts){
     else{players.push(q);inputs.push(mkInput())}
     fieldsDirty=true;
   }
-  function dropPlayer(i){var q=players[i];if(q&&q.hp>0){q.hp=0;if(state==="play"||state==="drop")lossCheck()}}
+  function dropPlayer(i){var q=players[i];if(q&&q.hp>0){q.hp=0;if(state==="play"||state==="drop"||state==="choose"||state==="overtime")lossCheck()}}
 
-  buildMap();buildChunks();rebuildWalk();
+  buildMap();buildChunks();loosenPillars();rebuildWalk();contractSetup();
   spawnCells=openCells();sim.introTicks=zone.intro;   /* the drop-in intro: the zone opens in the middle of it, the waves start after */
   (opts.builds&&opts.builds.length?opts.builds:[STARTER]).forEach(function(b,i){players.push(newPlayer(cleanBuild(b),i));inputs.push(mkInput())});
   beginWave(1,true);
@@ -2027,6 +2190,7 @@ function create(opts){
     players.forEach(function(q){a.push(q.x,q.y,q.hp,q.heat,q.atb,q.ring,q.scrap,q.over,q.oc,q.combo)});
     bots.forEach(function(b){a.push(b.x,b.y,b.z,b.hp,b.state||"",b.stag||0)});
     pods.forEach(function(o){a.push(o.type,o.x,o.y,o.z)});
+    a.push(run.overtime?1:0,run.choose,run.revives,contract?contract.state:9,contract?contract.progress:0);
     var v=0;for(var i=0;i<N;i++)if(vox[i])v=(Math.imul(v,31)+i*16+vox[i])|0;a.push(v);
     bpHash(a);
     return fnv(a);
@@ -2036,7 +2200,7 @@ function create(opts){
     tick:{get:function(){return tick}},state:{get:function(){return state}},wave:{get:function(){return run.wave}},
     scrap:{get:function(){return scrap},set:function(v){scrap=v}},kills:{get:function(){return kills}},
     level:{get:function(){return level}},shake:{get:function(){return shake}},
-    zone:{get:function(){return zone}},stats:{get:function(){return stats}}
+    zone:{get:function(){return zone}},stats:{get:function(){return stats}},contract:{get:function(){return contract}}
   });
   sim.markOpen=function(k){if(zone.open<k+1)zone.open=k+1;if(zone.opening===k)zone.opening=-1;spawnCells=openCells()};
   /* debug hooks */

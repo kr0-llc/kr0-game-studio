@@ -6,6 +6,8 @@
                "perfect" every release at 1.0 s; "mix" 70% Perfect, 25% Good, 5% Miss; "random" anywhere from 0.5 to 1.4 s;
                "none" never uses the heavy weapon
      seed      the pilot's own random stream (the sim's stream is never touched)
+     overtime  true: at the prompt after wave 5 (sim.state "choose") mech 0's pilot calls Overtime (F, 64); otherwise it extracts
+               at once (Enter/R, 128). Only mech 0 chooses (the host, GDD-D37), alive or not.
 
    What it does: takes a Field repair pod when armor is below 50%, otherwise fights the nearest enemy (closing in with
    the pile-bunker when the ATB bar is full, keeping about 9 m away and circle-strafing otherwise), fires the light gun below 85 heat, and
@@ -18,7 +20,7 @@ function make(opts){
   opts=opts||{};
   var seed=((opts.seed|0)||1)%2147483647;if(seed<=0)seed+=2147483646;
   function rnd(){seed=(seed*16807)%2147483647;return (seed-1)/2147483646}
-  var accuracy=opts.accuracy||"mix",mem={};
+  var accuracy=opts.accuracy||"mix",mem={},overtime=!!opts.overtime;
 
   function holdTicks(){   /* ticks to hold the ring: release at hold/60 s; 60 is the 1.0 s target */
     if(accuracy==="perfect")return 60;
@@ -46,6 +48,7 @@ function make(opts){
   return function pilot(sim,i){
     var me=sim.players[i],T=sim.T,m=mem[i]||(mem[i]={hold:0,want:0,field:null,goalCell:-1,fieldT:0,stuck:0,lx:0,ly:0});
     var inp={k:0,ax:me.x+1,ay:me.y+1,az:.6,l:false,r:false,rp:false};
+    if(sim.state==="choose"){if(i===0)inp.k=overtime?64:128;return inp}
     if(me.hp<=0)return inp;
     var best=null,bd=1e9;
     sim.bots.forEach(function(b){if(b.hp<=0||b.dropping)return;var d=Math.hypot(b.x-me.x,b.y-me.y);if(d<bd){bd=d;best=b}});
