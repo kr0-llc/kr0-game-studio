@@ -137,6 +137,68 @@ All in the prototype, driven by sim events: hit-stop that freezes only the effec
 
 Done when: every event in the GDD's Audio and Feel sections has a sound or effect, and a co-op test shows no desync from presentation.
 
+**Done Oct 28:** the "Phase 8" block in `prototypes/prototype.html` (with its own CSS block). It reads sim events and view state only and wraps view functions by name (`handleEvent`, `updateFx`, `render`, `drawFloats`, `drawCrosshair`, `drawerOf`, `botView`, `hud`, `Net.apply`, `countUp`, the garage actions), so it never touches `sim.step()` and merges cleanly with the phase 6 garage and phase 7 bosses. Built: hit-stop (the Perfect's impact burst and its sparks hold still for 60 ms, the struck enemy flashes white through a view-only copy, the camera punches 4% and back); PERFECT, GOOD and MISS stamps at the struck enemy with the combo beside a Perfect; CRUSHED ×N and SPAN DOWN redrawn as the same stamps; multi-kill text over each mech (DOUBLE KILL to DEVASTATING, climbing in place); combo break feedback (COMBO BROKEN stamp, red ring, shaking tag); the combo tag by the heat bar and four pips with the number on the cursor ring at ×2 or more; a STAGGER readout (spinning ring, label, and a timer bar on the host) from `b.stag` and snapshot flag 64; the Redline aura and white-hot screen edges, and a LOCKOUT stamp when it ends in a lockout; call-in slots as key chips that flash when used; a contract progress bar and bump; a condition icon pulse when the match starts; the cockpit voice as captions (speech synthesis optional, off by default) with the 3 s gap and warnings first; music and about 95 sounds; Settings for screen shake, hit-stop and camera punch, music and effects volume, and cockpit speech, saved as `metr0niks.feel`. Two additive view-only events in `sim.js`: `g` (grade at the strike point; the stamp needs a position and mech, the old float has neither) and `su` (a pillar chunk broke, for "Span unstable", which had no event). Both pass the rules check and the replay check. Checked headless in solo and in a two-tab local co-op match with every effect on: no page errors, and host and guest end with the same voxel hash, enemy ids, kills and scrap.
+
+Every sound and music cue below is a **placeholder, needs kr0's approval for final audio**. "Ink file" means a Scenario take already in `art/metr0niks/ink-proto/audio/` (made for the ink prototype); everything else is procedural WebAudio. No paid generation was run.
+
+| GDD sound or cue | Source | Trigger in the view |
+| --- | --- | --- |
+| Footsteps (jump-jets, strider legs) | Ink file `step` (strider pitched up) | Each leg step from `p.step` |
+| Footsteps (siege treads, Grav-skids) | Procedural clank, hover hiss | Same |
+| Dash burst | Ink file `dash` | Dash cooldown starts |
+| Torso servo | Procedural whine | Torso turns faster than 4.5 rad/s |
+| Armor hit | Ink file `hurt` | Armor drops |
+| Low armor alarm | Procedural beeps (warning) | Armor below 35% |
+| Overheat alarm, lockout hiss | Ink file `overheat` + procedural hiss | Lockout starts |
+| Cooled down | Procedural chime | Lockout ends |
+| Mech destroyed | Ink file `explode` (slowed) + sub | Own armor reaches 0 |
+| Partner down, partner revived | Procedural fall, chime | Partner armor 0; `rv` |
+| Minigun spin-up and fire | Procedural spin-up + ink file `minigun` (pooled) | New minigun bullets |
+| Shotgun blast, plasma torch, rail shot | Procedural | New shots of that weapon |
+| ATB ready, timing ring | Procedural chime; ink file `ring` | Bar fills; ring starts |
+| Perfect, Good, Miss | Ink file `perfect`; procedural Good and Miss | `g`, on release |
+| Pile-bunker strike, retract | Ink file `pile`; procedural hydraulic hiss | `g`; retract starts |
+| Bunker-buster fire, shell blast | Procedural thump; ink file `explode` | `g`; shell gone |
+| Mag-winch cable and reel | Ink file `claw` + procedural reel | `l` |
+| Mortar launch, impact | Procedural thump; ink file `explode` | New mortar shell; shell gone |
+| Flash-vent blast | Procedural | Shoulder recharge starts |
+| Drop-in landing | Ink file `drop` | Enemy stops dropping |
+| Bot orb fire | Ink file `enemy_shot` | New orb |
+| Loader tell, charge | Procedural (tell is a warning) | Loader state edges |
+| Sniper tell, shot, jump, fall, land | Procedural; ink file `jump_land` | Boss tell and mode edges; big orb |
+| Enemy destroyed | Ink file `enemy_die` (pitched by type) | `x` |
+| Voxel hit, voxel break, chunk break | Ink file `hit_building` (three pitches) | Shots ending early; voxel count changes |
+| Collapse creak | Procedural groan (warning) | `c` |
+| Collapse impact, pillar down | Ink file `collapse` (louder for bigger pieces) | A falling piece lands; "Pillar down" toast |
+| Zone shutter fall | Procedural slam | `z` |
+| Pod countdown, landing | Procedural beeps; ink file `drop` | New pod; pod lands |
+| Field repair, Overclock, enemy took a pod | Procedural | Pod toasts |
+| Scrap pickup | Ink file `scrap` (pooled) | Match scrap rises |
+| Wave start, boss wave, wave clear | Procedural | Wave number changes; `w` |
+| Extract, campaign over, victory | Procedural stings | End states |
+| Button, buy, upgrade, repair, can't afford | Ink files `ui_click`, `ui_confirm`; procedural deny | Clicks; garage actions |
+| Combo step (rising), combo broken | Procedural | `cb` |
+| Stagger crack | Procedural | `sg` |
+| Redline whine, hiss | Procedural | `rl` start; `rl` end with a lockout |
+| Scuttler skitter, flash, pop | Procedural | Scuttlers alive; flash state; `x` |
+| Bulwark block, bash, shield break | Procedural | BLOCKED float; bash state; `sb` |
+| Wrecker plant beep, charge countdown, blast | Procedural; ink file `explode` | Plant state; charge fuse; charge gone |
+| Container topple, crane collapse | Ink file `collapse` + procedural metal ring | A prop piece lands |
+| Slag spill and sizzle | Procedural | `sp`; pools on the floor |
+| Scrap cache burst, strike beacon whistle | Procedural | Cache toast; new strike line |
+| Contract complete, Overtime called | Procedural | `ct` done; `ch` overtime |
+| Report count-up ticks | Procedural | The excursion report's count-up |
+| Multi-kill stings (four, DEVASTATING biggest) | Procedural chords | `mk` |
+| Cockpit voice (ten lines) | Captions + procedural radio blip; browser speech optional | `rl`, heat 80, armor 35%, new pod, pod toast, boss lands, `su`, new charge, `ct`, `ch` |
+| Title and garage theme | Ink file `synth_garage` (loop) | Menu and garage |
+| Combat loop | Ink file `synth_battle` (loop) | Waves |
+| Boss layer | Procedural held minor lead over the loop | Waves 3 and 5 while a boss is alive |
+| Breather | The loop through a low-pass, procedural pad swell | Between waves |
+| Overtime layer | Loop at 1.25× + procedural siren lead | The Overtime wave |
+| Warden theme | Procedural slow ostinato, up a whole step per broken leg | Any enemy whose kind matches "warden" (inert until phase 7 adds one) |
+
+Interpretations for kr0: the Overtime layer runs the loop at 1.25× rather than double tempo (double sounds like a chipmunk until there is a real stem); the boss layer is a held lead with no extra drums so it can't clash with a loop whose tempo the view doesn't know; "Span unstable" fires on any pillar chunk breaking (every pillar holds two spans); "Pod inbound" fires on every new pod marker, call-ins included; the voice drops an info line that waits more than 2.5 s; hit-stop off also removes the camera punch but keeps the white flash. The Warden theme keys off `kind`/`type` matching "warden" and counts parts whose kind matches "leg"; phase 7 should check that against its entity names.
+
 ## Phase 9: sweep
 
 Run the fun pass sweep questions in the [tuning history](../tuning-history.md) on paired seeds with the runner: combo rates, Redline cost, extract rate and scrap per run with and without Overtime, call-in spending, collapse lethality at level 5, Warden fight length, multi-kill frequency, the stacked scrap curve against prices, the death-rate step per zone enemy, climb length, and wave density on the 216 × 48 m map in solo and co-op. kr0 sets the targets first; each change kr0 picks gets a decision row.

@@ -222,6 +222,35 @@ body[data-theme="ink"] .gcall .gcb button{background:#e3ecd6;border:2px solid va
 #links button:hover,#links button:focus-visible{color:var(--fg);border-color:var(--muted)}
 @media(max-width:640px){.themes{grid-template-columns:1fr}.card .thm{display:grid;grid-template-columns:40% 1fr;gap:2px 10px;align-items:start}.card .thm img{grid-row:1/4}}
 
+/* ===== Phase 8, feel and audio (GDD-D45, TDD-D16): combo tag, cockpit voice caption, call-in chips, contract bar,
+   condition pulse, Feel and sound settings. The JS is the "Phase 8" block before the loop. ===== */
+.cmb{display:inline-block;margin-left:8px;padding:0 5px;border:1px solid var(--line);border-radius:3px;font:700 12px/16px var(--display);color:var(--muted);letter-spacing:.04em}
+.cmb.on{color:#16171a;background:var(--hazard);border-color:var(--hazard)}
+.cmb.up{animation:f8up .28s ease-out}
+.cmb.brk{color:var(--bad);border-color:var(--bad);background:transparent;animation:f8shake .35s}
+@keyframes f8up{0%{transform:scale(1.7)}100%{transform:scale(1)}}
+@keyframes f8shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+#voCap{left:50%;bottom:72px;transform:translateX(-50%);padding:6px 14px;border:1px solid var(--hazard);border-left-width:4px;border-radius:3px;background:var(--panel);color:var(--fg);font:700 14px var(--display);letter-spacing:.14em;opacity:0;transition:opacity .2s;white-space:nowrap;max-width:calc(100vw - 32px)}
+#voCap.on{opacity:1}#voCap.warn{border-color:var(--bad)}#voCap small{color:var(--muted);font:500 10px var(--mono);margin-right:8px;letter-spacing:.1em}
+.cis{display:inline-flex;align-items:center;gap:5px;margin:0 6px 0 0;padding:1px 6px 1px 1px;border:1px solid var(--line);border-radius:3px;color:var(--fg)}
+.cis kbd{font:700 11px var(--mono);background:var(--cyan);color:#16171a;border-radius:2px;padding:0 4px}
+.cis.empty{color:var(--muted);opacity:.6}.cis.empty kbd{background:var(--line);color:var(--muted)}
+.cis.used{animation:f8use .7s}
+@keyframes f8use{0%{background:var(--cyan);color:#16171a}100%{background:transparent}}
+#score .ct .ctBar{display:block;width:100%;height:3px;background:#0b0c0e;margin-top:3px;border-radius:2px;overflow:hidden}
+#score .ct .ctBar[hidden]{display:none}
+#score .ct .ctBar i{display:block;height:100%;background:var(--hazard);transition:width .3s}
+#score .ct.done .ctBar i{background:var(--good)}
+#score .ct.bump b{animation:f8up .3s}
+#score .cond.fresh .cicon{animation:f8cond 1s ease-in-out 3}
+@keyframes f8cond{50%{transform:scale(1.5);filter:drop-shadow(0 0 4px var(--hazard))}}
+.feelSet{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;align-items:center;font:500 13px var(--mono);color:var(--fg)}
+.feelSet label{display:contents}
+.feelSet input[type=range]{width:100%;accent-color:var(--rust)}
+.feelSet input[type=checkbox]{justify-self:start;accent-color:var(--rust);width:16px;height:16px;margin:0}
+@media(prefers-reduced-motion:reduce){.cmb.up,.cmb.brk,.cis.used,#score .ct.bump b,#score .cond.fresh .cicon{animation:none}}
+/* ===== end phase 8 ===== */
+
 @media(max-height:520px){
   .card{padding:16px 18px;gap:10px}
   .card h1{font-size:30px}
@@ -710,9 +739,7 @@ function handleEvent(e){
     case "o":runOver(e);break;
     case "l":cables.push({a:[e[1],e[2],e[3]],b:[e[4],e[5],e[6]],t:.3});break;
     case "z":sim.markOpen(e[1]);zoneFx={k:e[1],t:0};meshDirty=true;break;   /* the gate fell: the sealed zone lights up over the next second */
-    /* phase 5 callouts (GDD Feel): the kills of one collapse or slag pool, and a deck span coming down */
-    case "cr":floats.push({x:e[3],y:e[4],z:2.4,txt:"CRUSHED \u00d7"+e[2],col:"#ff8a3a",t:1.6,big:1.6});break;
-    case "sd":floats.push({x:e[2],y:e[3],z:3.6,txt:"SPAN DOWN",col:"#f2c230",t:1.8,big:1.9});break;
+    /* phase 5 callouts CRUSHED xN ("cr") and SPAN DOWN ("sd") are drawn as stamps by the phase 8 feel block (feelEvent) */
     /* phase 6: Arc bolt, Seismic slam, Breach blast, Strike shell */
     case "ar":bolts.push({p:e[2],t:.14});break;
     case "sm":rings.push({x:e[2],y:e[3],z:0,r:e[4],t:.4,max:.4,col:e[5]?"242,194,48":"210,190,160"});break;
@@ -2333,6 +2360,594 @@ function coopInit(){
   inp.addEventListener("keydown",function(e){if(e.code==="Enter"){e.preventDefault();go("host")}});
   addEventListener("pagehide",function(){Net.close()});
 }
+
+/* ===== Phase 8, feel and audio (GDD-D45, TDD-D16, fun pass implementation plan phase 8) =====
+   Presentation only. Everything in this block reads sim events (handleEvent, Net.apply), the snapshot and the view's own state.
+   It never writes to the sim or to anything the sim reads, so co-op stays in step: hit-stop freezes only the impact effect,
+   never sim.step(). It wraps a few view functions by name (handleEvent, updateFx, render, drawFloats, drawCrosshair, drawerOf,
+   botView, hud, Net.apply, countUp and the garage actions) instead of editing them, so the phase 6 garage and phase 7 boss
+   work merge cleanly. Sounds: the ink prototype's Scenario files where they fit (art/metr0niks/ink-proto/audio) and procedural
+   WebAudio placeholders for the rest. Every sound and music cue here is a placeholder that needs kr0's approval for final audio.
+   Settings (screen shake, hit-stop, music and effects volume, cockpit speech) are saved on the device as "metr0niks.feel". */
+var F8={sim:null,stamps:[],impacts:[],flash:new Map(),punchAt:-1e9,arm:null,combo:[1,1],seenShot:new WeakSet(),shells:[],gShots:{},
+  bots:new Map(),pods:{},clus:{},strikes:{},pl:[],wave:0,state:"",brk:0,cUp:0,ctBump:0,cond:null,ciT:0,ciUsed:-1,rev:0,skit:0,sizzle:0,
+  scrap:0,br:false,legMax:0,errors:[],voLog:[],sndLog:[]};
+var FS={shake:true,hitstop:true,music:.6,sfx:.8,speech:false};
+(function(){try{var o=JSON.parse(localStorage.getItem("metr0niks.feel")||"null");if(o&&typeof o==="object")for(var k in FS)if(typeof o[k]===typeof FS[k])FS[k]=o[k]}catch(e){}})();
+function saveFS(){try{localStorage.setItem("metr0niks.feel",JSON.stringify(FS))}catch(e){}}
+function f8Err(err){if(F8.errors.length<20)F8.errors.push(String(err&&err.stack||err))}
+
+/* ----- audio engine: buses (music through a low-pass for the breather, effects, warnings above both), samples, synth voices ----- */
+var AU={ac:null,buf:{},voices:{},duckUntil:0},AU_BASE="../../../art/metr0niks/ink-proto/audio/";
+var AU_FILES=["minigun","pile","perfect","ring","enemy_shot","explode","collapse","hit_building","scrap","step","dash","hurt","overheat",
+  "ui_click","ui_confirm","drop","enemy_die","claw","jump_land","synth_battle","synth_garage"];
+var AU_LOOPS={synth_battle:[0,86],synth_garage:[0,21]};   /* loop points measured for the ink prototype */
+function auInit(){
+  if(AU.ac){if(AU.ac.state==="suspended")try{AU.ac.resume()}catch(e){}return}
+  var C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+  try{AU.ac=new C()}catch(e){AU.ac=null;return}
+  var ac=AU.ac;AU.master=ac.createGain();AU.master.connect(ac.destination);
+  AU.musF=ac.createBiquadFilter();AU.musF.type="lowpass";AU.musF.frequency.value=20000;
+  AU.mus=ac.createGain();AU.mus.connect(AU.musF);AU.musF.connect(AU.master);
+  AU.sfx=ac.createGain();AU.sfx.connect(AU.master);AU.warn=ac.createGain();AU.warn.connect(AU.master);
+  var n=ac.sampleRate,b=ac.createBuffer(1,n,n),d=b.getChannelData(0);for(var i=0;i<n;i++)d[i]=Math.random()*2-1;AU.noise=b;
+  auVol();AU_FILES.forEach(auLoad);
+}
+function auVol(){if(!AU.ac)return;AU.sfx.gain.value=FS.sfx;AU.warn.gain.value=Math.min(1.5,FS.sfx*1.25)}   /* music gain follows FS.music in musTick */
+function auLoad(n){
+  if(n in AU.buf)return;AU.buf[n]=undefined;
+  try{fetch(AU_BASE+n+".mp3").then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()}).then(function(b){return AU.ac.decodeAudioData(b)})
+    .then(function(d){AU.buf[n]=d;if(!MU.node&&MU.cue&&MU.file===n)musStart(MU.cue)}).catch(function(){AU.buf[n]=null})}catch(e){AU.buf[n]=null}
+}
+function auSlot(key,max,len){   /* voice limit per sound: rapid repeats never pile up */
+  var t=AU.ac.currentTime,v=AU.voices[key]||(AU.voices[key]=[]);
+  while(v.length&&v[0]<t)v.shift();if(v.length>=max)return false;v.push(t+len);v.sort();return true;
+}
+function auSample(n,o){
+  var ac=AU.ac,b=AU.buf[n];if(!b)return false;
+  var rate=o.rate||1,d=o.dur||b.duration;if(!auSlot(o.key||n,o.max||4,d/rate))return true;
+  var s=ac.createBufferSource(),g=ac.createGain();s.buffer=b;s.playbackRate.value=rate;g.gain.value=o.vol;
+  if(o.dur){g.gain.setValueAtTime(o.vol,ac.currentTime+d*.7/rate);g.gain.linearRampToValueAtTime(0,ac.currentTime+d/rate)}
+  s.connect(g);g.connect(o.bus);s.start(0,0,d+.02);return true;
+}
+/* A synth voice: layers of oscillators {o,f:[from,to],d,g,a,at,v:[lfoHz,depth]} or filtered noise {n:1,f:[from,to],d,g,bp|hp,q,at} */
+function auSynth(L,vol,pitch,bus,t0){
+  var ac=AU.ac;t0=t0||ac.currentTime;
+  L.forEach(function(l){
+    var at=t0+(l.at||0),d=l.d,g=ac.createGain(),pk=Math.max(1e-4,l.g*vol),src;
+    g.gain.setValueAtTime(1e-4,at);g.gain.linearRampToValueAtTime(pk,at+(l.a||.006));g.gain.exponentialRampToValueAtTime(1e-4,at+d);
+    if(l.n){src=ac.createBufferSource();src.buffer=AU.noise;src.loop=true;var f=ac.createBiquadFilter();f.type=l.bp?"bandpass":l.hp?"highpass":"lowpass";f.Q.value=l.q||1;
+      f.frequency.setValueAtTime(l.f[0],at);f.frequency.exponentialRampToValueAtTime(l.f[1]||l.f[0],at+d);src.connect(f);f.connect(g)}
+    else{src=ac.createOscillator();src.type=l.o==="saw"?"sawtooth":l.o;src.frequency.setValueAtTime(l.f[0]*pitch,at);
+      if(l.f[1]&&l.f[1]!==l.f[0])src.frequency.exponentialRampToValueAtTime(l.f[1]*pitch,at+d);
+      if(l.v){var lf=ac.createOscillator(),lg=ac.createGain();lf.frequency.value=l.v[0];lg.gain.value=l.v[1]*pitch;lf.connect(lg);lg.connect(src.frequency);lf.start(at);lf.stop(at+d+.05)}
+      src.connect(g)}
+    g.connect(bus);src.start(at);src.stop(at+d+.05);
+  });
+}
+function lenOf(L){var m=0;L.forEach(function(l){m=Math.max(m,(l.at||0)+l.d)});return m}
+function bp(f,at,d,g){return {o:"square",f:[f,f],d:d||.08,g:g||.08,at:at||0}}   /* a plain beep layer */
+/* The sound table (GDD Audio): f = ink prototype file, s = procedural layers (also the fallback while a file loads), v volume,
+   r rate, m voices at once, j pitch spread, w = a warning (warning bus, ducks the music). All are placeholders for kr0's approval. */
+var SND={
+  /* mech */
+  step:{f:"step",v:.3,m:2,j:.15},stepStrider:{f:"step",r:1.3,v:.24,m:2,j:.15},
+  stepTreads:{s:[{n:1,f:[320,180],d:.16,g:.22},{o:"square",f:[58,50],d:.12,g:.06}],m:2,j:.1},
+  stepSkids:{s:[{n:1,f:[1400,700],d:.2,g:.08,bp:1,q:2}],m:2},
+  dash:{f:"dash",v:.6,m:2},servo:{s:[{o:"saw",f:[380,540],d:.22,g:.035,a:.03},{o:"sine",f:[760,1080],d:.22,g:.025}],m:1},
+  hurt:{f:"hurt",v:.6,m:2,j:.1},lowArmor:{w:1,s:[bp(880,0,.12,.1),bp(660,.16,.12,.1),bp(880,.32,.12,.1),bp(660,.48,.12,.1)],m:1},
+  overheat:{f:"overheat",v:.8,w:1,m:1},lockHiss:{s:[{n:1,f:[6000,2500],d:.9,g:.12,hp:1}],m:1},
+  cooled:{s:[{o:"sine",f:[1320,1760],d:.18,g:.09},{n:1,f:[4000,1500],d:.3,g:.04,hp:1}],m:1},
+  destroyed:{f:"explode",r:.7,v:1,m:1},sub:{s:[{o:"sine",f:[90,30],d:.8,g:.4}],m:2},
+  partnerDown:{w:1,s:[{o:"saw",f:[440,220],d:.6,g:.1},{o:"saw",f:[330,165],d:.6,g:.07,at:.05}],m:1},
+  revived:{s:[{o:"triangle",f:[523,523],d:.15,g:.14},{o:"triangle",f:[659,659],d:.15,g:.14,at:.12},{o:"triangle",f:[784,784],d:.3,g:.14,at:.24}],m:1},
+  /* light weapons */
+  minigun:{f:"minigun",v:.28,m:4,j:.12},spinUp:{s:[{o:"saw",f:[120,520],d:.3,g:.04}],m:1},
+  shotgun:{s:[{n:1,f:[3000,300],d:.25,g:.45},{o:"sine",f:[140,50],d:.18,g:.3}],m:2,j:.08},
+  plasma:{s:[{n:1,f:[2500,2300],d:.09,g:.1,bp:1,q:1.5},{o:"saw",f:[220,210],d:.09,g:.03}],m:3,j:.1},
+  rail:{s:[{o:"saw",f:[2400,300],d:.3,g:.12},{n:1,f:[8000,2000],d:.15,g:.22,hp:1},{o:"sine",f:[90,40],d:.25,g:.28}],m:2},
+  /* heavy weapons */
+  atbReady:{s:[{o:"triangle",f:[988,988],d:.08,g:.1},{o:"triangle",f:[1319,1319],d:.14,g:.1,at:.07}],m:1},
+  ring:{f:"ring",v:.45,m:1},perfect:{f:"perfect",v:.9,m:2},
+  good:{s:[{o:"triangle",f:[660,660],d:.16,g:.18},{o:"sine",f:[990,990],d:.14,g:.07}],m:2},
+  miss:{s:[{o:"square",f:[180,120],d:.22,g:.1}],m:2},
+  pile:{f:"pile",v:.85,m:2},retract:{s:[{n:1,f:[1800,500],d:.7,g:.1},{o:"saw",f:[90,70],d:.6,g:.04}],m:1},
+  busterFire:{s:[{o:"sine",f:[110,40],d:.35,g:.45},{n:1,f:[1500,200],d:.3,g:.3}],m:2},
+  blast:{f:"explode",v:.6,m:4,j:.12},winch:{f:"claw",v:.6,m:2},reel:{s:[{o:"saw",f:[300,700],d:.35,g:.04,v:[30,40]}],m:2},
+  seismic:{f:"explode",r:.6,v:.85,m:2},arc:{s:[{n:1,f:[5000,3000],d:.2,g:.18,bp:1,q:4},{o:"square",f:[1600,400],d:.18,g:.05,v:[90,300]}],m:3},
+  /* shoulder */
+  mortarLaunch:{s:[{o:"sine",f:[200,70],d:.25,g:.3},{n:1,f:[900,200],d:.25,g:.18}],m:3,j:.1},
+  vent:{s:[{n:1,f:[8000,800],d:.9,g:.28},{o:"sine",f:[400,1200],d:.5,g:.04}],m:1},breachToss:{s:[bp(700,0,.06,.05)],m:2},
+  /* enemies */
+  land:{f:"drop",v:.3,m:3,j:.15},orb:{f:"enemy_shot",v:.3,m:3,j:.12},
+  loaderTell:{w:1,s:[{o:"saw",f:[200,600],d:.45,g:.1},{o:"square",f:[400,1200],d:.45,g:.04}],m:2},
+  loaderCharge:{s:[{n:1,f:[400,900],d:.9,g:.2},{o:"saw",f:[70,110],d:.9,g:.12}],m:2},
+  sniperTell:{w:1,s:[{o:"sine",f:[1200,2400],d:.55,g:.09,v:[18,40]}],m:1},
+  sniperShot:{s:[{n:1,f:[9000,1500],d:.18,g:.35,hp:1},{o:"saw",f:[1800,200],d:.2,g:.1}],m:2},
+  sniperJump:{s:[{n:1,f:[600,2000],d:.3,g:.13},{o:"sine",f:[300,600],d:.3,g:.05}],m:1},
+  sniperFall:{s:[{o:"sine",f:[1400,300],d:.7,g:.07}],m:1},sniperLand:{f:"jump_land",v:.6,m:2},
+  die:{f:"enemy_die",v:.55,m:4,j:.1},
+  scutSkitter:{s:[{n:1,f:[4000,3000],d:.04,g:.07,bp:1,q:6},{n:1,f:[3500,2800],d:.04,g:.05,bp:1,q:6,at:.06}],m:2,j:.2},
+  scutFlash:{w:1,s:[bp(1800,0,.06),bp(1800,.12,.06),bp(2200,.22,.06),bp(2200,.3,.06)],m:2},
+  scutPop:{s:[{n:1,f:[3000,400],d:.25,g:.35},{o:"sine",f:[300,60],d:.2,g:.25}],m:3},
+  shieldBlock:{s:[{o:"square",f:[1300,1250],d:.08,g:.06},{n:1,f:[5000,5000],d:.06,g:.09,bp:1,q:3}],m:2},
+  bash:{s:[{o:"sine",f:[120,50],d:.25,g:.4},{n:1,f:[2000,300],d:.2,g:.25}],m:2},
+  shieldBreak:{s:[{n:1,f:[7000,1000],d:.45,g:.3,hp:1},{o:"square",f:[1500,300],d:.3,g:.07}],m:1},
+  plantBeep:{w:1,s:[bp(1000,0,.07),bp(1000,.15,.07)],m:2},chargeBeep:{s:[bp(1500,0,.05,.05)],m:2},chargeBlast:{f:"explode",r:.85,v:.85,m:2},
+  /* world */
+  voxHit:{f:"hit_building",r:1.6,v:.1,m:2,d:.08,j:.2},voxBreak:{f:"hit_building",v:.3,m:3,j:.15},chunk:{f:"hit_building",r:.7,v:.55,m:2},
+  creak:{w:1,s:[{o:"saw",f:[70,55],d:.9,g:.07,v:[7,6]},{n:1,f:[300,200],d:.9,g:.1,bp:1,q:5}],m:2},
+  collapse:{f:"collapse",v:.9,m:3,j:.08},pillarDown:{f:"collapse",r:.75,v:1,m:1},metal:{s:[{o:"square",f:[310,300],d:.6,g:.05},{o:"square",f:[467,460],d:.5,g:.035}],m:2},
+  shutter:{s:[{o:"square",f:[90,45],d:.6,g:.2},{n:1,f:[1200,200],d:.8,g:.3},{o:"sine",f:[60,30],d:.7,g:.35,at:.05}],m:1},
+  spanStrain:{w:1,s:[{o:"saw",f:[95,70],d:.8,g:.09,v:[5,8]}],m:1},
+  slagSpill:{s:[{n:1,f:[800,3000],d:.6,g:.28},{o:"sine",f:[100,50],d:.5,g:.25}],m:2},sizzle:{s:[{n:1,f:[5000,4000],d:.35,g:.05,hp:1}],m:1},
+  /* pods and scrap */
+  podIncoming:{s:[{o:"sine",f:[1046,1046],d:.09,g:.09},{o:"sine",f:[1046,1046],d:.09,g:.09,at:1},{o:"sine",f:[1397,1397],d:.12,g:.09,at:2}],m:2},
+  podLand:{f:"drop",v:.75,m:2},podRepair:{s:[{o:"triangle",f:[523,1046],d:.35,g:.13},{o:"sine",f:[784,1568],d:.35,g:.07}],m:1},
+  podOverclock:{s:[{o:"saw",f:[220,880],d:.4,g:.07},{o:"square",f:[440,1760],d:.4,g:.035}],m:1},
+  podStolen:{w:1,s:[{o:"square",f:[600,300],d:.25,g:.09},{o:"square",f:[450,225],d:.3,g:.09,at:.2}],m:1},
+  cacheBurst:{s:[{n:1,f:[2000,6000],d:.3,g:.18},{o:"triangle",f:[1046,2093],d:.3,g:.09}],m:1},
+  strikeWhistle:{w:1,s:[{o:"sine",f:[2200,700],d:1.4,g:.06}],m:2},scrap:{f:"scrap",v:.3,m:3,j:.2},
+  /* match */
+  waveStart:{s:[{o:"saw",f:[220,220],d:.25,g:.07},{o:"saw",f:[330,330],d:.4,g:.07,at:.18}],m:1},
+  bossWave:{w:1,s:[{o:"saw",f:[110,110],d:.6,g:.13},{o:"saw",f:[116.5,116.5],d:.6,g:.1},{o:"square",f:[55,55],d:.8,g:.13,at:.3}],m:1},
+  waveClear:{s:[{o:"triangle",f:[523,523],d:.2,g:.12},{o:"triangle",f:[659,659],d:.2,g:.12,at:.1},{o:"triangle",f:[784,784],d:.4,g:.12,at:.2}],m:1},
+  contractDone:{s:[{o:"square",f:[523,523],d:.12,g:.07},{o:"square",f:[659,659],d:.12,g:.07,at:.1},{o:"square",f:[784,784],d:.12,g:.07,at:.2},{o:"triangle",f:[1046,1046],d:.6,g:.13,at:.3}],m:1},
+  contractFail:{s:[{o:"triangle",f:[300,200],d:.4,g:.09}],m:1},
+  overtimeCall:{w:1,s:[{o:"square",f:[600,1200],d:.5,g:.07},{o:"square",f:[1200,600],d:.5,g:.07,at:.5},{o:"sine",f:[80,40],d:.6,g:.35}],m:1},
+  choosePrompt:{s:[{o:"triangle",f:[880,880],d:.1,g:.09},{o:"triangle",f:[1175,1175],d:.2,g:.09,at:.1}],m:1},
+  tick:{s:[bp(2000,0,.02,.035)],m:2},
+  mk2:{s:[{o:"saw",f:[440,440],d:.25,g:.07},{o:"saw",f:[554,554],d:.25,g:.06}],m:2},
+  mk3:{s:[{o:"saw",f:[494,494],d:.3,g:.08},{o:"saw",f:[622,622],d:.3,g:.07},{o:"saw",f:[740,740],d:.3,g:.06}],m:2},
+  mk4:{s:[{o:"saw",f:[554,554],d:.4,g:.09},{o:"saw",f:[698,698],d:.4,g:.08},{o:"saw",f:[831,831],d:.4,g:.07},{o:"sine",f:[110,55],d:.4,g:.25}],m:2},
+  mk5:{s:[{o:"saw",f:[587,587],d:.7,g:.1},{o:"saw",f:[740,740],d:.7,g:.09},{o:"saw",f:[880,880],d:.7,g:.08},{o:"saw",f:[1175,1175],d:.7,g:.06,at:.08},{o:"sine",f:[120,40],d:.7,g:.35},{n:1,f:[6000,800],d:.5,g:.15}],m:1},
+  comboStep:{s:[{o:"triangle",f:[660,660],d:.14,g:.11},{o:"sine",f:[1320,1320],d:.1,g:.04}],m:2},comboBreak:{s:[{o:"saw",f:[400,120],d:.35,g:.09}],m:1},
+  stagger:{s:[{n:1,f:[6000,2000],d:.08,g:.35,hp:1},{o:"square",f:[2200,900],d:.07,g:.07}],m:2},
+  redline:{w:1,s:[{o:"saw",f:[300,1800],d:.9,g:.07},{o:"sine",f:[600,3600],d:.9,g:.035}],m:1},redHiss:{s:[{n:1,f:[7000,1500],d:1.2,g:.18,hp:1}],m:1},
+  callin:{s:[bp(1200,0,.05,.05),bp(1600,.08,.05,.05)],m:1},vox:{w:1,s:[bp(740,0,.05,.045),{n:1,f:[2500,2500],d:.12,g:.04,bp:1,q:2,at:.05}],m:1},
+  /* interface */
+  uiClick:{f:"ui_click",v:.45,m:2},uiConfirm:{f:"ui_confirm",v:.55,m:1},uiDeny:{s:[bp(200,0,.12),bp(150,.12,.16)],m:1}
+};
+for(var sk8 in SND)if(SND[sk8].s)SND[sk8].len=lenOf(SND[sk8].s);
+function nearestMech(x,y){var b=null,d=2.5;players.forEach(function(q){var e=Math.hypot(q.x-x,q.y-y);if(e<d){d=e;b=q}});return b}
+/* snd(name, {x,y} position for distance, mech = whose sound (the partner's play quieter), vol, pitch) */
+function snd(name,o){
+  var S=SND[name];if(!S)return;if(F8.sndLog.length<400)F8.sndLog.push(name);
+  if(!AU.ac||AU.ac.state==="closed")return;o=o||{};
+  try{
+    var v=(S.v==null?1:S.v)*(o.vol==null?1:o.vol),fp=player&&focusP();
+    if(o.x!=null&&fp)v*=Math.max(.2,Math.min(1,1.15-Math.hypot(o.x-fp.x,o.y-fp.y)/30));
+    if(o.mech!=null&&player&&o.mech!==player.idx)v*=.7;   /* GDD: the partner's sounds are slightly quieter */
+    if(v<.02)return;
+    var bus=S.w?AU.warn:AU.sfx,pitch=(o.pitch||1)*(S.j?1+(Math.random()-.5)*S.j:1);
+    if(S.w)AU.duckUntil=performance.now()+600;   /* warnings cut through the music */
+    if(S.f&&auSample(S.f,{vol:v,rate:(S.r||1)*pitch,max:S.m||4,dur:S.d,bus:bus,key:name}))return;
+    if(S.s&&auSlot(name,S.m||4,S.len))auSynth(S.s,v,pitch,bus);
+  }catch(err){f8Err(err)}
+}
+addEventListener("pointerdown",auInit,true);addEventListener("keydown",auInit,true);
+document.addEventListener("click",function(e){var t=e.target&&e.target.closest&&e.target.closest("button,[role=button],.gth,.gtab");if(t)snd("uiClick")},true);
+
+/* ----- music (GDD Music): title and garage, combat loop, boss layer, Warden theme, breather, Overtime layer, stings ----- */
+var MU={cue:"",file:"",node:null,layers:{},seq:null,wStep:0};
+function musStop(){
+  var n=MU.node;MU.node=null;MU.seq=null;if(!n||!AU.ac)return;
+  var t=AU.ac.currentTime;n.g.gain.cancelScheduledValues(t);n.g.gain.setValueAtTime(n.g.gain.value,t);n.g.gain.linearRampToValueAtTime(0,t+.6);n.s.stop(t+.65);
+}
+function musStart(cue){
+  musStop();MU.file=cue==="garage"?"synth_garage":cue==="combat"?"synth_battle":"";
+  if(cue==="warden"){MU.seq={next:AU.ac.currentTime+.1,step:0};return}
+  var b=MU.file&&AU.buf[MU.file];if(!b)return;   /* still loading: auLoad starts it */
+  var ac=AU.ac,s=ac.createBufferSource(),g=ac.createGain(),L=AU_LOOPS[MU.file];s.buffer=b;s.loop=true;
+  if(L&&L[1]&&L[1]<b.duration){s.loopStart=L[0];s.loopEnd=L[1]}
+  g.gain.setValueAtTime(0,ac.currentTime);g.gain.linearRampToValueAtTime(1,ac.currentTime+.8);s.connect(g);g.connect(AU.mus);s.start();MU.node={s:s,g:g};
+}
+function tone(type,f,t,d,g,lp){   /* one scheduled music note into the music bus */
+  var ac=AU.ac,o=ac.createOscillator(),e=ac.createGain(),fl=ac.createBiquadFilter();o.type=type;o.frequency.value=f;fl.type="lowpass";fl.frequency.value=lp||4000;
+  e.gain.setValueAtTime(1e-4,t);e.gain.linearRampToValueAtTime(g,t+Math.min(.02,d/4));e.gain.exponentialRampToValueAtTime(1e-4,t+d);
+  o.connect(fl);fl.connect(e);e.connect(AU.mus);o.start(t);o.stop(t+d+.05);
+}
+function kick(t,g){var ac=AU.ac,o=ac.createOscillator(),e=ac.createGain();o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(40,t+.25);
+  e.gain.setValueAtTime(g||.5,t);e.gain.exponentialRampToValueAtTime(1e-4,t+.3);o.connect(e);e.connect(AU.mus);o.start(t);o.stop(t+.35)}
+function layer(name,on){   /* boss lead (a held minor progression) and the Overtime siren lead: they never clash with the loop's beat */
+  var L=MU.layers[name],ac=AU.ac,t=ac.currentTime;
+  if(on&&!L){
+    var g=ac.createGain(),f=ac.createBiquadFilter(),os=[],k;g.gain.setValueAtTime(1e-4,t);g.gain.linearRampToValueAtTime(name==="boss"?.05:.03,t+1);
+    f.type="lowpass";f.connect(g);g.connect(AU.mus);
+    if(name==="boss"){f.frequency.value=1600;var prog=[220,174.6,261.6,196];
+      [0,7].forEach(function(dt){var o=ac.createOscillator();o.type="sawtooth";o.detune.value=dt;for(k=0;k<64;k++)o.frequency.setValueAtTime(prog[k%4]*(dt?1.5:1),t+k*2);o.connect(f);o.start(t);os.push(o)})}
+    else{f.frequency.value=2600;var o=ac.createOscillator(),lf=ac.createOscillator(),lg=ac.createGain();o.type="square";o.frequency.value=760;lf.frequency.value=.6;lg.gain.value=260;
+      lf.connect(lg);lg.connect(o.frequency);o.connect(f);o.start(t);lf.start(t);os.push(o,lf)}
+    MU.layers[name]={g:g,os:os};
+  } else if(!on&&L){
+    MU.layers[name]=null;L.g.gain.cancelScheduledValues(t);L.g.gain.setValueAtTime(L.g.gain.value,t);L.g.gain.linearRampToValueAtTime(1e-4,t+.8);L.os.forEach(function(o){o.stop(t+.85)});
+  }
+}
+function musPad(){   /* breather: pads swell (the loop's drums drop out through the low-pass in musTick) */
+  if(!AU.ac)return;var t=AU.ac.currentTime;[220,261.6,329.6].forEach(function(f){tone("triangle",f,t,3.2,.05,1800)});
+}
+/* The Warden theme (GDD-D51): a slow, heavy placeholder ostinato that rises a whole step for every broken leg. Inert without a Warden. */
+function wardenInfo(){
+  var w=false,legs=0;
+  bots.forEach(function(b){var k=String(b.kind||b.type||"");if(b.warden||/warden/i.test(k)){w=true;if((b.leg||/leg/i.test(k))&&b.hp>0)legs++}else if(/^leg$/i.test(k)&&b.hp>0)legs++});
+  if(!w)return null;F8.legMax=Math.max(F8.legMax,legs);return {step:Math.max(0,Math.min(4,F8.legMax-legs))};
+}
+function wardenSeq(){
+  var ac=AU.ac,s=MU.seq;if(!s)return;var spb=60/72/2,root=55*Math.pow(2,MU.wStep*2/12),pat=[0,0,12,0,3,0,10,7];
+  while(s.next<ac.currentTime+.25){var i=s.step%8,t=s.next;
+    tone("sawtooth",root*Math.pow(2,pat[i]/12),t,spb*.95,.09,420);if(i===0||i===4)kick(t,.45);
+    if(s.step%32===0)[2,3,4.5].forEach(function(m){tone("triangle",root*m,t,spb*32,.025,1200)});
+    s.next+=spb;s.step++}
+}
+function sting(kind){   /* extract: rising major; campaign over: falling minor into silence; victory: an anthem phrase */
+  if(!AU.ac)return;var t=AU.ac.currentTime+.05;
+  if(kind==="extract")[523,659,784,1046].forEach(function(f,i){tone("square",f,t+i*.09,i===3?.9:.2,.06,3000);tone("triangle",f/2,t+i*.09,i===3?.9:.2,.08)});
+  else if(kind==="over")[440,349,294,220].forEach(function(f,i){tone("sawtooth",f,t+i*.24,i===3?1.6:.3,.07,1200)});
+  else{var ch=[[262,330,392],[196,247,294],[220,262,330],[175,220,262]],e=60/140/2;
+    ch.forEach(function(c,b){for(var k=0;k<8;k++)tone("square",c[k%3]*2,t+(b*8+k)*e,e*.9,.045,3500);tone("sawtooth",c[0]/2,t+b*8*e,8*e,.06,700);kick(t+b*8*e,.35);kick(t+(b*8+4)*e,.3)});
+    [262,330,392,523].forEach(function(f){tone("triangle",f,t+32*e,2.2,.05,3000)})}
+}
+function musTick(){
+  if(!AU.ac)return;var ac=AU.ac,now=ac.currentTime,wi=state==="play"||state==="paused"?wardenInfo():null;
+  var cue=state==="garage"||state==="menu"?"garage":state==="play"||state==="paused"?(wi?"warden":"combat"):"";
+  if(cue!==MU.cue){MU.cue=cue;musStart(cue)}
+  if(wi)MU.wStep=wi.step;
+  var ot=state==="play"&&(run.wave>T.waves.length||simState()==="overtime");
+  var boss=cue==="combat"&&(run.wave===3||run.wave===5)&&bots.some(function(b){return b.boss&&b.hp>0});
+  layer("boss",boss);layer("ot",ot&&cue==="combat");
+  if(MU.node)MU.node.s.playbackRate.setTargetAtTime(ot?1.25:1,now,.3);   /* Overtime: the loop runs faster (placeholder for the doubled-tempo mix) */
+  AU.musF.frequency.setTargetAtTime(state==="play"&&run.breather>0?700:state==="paused"?1200:20000,now,.25);
+  AU.mus.gain.setTargetAtTime(FS.music*.55*(performance.now()<AU.duckUntil?.45:1),now,.08);
+  if(cue==="warden")wardenSeq();
+}
+
+/* ----- the cockpit voice (GDD-D45): ten lines, captions always, speech synthesis if switched on; one line per 3 s, warnings win ----- */
+var VLINES={heat:["Heat critical",2],armor:["Armor critical",2],redline:["Redline",2],podLost:["Pod lost",2],sniper:["Sniper on the roof",2],
+  span:["Span unstable",2],charge:["Charge planted",2],pod:["Pod inbound",1],contract:["Contract complete",1],overtime:["Overtime",1]};
+var VO={last:-9,pend:null,hideT:0},capEl=document.createElement("div");capEl.className="hud";capEl.id="voCap";capEl.setAttribute("aria-live","polite");document.body.appendChild(capEl);
+function voice(id){
+  var L=VLINES[id];if(!L)return;var now=performance.now()/1000;
+  if(VO.pend&&VO.pend.w>L[1]&&now-VO.pend.t<2.5)return;   /* a waiting warning beats a new info line */
+  VO.pend={id:id,w:L[1],t:now};
+}
+function voTick(){
+  var now=performance.now()/1000,p=VO.pend;
+  if(p&&now-p.t>2.5){VO.pend=p=null}   /* too late to be useful */
+  if(p&&now-VO.last>=3&&state==="play"){VO.pend=null;VO.last=now;say(p.id)}
+  if(VO.hideT&&now>VO.hideT){VO.hideT=0;capEl.classList.remove("on")}
+}
+function say(id){
+  var L=VLINES[id];capEl.innerHTML="<small>COCKPIT</small>"+L[0].toUpperCase();capEl.classList.toggle("warn",L[1]>1);capEl.classList.add("on");
+  VO.hideT=performance.now()/1000+2.2;F8.voLog.push({line:L[0],t:Math.round(performance.now())});if(F8.voLog.length>60)F8.voLog.shift();snd("vox");
+  if(FS.speech&&window.speechSynthesis&&window.SpeechSynthesisUtterance)try{var u=new SpeechSynthesisUtterance(L[0]);u.rate=1.1;u.pitch=.4;u.volume=Math.min(1,FS.sfx*1.2);speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}
+}
+
+/* ----- stamps, multi-kill text, impacts, flashes ----- */
+var MK_TXT=["","","DOUBLE KILL","TRIPLE KILL","QUADRUPLE KILL","DEVASTATING"];
+function stamp(x,y,z,txt,col,o){o=o||{};F8.stamps.push({x:x,y:y,z:z,txt:txt,col:col,sub:o.sub||"",size:o.size||1,life:o.life||1,rot:o.rot==null?-.06:o.rot,mech:o.mech,mk:!!o.mk,born:performance.now()});
+  if(F8.stamps.length>40)F8.stamps.shift()}
+function bkey(b){return guestLive()?b.id:b}   /* host enemies are kept objects; a guest rebuilds them from snapshot rows every frame */
+function flashBot(b){var k=bkey(b);if(k!=null)F8.flash.set(k,performance.now()+90)}
+function nearBot(x,y,r){var t=null;bots.forEach(function(b){if(b.hp<=0||b.dropping)return;var d=Math.hypot(b.x-x,b.y-y);if(d<r){r=d;t=b}});return t}
+function gradeFx(e){   /* ["g",mech,grade,x,y,z]: stamp at the struck enemy (or the strike point), grade and weapon sounds, hit-stop on a Perfect */
+  var m=e[1],gr=e[2],x=e[3],y=e[4],q=players[m],t=nearBot(x,y,2.4),now=performance.now(),c=F8.combo[m]||1;
+  if(t){x=t.x;y=t.y}
+  stamp(x,y,(t&&t.z||0)+1.6,gr==="Perfect"?"PERFECT":gr==="Good"?"GOOD":"MISS",gr==="Perfect"?"#f2c230":gr==="Good"?"#7fdc6a":"#ff5a4a",
+    {sub:gr==="Perfect"&&c>1?"×"+c:"",size:gr==="Perfect"?1.15:.9,life:.8,rot:gr==="Miss"?.1:-.07});
+  snd(gr==="Perfect"?"perfect":gr==="Good"?"good":"miss",{mech:m});   /* on release, no delay */
+  var k=q&&q.pileKind;if(!k||k==="pile")snd("pile",{mech:m});else if(k==="buster")snd("busterFire",{mech:m});
+  if(gr!=="Perfect")return;
+  if(t)flashBot(t);
+  if(FS.hitstop){F8.punchAt=now;F8.arm={x:x,y:y,until:now+40}}
+  F8.impacts.push({x:x,y:y,z:(t&&t.z||0)+.8,born:now,hold:FS.hitstop?60:0});
+}
+function multiKill(m,n){
+  var q=players[m];if(!q)return;var k=Math.min(5,n);
+  F8.stamps=F8.stamps.filter(function(s){return !(s.mk&&s.mech===m)});   /* the count climbs in place */
+  stamp(q.x,q.y,3,MK_TXT[k],k>=5?"#ff5a4a":k>=4?"#ff8a3a":"#f2c230",{size:1+.22*(k-2),life:1.5,mech:m,mk:true,sub:n>5?"×"+n:"",rot:-.04});
+  snd("mk"+k,{mech:m});
+}
+function toastFx(e){   /* ["t",text,css,only]: a few toasts are the only signal for pods taken and pillars down */
+  var t=String(e[1]||""),mine=e[3]<0||!player||e[3]===player.idx;
+  if(/ took a /.test(t)){snd("podStolen");voice("podLost")}
+  else if(/^Pillar down/.test(t))snd("pillarDown");
+  else if(mine&&/^Field repair/.test(t))snd("podRepair");
+  else if(mine&&/^Overclock:/.test(t))snd("podOverclock");
+  else if(mine&&/^Scrap cache:/.test(t))snd("cacheBurst");
+}
+function feelEvent(e){
+  var me=player?player.idx:0,q;
+  switch(e[0]){
+    case "g":gradeFx(e);break;
+    case "cb":{var was=F8.combo[e[1]]||1;F8.combo[e[1]]=e[2];
+      if(e[3]&&was>1){snd("comboBreak",{mech:e[1]});if(e[1]===me){F8.brk=performance.now();q=players[me];if(q)stamp(q.x,q.y,2.5,"COMBO BROKEN","#ff5a4a",{size:.7,life:.9,mech:me})}}
+      else if(e[2]>was){snd("comboStep",{mech:e[1],pitch:Math.pow(2,(e[2]-2)*3/12)});if(e[1]===me)F8.cUp=performance.now()}
+      break}
+    case "sg":{var b=nearBot(e[1],e[2],1.2);if(b)flashBot(b);snd("stagger",{x:e[1],y:e[2]});break}
+    case "mk":multiKill(e[1],e[2]);break;
+    case "cr":stamp(e[3],e[4],2.4,"CRUSHED","#ff8a3a",{sub:"×"+e[2],size:1.25,life:1.6});break;
+    case "sd":stamp(e[2],e[3],3.6,"SPAN DOWN","#f2c230",{size:1.5,life:1.8,rot:-.04});break;
+    case "x":{var ty=e[1];snd(ty==="scuttler"?"scutPop":"die",{mech:e[2]>=0?e[2]:undefined,pitch:ty==="loader"||ty==="bulwark"?.75:ty==="sniper"?.65:1});if(ty==="sniper")snd("blast");break}
+    case "rl":if(e[2]){snd("redline",{mech:e[1]});if(e[1]===me)voice("redline")}
+      else if(e[3]>0){snd("redHiss",{mech:e[1]});q=players[e[1]];if(q)stamp(q.x,q.y,2.4,"LOCKOUT","#ff5a4a",{sub:(+e[3]).toFixed(1)+"s",size:.8,life:1.1,mech:e[1]})}break;
+    case "ar":snd("arc",{mech:e[1]});break;
+    case "sm":snd("seismic",{x:e[2],y:e[3]});snd("sub",{x:e[2],y:e[3]});break;
+    case "bx":case "sk":snd("blast",{x:e[2],y:e[3]});break;
+    case "ci":snd("callin",{mech:e[1]});if(e[1]===me){F8.ciUsed=e[2];F8.ciT=performance.now()}break;
+    case "l":snd("winch",{x:e[1],y:e[2]});snd("reel",{x:e[1],y:e[2]});break;
+    case "sb":snd("shieldBreak",{x:e[1],y:e[2]});break;
+    case "f":if(e[4]==="BLOCKED")snd("shieldBlock",{x:e[1],y:e[2]});break;
+    case "sp":snd("slagSpill",{x:e[2],y:e[3]});break;
+    case "su":snd("spanStrain",{x:e[2],y:e[3]});voice("span");break;
+    case "c":snd("creak");break;
+    case "z":snd("shutter");break;
+    case "w":snd("waveClear");break;
+    case "ct":F8.ctBump=performance.now();
+      if(e[4]===1){snd("contractDone");voice("contract");if(player)stamp(player.x,player.y,2.9,"CONTRACT COMPLETE","#7fdc6a",{sub:e[5]?"+"+e[5]:"",size:.9,life:2,mech:me})}
+      else if(e[4]===-1)snd("contractFail");break;
+    case "ch":if(e[1]==="prompt")snd("choosePrompt");
+      else if(e[1]==="overtime"){snd("overtimeCall");voice("overtime");if(player)stamp(player.x,player.y,2.9,"OVERTIME","#ff5a4a",{size:1.4,life:1.6,mech:me})}break;
+    case "rv":snd("revived");break;
+    case "t":toastFx(e);break;
+  }
+}
+
+/* ----- per-frame edges in the view state: mechs, enemies, pods, falling pieces, shots, voxels ----- */
+function f8Reset(){
+  F8.sim=sim;F8.stamps.length=0;F8.impacts.length=0;F8.flash.clear();F8.combo=[1,1];F8.seenShot=new WeakSet();F8.shells=[];F8.gShots={};
+  F8.bots=new Map();F8.pods={};F8.clus={};F8.strikes={};F8.pl=[];F8.wave=run?run.wave:0;F8.rev=sim.world.rev;F8.scrap=0;F8.legMax=0;F8.br=false;VO.pend=null;
+}
+function playersTick(now){
+  players.forEach(function(q,i){
+    var s=F8.pl[i],mine=q===player,o={mech:q.idx},st=q.step||0;
+    if(!s){F8.pl[i]={hp:q.hp,over:q.over||0,cd:q.dashCd||0,ring:q.ring,atb:q.atb,ret:q.retract||0,aim:q.aim,step:st,sq:q.sq||0,lowA:false,hot:false,t:now};return}
+    var dt=Math.max(.001,(now-s.t)/1000),fr=q.maxHp?q.hp/q.maxHp:1;s.t=now;
+    if(q.hp<s.hp-.5&&q.hp>0&&now>(s.hurtT||0)){snd("hurt",o);s.hurtT=now+120}
+    if(s.hp>0&&q.hp<=0){if(mine){snd("destroyed",o);snd("sub",o)}else snd("partnerDown",o)}
+    if(mine&&q.hp>0){
+      if(fr<.35&&!s.lowA){s.lowA=true;snd("lowArmor");voice("armor")}else if(fr>.42)s.lowA=false;
+      if(q.heat>=80&&!s.hot){s.hot=true;voice("heat")}else if(q.heat<70)s.hot=false;
+      if(q.ring>=0&&!(s.ring>=0))snd("ring",o);
+      if(q.atb>=T.atb.fill&&!(s.atb>=T.atb.fill))snd("atbReady",o);
+      if((q.retract||0)>0&&!(s.ret>0))snd("retract",o);
+      if((q.sq||0)>s.sq+.5&&q.q!=="mortar"&&q.q!=="redline")snd(q.q==="breach"?"breachToss":"vent",o);   /* mortar shells and Redline have their own */
+    }
+    if((q.over||0)>0&&!(s.over>0)){snd("overheat",o);snd("lockHiss",o)}else if(!(q.over>0)&&s.over>0&&q.hp>0)snd("cooled",o);
+    if((q.dashCd||0)>s.cd+.3)snd("dash",o);
+    var da=Math.abs(Math.atan2(Math.sin(q.aim-s.aim),Math.cos(q.aim-s.aim)))/dt;if(da>4.5&&q.hp>0&&now>(s.servoT||0)){snd("servo",o);s.servoT=now+260}
+    if(q.hp>0&&Math.floor(st*3.2/Math.PI)!==Math.floor(s.step*3.2/Math.PI)&&Math.abs(st-s.step)<3){var lg=q.v&&q.v.legs||"jets";
+      snd(lg==="treads"?"stepTreads":lg==="strider"?"stepStrider":lg==="skids"?"stepSkids":"step",o)}
+    s.hp=q.hp;s.over=q.over||0;s.cd=q.dashCd||0;s.ring=q.ring;s.atb=q.atb;s.ret=q.retract||0;s.aim=q.aim;s.step=st;s.sq=q.sq||0;
+  });
+}
+function botsTick(now){
+  var cur=new Map(),skit=null;
+  bots.forEach(function(b){
+    var k=bkey(b);if(k==null)return;var s=F8.bots.get(k),o={x:b.x,y:b.y},st=b.state,drop=!!b.dropping;
+    if(!s){s={said:false,beep:0};if(b.kind==="charge")voice("charge")}
+    else{
+      if(s.drop&&!drop)snd(b.boss?"sniperLand":"land",o);
+      if(st!==s.st){if(b.loader&&st==="tell")snd("loaderTell",o);else if(b.loader&&st==="charge")snd("loaderCharge",o);
+        else if(st==="flash")snd("scutFlash",o);else if(st==="bash")snd("bash",o);else if(st==="plant")snd("plantBeep",o)}
+      if(b.boss){var tl=b.tell>0;if(tl&&!s.tell)snd("sniperTell",o);
+        if(b.mode!==s.mode){if(b.mode==="jump")snd("sniperJump",o);else if(b.mode==="fall")snd("sniperFall",o);else if(s.mode==="jump"||s.mode==="fall")snd("sniperLand",o)}}
+    }
+    if(b.boss&&!drop&&!s.said){s.said=true;voice("sniper")}
+    if(b.kind==="charge"&&now>s.beep){snd("chargeBeep",o);s.beep=now+Math.max(110,Math.min(900,(+b.t||0)*220))}   /* faster as the fuse runs down */
+    if(b.kind==="scuttler"&&!drop&&b.hp>0)skit=b;
+    s.st=st;s.drop=drop;s.mode=b.mode;s.tell=b.tell>0;s.x=b.x;s.y=b.y;s.kind=b.kind;cur.set(k,s);
+  });
+  F8.bots.forEach(function(s,k){if(!cur.has(k)&&s.kind==="charge")snd("chargeBlast",{x:s.x,y:s.y})});
+  F8.bots=cur;
+  if(skit&&now>F8.skit){F8.skit=now+330;snd("scutSkitter",{x:skit.x,y:skit.y})}
+}
+function podsTick(){
+  var cur={};
+  pods.forEach(function(o){var k=Math.round(o.x*2)+":"+Math.round(o.y*2),s=F8.pods[k];
+    if(!s){s={};if(!o.landed){snd("podIncoming",{x:o.x,y:o.y});voice("pod")}}
+    else if(!s.landed&&o.landed)snd("podLand",{x:o.x,y:o.y});
+    s.landed=!!o.landed;cur[k]=s});
+  F8.pods=cur;
+}
+function clustersTick(){
+  var cur={};
+  clusters.forEach(function(c){var f=c.foot&&c.foot[0]||0;cur[c.id]={n:c.vs?c.vs.length:10,x:f%W+.5,y:((f/W)|0)+.5,prop:!!c.prop}});
+  for(var k in F8.clus)if(!cur[k]){var c=F8.clus[k];snd("collapse",{x:c.x,y:c.y,vol:Math.min(1.2,.35+c.n/120)});if(c.prop)snd("metal",{x:c.x,y:c.y})}   /* louder for bigger pieces */
+  F8.clus=cur;
+}
+function onShot(kind,team,by,x,y,big){
+  if(team===1||kind==="orb"){snd(big?"sniperShot":"orb",{x:x,y:y});return}
+  var q=by!=null&&by>=0?players[by]:nearestMech(x,y),o={mech:q?q.idx:undefined,x:x,y:y},now=performance.now();
+  if(kind==="mortar")snd("mortarLaunch",o);
+  else if(kind==="shell")return;   /* the Bunker-buster's fire sound comes with its grade */
+  else if(kind==="rail")snd("rail",o);
+  else if(kind==="plasma")snd("plasma",o);   /* the torch "loop": short overlapping bursts while it fires */
+  else if(q&&q.gun==="shotgun"){if(now>(F8.sgT||0)){F8.sgT=now+60;snd("shotgun",o)}}
+  else{if(now-(F8.mgLast||0)>400)snd("spinUp",o);F8.mgLast=now;snd("minigun",o)}
+}
+function onGone(kind,team,x,y,t){
+  if(kind==="shell"||kind==="mortar")snd("blast",{x:x,y:y});
+  else if(team!==1&&kind!=="orb"&&(t==null||t>.04))snd("voxHit",{x:x,y:y});   /* a slug that stopped early hit something */
+}
+function shotsTick(){
+  if(guestLive())return;   /* the guest reads its shots in Net.apply */
+  var live=new Set();
+  shots.forEach(function(s){live.add(s);if(F8.seenShot.has(s))return;F8.seenShot.add(s);onShot(s.kind,s.team,s.src&&s.src.by,s.x,s.y,s.big);if(s.team===0&&F8.shells.length<300)F8.shells.push(s)});
+  F8.shells=F8.shells.filter(function(s){if(live.has(s))return true;onGone(s.kind,s.team,s.x,s.y,s.t);return false});
+}
+function strikesTick(){var cur={};strikes.forEach(function(k){cur[k.id]=1;if(!F8.strikes[k.id])snd("strikeWhistle",{x:k.x,y:k.y})});F8.strikes=cur}
+function worldBreak(n){snd(n>=6?"chunk":"voxBreak")}
+function stateEdge(cur){
+  if(cur==="extracted"){musStop();MU.cue="";var h=overlay.querySelector("h1");sting(h&&/victory/i.test(h.textContent)?"victory":"extract")}
+  else if(cur==="dead"){musStop();MU.cue="";sting("over")}
+}
+function f8Tick(){
+  var now=performance.now();
+  if(F8.sim!==sim)f8Reset();
+  if(state!==F8.state){stateEdge(state);F8.state=state}
+  musTick();voTick();
+  if(state!=="play")return;
+  if(run.wave!==F8.wave){if(run.wave>F8.wave&&run.wave>0)snd(run.wave===3||run.wave===5?"bossWave":"waveStart");F8.wave=run.wave}
+  var br=run.breather>0;if(br&&!F8.br)musPad();F8.br=br;
+  playersTick(now);botsTick(now);podsTick();clustersTick();shotsTick();strikesTick();
+  if(!guestLive()){var r=sim.world.rev,d=r-F8.rev;F8.rev=r;if(d>0)worldBreak(d)}
+  if(scrap>F8.scrap)snd("scrap",{pitch:1+Math.min(.5,(scrap-F8.scrap)*.02)});F8.scrap=scrap;
+  if(pools.length&&now>F8.sizzle){F8.sizzle=now+380;var o=pools[0];snd("sizzle",{x:(o.x0+o.x1)/2,y:(o.y0+o.y1)/2})}
+}
+(function f8Loop(){requestAnimationFrame(f8Loop);try{f8Tick()}catch(err){f8Err(err)}})();
+
+/* ----- drawing: stamps, multi-kills, impacts, stagger readouts, the Redline aura, the combo on the cursor ring, the camera punch ----- */
+function stampFont(){return TH.ink?"Kalam,'Patrick Hand',cursive":"'Chakra Petch','Segoe UI',sans-serif"}
+function drawStamps(){
+  var now=performance.now(),fam=stampFont(),ink=TH.ink,i;
+  for(i=F8.stamps.length-1;i>=0;i--)if((now-F8.stamps[i].born)/1000>F8.stamps[i].life)F8.stamps.splice(i,1);
+  F8.stamps.forEach(function(s){
+    var age=(now-s.born)/1000,q=s.mech!=null&&players[s.mech],x=q&&q.hp>0?q.x:s.x,y=q&&q.hp>0?q.y:s.y,z=s.z+Math.min(age,.6)*.6;
+    var pop=age<.09?1.7-.7*age/.09:1,a=age>s.life*.7?1-(age-s.life*.7)/(s.life*.3):1,px=Math.round(15*s.size*Math.max(.85,Math.min(1.5,zoom)));
+    ctx.save();ctx.translate(SX(x,y,z),SY(x,y,z));ctx.rotate(s.rot);ctx.scale(pop,pop);ctx.globalAlpha=Math.max(0,a);
+    ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="700 "+px+"px "+fam;var w=ctx.measureText(s.txt).width,sw=0,sf="700 "+Math.round(px*.8)+"px "+fam;
+    if(s.sub){ctx.font=sf;sw=ctx.measureText(s.sub).width+px*.5;ctx.font="700 "+px+"px "+fam}
+    var BW=w+sw+px*.8,BH=px*1.45,x0=-BW/2;
+    ctx.fillStyle=ink?"rgba(255,250,240,.9)":"rgba(10,11,13,.66)";ctx.fillRect(x0,-BH/2,BW,BH);
+    ctx.strokeStyle=ink||s.col;ctx.lineWidth=Math.max(1.5,px*.12);ctx.strokeRect(x0,-BH/2,BW,BH);
+    if(!ink){ctx.globalAlpha*=.5;ctx.strokeStyle=s.col;ctx.lineWidth=1;ctx.strokeRect(x0+3,-BH/2+3,BW-6,BH-6);ctx.globalAlpha=Math.max(0,a)}
+    ctx.fillStyle=s.col;ctx.fillText(s.txt,x0+px*.4+w/2,1);
+    if(s.sub){ctx.font=sf;ctx.fillStyle=ink||"#fff";ctx.fillText(s.sub,x0+px*.4+w+sw/2,1)}
+    ctx.restore();
+  });
+  ctx.globalAlpha=1;ctx.textBaseline="alphabetic";
+}
+function drawImpacts(){   /* the Perfect impact burst: held still for the 60 ms hit-stop, then it blows out */
+  var now=performance.now();
+  for(var i=F8.impacts.length-1;i>=0;i--){var o=F8.impacts[i],age=Math.max(0,now-o.born-o.hold)/1000;if(age>.22){F8.impacts.splice(i,1);continue}
+    var X=SX(o.x,o.y,o.z),Y=SY(o.x,o.y,o.z),u=age/.22;
+    ctx.globalAlpha=1-u;ctx.strokeStyle="#fff";ctx.lineWidth=3*(1-u)+1;ctx.beginPath();ctx.ellipse(X,Y,(10+40*u)*zoom,(7+28*u)*zoom,0,0,6.283);ctx.stroke();
+    ctx.fillStyle=TH.ink?"#fffaf0":"#fff";ctx.beginPath();
+    for(var k=0;k<8;k++){var an=k*.785+.2,R=(k%2?16:30)*zoom*(1-u*.5);ctx.lineTo(X+Math.cos(an)*R,Y+Math.sin(an)*R*.7);ctx.lineTo(X+Math.cos(an+.39)*5*zoom,Y+Math.sin(an+.39)*3.5*zoom)}
+    ctx.closePath();ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+function drawStagger(){   /* staggered enemies (sim b.stag, snapshot flag 64): a spinning broken ring and STAGGER over the head */
+  var t=performance.now()/1000,host=!guestLive();
+  bots.forEach(function(b){
+    if(!(b.stag>0)||b.hp<=0)return;var z=(b.z||0)+(b.h||1.1)+.45,X=SX(b.x,b.y,z),Y=SY(b.x,b.y,z),r=12*zoom;
+    ctx.strokeStyle="#f2c230";ctx.lineWidth=2;ctx.setLineDash([4*zoom,4*zoom]);ctx.lineDashOffset=-t*30;ctx.beginPath();ctx.ellipse(X,Y,r,r*.45,0,0,6.283);ctx.stroke();ctx.setLineDash([]);
+    ctx.font="700 "+Math.round(9*Math.max(1,zoom))+"px 'JetBrains Mono',monospace";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle=TH.ink||"rgba(0,0,0,.75)";
+    ctx.strokeText("STAGGER",X,Y-7*zoom);ctx.fillStyle="#f2c230";ctx.fillText("STAGGER",X,Y-7*zoom);
+    if(host&&T.stagger&&T.stagger.time>0){var f=Math.max(0,Math.min(1,b.stag/T.stagger.time)),w=26*zoom;ctx.fillStyle="rgba(0,0,0,.6)";ctx.fillRect(X-w/2,Y+5*zoom,w,3);ctx.fillStyle="#f2c230";ctx.fillRect(X-w/2,Y+5*zoom,w*f,3)}
+  });
+}
+function drawAura(){   /* Redline: a white-hot ring around the mech */
+  var a=.45+.25*Math.sin(performance.now()/70);
+  players.forEach(function(q){if(!(q.red>0)||q.hp<=0)return;ctx.strokeStyle="rgba(255,240,220,"+a+")";ctx.lineWidth=3;ring(q.x,q.y,.2,.95);ctx.stroke();
+    ctx.strokeStyle="rgba(255,190,120,"+a*.6+")";ctx.lineWidth=6;ring(q.x,q.y,.2,1.15);ctx.stroke()});
+}
+function punchAmt(){var d=performance.now()-F8.punchAt;if(d<0||d>220)return 0;return d<40?.04*d/40:.04*(1-(d-40)/180)}   /* 4% in, then back */
+render=(function(orig){return function(){
+  var z0=zoom,sh=shake,pa=FS.hitstop?punchAmt():0;
+  if(!FS.shake)shake=0;if(pa)zoom=z0*(1+pa);
+  try{orig()}finally{zoom=z0;shake=sh}
+  if(player&&player.red>0&&state==="play"){   /* Redline: the screen edges glow white-hot */
+    var g=ctx.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*.3,cw/2,ch/2,Math.max(cw,ch)*.72),a=.2+.08*Math.sin(performance.now()/90);
+    g.addColorStop(0,"rgba(255,244,230,0)");g.addColorStop(1,"rgba(255,226,190,"+a+")");ctx.fillStyle=g;ctx.fillRect(0,0,cw,ch);
+  }
+}})(render);
+drawFloats=(function(orig){return function(){orig();try{drawStagger();drawAura();drawImpacts();drawStamps()}catch(err){f8Err(err)}}})(drawFloats);
+drawCrosshair=(function(orig){return function(){
+  orig();if(state!=="play"||!player)return;
+  var x=mouse.x,y=mouse.y,c=F8.combo[player.idx]||1,brk=performance.now()-F8.brk<450,k;
+  if(brk){ctx.strokeStyle="#ff5a4a";ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,30,0,6.283);ctx.stroke()}
+  if(c<2)return;   /* the combo on the cursor ring at x2 or more: four pips and the number */
+  for(k=0;k<4;k++){ctx.strokeStyle=k<c?"#f2c230":"rgba(242,194,48,.2)";ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,30,-Math.PI/2+k*1.5708+.12,-Math.PI/2+(k+1)*1.5708-.12);ctx.stroke()}
+  var pop=Math.max(1,1.5-(performance.now()-F8.cUp)/400);ctx.font="700 "+Math.round(13*pop)+"px 'Chakra Petch',sans-serif";ctx.textAlign="left";
+  ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,.7)";ctx.strokeText("×"+c,x+30,y-24);ctx.fillStyle="#f2c230";ctx.fillText("×"+c,x+30,y-24);
+}})(drawCrosshair);
+drawerOf=(function(orig){return function(b){   /* the struck enemy flashes white: drawn through a view-only copy, the enemy itself is untouched */
+  var f=orig(b),u=F8.flash.get(bkey(b));if(!u)return f;if(u<performance.now()){F8.flash.delete(bkey(b));return f}
+  return function(o){var p=Object.create(o);p.flash=1;f(p)};
+}})(drawerOf);
+botView=(function(orig){return function(r,pr,u){var o=orig(r,pr,u);if(r[8]&64)o.stag=1;return o}})(botView);   /* guest: snapshot flag 64 = staggered */
+handleEvent=(function(orig){return function(e){
+  var k=e[0];
+  if(k==="f"&&(e[4]==="PERFECT"||e[4]==="Good"||e[4]==="Miss"))return;   /* the grade float is now a stamp ("g") */
+  if(k==="s"&&F8.arm&&performance.now()<F8.arm.until&&Math.hypot(e[1]-F8.arm.x,e[2]-F8.arm.y)<2.5){   /* hit-stop: the Perfect's sparks hold still for 60 ms */
+    var n=parts.length;orig(e);for(var i=n;i<parts.length;i++)parts[i].hold=.06;return}
+  orig(e);
+  try{feelEvent(e)}catch(err){f8Err(err)}
+}})(handleEvent);
+updateFx=(function(orig){return function(dt){
+  var held=null,i,q;
+  for(i=0;i<parts.length;i++){q=parts[i];if(q.hold>0){(held||(held=[])).push([q,q.x,q.y,q.z,q.vx,q.vy,q.vz,q.t]);q.hold-=dt}}
+  orig(dt);
+  if(held)held.forEach(function(h){q=h[0];q.x=h[1];q.y=h[2];q.z=h[3];q.vx=h[4];q.vy=h[5];q.vz=h[6];q.t=h[7]});
+}})(updateFx);
+Net.apply=(function(orig){return function(e){   /* guest: falling pieces, shots and broken voxels from each snapshot as it comes due */
+  var m=e.s,rm=0,i;
+  try{
+    for(i=0;i<m.vx.length;i+=3)if(vox[m.vx[i]]&&!m.vx[i+1])rm++;
+    m.ev.forEach(function(v){if(v[0]==="c")snd("creak")});
+    var cur={};m.s.forEach(function(r){cur[r[0]]=r;if(!F8.gShots[r[0]]){var k=SHOT_NAME[r[7]]||"bullet";onShot(k,k==="orb"?1:0,null,r[1],r[2],r[8])}});
+    for(var id in F8.gShots)if(!cur[id]){var r=F8.gShots[id],k2=SHOT_NAME[r[7]]||"bullet";onGone(k2,k2==="orb"?1:0,r[1],r[2],null)}
+    F8.gShots=cur;
+  }catch(err){f8Err(err)}
+  orig(e);
+  if(rm)worldBreak(rm);
+}})(Net.apply);
+countUp=(function(orig){return function(el,from,to,ms){   /* the excursion report's count-up ticks */
+  orig(el,from,to,ms);if(to===from||!(ms>0))return;var n=Math.min(24,Math.max(3,Math.round(ms/70))),k=0,id=setInterval(function(){snd("tick",{pitch:1+k*.02});if(++k>=n)clearInterval(id)},ms/n);
+}})(countUp);
+garageEquip=(function(orig){return function(){var r=orig.apply(this,arguments);snd(r===false?"uiDeny":"uiConfirm");return r}})(garageEquip);
+garageRepair=(function(orig){return function(){var r=orig.apply(this,arguments);snd(r===false?"uiDeny":"uiConfirm");return r}})(garageRepair);
+garageUpgrade=(function(orig){return function(){var r=orig.apply(this,arguments);snd(r===false?"uiDeny":"uiConfirm");return r}})(garageUpgrade);
+
+/* ----- HUD polish: the combo by the heat bar, call-in slot chips, the contract progress bar, the condition icon pulse ----- */
+var cmbEl=document.createElement("i"),ciEl=document.createElement("div"),ctBar=document.createElement("i");
+cmbEl.className="cmb";cmbEl.textContent="×1";$("heatTxt").parentNode.firstElementChild.appendChild(cmbEl);
+ciEl.className="oc ci";ciEl.id="ciSlots";ciEl.hidden=true;hudEls.ci.parentNode.insertBefore(ciEl,hudEls.ci.nextSibling);hudEls.ci.style.display="none";
+ctBar.className="ctBar";ctBar.innerHTML="<i></i>";$("ctBox").appendChild(ctBar);
+var HD={c:0,up:0,brk:0,ci:"",ct:"",cb:0};
+function f8Hud(){
+  var p=player,now=performance.now(),c=F8.combo[p.idx]||1;
+  if(c!==HD.c){cmbEl.textContent="×"+c;cmbEl.classList.toggle("on",c>=2);HD.c=c}
+  if(F8.cUp!==HD.up){HD.up=F8.cUp;cmbEl.classList.remove("up");void cmbEl.offsetWidth;cmbEl.classList.add("up")}
+  var bk=now-F8.brk<500;if(bk!==HD.brk){HD.brk=bk;cmbEl.classList.toggle("brk",bk)}
+  var cs=sim.callins&&sim.callins[p.idx],used=now-F8.ciT<800?F8.ciUsed:-1,key=cs?(cs[0]||"")+"|"+(cs[1]||"")+"|"+used:"";
+  if(key!==HD.ci){HD.ci=key;ciEl.hidden=!(cs&&(cs[0]||cs[1]||used>=0));
+    if(!ciEl.hidden)ciEl.innerHTML=[0,1].map(function(k){var t=cs[k];return '<span class="cis'+(t?"":" empty")+(used===k?" used":"")+'"><kbd>'+(k+1)+"</kbd>"+(t?esc(MetroSim.POD_NAME[t]||t):"empty")+"</span>"}).join("")}
+  var ct=curContract(),ck=ct?ct.id+"|"+ct.progress+"|"+ct.goal+"|"+ct.state:"";
+  if(ck!==HD.ct){HD.ct=ck;var inv=!ct||ct.id==="untouchable"||ct.id==="closeShave"||ct.id==="blitz";ctBar.hidden=inv;   /* those count down, not up */
+    if(!inv)ctBar.firstChild.style.width=Math.max(0,Math.min(100,(ct.state>0?1:ct.progress/Math.max(1,ct.goal))*100))+"%"}
+  if(F8.ctBump!==HD.cb){HD.cb=F8.ctBump;var bx=$("ctBox");bx.classList.remove("bump");void bx.offsetWidth;bx.classList.add("bump")}
+  if(MF.condShown!==F8.cond){F8.cond=MF.condShown;var cd=$("planTxt").parentNode;if(F8.cond){cd.classList.add("fresh");setTimeout(function(){cd.classList.remove("fresh")},3200)}}
+}
+hud=(function(orig){return function(){orig();try{f8Hud()}catch(err){f8Err(err)}}})(hud);
+
+/* ----- settings: screen shake, hit-stop, music and effects volume, cockpit speech ----- */
+(function(){
+  var done=$("setDone"),card=done.parentNode,lbl=document.createElement("div"),box=document.createElement("div"),note=document.createElement("span");
+  lbl.className="setLbl";lbl.textContent="Feel and sound";box.className="feelSet";note.className="note";
+  note.textContent="Saved on this device. Effects are presentation only: the match plays the same with them off. Sounds and music are placeholders until kr0 approves the final audio.";
+  box.innerHTML='<label for="fsShake"><span>Screen shake</span><input type="checkbox" id="fsShake"></label>'+
+    '<label for="fsStop"><span>Hit-stop and camera punch</span><input type="checkbox" id="fsStop"></label>'+
+    '<label for="fsMusic"><span>Music volume</span><input type="range" id="fsMusic" min="0" max="100" step="5"></label>'+
+    '<label for="fsSfx"><span>Effects volume</span><input type="range" id="fsSfx" min="0" max="100" step="5"></label>'+
+    '<label for="fsSpeech"><span>Cockpit voice speech</span><input type="checkbox" id="fsSpeech"></label>';
+  card.insertBefore(lbl,done);card.insertBefore(box,done);card.insertBefore(note,done);
+  var sh=$("fsShake"),hs=$("fsStop"),mu=$("fsMusic"),fx=$("fsSfx"),sp=$("fsSpeech");
+  sh.checked=FS.shake;hs.checked=FS.hitstop;mu.value=Math.round(FS.music*100);fx.value=Math.round(FS.sfx*100);sp.checked=FS.speech;
+  if(!window.speechSynthesis){sp.disabled=true;sp.title="This browser has no speech synthesis: captions only"}
+  sh.addEventListener("change",function(){FS.shake=sh.checked;saveFS()});
+  hs.addEventListener("change",function(){FS.hitstop=hs.checked;saveFS()});
+  mu.addEventListener("input",function(){FS.music=mu.value/100;saveFS()});
+  fx.addEventListener("input",function(){FS.sfx=fx.value/100;auVol();saveFS()});
+  fx.addEventListener("change",function(){snd("uiConfirm")});
+  sp.addEventListener("change",function(){FS.speech=sp.checked;saveFS();if(!sp.checked&&window.speechSynthesis)try{speechSynthesis.cancel()}catch(e){}});
+})();
+/* test hook for the feel and audio block */
+window.__feel={F8:F8,FS:FS,SND:SND,VO:VO,play:snd,voice:voice,stamp:stamp,get au(){return AU.ac?AU.ac.state:"none"},get music(){return MU.cue},
+  get layers(){return Object.keys(MU.layers).filter(function(k){return MU.layers[k]})}};
+/* ===== end phase 8 ===== */
 
 /* ===== Loop and input ===== */
 var last=0,acc=0,STEP=1/60,lastFrame=0;

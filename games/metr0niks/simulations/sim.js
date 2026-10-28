@@ -45,6 +45,8 @@
                         ["rv",mech,payer,price]   a downed mech was revived at a wave's end (GDD-D24)
                         ["z",zoneIndex,name]      a sealed zone's gate fell: the map grew (also sent to guests)
                         ["sb",x,y]                a Perfect broke a Bulwark's shield (phase 4)
+                        ["g",mech,"Perfect"|"Good"|"Miss",x,y,z]  a heavy shot's grade at its strike point (phase 8, view only: the grade stamp)
+                        ["su",pillarId,x,y]       a pillar chunk broke, so the deck it holds is unstable (phase 8, view only: the cockpit voice)
    sim.snapshot(full)   co-op host snapshot {t:"snap",tk,ack,sc,k,sh,w,p,b,s,sr,pd,cl,sl,vx,ev,st,ch,ct}; sl = slag pools [id,x0,y0,x1,y1,z,secondsLeft];
                         st = sim.state, ch = [prompt seconds left, Overtime called 0|1], ct = [contract progress, goal, state] (no contract: absent).
                         Bot rows [id,kind,x,y,z,head,aim,hp,flags,...]: kind 0 bot, 1 loader, 2 boss,
@@ -668,6 +670,7 @@ function create(opts){
     }
     c.count=0;supportDirty=true;lastBreakBy=curBy;
     if(n){sparks(fx/n+.5,fy/n+.5,fz/n+.5,10,[255,200,120]);smoke(fx/n+.5,fy/n+.5,fz/n+.5,3,[140,136,128]);addShake(.08)}
+    if(n&&c.pillar)emitNet(["su",c.s,r2(fx/n+.5),r2(fy/n+.5)]);   /* phase 8 (view only): a pillar that holds the deck lost a chunk ("Span unstable") */
     propBreak(c);   /* phase 5 */
   }
 
@@ -1176,6 +1179,7 @@ function create(opts){
     var src={by:p.idx,kind:"heavy",grade:grade,pow:p.dmgMul,w:p.pileKind};
     if(grade==="Miss"&&p.pileKind!=="buster")p.retract=K.retract;
     floatText(p.x,p.y,2.1,grade==="Perfect"?"PERFECT":grade,perfect?"#f2c230":grade==="Good"?"#7fdc6a":"#ff5a4a");
+    emitNet(["g",p.idx,grade,r2(p.x+ca*K.reach),r2(p.y+sa*K.reach),1]);   /* phase 8 (view only): the grade stamp at the strike point */
     addHeat(p,K.heat);
     if(p.pileKind==="buster"){fireBuster(p,src);return}
     if(p.pileKind==="winch"){fireWinch(p,grade,m,src);return}
