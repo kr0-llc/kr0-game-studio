@@ -1,6 +1,6 @@
 # Metr0niks level design: Overpass Sector 4 (five sectors)
 
-Updated Oct 28, 2026 · @kr0 · Concepts: [research/level-concepts/](research/level-concepts/README.md) · Concept page: https://claude.ai/artifact/X8y8t7nd96zwL1BeCetdzC
+Updated Oct 28, 2026 · @kr0 · Ink prototype's version: [level-design-ink.md](level-design-ink.md) · Concepts: [research/level-concepts/](research/level-concepts/README.md) · Concept page: https://claude.ai/artifact/X8y8t7nd96zwL1BeCetdzC
 
 On Oct 28 kr0 said the voxel prototype's zones all look very similar and asked for a full map with a breakdown by section. kr0 picked concept **A + B landmarks**: each zone is its own district, with one landmark that falls under the same support rule as the deck. The map is built in `simulations/sim.js` (`MAP`), so the voxel prototype plays it. `node simulations/map-check.js` checks it. Later on Oct 28 kr0 asked to grow the map to five sectors and give the last one room for a big boss fight. That adds the Glass Quarter and the Terminus Yard arena, where the deck ends. kr0 also said to focus on voxel and keep it as it is (GDD-D46), so the map stays voxel data in `sim.js`. Then kr0 asked for bigger sectors so two people can play comfortably, so every sector was scaled up 1.5× with the same layout and landmarks.
 
