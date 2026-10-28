@@ -30,3 +30,9 @@ Review page: https://claude.ai/artifact/34bv3u8XC7SwX124pWuEC8 (frame player, kr
 2. Cut-out puppet: the ink prototype rig (parts sheets, `art/metr0niks/source/ink_atlas.py`, code IK in `prototypes/prototype-ink.html`). Not yet written up as a studio workflow.
 
 Recommendation: the puppet for gameplay, frame-by-frame for acting reference and screens outside gameplay. kr0 chose on 28 October to compare both on dash first. The puppet dash is on the review page; the isometric frame-by-frame brief is `art/metr0niks/prompts/tim-o-sprites-dash-iso.txt`, priced at 13 credits and not yet run.
+
+## Round 3: jump-jets and win, isometric (28 October 2026)
+
+- **Jump-jets** (`sprites/jetpack-iso/`): on-model, and the reactor pack finally matches the sheet: two tall upright cylinders behind the shoulders. Arms are attached in every frame. Faults: he faces the lower left instead of the lower right (mirroring would also swap the weapons), the pack-nozzle flames in f4–9 sit behind the pile-bunker arm and can read as coming from it, and f12 stands 31 px higher than f1.
+- **Win** (`sprites/win-iso/`): on-model, with the right shoulders and arms, no flip, the hop and hearts kept, and the happy lens in f8–12. Faults: the f7 squash is very low (175 px against 225 px) and f12 doesn't match f1.
+- Frame-1 heights across the isometric sets are 225 to 239 px, so the sets are close to one height but not exact. "Same size" on the review page evens them out.

@@ -80,3 +80,5 @@ None logged yet.
 | 2026-10-28 | Tim-o | Puppet parts sheet v2 (GPT Image 2.5 Sunburst, medium, transparent) | 4 |
 | 2026-10-28 | Tim-o | Isometric dash sprite sheet (GPT Image 2, medium) | 13 |
 | 2026-10-28 | Tim-o | Parts sheet v2.1, torso side socket removed (GPT Image 2.5 Sunburst edit, medium) | 4 |
+| 2026-10-28 | Tim-o | Isometric jump-jet hop sprite sheet (GPT Image 2, medium) | 13 |
+| 2026-10-28 | Tim-o | Isometric win cheer sprite sheet (GPT Image 2, medium) | 13 |

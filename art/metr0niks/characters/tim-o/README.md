@@ -30,6 +30,17 @@ Made after kr0's review comments on the [animation review page](https://claude.a
 
 Prompts: `../../prompts/tim-o-parts-v2.txt` and `../../prompts/tim-o-sprites-dash-iso.txt`. Known issues with the dash are listed on the review page: frames 11 and 12 stand taller than frame 1, the pack is mostly hidden, and he faces the camera while dashing sideways.
 
+## Round 3 (28 October 2026)
+
+kr0 chose to redraw jetpack and win first, isometric and at one height. Brief changes from round 2: the reactor pack is copied from the character sheet (two tall upright cylinders, mounted high and fixed to the back), he never flips, and in the air he rises no more than a fifth of the cell.
+
+| File | What it is | Scenario asset | Model | Credits |
+| --- | --- | --- | --- | --- |
+| `sprites/jetpack-iso/` | Jump-jet hop: thrust from the leg jets and the pack nozzles. On-model with the right pack, but he faces the lower left, not the lower right; frame 12 doesn't land back on frame 1 | `asset_SKfvh9KzBFvGWuY1iP5hA5F6` | GPT Image 2 | 13 |
+| `sprites/win-iso/` | Win cheer: hop with arms raised, pink hearts, the happy lens. On-model; frame 7's squash is very low and frame 12 doesn't match frame 1 | `asset_frXn4UvjGS1qEHbUWrFaWvod` | GPT Image 2 | 13 |
+
+Prompts: `../../prompts/tim-o-sprites-jetpack-iso.txt` and `../../prompts/tim-o-sprites-win-iso.txt`. Frame-1 heights: dash 229 px, jump-jets 239 px, win 225 px (in 366 × 323 frames).
+
 ## Puppet moves (28 October 2026)
 
 `puppet/puppet-moves.js` animates Tim-o in code on parts sheet v2.1 (`puppet/atlas-v2-1.webp`, joints in `puppet/rig-v2-1.js`). It has dash, pile-bunker charge/fire/retract, jump-jets from the legs, overheat vent and destroyed break-apart. It uses the ink prototype's joints and two-bone IK legs and costs no credits. The review page plays every move. The same parts and poses are in `games/metr0niks/prototypes/prototype-ink.html` (copied to `ink-proto/sprites/timo_v21.*`). The route is written up as section 4 of `studio/design-workflows.md`.
