@@ -58,6 +58,31 @@ canvas{display:block;width:100vw;height:100vh;cursor:none}
 #keys b{color:var(--fg)}
 #toast{left:0;right:0;top:22%;text-align:center;font:700 22px var(--display);letter-spacing:.08em;opacity:0;transition:opacity .25s}
 #toast.on{opacity:1}
+/* Phase 3, match flow: contract and condition on the score box, the wave report strip, the Extract or Overtime prompt, the excursion report */
+#score .ct b{font-size:14px;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#score .ct.done b{color:var(--good)}#score .ct.fail b{color:var(--muted);text-decoration:line-through}
+#score .cond b{font-size:14px;display:flex;align-items:center;gap:6px}
+.cicon{display:inline-block;width:16px;height:16px;flex:none}.cicon svg{width:16px;height:16px;stroke:var(--hazard);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#waveRep{left:50%;top:calc(22% + 38px);transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:6px 12px;color:var(--muted);opacity:0;transition:opacity .25s;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis}
+#waveRep.on{opacity:1}#waveRep b{color:var(--fg)}
+#choose{left:50%;top:calc(22% + 84px);transform:translateX(-50%);pointer-events:auto;background:var(--panel);border:1px solid var(--hazard);border-radius:6px;padding:12px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-transform:none;max-width:calc(100vw - 32px)}
+#choose[hidden]{display:none}
+#choose .cq{font:700 15px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--fg)}
+#choose .cn{color:var(--muted);font-size:12px;text-align:center}
+#choose .cbt{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#choose button{font:700 14px var(--display);text-transform:uppercase;letter-spacing:.08em;padding:9px 14px;border-radius:4px;border:1px solid var(--rust);background:transparent;color:var(--rust);cursor:pointer}
+#choose button.ot{background:var(--rust);color:#16171a}
+#choose button:disabled{opacity:.45;cursor:default}
+#choose button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+#choose .cbar{width:100%;height:6px;background:#0b0c0e;border:1px solid var(--line);border-radius:2px;overflow:hidden}#choose .cbar i{display:block;height:100%;background:var(--hazard)}
+#report{display:flex;flex-direction:column;gap:10px;font:500 12px var(--mono);color:var(--muted)}
+#report[hidden]{display:none}
+#report h3{margin:0;font:700 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--fg)}
+#report .rl{display:flex;justify-content:space-between;gap:12px}#report .rl b{color:var(--fg);font-weight:700}
+#report .rl.tot{border-top:1px solid var(--line);padding-top:4px}#report .rl.tot b{color:var(--hazard);font-size:15px}
+#report .lost b{color:var(--bad)}#report .okc{color:var(--good)}#report .badc{color:var(--bad)}
+#report .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+#report svg{width:100%;height:auto;max-height:150px;display:block}#report .cols>div{display:flex;flex-direction:column;gap:3px}#report .leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px}#report .leg i{display:inline-block;width:10px;height:10px;margin-right:4px;vertical-align:-1px}
 #links{bottom:14px;right:14px;pointer-events:auto;display:flex;gap:8px}
 #links a{color:var(--muted);text-decoration:none;font:500 12px var(--mono);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:6px 10px}
 #links a:hover,#links a:focus-visible{color:var(--fg);border-color:var(--muted)}
@@ -270,11 +295,19 @@ body[data-theme="ink"] #gDrop{border:2px solid var(--line);color:#fffaf0;box-sha
   <div><span id="enLbl">Enemies</span><b id="enTxt">0</b></div>
   <div class="scrap"><span>Scrap</span><b id="scrapTxt">0</b></div>
   <div><span>Bots down</span><b id="killTxt">0</b></div>
-  <div><span>Sector</span><b id="planTxt">-</b></div>
+  <div class="cond"><span>Condition</span><b id="planTxt">-</b></div>
+  <div class="ct" id="ctBox"><span>Contract</span><b id="ctTxt">-</b></div>
 </div>
 <div class="hud" id="bossBar" hidden><div class="bl"><span>Bounty sniper</span><b id="bossTxt">180</b></div><div class="bar"><i></i></div></div>
 <div class="hud" id="keys"><b>WASD</b> drive · <b>Mouse</b> aim torso · <b>Left click</b> minigun · <b>Right mouse</b> pile-bunker: hold when the bar is full, release on the green ring · <b>Space</b> dash · <b>Esc</b> pause · Touch cyan drop pods before the bots do · Break two pillars in a row to drop the road</div>
 <div class="hud" id="toast"></div>
+<div class="hud" id="waveRep" aria-live="polite"></div>
+<div class="hud" id="choose" hidden role="dialog" aria-labelledby="chooseQ">
+  <div class="cq" id="chooseQ">Wave 5 cleared</div>
+  <div class="cbt"><button id="chExtract" type="button">Extract <small>(Enter or R)</small></button><button id="chOver" class="ot" type="button">Overtime <small>(F)</small></button></div>
+  <div class="cbar"><i id="chBar"></i></div>
+  <div class="cn" id="chNote">Overtime: one more wave, drops x1.5, clear it to extract. Dying loses everything.</div>
+</div>
 <div id="netToast" role="alert" hidden></div>
 <nav id="links"><button id="hudSet" type="button">Settings</button><a href="pitch-and-firing-range/index.html">Pitch and firing range</a><a href="../../../site/index.html#metr0niks">Design brief</a></nav>
 
@@ -316,9 +349,10 @@ body[data-theme="ink"] #gDrop{border:2px solid var(--line);color:#fffaf0;box-sha
   <div class="card">
     <h1>Metr<span>0</span>niks</h1>
     <p id="ovText">Prototype: Overpass Sector 4, a few blocks under the highway. Patrol bots drop in and hunt you. Drive with your legs, aim with your torso, and keep the minigun from overheating. The city is a weapon: break two pillars in a row and the road between them falls on whoever is underneath. A run is five waves with a Bounty sniper on waves 3 and 5: clear wave 5 to extract and bank your scrap, die and the match's scrap is gone. Drop pods land with a cyan marker: touch one for armor or a faster pile-bunker, but the bots want them too. Heavy loaders do not shoot: they telegraph, then ram in a straight line, plowing through barriers and containers. The minigun barely scratches their armor; the pile-bunker does not.</p>
+    <div id="report" hidden></div>
     <span class="note" id="bankTxt">Banked: 0</span>
     <span class="note" id="recTxt" hidden></span>
-    <table>
+    <table id="ctlTable">
       <tr><td>WASD</td><td>Legs: drive with momentum</td></tr>
       <tr><td>Mouse</td><td>Torso: aim independently of the legs</td></tr>
       <tr><td>Left mouse</td><td id="tdL">Minigun. Each shot adds heat; 100% locks guns for 3 s</td></tr>
@@ -635,7 +669,7 @@ function reset(){
   var builds=[BUILD],wear=[WEAR],upg=[UPG];if(Net.hosting&&Net.peer){builds.push(Net.peerBuild);wear.push(Net.peerWear||{});upg.push(Net.peerUpg||{})}
   LASTCODE=Camp.encode(curCampaign());   /* what a retry after dying starts from */
   bind(newSim(builds,{wear:wear,upg:upg,plan:guestSeat()?null:curPlan()}));
-  parts.length=0;floats.length=0;shake=0;scrap=0;kills=0;buildHud();
+  parts.length=0;floats.length=0;shake=0;scrap=0;kills=0;resetMatchView();buildHud();
   camX=px(player.x,player.y,0);camY=py(player.x,player.y,0);
 }
 function sparks(x,y,z,n,col){
@@ -667,26 +701,31 @@ function handleEvent(e){
     case "sm":rings.push({x:e[2],y:e[3],z:0,r:e[4],t:.4,max:.4,col:e[5]?"242,194,48":"210,190,160"});break;
     case "bx":rings.push({x:e[2],y:e[3],z:e[4],r:T.breach.radius,t:.3,max:.3,col:"255,140,60"});break;
     case "sk":rings.push({x:e[2],y:e[3],z:e[4],r:T.strike.radius,t:.35,max:.35,col:"255,190,90"});break;
+    case "w":waveReport(e);break;   /* phase 3: the wave report strip */
+    case "ct":contractEvent(e);break;
+    case "ch":MF.simState=e[1]==="prompt"?"choose":e[1]==="overtime"?"overtime":MF.simState;if(e[1]==="prompt")MF.chooseT=e[2];break;
+    case "rv":if(e[1]===player.idx)floats.push({x:player.x,y:player.y,z:2,txt:"REVIVED",col:"#7fdc6a",t:1.2});break;
   }
 }
 /* The run ended: bank what counts, tell the partner, show the end screen. */
 function runOver(e){
-  var d=e[4]||{};
+  var d=e[4]||{},before=banked,k=player.idx;
   if(Net.hosting&&Net.live){Net.send({t:"over",kind:e[1],msg:e[2],got:d.scrap?d.scrap[1]|0:0,d:d});Net.live=false}   /* local test co-op: the guest banks its own share */
   state=e[1]==="victory"?"extracted":e[1];var msg=e[2];
   if(d.result==="extracted"||d.result==="victory"){   /* scrap banks, wear goes on, the next level opens; a victory starts the next climb */
     var c=Camp.advance(ownCampaign(),d);if(d.result==="victory")c=Camp.restart(c,newSeed());
     adoptCampaign(c,0);saveCampaign();
     if(d.result==="victory")showOverlay("Victory",msg,"New climb");else showOverlay("Extracted",msg,"Garage");
+    showReport(d,k,before,banked,false);   /* the excursion report (GDD-D50) */
     return;
   }
-  var lv=campaignOver();deathScreen(msg,d.level||lv);
+  var lv=campaignOver();deathScreen(msg,d.level||lv,d,k,before);
 }
 /* A death ends the climb at once (saved): level 1 on a new seed (a typed seed is for one climb only). A co-op guest's own campaign stays. */
 function campaignOver(){var lv=CAMP.level;if(!guestSeat()){adoptCampaign(Camp.restart(ownCampaign(),newSeed()),0);saveCampaign()}return lv}
 /* The code shown is the garage the run began from. */
-function deathScreen(msg,lv){
-  setTimeout(function(){showOverlay("Campaign over at level "+lv,msg,"New campaign",LASTCODE)},900);
+function deathScreen(msg,lv,d,k,before){
+  setTimeout(function(){showOverlay("Campaign over at level "+lv,msg,"New campaign",LASTCODE);if(d)showReport(d,k,before,before,true)},900);
 }
 function drainEvents(){
   var ev=sim.drainEvents();
@@ -746,7 +785,8 @@ function updateCam(dt){
   var k=1-Math.exp(-dt*6);camX+=(tx-camX)*k;camY+=(ty-camY)*k;zoom=baseZoom*zm;
 }
 function keyBits(){return (keys.KeyW||keys.ArrowUp?1:0)|(keys.KeyA||keys.ArrowLeft?2:0)|(keys.KeyS||keys.ArrowDown?4:0)|(keys.KeyD||keys.ArrowRight?8:0)|(keys.Space?16:0)|(keys.KeyQ?32:0)|
-  (keys.Digit1||keys.Numpad1?256:0)|(keys.Digit2||keys.Numpad2?512:0)}   /* 1 and 2: call-in slots (GDD-D54) */
+  (keys.Digit1||keys.Numpad1?256:0)|(keys.Digit2||keys.Numpad2?512:0)|
+  (keys.KeyF?64:0)|(keys.Enter||keys.NumpadEnter||keys.KeyR?128:0)|chooseBits()}   /* 1 and 2: call-in slots (GDD-D54); F 64 Overtime, Enter or R 128 extract (TDD-D15) */
 /* Torso: aim at the geometry under the cursor (walls, pillars, cover), else at bot height,
    snapping to a bot under the cursor. The snap takes the bot's own height. */
 var aim={ax:16,ay:16,az:.6};
@@ -1227,6 +1267,7 @@ function render(){
     drawVoxel(v,a,0,dm);
   }
   while(e<ents.length){ents[e].f(ents[e].o);e++}
+  drawNight();   /* Blackout: darkness except near the mechs, flashes, blasts and slag */
   bots.forEach(function(b){if(b.boss)drawBossFx(b);else if(b.kind==="charge")drawChargeMark(b)});
   drawCables();
   pods.forEach(drawPodMark);   /* on top of the voxels so a pod under the overpass stays visible */
@@ -1402,10 +1443,165 @@ function hud(){
   hudEls.oc.hidden=!(p.oc>0);if(p.oc>0)hudEls.oc.textContent="OVERCLOCK "+Math.ceil(p.oc)+"s";
   hudEls.s.textContent=scrap;hudEls.k.textContent=kills;hudEls.lv.textContent=CAMP.level;
   var R=run,br=R.breather>0,bs=null;
-  hudEls.w.textContent=R.wave+" / "+T.waves.length;hudEls.wl.textContent="Wave";
-  hudEls.el.textContent=br?"Next wave in":"Enemies";hudEls.e.textContent=br?R.breather.toFixed(1)+"s":enemyCount();
+  var ot=R.wave>T.waves.length,chs=simState()==="choose";
+  hudEls.w.textContent=ot?"OT":R.wave+" / "+T.waves.length;hudEls.wl.textContent=ot?"Overtime":"Wave";
+  hudEls.el.textContent=chs?"Extract in":br?"Next wave in":"Enemies";hudEls.e.textContent=chs?Math.ceil(chooseLeft())+"s":br?R.breather.toFixed(1)+"s":enemyCount();
+  hudMatch();
   bots.forEach(function(b){if(b.boss&&b.hp>0)bs=b});
   hudEls.bb.hidden=!bs;if(bs){hudEls.bbT.textContent=Math.ceil(bs.hp);hudEls.bbI.style.width=Math.max(0,bs.hp/bs.maxHp*100)+"%"}
+}
+
+/* ===== Phase 3, match flow view (GDD-D37, D38, D39, D50, D52): contract and condition on the HUD, the wave report strip,
+   the Extract or Overtime prompt, the Blackout night pass and the excursion report. It reads sim events, the match stats
+   and (a co-op guest) the snapshot; nothing here changes a rule. ===== */
+var MF={chooseKey:0,chooseN:0,waveRepT:0,ct:null,cond:null,simState:"play",chooseT:0,lastSnap:0,condShown:null,slag:null,slagT:0,reportT:[]};
+var CICON={brittle:'<path d="M3 2l4 5-3 2 5 5M12 2l-2 5 3 2"/>',reinforced:'<path d="M8 2l5 2v4c0 3-2 5-5 6-3-1-5-3-5-6V4z"/>',
+  loosePillars:'<path d="M5 2v12M11 2v6M11 11v3M9 8.5l4 1"/>',heatWave:'<circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3"/>',
+  coldFront:'<path d="M8 1v14M2 4.5l12 7M2 11.5l12-7"/>',scrapStorm:'<path d="M2 7l4-2 4 2-4 2zM2 7v4l4 2V9M10 7v4l-4 2M12 2l2 1M12 5l3 0"/>',
+  blackout:'<path d="M12 10.5A6 6 0 1 1 5.5 4 5 5 0 0 0 12 10.5z"/>',podRain:'<path d="M4 1v4M8 1v3M12 1v4"/><rect x="5" y="8" width="6" height="6"/>',
+  snipersNest:'<circle cx="8" cy="8" r="5"/><path d="M8 1v4M8 11v4M1 8h4M11 8h4"/>'};
+function guestLive(){return Net.guest&&Net.live}
+function simState(){return guestLive()?MF.simState:sim?sim.state:"play"}
+function chooseLeft(){return guestLive()?MF.chooseT:sim.run.choose||0}
+function curCond(){return guestLive()?MF.cond:sim&&sim.cond}
+function curContract(){return guestLive()?MF.ct:sim&&sim.contract}
+/* the prompt's buttons press F or Enter for a few ticks, like the keys */
+function chooseBits(){if(MF.chooseN>0){MF.chooseN--;return MF.chooseKey}return 0}
+function pressChoice(k){if(guestSeat()&&!Net.online)return;MF.chooseKey=k;MF.chooseN=3;cv.focus()}
+$("chExtract").addEventListener("click",function(){pressChoice(128)});
+$("chOver").addEventListener("click",function(){pressChoice(64)});
+/* contract text: short for the HUD, long for the report */
+function ctShort(c){var p=c.progress,g=c.goal;
+  return c.id==="blitz"?p+"/"+g+" s":c.id==="untouchable"?(run.wave<3?"wave 3":p+"% lost"):c.id==="closeShave"?p+"% armor":c.id==="fullCombo"?"x"+p+"/x"+g:p+"/"+g}
+function ctLong(c){var p=c.progress,g=c.goal;
+  switch(c.id){
+    case "untouchable":return "lost "+p+"% of max armor in wave 3 (under "+g+"%)";
+    case "closeShave":return "armor at "+p+"% (under "+g+"% at extract)";
+    case "blitz":return p+" s (waves 1 and 2 within "+g+" s)";
+    case "cleanSweep":return p+" of "+g+" pods";
+    case "bringItDown":return p+" of "+g+" spans";
+    case "crush":return p+" of "+g+" kills from one collapse";
+    case "eviction":return p+" of "+g+" knock-offs";
+    case "fullCombo":return "x"+p+" of x"+g;
+    case "wreckingCrew":return p+" of "+g+" voxels";
+    case "repoMan":return p+" of "+g+" pod thieves";
+  }
+  return p+" of "+g;
+}
+function contractEvent(e){   /* ["ct",id,progress,goal,state,reward] */
+  if(guestLive()&&MF.ct&&MF.ct.id===e[1]){MF.ct.progress=e[2];MF.ct.goal=e[3];MF.ct.state=e[4];MF.ct.reward=e[5]}
+}
+function hudMatch(){
+  var c=curContract(),box=$("ctBox");box.hidden=!c;
+  if(c){$("ctTxt").textContent=c.name+" "+(c.state>0?"done":c.state<0?"failed":ctShort(c));box.classList.toggle("done",c.state>0);box.classList.toggle("fail",c.state<0);box.title=c.name+": "+ctLong(c)}
+  var cd=curCond(),id=cd&&cd.id||"";
+  if(MF.condShown!==id){MF.condShown=id;var el=$("planTxt");
+    if(!id)el.textContent="-";else{var x=COND[id];el.innerHTML='<i class="cicon" aria-hidden="true"><svg viewBox="0 0 16 16">'+(CICON[id]||"")+"</svg></i>";el.appendChild(document.createTextNode(x.name));el.parentNode.title=x.name+": "+x.desc}}
+  var on=simState()==="choose"&&(state==="play"),chEl=$("choose");
+  if(chEl.hidden===on)chEl.hidden=!on;
+  if(on){var left=chooseLeft(),host=!guestSeat();
+    $("chBar").style.width=Math.max(0,left/T.overtime.choose*100)+"%";
+    $("chooseQ").textContent="Wave "+T.waves.length+" cleared · extract in "+Math.ceil(left)+" s";
+    $("chExtract").disabled=$("chOver").disabled=!host;
+    $("chNote").textContent=host?"Overtime: one more wave (wave 4 plus a loader), drops x"+T.overtime.scrap+", clear it to extract. Dying in it loses everything.":"The host chooses. No choice extracts."}
+}
+function tickMatch(dt){if(MF.waveRepT>0&&(MF.waveRepT-=dt)<=0)$("waveRep").classList.remove("on")}
+function sumOf(o){var n=0;for(var k in o)n+=+o[k]||0;return n}
+/* ["w",wave,[stats per mech]]: this wave's kills, damage dealt and taken, Perfects and scrap, under the wave-clear toast */
+function waveReport(e){
+  var w=e[2]&&e[2][player.idx];if(!w)return;
+  var el=$("waveRep"),n=e[1]>T.waves.length?"Overtime":"Wave "+e[1];
+  el.innerHTML=n+" · kills <b>"+sumOf(w.kills)+"</b> · dealt <b>"+Math.round(sumOf(w.dealt))+"</b> · taken <b>"+Math.round(sumOf(w.taken))+"</b> · Perfects <b>"+(w.perfect|0)+"</b> · scrap <b>"+sumOf(w.scrap)+"</b>";
+  el.classList.add("on");MF.waveRepT=T.wave.breather+.6;
+}
+/* Blackout (GDD-D39, TDD Camera): night everywhere except within the light radius of each mech, muzzle flashes, blasts and slag */
+var nightCv=document.createElement("canvas"),nightG=nightCv.getContext("2d"),lightSpr=null;
+function lightSprite(){var c=document.createElement("canvas");c.width=c.height=128;var g=c.getContext("2d"),gr=g.createRadialGradient(64,64,0,64,64,64);
+  gr.addColorStop(0,"rgba(0,0,0,1)");gr.addColorStop(.55,"rgba(0,0,0,.9)");gr.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=gr;g.fillRect(0,0,128,128);return c}
+function slagLights(){   /* molten vat tops, rescanned every 2 s */
+  if(MF.slag&&MF.slagT>time)return MF.slag;MF.slagT=time+2;var a=[];
+  for(var i=0;i<vox.length;i++)if(vox[i]===17)a.push([i%W+.5,((i/W)|0)%D+.5,((i/(W*D))|0)+1]);
+  return MF.slag=a;
+}
+function drawNight(){
+  var cd=curCond();if(!cd||!cd.night)return;
+  var sc=.5,w=Math.ceil(cw*sc),h=Math.ceil(ch*sc),g=nightG,i;
+  if(nightCv.width!==w||nightCv.height!==h){nightCv.width=w;nightCv.height=h}
+  if(!lightSpr)lightSpr=lightSprite();
+  g.globalCompositeOperation="source-over";g.globalAlpha=1;g.clearRect(0,0,w,h);
+  g.fillStyle=TH.ink?"rgba(46,38,70,.74)":"rgba(3,5,12,.88)";g.fillRect(0,0,w,h);
+  g.globalCompositeOperation="destination-out";
+  function hole(x,y,z,r,a){var X=SX(x,y,z)*sc,Y=SY(x,y,z)*sc,rx=r*HW*1.41*zoom*sc,ry=r*HH*1.41*zoom*sc;g.globalAlpha=a;g.drawImage(lightSpr,X-rx,Y-ry,rx*2,ry*2)}
+  var L=(cd.light||12)*1.15;   /* the sprite fades out over its last 45%: this keeps the street readable to about the light radius */
+  players.forEach(function(q){if(q.hp>0){hole(q.x,q.y,0,L,1);if(q.muzzle>0)hole(q.x+Math.cos(q.aim)*.8,q.y+Math.sin(q.aim)*.8,1.1,4,1)}});
+  shots.forEach(function(s){hole(s.x,s.y,s.z,s.kind==="shell"||s.kind==="mortar"?3:s.kind==="orb"?1.6:1.2,.75)});
+  for(i=0;i<parts.length;i+=lowFx?6:3){var q=parts[i];if(q.kind==="spark")hole(q.x,q.y,q.z,2.4,.55)}
+  slagLights().forEach(function(l){hole(l[0],l[1],l[2],2.6,.85)});
+  g.globalAlpha=1;g.globalCompositeOperation="source-over";
+  ctx.drawImage(nightCv,0,0,cw,ch);
+}
+/* ----- the excursion report (GDD-D50): scrap count-up, contract, condition, per-wave chart, highlights ----- */
+var SRC_LINE={collapse:"Collapses",contract:"Contract",overtime:"Overtime",cache:"Pods",pods:"Pods"};   /* every other source is a kill */
+var MULTI=["","","Double","Triple","Quadruple","Devastating"];
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function waveStats(d,k){return ((d.stats&&d.stats[k])||[]).map(function(w){return w||null})}
+function countUp(el,from,to,ms){var t0=performance.now();(function f(){var u=Math.min(1,(performance.now()-t0)/ms);el.textContent=Math.round(from+(to-from)*u);if(u<1&&!el.hidden&&document.contains(el))requestAnimationFrame(f)})()}
+function clearReport(){MF.reportT.forEach(clearTimeout);MF.reportT=[];var r=$("report");r.hidden=true;r.innerHTML="";$("ctlTable").hidden=false}
+/* d: the run-over detail; k: this player's mech; before/after: banked scrap; dead: the match scrap is lost */
+function showReport(d,k,before,after,dead){
+  clearReport();if(!d||!d.stats)return;
+  var r=$("report"),ws=waveStats(d,k),lines={Kills:0,Collapses:0,Pods:0,Contract:0,Overtime:0},spent=0,h="";
+  ws.forEach(function(w){if(!w)return;for(var s in w.scrap){lines[SRC_LINE[s]||"Kills"]+=w.scrap[s]}spent+=w.reviveSpent||0});
+  var picked=sumOf(lines),wallet=d.scrap&&d.scrap[k]!==undefined?d.scrap[k]:Math.max(0,picked-spent),floor=wallet-(picked-spent);
+  var rows=Object.keys(lines).filter(function(n){return lines[n]>0}).map(function(n){return [n,lines[n]]});
+  if(floor>0)rows.push(["Floor cubes at extract",floor]);if(spent>0)rows.push(["Revive paid",-spent]);
+  h+="<h3>Scrap</h3>";
+  rows.forEach(function(x,i){h+='<div class="rl" data-i="'+i+'" hidden><span>'+esc(x[0])+'</span><b data-to="'+x[1]+'">0</b></div>'});
+  h+='<div class="rl tot'+(dead?" lost":"")+'" data-i="'+rows.length+'" hidden><span>'+(dead?"Match scrap: lost":"Match scrap")+'</span><b data-to="'+wallet+'">0</b></div>';
+  h+='<div class="rl" data-i="'+(rows.length+1)+'" hidden><span>Banked</span><b data-from="'+before+'" data-to="'+after+'">'+before+'</b></div>';
+  var c=d.contract,cd=d.condition&&COND[d.condition];
+  if(c){var ok=c.state>0;h+='<div class="rl"><span>Contract: '+esc(c.name)+", "+esc(ctLong(c))+'</span><b class="'+(ok?"okc":"badc")+'">'+(ok?"done +"+c.reward:"failed")+"</b></div>"}
+  if(cd)h+='<div class="rl"><span>Condition: '+esc(cd.name)+", "+esc(cd.desc)+"</span></div>";
+  if(d.overtime&&d.overtime.called)h+='<div class="rl"><span>Overtime</span><b class="'+(d.overtime.cleared?"okc":"badc")+'">'+(d.overtime.cleared?"cleared":"lost")+"</b></div>";
+  h+="<h3>Per wave</h3>"+chartSvg(d)+highlights(d);
+  r.innerHTML=h;r.hidden=false;$("ctlTable").hidden=true;
+  /* the count-up: line by line, then the match total, then the banked total (on a death the match scrap counts down to zero) */
+  var els=[].slice.call(r.querySelectorAll(".rl[data-i]"));
+  els.forEach(function(el,i){MF.reportT.push(setTimeout(function(){el.hidden=false;var b=el.querySelector("b"),to=+b.dataset.to,from=b.dataset.from!==undefined?+b.dataset.from:0;
+    if(dead&&el.classList.contains("tot")){b.textContent=wallet;MF.reportT.push(setTimeout(function(){countUp(b,wallet,0,700)},350))}else countUp(b,from,to,450)},250+i*260))});
+}
+function chartSvg(d){
+  var n=Math.max.apply(null,[0].concat((d.stats||[]).map(function(w){return w?w.length:0})));if(!n)return "";
+  var P=(d.stats||[]).length,cols=[["#e0702b","#f2c230"],["#3fd6e8","#a7f0f8"]],max=1,smax=1,k,i;
+  var data=(d.stats||[]).map(function(ws){return (ws||[]).map(function(w){var o={d:w?sumOf(w.dealt):0,t:w?sumOf(w.taken):0,s:w?sumOf(w.scrap):0};max=Math.max(max,o.d,o.t);smax=Math.max(smax,o.s);return o})});
+  var Wd=300,Hh=110,gw=Wd/n,bw=Math.min(14,(gw-8)/(2*P)),svg='<svg viewBox="0 0 '+Wd+" "+(Hh+16)+'" role="img" aria-label="Damage dealt and taken and scrap per wave">';
+  for(i=0;i<n;i++){svg+='<text x="'+(i*gw+gw/2)+'" y="'+(Hh+12)+'" fill="#a39d93" font-size="9" text-anchor="middle">'+(i>=T.waves.length?"OT":"W"+(i+1))+"</text>";
+    for(k=0;k<P;k++){var o=data[k][i];if(!o)continue;var x0=i*gw+gw/2-(P*bw)+k*2*bw;
+      svg+='<rect x="'+x0+'" y="'+(Hh-o.d/max*Hh)+'" width="'+(bw-1)+'" height="'+(o.d/max*Hh)+'" fill="'+cols[k][0]+'"/>';
+      svg+='<rect x="'+(x0+bw)+'" y="'+(Hh-o.t/max*Hh)+'" width="'+(bw-1)+'" height="'+(o.t/max*Hh)+'" fill="'+cols[k][0]+'" fill-opacity=".35"/>'}}
+  for(k=0;k<P;k++){var pts=data[k].map(function(o,j){return (j*gw+gw/2)+","+(Hh-o.s/smax*Hh*.9)}).join(" ");
+    svg+='<polyline points="'+pts+'" fill="none" stroke="'+cols[k][1]+'" stroke-width="2"/>'}
+  svg+="</svg>";
+  var leg='<div class="leg">';for(k=0;k<P;k++){var nm=P>1?"P"+(k+1)+" ":"";leg+='<span><i style="background:'+cols[k][0]+'"></i>'+nm+'dealt</span><span><i style="background:'+cols[k][0]+';opacity:.35"></i>'+nm+'taken</span><span><i style="background:'+cols[k][1]+';height:2px"></i>'+nm+"scrap</span>"}
+  return svg+leg+"</div>";
+}
+function highlights(d){
+  var P=(d.stats||[]).length,h='<h3>Highlights</h3><div class="cols">';
+  for(var k=0;k<P;k++){var ws=(d.stats[k]||[]).filter(Boolean),best=1,mk=0,crush=0,perf=0,spans=0;
+    ws.forEach(function(w){best=Math.max(best,w.bestCombo||1);crush=Math.max(crush,w.bestCrush||0);perf+=w.perfect||0;spans+=w.spans||0;for(var m=5;m>=2;m--)if(w.multi&&w.multi[m]>0){mk=Math.max(mk,m);break}});
+    h+="<div>"+(P>1?"<h3>P"+(k+1)+"</h3>":"")+
+      '<div class="rl"><span>Best combo</span><b>x'+best+'</b></div><div class="rl"><span>Best multi-kill</span><b>'+(mk?MULTI[mk]:"-")+"</b></div>"+
+      '<div class="rl"><span>Most from one collapse</span><b>'+crush+'</b></div><div class="rl"><span>Perfects</span><b>'+perf+'</b></div><div class="rl"><span>Spans dropped</span><b>'+spans+"</b></div>"+
+      '<div class="rl"><span>Time per wave</span><b>'+(d.stats[k]||[]).map(function(w){return w?Math.round(w.time)+"s":"-"}).join(" ")+"</b></div></div>"}
+  return h+"</div>";
+}
+/* ----- host leaving ends the room (GDD-D52): the guest's match ends with its match scrap lost, back to the title screen.
+   The host's own leaving is a death through the in-match mark (TDD-D8): its save stays live and the next load restarts the climb. ----- */
+function resetMatchView(){MF.simState="play";MF.chooseT=0;MF.waveRepT=0;MF.chooseN=0;MF.condShown=null;MF.slag=null;MF.lastSnap=0;$("waveRep").classList.remove("on");$("choose").hidden=true}
+function hostLeft(why){
+  if(!Net.live)return;Net.live=false;clearReport();
+  var lost=scrap|0;Net.close();state="menu";friendRender();refreshCoop();
+  showOverlay("Metr0niks",(why||"The host left the room.")+" That ends the match for both players: your match scrap"+(lost?" ("+lost+" for the team)":"")+" is lost. Your parts, upgrades, banked scrap and your own campaign are safe.","Drop in");
 }
 
 /* ===== Garage: build model (parts and derived stats live in sim.js), screen ===== */
@@ -1708,6 +1904,7 @@ function buildHud(){
   hudEls.pl.textContent=arm.charAt(0).toUpperCase()+arm.slice(1);
   hudEls.keys.innerHTML="<b>WASD</b> drive · <b>Mouse</b> aim torso · <b>Left click</b> "+gun+" · <b>Right mouse</b> "+arm+": "+ring+" · "+(p.noDash?"<b>Treads</b>: no dash":"<b>Space</b> dash")+(p.q?" · <b>Q</b> "+qn:"")+(sim.callins&&sim.callins[p.idx]&&(sim.callins[p.idx][0]||sim.callins[p.idx][1])?" · <b>1</b> <b>2</b> call-ins at the cursor":"")+" · <b>Esc</b> pause · Touch cyan drop pods before the bots do · Break two pillars in a row to drop the road";
   var pn=sim&&sim.plan;$("planTxt").textContent=pn?COND[pn.condition].name+" · "+CONT[pn.contract].name:"-";
+  MF.condShown=null;   /* the condition cell redraws on the next hud() */
   hudEls.tdL.textContent=GUN_TIP[p.gun]||GUN_TIP.minigun;
   hudEls.tdR.textContent=ARM_TIP[p.pileKind]||ARM_TIP.pile;
   hudEls.shRow.hidden=!p.q;hudEls.tdQRow.hidden=!p.q;
@@ -1816,7 +2013,7 @@ Net.sendWelcome=function(){
   var inRun=state==="play",m={t:"welcome",to:Net.peer,idx:1,st:inRun?"play":"lobby",builds:[inRun?players[0].v:cloneBuild(BUILD),Net.peerBuild]};
   if(inRun){
     if(!players[1])sim.applyBuild(1,Net.peerBuild,Net.peerWear||{},Net.peerUpg||{});
-    m.builds=[players[0].v,players[1].v];m.wave=run.wave;
+    m.builds=[players[0].v,players[1].v];m.wave=run.wave;m.plan=sim.plan;
     var f=sim.snapshot(true);m.tick=f.tk;m.vox=b64(f.vox);m.owner=b64(new Uint8Array(f.owner.buffer));
     Net.acc=0;Net.peerReady=false;Net.live=true;
   }
@@ -1840,25 +2037,28 @@ Net.guestRecv=function(m){
   if(m.t==="snap"){if(Net.live)Net.snap(m)}
   else if(m.t==="over"){
     if(!Net.live)return;
-    Net.live=false;
+    Net.live=false;var before=banked;
     if(m.kind!=="dead"){   /* the guest banks only its own scrap, wear and records (GDD-D31) */
       if(m.d&&typeof m.d==="object"){takeOwn(Camp.bank(ownCampaign(),0,m.d,Net.idx||1).players[0]);saveCampaign()}else if(m.got){banked+=m.got;saveBank()}}
-    if(m.kind==="dead"){state="dead";setTimeout(function(){showOverlay("Mech destroyed",m.msg,"Garage")},900)}
-    else if(m.kind==="victory"){state="extracted";showOverlay("Victory",m.msg+" The host's campaign starts a new climb; yours stays where it was.","Garage")}
-    else{state="extracted";showOverlay("Extracted",m.msg,"Garage")}
+    var gk=Net.idx||1;
+    if(m.kind==="dead"){state="dead";setTimeout(function(){showOverlay("Mech destroyed",m.msg,"Garage");showReport(m.d,gk,before,before,true)},900)}
+    else if(m.kind==="victory"){state="extracted";showOverlay("Victory",m.msg+" The host's campaign starts a new climb; yours stays where it was.","Garage");showReport(m.d,gk,before,banked,false)}
+    else{state="extracted";showOverlay("Extracted",m.msg,"Garage");showReport(m.d,gk,before,banked,false)}
   }
   else if(m.t==="bye"){
+    if(Net.live){hostLeft("The host left the room.");return}   /* GDD-D52: the room ends for both */
     Net.peer=null;Net.lobby=false;
-    if(Net.live){Net.live=false;state="dead";showOverlay("Host left","The host closed the room. Parts you own are safe.","Garage")}
     refreshCoop();
   }
 };
 Net.enter=function(m){
-  var gs=newSim([m.builds[0],m.builds[1]]);   /* CAMP.level is already the level being played */   /* the guest's sim is never stepped: it holds the world, the mechs and the debris physics */
+  var gs=newSim([m.builds[0],m.builds[1]],{plan:m.plan||null});   /* CAMP.level is already the level being played; the plan carries the condition and contract */   /* the guest's sim is never stepped: it holds the world, the mechs and the debris physics */
   gs.world.vox.set(unb64(m.vox));gs.world.owner.set(new Uint16Array(unb64(m.owner).buffer));gs.world.rebuildWalk();
   bind(gs);player=players[Net.idx];parts.length=0;floats.length=0;
   run.wave=m.wave;run.breather=0;run.queue=[];run.done=false;kills=0;scrap=0;
   Net.snaps=[];Net.off=null;Net.hist=[];Net.seq=0;Net.prevB=null;Net.live=true;Net.readySent=false;Net.inGarage=false;Net.peerReady=false;Net.en=0;
+  resetMatchView();MF.cond=gs.cond;MF.lastSnap=performance.now();
+  MF.ct=gs.contract?{id:gs.contract.id,name:gs.contract.name,progress:0,goal:gs.contract.goal,state:0,reward:0}:null;
   state="play";overlay.hidden=true;gEl.garage.hidden=true;document.body.classList.remove("ing");acc=0;cv.focus();
   buildHud();camX=px(player.x,player.y,0);camY=py(player.x,player.y,0);
 };
@@ -1869,6 +2069,8 @@ Net.snap=function(m){
   Net.snaps.push({ht:ht,s:m,done:false,m:{b:rowMap(m.b),s:rowMap(m.s),sr:rowMap(m.sr),pd:rowMap(m.pd),cl:rowMap(m.cl),p:rowMap(m.p)}});
   while(Net.snaps.length>16&&Net.snaps[0].done)Net.snaps.shift();
   scrap=m.sc;kills=m.k;run.wave=m.w[0];run.breather=m.w[1];Net.en=m.w[2];shake=Math.max(shake,m.sh);
+  MF.lastSnap=performance.now();if(m.st)MF.simState=m.st;if(m.ch)MF.chooseT=m.ch[0];
+  if(m.ct&&MF.ct){MF.ct.progress=m.ct[0];MF.ct.goal=m.ct[1];MF.ct.state=m.ct[2]}
   for(i=0;i<m.p.length;i++)if(m.p[i][0]===Net.idx)row=m.p[i];
   if(!row)return;
   var was=p.hp;
@@ -1954,7 +2156,10 @@ function updateGuest(dt){
     var seq=++Net.seq;Net.hist[seq&127]={s:seq,x:p.x,y:p.y};
     Net.send({t:"in",seq:seq,k:bits,ax:r2(p.ax),ay:r2(p.ay),az:r2(p.az),l:mouse.down?1:0,r:mouse.rdown?1:0});
     mouse.rpress=false;
+  } else if(MF.simState==="choose"&&Net.idx===0){   /* online, the host seat chooses even with its mech down */
+    Net.send({t:"in",seq:++Net.seq,k:keyBits()&192,ax:r2(p.x),ay:r2(p.y),az:.6,l:0,r:0});
   }
+  if(!Net.online&&MF.lastSnap&&performance.now()-MF.lastSnap>T.net.hostLost*1000){hostLeft("The host stopped answering.");return}
   sim.stepDebris(dt);updateFx(dt);updateCam(dt);
 }
 
@@ -1981,7 +2186,8 @@ Net.onlineRecv=function(m){
     case "peer":
       if(m.joined){Net.waiting=false;Net.lobby=true;Net.peer=true;Net.peerReady=!!m.ready;
         if(!m.ready){setNetStatus("Partner joined");if(state!=="garage"&&!Net.live)openGarage()}}
-      else{Net.peer=false;Net.peerReady=false;if(!Net.inGarage)Net.readySent=false;if(!Net.live)setNetStatus("Partner left the room")}
+      else{Net.peer=false;Net.peerReady=false;if(!Net.inGarage)Net.readySent=false;if(!Net.live)setNetStatus("Partner left the room");
+        else if(Net.idx===1){hostLeft("The host left the room.");return}}   /* GDD-D52: the host's leaving ends the room for both */
       friendRender();refreshCoop();break;
     case "garage":   /* the shared garage: the server's campaign (next level, wallets, armor) replaces what this client had */
       Net.camp=m.campaign;Net.live=false;Net.lobby=true;Net.inGarage=true;Net.peerReady=false;
@@ -2090,7 +2296,7 @@ function frame(now){
   if(!(Net.guest&&Net.live))drainEvents();   /* end screens can come from outside a tick, e.g. a debug kill in the garage */
   if(state==="garage"){var dt=Math.min(.1,Math.max(0,(now-(last||now))/1000));last=now;renderGarage(dt);requestAnimationFrame(frame);return}
   var fdt=Math.min(.1,Math.max(0,(now-(last||now))/1000));
-  pump(now);tickToast(fdt);
+  pump(now);tickToast(fdt);tickMatch(fdt);
   if(Net.guest&&Net.live)guestView();else{scrap=sim.scrap;kills=sim.kills}
   if(sim.world.rev!==meshRev){meshRev=sim.world.rev;meshDirty=true}
   render();hud();perfTick(fdt);
@@ -2113,7 +2319,7 @@ function menuButtons(menu,btn){
   goBtn.textContent=prog?"New campaign":btn;goBtn.classList.toggle("alt",prog);
 }
 function showOverlay(title,text,btn,code){
-  overlay.querySelector("h1").innerHTML=title==="Metr0niks"?"Metr<span>0</span>niks":title;
+  clearReport();  overlay.querySelector("h1").innerHTML=title==="Metr0niks"?"Metr<span>0</span>niks":title;
   $("ovCodeRow").hidden=!code;$("ovCode").value=code||"";
   $("ovText").textContent=text;menuButtons(title==="Metr0niks",btn);hudEls.bank.textContent="Banked: "+banked;showRecords(title==="Metr0niks");coopRow.hidden=!LOCAL||title!=="Metr0niks"||Net.on;overlay.hidden=false;for(var k in keys)keys[k]=false;mouse.down=false;mouse.rdown=false;mouse.rpress=false;if(player)player.ring=-1;
   if(state==="play")state="paused";goBtn.focus();friendRender();
@@ -2217,7 +2423,15 @@ window.__m={T:T,net:Net,get sim(){return sim},get players(){return players},voxS
   /* zones: rebind a single-player sim at level l (its drop-in intro plays if a zone opens), read the camera */
   level:function(l){CAMP.level=Math.max(1,Math.min(T.level.max,l|0));bind(MetroSim.create({seed:7,builds:[BUILD],colorOf:colorOf,level:l}));camX=px(player.x,player.y,0);camY=py(player.x,player.y,0);zoneFx={k:-1,t:9};return sim.zone},
   get cam(){return {x:camX,y:camY,zoom:zoom,base:baseZoom,cine:cineAt()}},
-  get dpr(){return dpr},get lowFx(){return lowFx}};window.__proj=window.__m.proj;
+  get dpr(){return dpr},get lowFx(){return lowFx},
+  /* phase 3, match flow: press the prompt's buttons (64 Overtime, 128 extract), read the contract, condition, prompt and reports;
+     play(plan) rebinds a single-player sim at the current level with a plan entry {condition, contract} */
+  match:{choose:pressChoice,get contract(){return curContract()},get cond(){return curCond()},get simState(){return simState()},get chooseLeft(){return chooseLeft()},
+    get prompt(){return !$("choose").hidden},waveRep:function(){return $("waveRep").classList.contains("on")?$("waveRep").textContent:""},
+    report:function(){return $("report").hidden?null:$("report").innerText},
+    showReport:function(d,k,before,after,dead,title){showOverlay(title||"Extracted","Report preview","Garage");showReport(d,k|0,before|0,after|0,!!dead)},night:function(){var c=curCond();return !!(c&&c.night)},hostLeft:hostLeft,
+    play:function(pl,tune){var e=curPlan();bind(MetroSim.create({seed:7,builds:[BUILD],colorOf:colorOf,level:CAMP.level,plan:{level:CAMP.level,zone:e.zone,condition:pl.condition||null,contract:pl.contract||null,bosses:e.bosses},tune:tune}));
+      resetMatchView();buildHud();camX=px(player.x,player.y,0);camY=py(player.x,player.y,0);return sim}}};window.__proj=window.__m.proj;
 })();
 </script>
 </body>

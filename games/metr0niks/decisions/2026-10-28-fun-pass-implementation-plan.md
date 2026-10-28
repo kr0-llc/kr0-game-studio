@@ -83,6 +83,8 @@ Done when: the rules check covers v1 to v2 migration, rejected bad codes, the pl
 
 Done when: each contract has a rules check case that completes it and one that fails it; each condition changes what it should in a scripted match; Overtime works in single-player and in a two-tab co-op test.
 
+**Done Oct 28:** all ten contracts (team-wide progress, reward to every living mech), all nine sector conditions through the tune merge (`T.match` flags), the 6 s choose prompt (F from the host only, Enter or R, or the timer extracts), the Overtime wave (wave 4 plus a loader, its zone threats as wave 4, drops x1.5), revive at a wave's end, wave and excursion reports, Blackout's night pass, and the host-leaving rule (GDD-D52). 65 rules-check cases; `run.js` plays each level's plan and has `--overtime` and `--no-plan`. Note for phase 9: consecutive climb seeds give correlated level-1 plans (seeds 1 to 20 alternate Pod rain and Cold front), so sweeps should spread their seeds.
+
 ## Phase 4: zone enemies
 
 - **Zone threats table (GDD-D40):** `T.zoneThreats` lists zone, enemy, replaced slots and waves. `beginWave` swaps slots for each open zone's enemy and keeps the drop order in the GDD's Wave pacing. A zone enemy prefers spawn cells inside its zone (`MAP.zones` bounds).

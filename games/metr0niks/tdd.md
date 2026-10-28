@@ -56,7 +56,7 @@ The rules are a headless, deterministic simulation with no renderer, as [simulat
 - **Randomness:** one seeded stream per match, owned by the sim. Random draws in the view (particles, pitch variation) never feed back into rules. The climb plan has its own stream (TDD-D10).
 - **One tuning table:** every number the rules use is a key in `T`. `create({tune})` merges overrides over a per-match copy, so sector conditions and sweep variants never change `MetroSim.T` (TDD-D11, built). `sim.tuneHash()` names the tuning a run used.
 - **Entities:** players, enemies, shots, pods, scrap cubes, clusters (falling pieces) and debris are plain objects in arrays the sim mutates in place. The fun pass adds charges (Wrecker and Breach charges), slag pools and the Warden's linked parts (to build).
-- **Input:** one record per mech per tick: a key bitmask (W 1, A 2, S 4, D 8, Space 16, Q 32), the aim point, and the two mouse buttons. The fun pass adds F 64 (Overtime), Enter or R 128 (extract now), 1 256 and 2 512 (call-ins, aimed at the aim point) (TDD-D15, to build).
+- **Input:** one record per mech per tick: a key bitmask (W 1, A 2, S 4, D 8, Space 16, Q 32), the aim point, and the two mouse buttons. The fun pass adds F 64 (Overtime), Enter or R 128 (extract now), 1 256 and 2 512 (call-ins, aimed at the aim point) (TDD-D15, built Oct 28).
 - **Events:** everything a view needs that isn't state is an event (see Events).
 - **Checks:** the replay hash check, the rules check and the map check run headless (see Testing).
 
@@ -64,15 +64,15 @@ The rules are a headless, deterministic simulation with no renderer, as [simulat
 
 A match is one excursion at one campaign level.
 
-- **States:** `drop` (the drop-in shot; input locked, no damage, no spawns), `play`, then `choose` after wave 5 (to build), `overtime` (to build), and the end states `extracted`, `dead` and `victory` (built Oct 28).
+- **States:** `drop` (the drop-in shot; input locked, no damage, no spawns), `play`, then `choose` after wave 5, `overtime` (both built Oct 28), and the end states `extracted`, `dead` and `victory` (built Oct 28).
 - **Waves:** `T.waves` holds the five waves (3 bots; 4 bots and a loader; 4 bots and the boss; 6 bots and 2 loaders; 5 bots, a loader and the boss). `beginWave(n)` builds a queue: the boss first, then loaders and Bulwarks, then Wreckers, then bots, then Scuttler packs, released one every `T.wave.stagger` (0.8 s). Bot and loader counts scale with the level. A wave clears when its queue is empty and no enemy is left; the next starts after a 3 s breather.
 - **Zone threats (built Oct 28):** `T.zoneThreats` lists, per zone, the enemy it brings, the slots it replaces and in which waves (Freight Yard: a Scuttler pack for 2 bots in waves 2, 4 and 5; Smelter Row: a Bulwark for 1 loader in waves 4 and 5; Glass Quarter: a Wrecker for 1 bot in waves 2 and 4; Terminus Yard: one bot or loader per wave becomes an Elite). `beginWave` applies every open zone's row, then the sector condition's changes.
 - **Spawns:** a bot or loader lands on an open street cell more than 10 m from every living mech when one exists; a zone enemy prefers cells inside its zone (`MAP.zones` bounds). Sealed zones never spawn anything.
-- **Choose and Overtime (GDD-D37, to build):** when wave 5 clears, the match enters `choose` for 6 s. F (host only in co-op) starts Overtime; Enter or R, or the timer, extracts. Overtime runs the revive check, then builds wave 4 plus one loader through the zone threats table, with no boss; while it runs, every kill's scrap is multiplied by `T.overtime.drops` (1.5). Clearing it extracts. A death in Overtime is a normal death.
+- **Choose and Overtime (GDD-D37, built Oct 28):** when wave 5 clears, the match enters `choose` for 6 s. F (host only in co-op) starts Overtime; Enter or R, or the timer, extracts. Overtime runs the revive check, then builds wave 4 plus one loader through the zone threats table, with no boss; while it runs, every kill's scrap is multiplied by `T.overtime.drops` (1.5). Clearing it extracts. A death in Overtime is a normal death.
 - **Extract:** cubes still on the floor go to the nearest living mech, each mech's wallet is reported in the run-over event, and the campaign layer banks it. Leaving mid-match is a death (the in-match mark, TDD-D8).
 - **Victory (built Oct 28):** extracting level 5 reports `victory`; the campaign layer starts a new climb at level 1 on a new seed, keeping parts, upgrades, blueprints, records and banked scrap.
-- **Contracts (GDD-D38, to build):** a table of ten, each with an id, a check and a progress value read from the match stats and events (Crush: most kills from one collapse ≥ 3; Bring it down: spans dropped ≥ 2; Eviction: sniper knocked off a perch ≥ 2; Full combo: best combo = 4; Clean sweep: every pod taken, at least 5; Untouchable: wave 3 armor lost < 20%; Close shave: extract below 15% armor; Blitz: waves 1 and 2 cleared within 75 s; Wrecking crew: 400 voxels; Repo man: 2 kills of pod-carrying enemies). The level's contract comes from the climb plan. On completion the sim adds `T.contract.scrap` (15) × the level's scrap scale to each living mech's match scrap and emits an event; failing costs nothing. Contract kills follow kill credit.
-- **Sector conditions (GDD-D39, to build):** a table of nine, each a tuning override plus at most one flag:
+- **Contracts (GDD-D38, built Oct 28):** a table of ten, each with an id, a check and a progress value read from the match stats and events (Crush: most kills from one collapse ≥ 3; Bring it down: spans dropped ≥ 2; Eviction: sniper knocked off a perch ≥ 2; Full combo: best combo = 4; Clean sweep: every pod taken, at least 5; Untouchable: wave 3 armor lost < 20%; Close shave: extract below 15% armor; Blitz: waves 1 and 2 cleared within 75 s; Wrecking crew: 400 voxels; Repo man: 2 kills of pod-carrying enemies). The level's contract comes from the climb plan. On completion the sim adds `T.contract.scrap` (15) × the level's scrap scale to each living mech's match scrap and emits an event; failing costs nothing. Contract kills follow kill credit.
+- **Sector conditions (GDD-D39, built Oct 28):** a table of nine, each a tuning override plus at most one flag:
 
 | Condition | Override | Flag the sim or view reads |
 | --- | --- | --- |
@@ -192,8 +192,8 @@ Enemies are state machines with their own data blocks in `T`. All take level sca
 - **Topology (TDD-D1):** online, the room server runs the whole sim (`server/metr0niks.js`, in the private `kr0/blackletter-chronos` repo) and both players are clients; in the local two-tab test, the host's tab runs it. Mech 0 is the host and mech 1 the guest. Clients send input every tick and predict only their own movement; the sim's side sends snapshots at 20 per second with voxel diffs, rendered 100 ms behind. A silent player's keys are released after 0.5 s.
 - **Authority:** the side running the sim decides firing, heat, ATB, damage, kill credit, combo, contracts, pods and ties ("same frame" means "same sim tick").
 - **What's per player:** wallet, combo, multi-kill count, call-ins, stats, wear and the save. What's shared: the map, enemies, pods, the contract (each living mech gets its reward) and the host's campaign.
-- **Snapshots (to build):** add charges, slag pools, Warden parts, stagger and shield state, combo and Redline per mech, the contract's progress, and the `choose` timer, as compact arrays. Stats travel in wave-clear and run-over events, not every snapshot.
-- **Leaving:** a guest who leaves is destroyed (`dropPlayer`) and the host fights on. A host who leaves ends the room for both (GDD-D52, to build): the guest's match ends with match scrap lost; the host's in-match mark turns it into a death on the host's next load.
+- **Snapshots (built Oct 28 except the Warden):** add charges, slag pools, Warden parts, stagger and shield state, combo and Redline per mech, the contract's progress, and the `choose` timer, as compact arrays. Stats travel in wave-clear and run-over events, not every snapshot.
+- **Leaving:** a guest who leaves is destroyed (`dropPlayer`) and the host fights on. A host who leaves ends the room for both (GDD-D52, built Oct 28): the guest's match ends with match scrap lost; the host's in-match mark turns it into a death on the host's next load.
 - **Revive (GDD-D24):** at the end of waves 1 to 4 (and wave 5 if Overtime is called), the sim revives a downed mech if the survivor's wallet covers 40 × the level's scrap scale, at 30% armor. Damage taken carries across for wear.
 
 ## Match stats and reports
@@ -223,7 +223,7 @@ One camera at a fixed 2:1 dimetric angle (20 px by 10 px per cell, 22 px per hei
 - **Drop-in:** the shutter shot runs on the sim clock for 5.5 s; input locked, no damage.
 - **HUD:** armor, heat (and lockout or Redline), dash, ATB state, shoulder cooldown, Overclock, level, wave, enemies left or countdown, match scrap, kills, boss bar (the Warden's with rider and leg pips, to build); the combo beside the heat bar and on the cursor ring at ×2 or more; contract progress; the condition icon; two call-in slots; the wave report strip; the 6 s Extract or Overtime prompt.
 - **Screens:** title (continue, new campaign, settings, co-op, records), garage, pause (single-player), extracted, campaign over, victory, settings (art style, music and effects volume, saved on the device).
-- **Blackout (to build):** a night pass in each art style: darkness everywhere except within 12 m of each mech, muzzle flashes, blasts and slag.
+- **Blackout (built Oct 28):** a night pass in each art style: darkness everywhere except within 12 m of each mech, muzzle flashes, blasts and slag.
 
 ## Feel and audio
 
@@ -252,7 +252,7 @@ The sim's events are arrays (`drainEvents()`). Built today: toast `t`, floating 
 
 ## Tuning data
 
-Every number above is a key in `T`; the GDD's numbers are starting values for the sweep ([tuning history](tuning-history.md)). Still to build: `overtime`, `contract`, the `contracts` and `conditions` rules, `juggernaut` and `warden`. Built so far: `redline`, `arc`, `seismic`, `breach`, `overdrive`, `skids`, `callin`, `cache`, `strike`, `pods.odds`, the six blueprint parts in `PARTS`, `combo`, `stagger`, `credit`, `demolition`, `multiKill`, `level.max` 5, `collapse` level scaling, `slag`, `zoneThreats`, `scuttler`, `bulwark`, `wrecker`, `charge` and `elite`. Per-run overrides (TDD-D11) let a sweep change any of them without editing the file.
+Every number above is a key in `T`; the GDD's numbers are starting values for the sweep ([tuning history](tuning-history.md)). Still to build: `juggernaut` and `warden`. Built so far: `overtime`, `contract`, `revive`, `cond`, `match`, the `contracts` and `conditions` rules, `redline`, `arc`, `seismic`, `breach`, `overdrive`, `skids`, `callin`, `cache`, `strike`, `pods.odds`, the six blueprint parts in `PARTS`, `combo`, `stagger`, `credit`, `demolition`, `multiKill`, `level.max` 5, `collapse` level scaling, `slag`, `zoneThreats`, `scuttler`, `bulwark`, `wrecker`, `charge` and `elite`. Per-run overrides (TDD-D11) let a sweep change any of them without editing the file.
 
 ## Testing
 

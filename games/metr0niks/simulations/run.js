@@ -13,9 +13,12 @@
      --max S         stop a match after S simulated seconds and record it as "timeout" (default 900)
      --out FILE      write the records as JSON lines (default: none; tuning runs go in games/metr0niks/tuning-runs/)
      --no-replay     skip the replay check
+     --overtime      the pilots call Overtime at the prompt after wave 5 (default: extract at once)
+     --no-plan       play without the climb plan (no sector condition, no contract); by default each match plays
+                     Campaign.plan({seed}) for its level, with the run's seed as the climb seed
 
    Each record: {seed, level, players, accuracy, tuneHash, result, wave, ticks, seconds, kills, scrap:[per mech],
-   armor:[per mech at the end], hash}. A climb adds {climb:true, reached, levels:[records]}. The replay check
+   armor:[per mech at the end], hash, condition, contract:{id,state,progress,goal,reward}|null, overtime:{called,cleared}}. A climb adds {climb:true, reached, levels:[records]}. The replay check
    re-runs the batch's first match from its recorded inputs and compares the state hash every 10 s and at the end;
    any mismatch exits with code 1. stats: the GDD-D50 match stats, [mech][wave] (sim.stats). */
 "use strict";
@@ -24,21 +27,23 @@ require("./sim.js");require("./pilot.js");
 var M=globalThis.MetroSim,P=globalThis.MetroPilot;
 
 function args(argv){
-  var o={runs:20,seed:1,level:1,climb:false,to:5,players:1,accuracy:"mix",tune:null,max:900,out:null,replay:true};
+  var o={runs:20,seed:1,level:1,climb:false,to:5,players:1,accuracy:"mix",tune:null,max:900,out:null,replay:true,overtime:false,plan:true};
   for(var i=2;i<argv.length;i++){var a=argv[i],v=argv[i+1];
     if(a==="--runs"){o.runs=+v;i++}else if(a==="--seed"){o.seed=+v;i++}else if(a==="--level"){o.level=+v;i++}
     else if(a==="--climb")o.climb=true;else if(a==="--to"){o.to=+v;i++}else if(a==="--players"){o.players=+v;i++}
     else if(a==="--accuracy"){o.accuracy=v;i++}else if(a==="--tune"){o.tune=JSON.parse(fs.readFileSync(v,"utf8"));i++}
     else if(a==="--max"){o.max=+v;i++}else if(a==="--out"){o.out=v;i++}else if(a==="--no-replay")o.replay=false;
+    else if(a==="--overtime")o.overtime=true;else if(a==="--no-plan")o.plan=false;
     else{console.error("unknown option "+a);process.exit(2)}}
   return o;
 }
 
 /* One excursion. log: an array to record every tick's inputs into, or recorded inputs to replay (replay=true). */
-function match(o,seed,level,log,replay,checks){
+function match(o,seed,level,log,replay,checks,climbSeed){
   var builds=[];for(var i=0;i<o.players;i++)builds.push(M.STARTER);
-  var sim=M.create({seed:seed,level:level,builds:builds,tune:o.tune||undefined});
-  var pilots=builds.map(function(_,k){return P.make({seed:seed*7+k+1,accuracy:o.accuracy})});
+  var plan=o.plan?M.Campaign.plan({seed:climbSeed||seed})[level-1]:undefined;
+  var sim=M.create({seed:seed,level:level,builds:builds,tune:o.tune||undefined,plan:plan});
+  var pilots=builds.map(function(_,k){return P.make({seed:seed*7+k+1,accuracy:o.accuracy,overtime:o.overtime})});
   var over=null,maxT=Math.round(o.max*60);
   while(!over&&sim.tick<maxT){
     for(var k=0;k<builds.length;k++){
@@ -54,12 +59,14 @@ function match(o,seed,level,log,replay,checks){
   return {seed:seed,level:level,players:o.players,accuracy:o.accuracy,tuneHash:sim.tuneHash(),
     result:over?over[1]:"timeout",wave:sim.wave,ticks:sim.tick,seconds:Math.round(sim.tick/6)/10,kills:sim.kills,
     scrap:over&&over[4]&&over[4].scrap?over[4].scrap:sim.players.map(function(q){return over&&over[1]==="dead"?0:q.scrap}),
-    armor:sim.players.map(function(q){return Math.max(0,Math.round(q.hp))}),hash:sim.stateHash(),stats:sim.stats};
+    armor:sim.players.map(function(q){return Math.max(0,Math.round(q.hp))}),hash:sim.stateHash(),stats:sim.stats,
+    condition:sim.cond.id,contract:sim.contract&&{id:sim.contract.id,state:sim.contract.state,progress:sim.contract.progress,goal:sim.contract.goal,reward:sim.contract.reward},
+    overtime:{called:sim.run.overtime,cleared:sim.run.otCleared}};
 }
 
 function climb(o,seed){
   var levels=[],lv=1,r;
-  do{r=match(o,seed*31+lv,lv);levels.push(r);lv++}while(r.result==="extracted"&&lv<=o.to);
+  do{r=match(o,seed*31+lv,lv,null,false,null,seed);levels.push(r);lv++}while(r.result==="extracted"&&lv<=o.to);
   var last=levels[levels.length-1];
   return {seed:seed,climb:true,players:o.players,accuracy:o.accuracy,tuneHash:last.tuneHash,
     result:last.result==="extracted"?"victory":last.result,reached:last.level,
@@ -86,9 +93,12 @@ function main(){
     console.log("reached x4 combo "+cnt(function(r){return best(r)>=4})+" · mean multi-kills "+mean(multi));
     var dw={};recs.forEach(function(r){if(r.result==="dead")dw[r.wave]=(dw[r.wave]||0)+1});console.log("deaths by wave: "+JSON.stringify(dw));
   }
+  var all=o.climb?[].concat.apply([],recs.map(function(r){return r.levels})):recs;
+  console.log("contracts done "+all.filter(function(r){return r.contract&&r.contract.state===1}).length+" of "+all.filter(function(r){return r.contract}).length+
+    " · Overtime called "+all.filter(function(r){return r.overtime&&r.overtime.called}).length+", cleared "+all.filter(function(r){return r.overtime&&r.overtime.cleared}).length);
   if(o.replay&&n){
-    var lv=o.climb?1:o.level,sd=o.climb?(o.seed*31+1):o.seed,log=[],a=[],b=[];
-    var r1=match(o,sd,lv,log,false,a),r2=match(o,sd,lv,log,true,b);
+    var lv=o.climb?1:o.level,sd=o.climb?(o.seed*31+1):o.seed,cs=o.climb?o.seed:sd,log=[],a=[],b=[];
+    var r1=match(o,sd,lv,log,false,a,cs),r2=match(o,sd,lv,log,true,b,cs);
     var same=a.length===b.length&&a.every(function(h,i){return h===b[i]})&&r1.hash===r2.hash;
     console.log((same?"replay ok   ":"REPLAY FAIL ")+"seed "+sd+", "+a.length+" hashes, final "+r1.hash+" / "+r2.hash);
     if(!same)process.exit(1);
