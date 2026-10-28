@@ -1,6 +1,6 @@
 # Metr0niks tuning history
 
-Oct 25, 2026 · updated Oct 27, 2026 · @kr0 · kept by the systems-designer
+Oct 25, 2026 · updated Oct 28, 2026 · @kr0 · kept by the systems-designer
 
 Every changed number, why it changed, and the tokens each story spent. No tuning change has been logged yet. This file opens with the Simulation section the [studio standard](../../studio/simulation-and-tuning.md) requires and the baseline values the prototype ships with. Until the unset rows below are filled in, sweeps are exploratory and can't close a tuning story.
 
@@ -31,6 +31,8 @@ Questions that need sweeps:
 - Whether 10% wear and the repair rates let a losing player recover.
 - Co-op revive (GDD-D24): how often a survivor can afford the revive price by wave, by level. Needs the runner, a two-bot scenario and kr0's target.
 - Weapon upgrades (GDD-D23): how many extracts it takes to take a weapon to Mk III, and how much each level shortens a wave. Planned variants: damage per level 0.05, 0.10 and 0.15, crossed with upgrade cost ×0.5, ×1 and ×2, on paired seeds at level 1 and level 3, single-player, the starter build and one rare build. Needs the runner and kr0's targets first.
+
+- Fun pass (GDD-D35 to GDD-D45, Proposed Oct 28): every number in it is a starting value. Before kr0 accepts the values, the runner should answer: how often a bot-driven player reaches a ×4 chain (chain step 20%, decay 12 s); how much armor Redline costs a minigun build per wave (cap 130, 0.5 armor per heat); the extract rate and scrap per run with and without Overtime at levels 1, 10 and 30 (Overtime ×2 drops, +25% bonus); whether collapse damage scaled with enemy health keeps a span drop lethal to bots through level 50; the scrap curve with every kill bonus stacked (beat chain, demolition, Crossfire, Elite, Overtime); and whether each threat band's enemies raise the death rate by a step rather than a cliff. Needs the runner, a scripted player that uses the ring, and kr0's targets.
 
 ## Baseline: tuning in the prototype (Oct 25, 2026)
 

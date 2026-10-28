@@ -1,8 +1,8 @@
 # Metr0niks prototype changes
 
-Oct 25, 2026 · updated Oct 27, 2026 · @kr0 · kept by the producer
+Oct 25, 2026 · updated Oct 28, 2026 · @kr0 · kept by the producer
 
-What `prototypes/prototype.html` (the voxel prototype, prototype 1) and `simulations/sim.js` must change to match the [GDD](../gdd.md) and [TDD](../tdd.md). Sections 1 and 7 were done on Oct 27, 2026; the rest is not done. Line numbers are for the files as of Oct 25, 2026 (P = `prototypes/prototype.html`, S = `simulations/sim.js`) and have shifted since the Oct 27 removals. Values marked **new** are numbers the GDD sets that the prototype doesn't have yet; each says whether kr0 has accepted it (GDD-D18, D20 and D23 values were accepted on Oct 26 as starting values; the revive values are Proposed). The ink prototype (`prototype-ink.html`, prototype 2) is separate and not covered here (GDD-D32).
+What `prototypes/prototype.html` (the voxel prototype, prototype 1) and `simulations/sim.js` must change to match the [GDD](../gdd.md) and [TDD](../tdd.md). Sections 1 and 7 were done on Oct 27, 2026; the rest is not done. Section 18 (the Oct 28 fun pass) waits on kr0. Line numbers are for the files as of Oct 25, 2026 (P = `prototypes/prototype.html`, S = `simulations/sim.js`) and have shifted since the Oct 27 removals. Values marked **new** are numbers the GDD sets that the prototype doesn't have yet; each says whether kr0 has accepted it (GDD-D18, D20 and D23 values were accepted on Oct 26 as starting values; the revive values are Proposed). The ink prototype (`prototype-ink.html`, prototype 2) is separate and not covered here (GDD-D32).
 
 ## 1. Remove Gauntlet (done Oct 27)
 
@@ -116,3 +116,15 @@ GDD-D28 changed GDD text to match the prototype (collapse scrap, timing grades, 
 ## 17. Checked, nothing to change
 
 These GDD statements already match the prototype: the controls table, the dimetric camera and cutaway fade, the 35% vignette, the ATB and ring values, heat rules (every grade costs the same heat, an overheat during a ring adds none, the flash-vent ends a lockout, Overclock doubles every fill), the 21 parts and prices, two pod types and the pod rules, the wave table, level scaling, zones and drop-in timing for levels 2 and 3, death resetting the campaign to level 1, and co-op partner-down behaviour.
+
+## 18. Fun pass (waiting on kr0, not started)
+
+Decisions: GDD-D35 to GDD-D45, all Proposed ([record](../decisions/2026-10-28-fun-pass.md)). Nothing here is to be built until kr0 accepts the decision it comes from. When one is accepted, its rules go into `simulations/sim.js` first, so both prototypes get them (GDD-D32); the ink prototype's brief lists any it can't show yet.
+
+- **New `T` keys (proposed):** `chain {max:4, step:0.2, decay:12, atbAt4:0.25}`, `stagger {time:1.0, taken:0.5}`, `redline {cap:130, armorPerHeat:0.5, lockPer10:1}`, `overtime {choose:6, drops:2, bonus:0.25}`, `contract {scrap:20}`, `collapse.scaleHp:true`, `demolition:0.5`, `crossfire {window:2, dmg:0.5, scrap:0.5, after:3}`, `pods.odds [0.35,0.30,0.20,0.15]`, `bands [10,20,30,40]`, enemy blocks for `scuttler`, `bulwark`, `wrecker`, `elite`, and the six blueprint parts in `PARTS` with a band field.
+- **Sim events** for the new sounds, voice lines, stamps and callouts (chain step and break, stagger, Redline start and end, contract progress and completion, Overtime prompt and call, Crossfire, crushed count per collapse).
+- **Garage:** the next level preview (band, condition, contract) and "New" marks on blueprint parts.
+- **Save:** a campaign field for the highest level ever reached, kept on a death and a new campaign, and lifetime records. Old codes load with it set to their current level.
+- **Hazard props:** container stacks, gantry cranes and slag vats in `MAP`, placed by the level design work.
+- **Presentation:** hit-stop on the struck enemy only, never on `sim.step()`.
+

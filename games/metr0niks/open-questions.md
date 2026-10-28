@@ -1,6 +1,6 @@
 # Metr0niks open questions
 
-Oct 20, 2026 · updated Oct 27, 2026 · @kr0
+Oct 20, 2026 · updated Oct 28, 2026 · @kr0
 
 ## Decided so far
 
@@ -79,6 +79,12 @@ Still Proposed in the [decision history](gdd-decisions.md): the revive price and
 - [ ] Where production milestones live, since they are not part of the GDD (GDD-D27). The producer's documents and the phases in ways of working section 5 are the candidates.
 - [ ] The death screen offers the campaign code from before the run, and pasting it as a co-op host restores that level, which gets around the reset on death. Keep it as a deliberate retry, or remove it? (Prototype changes section 9 currently suggests adding a single-player paste box.)
 - [ ] Co-op campaign (GDD-D31, accepted Oct 27: the host owns it): what happens when the host leaves mid-match (the guest fights on and the host's campaign resets as a death, or the room ends for both)?
+- [ ] Fun pass of Oct 28 (GDD-D35 to GDD-D45, [record](decisions/2026-10-28-fun-pass.md)): accept, change or reject each. The record suggests building them in this order: Overtime, contracts and sector conditions first; Redline, Bulwarks and Elites last.
+- [ ] "What makes it fun" stays TBD (GDD-D27). The fun pass record offers a draft line: "Bringing the city down on a crowd, landing the heavy hit on the beat, and deciding, with a full wallet, whether to push one more wave." Use it, rewrite it, or keep it TBD?
+- [ ] Redline (GDD-D36) bends heat from a hard stop into a gamble. Keep heat as a hard stop instead? Dropping D36 also drops the Redline reactor and the Hot hands contract.
+- [ ] A second boss for the later bands, or keep one sniper (GDD-D13) with Sniper's nest and Elites as the variety?
+- [ ] Blackout (GDD-D39) needs a night look in each art style (Blockout, Cinematic, Ink). Keep it, or leave it out until an art style is chosen?
+- [ ] Blueprints (GDD-D42) need the save to keep the highest level ever reached. The campaign code format changes; the TDD's save section needs the technical-director's update once kr0 accepts D42.
 
 ## Backlog: dropped from the GDD, to bring back only by decision
 
