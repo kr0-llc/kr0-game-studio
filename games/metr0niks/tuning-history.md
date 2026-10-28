@@ -6,10 +6,10 @@ Every changed number, why it changed, and the tokens each story spent. No tuning
 
 ## Simulation
 
-- **Runner:** none yet. The rules are `simulations/sim.js`; in Node, `import './simulations/sim.js'` from this folder then `globalThis.MetroSim.create({seed, builds, level})`, and `sim.step()` advances one tick. A runner that plays whole excursions and writes a metrics record per run is to be built (TDD-D17, phase 0 of the [implementation plan](decisions/2026-10-28-fun-pass-implementation-plan.md)). Results will land in `games/metr0niks/tuning-runs/` (proposed).
-- **Determinism:** the simulation draws from one seeded stream, steps in fixed 1/60 s ticks and has no DOM, timers or browser globals. `MetroSim.hash` exists. The replay check (a seed, the tuning version and the input log reproducing one state hash) is not built.
+- **Runner:** `simulations/run.js` (built Oct 28, TDD-D17). `node simulations/run.js --runs 100 --level 1` plays whole excursions headless with scripted pilots and prints a summary; `--players 2` for co-op, `--climb` for level 1 up until a death, `--tune file.json` for a variant (a partial `T` merged over a copy for those runs only, TDD-D11), `--out` writes one JSON record per run to `games/metr0niks/tuning-runs/`. Run k of a batch uses seed `--seed + k`, so batches share paired seeds. About 0.3 s per excursion.
+- **Determinism:** the simulation draws from one seeded stream, steps in fixed 1/60 s ticks and has no DOM, timers or browser globals. Every runner batch replays its first match from the recorded inputs and compares `sim.stateHash()` every 10 s and at the end; a mismatch fails the batch. `sim.tuneHash()` identifies the tuning a record was made with. `simulations/rules-check.js` asserts single rules.
 - **Scenarios:** to be set by kr0. Likely: Excursion level 1 and level 3 (all zones open), single-player and two-player co-op, Overpass Sector 4.
-- **Players:** none yet. A scripted bot has to drive a mech through five waves; co-op needs a second bot.
+- **Players:** `simulations/pilot.js`, a scripted pilot: it fights the nearest enemy from about 9 m while circle-strafing, closes in for the pile-bunker when the ATB bar is full (not into a charging loader or a crowd), takes Field repair below 60% armor and picks up scrap. Ring accuracy is set per batch: `perfect`, `mix` (70% Perfect, 25% Good, 5% Miss), `random` or `none`. It is a baseline, not a model of a skilled player: it never dashes, uses Q or plays the city.
 - **Seeds:** TBD (kr0 to decide). Paired seeds are required by the standard.
 - **Measures and targets:**
 
@@ -25,6 +25,16 @@ Every changed number, why it changed, and the tokens each story spent. No tuning
 
 - **Re-run when:** any key in `T` changes, a part's stat change or cost changes, the wave table changes, or the durability or repair rule changes.
 - **Caps:** TBD. A run that exceeds the cap is counted and reported, not dropped.
+
+**Baseline, Oct 28** (tuning `05842d1b`, the prototype's `T` before the fun pass; pilot accuracy `mix`; seeds 1 to 100). Not a tuning change; it shows where the scripted pilot stands before any fun pass rule is built. Records in `tuning-runs/2026-10-28-baseline-*.jsonl`.
+
+| Scenario | Runs | Extracted | Mean length | Mean kills | Deaths by wave |
+| --- | --- | --- | --- | --- | --- |
+| Level 1, solo | 100 | 21% | 126 s | 20 | 2: 1, 3: 8, 4: 43, 5: 27 |
+| Level 1, co-op | 50 | 100% | 109 s | 28 | none |
+| Climb from level 1, solo | 50 | 9 of 50 reached level 2, none passed it | — | — | — |
+
+The patrol bots' orbs do the killing: with bot shots set to 0 damage, the solo pilot extracts 33 of 40 times. The solo/co-op gap is large; whether that's the pilot or the waves is a question for the wave-density sweep.
 
 Questions that need sweeps:
 

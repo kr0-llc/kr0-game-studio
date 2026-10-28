@@ -72,8 +72,66 @@ td:first-child,th:first-child{text-align:left}
 .plan div{border:1.5px dashed var(--ink);border-radius:5px;padding:5px 8px;background:#fff;font-size:14px;line-height:1.25}
 .plan b{font:700 15px var(--hand)}
 .plan i{font-style:normal;color:var(--muted)}
+.views{display:flex;gap:6px;margin:0 0 10px}
+.views a{font:700 15px var(--hand);color:var(--ink);text-decoration:none;border:1.5px solid var(--ink);border-radius:4px;padding:2px 10px;background:#fff}
+.views a[aria-current=page]{background:var(--peach);box-shadow:2px 2px 0 var(--ink)}
+.views a:focus-visible{outline:3px solid var(--teal);outline-offset:1px}
+#review{display:none}
+body.rv{display:block;overflow:auto}
+body.rv #panel{display:none}
+body.rv #stage{position:fixed;left:-10000px;top:0;width:900px;height:600px}   /* kept alive off screen: the review draws with the prototype's own rig code */
+body.rv #review{display:block}
 @media (max-width:900px){body{grid-template-columns:minmax(0,1fr);grid-template-rows:60vh auto;overflow:auto;height:auto}#stage{height:60vh;border-right:0;border-bottom:2px solid var(--ink)}#panel{overflow:visible;padding:14px 16px 40px;min-width:0}}
 .wide{overflow-x:auto}
+
+/* ----- animation review view ----- */
+#review{padding:16px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px));max-width:1500px;margin:0 auto}
+#review h1{font-size:34px}
+#review .lead{max-width:72ch;color:var(--muted);margin:0 0 6px}
+#review h2{font-size:24px;margin:22px 0 8px;justify-content:flex-start}
+.rvtabs{display:grid;grid-template-columns:repeat(3,minmax(0,200px));gap:8px;margin:10px 0 6px}
+.over{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:14px;align-items:start}
+.over img{width:100%;border:2px solid var(--ink);border-radius:6px;background:#fff;display:block}
+.over figcaption{font-size:13px;color:var(--muted);margin-top:4px}
+.over figure{margin:0}
+.over ul{margin:4px 0 0;padding-left:18px}
+.over li{margin:3px 0}
+.tally{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tally span{font:12px var(--mono);border:1px solid var(--line);border-radius:9px;padding:1px 8px;background:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+.item{border:2px solid var(--ink);border-radius:6px;background:var(--cream);padding:10px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.item>header{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.item>header b{font:700 20px var(--hand)}
+.item>header .use{color:var(--muted);font-size:14px;flex:1 1 140px}
+.vb{font:700 11px var(--mono);border-radius:9px;padding:1px 8px;border:1.5px solid var(--ink);background:#fff}
+.vb[data-v=Keep]{background:var(--sage)}.vb[data-v=Fix]{background:var(--mustard)}.vb[data-v=Redo]{background:var(--coral);color:#fff}.vb[data-v=Drop]{background:var(--ink);color:var(--cream)}
+.pl{width:100%;height:auto;aspect-ratio:480/340;max-width:100%;background:#f6eedc;border:1.5px solid var(--ink);border-radius:4px;display:block}
+.ctl{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.ctl .fr{font:12px var(--mono);color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.ctl label{display:flex;align-items:center;gap:4px;font-size:14px}
+.strip{display:flex;gap:3px;overflow-x:auto;padding-bottom:4px}
+.strip button{all:unset;cursor:pointer;flex:0 0 auto;border:1.5px solid var(--line);border-radius:3px;background:#f6eedc;position:relative}
+.strip button canvas{display:block;width:54px;height:38px}
+.strip button i{position:absolute;left:2px;top:0;font:9px var(--mono);font-style:normal;color:var(--muted)}
+.strip button[aria-current=true]{border-color:var(--ink);box-shadow:0 0 0 1.5px var(--ink)}
+.strip button.flag{border-color:var(--coral);background:#fde3d3}
+.strip button:focus-visible{outline:2px solid var(--teal)}
+.find{margin:0;padding-left:18px;font-size:14px;line-height:1.3}
+.find li{margin:2px 0}
+.find li.ok{list-style:"✓  ";color:#3d7a4f}.find li.warn{list-style:"!  ";color:#8a5d0c}.find li.bad{list-style:"✗  ";color:#b23b22}
+.find li span{color:var(--ink)}
+.mark{display:flex;flex-wrap:wrap;gap:4px;align-items:center;border-top:1.5px dashed var(--line);padding-top:6px}
+.mark .v{font:700 14px var(--hand);border:1.5px solid var(--ink);border-radius:4px;background:#fff;padding:1px 10px;cursor:pointer}
+.mark .v[aria-pressed=true][data-v=Keep]{background:var(--sage)}.mark .v[aria-pressed=true][data-v=Fix]{background:var(--mustard)}
+.mark .v[aria-pressed=true][data-v=Redo]{background:var(--coral);color:#fff}.mark .v[aria-pressed=true][data-v=Drop]{background:var(--ink);color:var(--cream)}
+.mark textarea{flex:1 1 100%;min-height:44px;font:14px var(--body);color:var(--ink);background:#fff;border:1.5px solid var(--line);border-radius:4px;padding:4px 6px;resize:vertical}
+.mark .cm{font:12px var(--mono);background:none;border:1px dashed var(--ink);border-radius:4px;padding:2px 7px;cursor:pointer;color:var(--ink)}
+.mark .cm[hidden]{display:none}
+.pc{width:100%;height:auto;aspect-ratio:300/220;background:#fff;border:1.5px solid var(--ink);border-radius:4px;display:block}
+.pmeta{font:12px var(--mono);color:var(--muted)}
+.saved{font:12px var(--mono);color:var(--muted)}
+@media (max-width:760px){.over{grid-template-columns:minmax(0,1fr)}.grid{grid-template-columns:minmax(0,1fr)}.rvtabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){.strip{scroll-behavior:auto}}
 </style>
 </head>
 <body>
@@ -82,6 +140,7 @@ td:first-child,th:first-child{text-align:left}
   <div id="err"></div>
 </div>
 <div id="panel">
+  <nav class="views" aria-label="Views"><a href="#lab" data-view="lab" aria-current="page">Lab</a><a href="#review" data-view="review">Animation review</a></nav>
   <h1>Metr<span class="r0">0</span>niks ink enemy lab</h1>
   <p class="sub">Every enemy in the ink prototype (prototype 2), with waves off. Spawn one, let its AI run or hold it still, trigger a behaviour, and slow time down to watch the cut-out animation. Click the game to drive your mech (WASD, mouse, both buttons).</p>
 
@@ -116,6 +175,15 @@ td:first-child,th:first-child{text-align:left}
   <div class="plan" id="plan"></div>
   <p class="note">From the Enemies and AI section of the GDD fun pass (pull request #13, still open). None of these has sim.js numbers or ink art yet; they get a tab here once they do.</p>
 </div>
+
+<section id="review" aria-label="Animation review">
+  <nav class="views" aria-label="Views"><a href="#lab" data-view="lab">Lab</a><a href="#review" data-view="review" aria-current="page">Animation review</a></nav>
+  <h1>Metr<span class="r0">0</span>niks ink enemy review</h1>
+  <p class="lead">Every animation and every sprite part of the three ink enemies, for your marks. The animations are the prototype's own cut-out puppet code, drawn frame by frame at fixed times, so what you see is what plays in the game. Mark each one Keep, Fix, Redo or Drop, flag the frames that are wrong, and leave a note or a comment.</p>
+  <p class="saved" id="rvSave">Loading the prototype…</p>
+  <div class="rvtabs" id="rvTabs"></div>
+  <div id="rvBody"></div>
+</section>
 
 <script>
 (function(){
@@ -190,6 +258,7 @@ function setup(){
   upd=G.update;
   G.update=function(dt){
     if(G.mode!=="battle")return upd(dt);
+    if(document.body.classList.contains("rv"))return;   /* the field holds still while you review */
     if(stepQ>0){stepQ--;one();return}
     if(speed>0){acc+=dt*speed;var n=0;while(acc>=H&&n<6){acc-=H;one();n++}if(n===6)acc=0}
   };
@@ -224,6 +293,7 @@ function setup(){
   try{if(localStorage.getItem("m0ink.mute")==="1")$("sound").textContent="Sound: off"}catch(x){}
   arena();renderTabs();pickUnit("bot");lineup();
   requestAnimationFrame(loop);
+  window.LAB={G:G,K:K,ST:ST,U:U};document.dispatchEvent(new Event("labready"));
 }
 function pre(){
   if(waveQ.length){waveT-=H;if(waveT<=0){var w=waveQ.shift();spawn(w,true,far());waveT=K.wave.stagger}}
@@ -437,6 +507,293 @@ function loop(now){
   drawPortraits();
   if(now-lastPanel>100){lastPanel=now;renderLive()}
 }
+})();
+</script>
+<script>
+/* ----- animation review: every enemy animation and sprite part, with marks and comments -----
+   Each clip is a pose over time handed to the prototype's own drawMech (or its debris physics for the wreck),
+   drawn at fixed frame times with the prototype's randomness seeded, so a frame looks the same every time. */
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id)};
+var G=null,K=null,ST=null,UL=null,en="bot",built={},players=[],marks={},db=null,comments=null,local=true;
+var VERDICTS=["Keep","Fix","Redo","Drop"];
+var NAMES={bot:"Gunner bot",loader:"Heavy loader",boss:"Jumper boss"};
+var SHEET={bot:"enemy_gunner",loader:"enemy_brute",boss:"enemy_scuttler"};
+
+/* ----- views: #lab (default) and #review ----- */
+function route(){
+  var rv=location.hash==="#review";document.body.classList.toggle("rv",rv);
+  document.querySelectorAll(".views a").forEach(function(a){if(a.dataset.view===(rv?"review":"lab"))a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  if(rv&&G)show(en);
+}
+addEventListener("hashchange",route);route();
+document.addEventListener("labready",function(){G=LAB.G;K=LAB.K;ST=LAB.ST;UL=LAB.U;start()});
+
+/* ----- drawing a pose with the prototype's rig ----- */
+function seeded(n){var s=(n*2654435761)%2147483647||1;return function(){s=(s*16807)%2147483647;return (s-1)/2147483646}}
+function draw(g,fn,seed){
+  var main=G.ctx,mr=G.Math.random,gt=G.gtime;G.ctx=g;G.Math.random=seeded(seed||1);
+  try{fn()}finally{G.ctx=main;G.Math.random=mr;G.gtime=gt}
+}
+function mech(type){var m=G.newMech(type,0,0);m.phase=0;m.face=1;m.aim=0;m.cool=9;return m}
+function fxAt(n,x,y,size,life,max){G.drawFx({n:n,x:x,y:y,size:size,life:life,max:max,delay:0,r:0})}
+function orb(x,y,r){var g=G.ctx;g.fillStyle="#e07a5f";g.strokeStyle="#2b2420";g.lineWidth=2.5;g.beginPath();g.arc(x,y,r,0,6.283);g.fill();g.stroke();g.fillStyle="#fffaf0";g.beginPath();g.arc(x-r*.3,y-r*.3,r*.3,0,6.283);g.fill()}
+/* the drop-in, as the prototype plays it: a fall under 2200 px/s² gravity, then a squash that eases out and a dust cloud */
+var DROP=160;
+function landPose(m,t){var fall=Math.sqrt(2*DROP/2200),tl=t-fall;m.z=Math.max(0,DROP-1100*t*t);m.dropping=m.z>0;m.squash=tl>=0?Math.max(0,.6-tl*2.5):0;m._land=tl}
+function landFx(m){if(m._land>=0&&m._land<1.1)fxAt("dust",0,0,m.type==="bot"?110:130,1.1-m._land,1.1)}
+/* the wreck, as killMech throws it: the rig's parts and ten bolts fly out under the prototype's own debris physics */
+function wreck(type,t){
+  var R=G.RIGS[type],rnd=seeded(7),r=function(a,b){return a+rnd()*(b-a)},list=R.crab?[R.hull,R.leg,R.leg,R.leg,R.claw]:R.spider?[R.body,R.leg,R.leg2,R.leg,R.leg2]:[R.torso,R.thigh,R.thigh,R.shin,R.shin,R.armF],
+      ps=list.map(function(n,i){var a=r(0,6.28),sp=r(120,320)*(i===0?.5:1);return {n:n,x:0,y:0,z:50,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*.6,vz:r(260,520)*(i===0?.7:1),r:0,vr:r(-9,9),life:3.5,f:1,sc:R.scale||1,rest:false}}),
+      bolts=[];for(var i=0;i<10;i++){var a=r(0,6.28),sp=r(.3,1)*360;bolts.push({n:G.DEB.bolts[(rnd()*G.DEB.bolts.length)|0],x:r(-20,20),y:r(-6,6)-10,z:r(10,60),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*.5,vz:r(.4,1.1)*360,r:r(0,6.28),vr:r(-12,12),sc:r(.7,1.25),life:6,rest:false})}
+  var all=ps.concat(bolts),steps=Math.round(t*60);
+  G.ctx.fillStyle="rgba(176,140,98,.16)";G.ctx.fillRect(-700,-170,1400,330);   /* the ground plane the parts land on, seen at three-quarters */
+  for(var k=0;k<steps;k++)all.forEach(function(o){G.stepFlying(o,1/60);o.life-=1/60});
+  G.ctx.save();G.ctx.globalAlpha=.9;if(t<1.2)fxAt("dust",0,0,120,1.2-t,1.2);G.ctx.restore();
+  all.sort(function(a,b){return a.y-b.y}).forEach(function(o){G.drawFlying(o,false)});
+  if(t<.45)fxAt("boom",0,-50,type==="bot"?110:150,.45-t,.45);
+}
+
+/* ----- the clips: what each enemy does in the ink prototype, and when ----- */
+function clips(type){
+  var c=K[type],B=K.bot,L=K.loader,J=K.boss,spB=B.speed,spL=L.speed,spJ=B.speed*.8;
+  if(type==="bot")return [
+    {id:"idle",name:"Idle",use:"standing still: the breathing bob",dur:2*Math.PI/2.2,n:24,pose:function(m,t){m._g=t}},
+    {id:"walk",name:"Walk",use:"one stride at its 2.4 m/s run, on a treadmill",dur:2*Math.PI/(G.BIPED_RATE*spB),n:20,pose:function(m,t){m.vx=spB;m.phase=t*spB*G.BIPED_RATE;m._g=t}},
+    {id:"walk-back",name:"Walk backwards",use:"backing off while facing you",dur:2*Math.PI/(G.BIPED_RATE*spB),n:20,pose:function(m,t){m.vx=-spB;m.phase=t*spB*G.BIPED_RATE;m._g=t}},
+    {id:"aim",name:"Aim sweep",use:"the gun arm tracking you from high to low",dur:2.4,n:24,pose:function(m,t,T){m.aim=-1.2+2.5*(.5-.5*Math.cos(t/T*6.283));m._g=t}},
+    {id:"fire",name:"Fire",use:"recoil, muzzle flash and the orb leaving the gun",dur:.5,n:12,pose:function(m,t){m.recoil=Math.max(0,1-t*12);m._g=t},
+      after:function(m,t){var mz=G.muzzleWorld(m,"armF","muzzle");if(t<.07)fxAt("flash",mz.x,mz.y-mz.z,20,.07-t,.07);orb(mz.x+B.shotSpeed*t,mz.y-mz.z,7)}},
+    {id:"hit",name:"Hit flash",use:"a bullet lands: 0.14 s of white",dur:.3,n:9,pose:function(m,t){m.hit=Math.max(0,.14-t);m._g=t}},
+    {id:"land",name:"Drop-in landing",use:"falls in, legs dangling, then squashes on landing",dur:1,n:15,pose:function(m,t){landPose(m,t);m._g=t},after:landFx},
+    {id:"wreck",name:"Wreck",use:"bursts into its parts and bolts",dur:2,n:24,view:.62,custom:function(t){wreck("bot",t)}}];
+  if(type==="loader")return [
+    {id:"idle",name:"Idle",use:"standing still: the claw sways",dur:2*Math.PI/3,n:20,pose:function(m,t){m.aim=Math.sin(t*3)*.15;m._g=t}},
+    {id:"walk",name:"Walk",use:"one gait cycle at 1.3 m/s, on a treadmill",dur:2*Math.PI/(.05*spL),n:20,pose:function(m,t){m.vx=spL;m.phase=t*spL*.05;m.aim=Math.sin(t*3)*.15;m._g=t}},
+    {id:"tell",name:"Tell",use:"0.5 s shake with the red \"!\" before the ram",dur:L.tell,n:12,pose:function(m,t){m.state="tell";m.aim=-.5;m._g=t}},
+    {id:"charge",name:"Charge",use:"the ram at 5 m/s, on a treadmill",dur:L.charge,n:12,pose:function(m,t){m.state="charge";m.vx=L.chargeSpeed;m.phase=t*L.chargeSpeed*.05;m.aim=.15;m._g=t},
+      after:function(m,t){for(var i=0;i<3;i++){var a=(t+i*.17)%.5;fxAt("puff",-70-a*L.chargeSpeed*.6,-2,22,.5-a,.5)}}},
+    {id:"recover",name:"Recover",use:"skids to a stop after the ram",dur:L.recover,n:10,pose:function(m,t){m.state="recover";m.vx=L.chargeSpeed*.2*Math.pow(.9,t*60);m.phase=t*20*.05;m.aim=Math.sin(t*3)*.15;m._g=t}},
+    {id:"hit",name:"Hit flash",use:"a bullet lands: 0.14 s of white",dur:.3,n:9,pose:function(m,t){m.hit=Math.max(0,.14-t);m._g=t}},
+    {id:"land",name:"Drop-in landing",use:"falls in and squashes on landing",dur:1,n:15,pose:function(m,t){landPose(m,t);m._g=t},after:landFx},
+    {id:"wreck",name:"Wreck",use:"bursts into hull, legs and claw",dur:2,n:24,view:.55,custom:function(t){wreck("loader",t)}}];
+  return [
+    {id:"idle",name:"Idle",use:"standing still",dur:2,n:12,pose:function(m,t){m._g=t}},
+    {id:"walk",name:"Walk",use:"two gait cycles at 1.9 m/s, on a treadmill",dur:2*2*Math.PI/(1.6*.09*spJ),n:16,pose:function(m,t){m.vx=spJ;m.phase=t*spJ*.09;m._g=t}},
+    {id:"volley",name:"Triple shot",use:"muzzle flash and three orbs in a spread",dur:.5,n:10,pose:function(m,t){m._g=t},
+      after:function(m,t){if(t<.08)fxAt("flash",30,-60,30,.08-t,.08);for(var k=-1;k<=1;k++){var a=k*.22;orb(Math.cos(a)*J.shotSpeed*t,-60+Math.sin(a)*J.shotSpeed*t,9)}}},
+    {id:"crouch",name:"Crouch",use:"the 0.6 s tell before the leap: body drops, eye glows",dur:J.tell,n:8,pose:function(m,t){m.state="crouch";m.squash=.25;m._g=t}},
+    {id:"jump",name:"Leap",use:"0.9 s in the air, 220 px at the top",dur:J.jumpTime,n:12,view:.5,pose:function(m,t,T){m.state="jump";m.z=Math.sin(t/T*Math.PI)*220;m._g=t}},
+    {id:"slam",name:"Slam landing",use:"lands with a squash, dust and a smoke ring",dur:.7,n:9,pose:function(m,t){m.state="land";m.squash=Math.max(0,.5-t*2.5);m._g=t},
+      after:function(m,t){fxAt("dust",0,0,180,Math.max(0,1.2-t),1.2);fxAt("smokering",0,0,160,Math.max(0,.8-t),.8)}},
+    {id:"hit",name:"Hit flash",use:"a bullet lands: 0.14 s of white",dur:.3,n:9,pose:function(m,t){m.hit=Math.max(0,.14-t);m._g=t}},
+    {id:"land",name:"Drop-in landing",use:"falls in and squashes on landing",dur:1,n:15,pose:function(m,t){landPose(m,t);m._g=t},after:landFx},
+    {id:"wreck",name:"Wreck",use:"bursts into body and legs",dur:2,n:24,view:.6,custom:function(t){wreck("boss",t)}}];
+}
+var SCALE={bot:1.55,loader:1.15,boss:1.15},XOFF={bot:-.06,loader:-.17,boss:0};   /* the loader's claw reaches far forward */
+/* one frame of a clip, drawn into g with the ground line at the bottom */
+function frame(g,type,cl,k,opt){
+  opt=opt||{};var W=g.canvas.width,H=g.canvas.height,T=cl.dur,t=k/cl.n*T,s=SCALE[type]*(cl.view||1)*(W/480);
+  if(!opt.keep){g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H)}
+  g.setTransform(s,0,0,s,W*(.5+(cl.custom?0:XOFF[type])),H-(cl.custom?120:46)*(W/480));
+  draw(g,function(){
+    G.gtime=t;
+    if(cl.custom){cl.custom(t);return}
+    var m=mech(type);cl.pose(m,t,T);G.gtime=m._g==null?t:m._g;G.drawMech(m);if(cl.after)cl.after(m,t,T);
+  },k+1);
+  g.setTransform(1,0,0,1,0,0);
+}
+function guides(g){
+  var W=g.canvas.width,H=g.canvas.height,y=H-46*(W/480);
+  g.save();g.strokeStyle="rgba(43,36,32,.45)";g.lineWidth=1.5;g.setLineDash([6,5]);g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();
+  g.setLineDash([]);g.strokeStyle="#ff4f9a";g.beginPath();g.moveTo(W/2-8,y);g.lineTo(W/2+8,y);g.moveTo(W/2,y-8);g.lineTo(W/2,y+8);g.stroke();
+  g.fillStyle="rgba(43,36,32,.55)";g.font="11px JetBrains Mono, monospace";g.fillText("ground",6,y-5);g.restore();
+}
+var off=document.createElement("canvas");off.width=480;off.height=340;
+function paint(p){
+  var g=p.cv.getContext("2d"),W=p.cv.width,H=p.cv.height;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);
+  if(p.onion&&p.cl.n>1){frame(off.getContext("2d"),p.type,p.cl,(p.k-1+p.cl.n)%p.cl.n);g.globalAlpha=.28;g.drawImage(off,0,0,W,H);g.globalAlpha=1}
+  frame(g,p.type,p.cl,p.k,{keep:true});if(p.guides)guides(g);
+  p.fr.textContent="frame "+(p.k+1)+" / "+p.cl.n+" · "+(p.cl.n/p.cl.dur).toFixed(1)+" fps · "+(p.k/p.cl.n*p.cl.dur).toFixed(2)+" s";
+  [].forEach.call(p.strip.children,function(b,i){b.setAttribute("aria-current",i===p.k)});
+  var fb=p.el.querySelector("[data-act=flag]");if(fb)fb.textContent=(flags(p.id).indexOf(p.k+1)>=0?"Unflag":"Flag")+" frame "+(p.k+1);
+  var cf=p.el.querySelector("[data-act=cframe]");if(cf)cf.textContent="Comment on frame "+(p.k+1);
+}
+
+/* ----- marks: the db when this page has one, this browser otherwise ----- */
+function flags(id){return (marks[id]&&marks[id].flags)||[]}
+function save(id,patch){
+  var m=Object.assign({},marks[id]||{},patch,{updatedAt:new Date().toISOString()});marks[id]=m;refresh(id);
+  if(db){db.collection("verdicts").doc(id).set(m).catch(function(e){$("rvSave").textContent="Could not save the mark for "+id+" ("+(e&&e.code||"error")+"). It is kept on this page until you reload."})}
+  else{try{localStorage.setItem("m0inklab.verdicts",JSON.stringify(marks))}catch(x){}}
+}
+function refresh(id){
+  document.querySelectorAll('[data-id="'+id+'"]').forEach(function(el){
+    var m=marks[id]||{};
+    el.querySelectorAll(".mark .v").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.v===m.verdict)});
+    var vb=el.querySelector(".vb");if(vb){vb.textContent=m.verdict||"not marked";vb.dataset.v=m.verdict||""}
+    var ta=el.querySelector("textarea");if(ta&&document.activeElement!==ta)ta.value=m.note||"";
+    var st=el.querySelector(".strip");if(st)[].forEach.call(st.children,function(b,i){b.classList.toggle("flag",(m.flags||[]).indexOf(i+1)>=0)});
+  });
+  tally();
+}
+function tally(){
+  var el=$("rvTally");if(!el)return;var n={Keep:0,Fix:0,Redo:0,Drop:0,none:0};
+  document.querySelectorAll("#rvBody [data-id]").forEach(function(x){var v=(marks[x.dataset.id]||{}).verdict;n[v||"none"]++});
+  el.innerHTML=VERDICTS.map(function(v){return "<span>"+v+" "+n[v]+"</span>"}).join("")+"<span>not marked "+n.none+"</span>";
+}
+function markHtml(id,anim){
+  return '<div class="mark">'+VERDICTS.map(function(v){return '<button class="v" type="button" data-v="'+v+'" aria-pressed="false">'+v+"</button>"}).join("")+
+    (anim?'<button class="b" type="button" data-act="flag">Flag frame 1</button>':"")+
+    '<textarea id="note-'+id+'" placeholder="Your note: what is wrong, what to change" aria-label="Note for '+id+'"></textarea>'+
+    '<button class="cm" type="button" data-act="comment" hidden>Comment on this '+(anim?"animation":"part")+"</button>"+
+    (anim?'<button class="cm" type="button" data-act="cframe" hidden>Comment on frame 1</button>':"")+"</div>";
+}
+
+/* ----- building an enemy's review ----- */
+function start(){
+  $("rvTabs").innerHTML=Object.keys(NAMES).map(function(k){return '<button class="tab" type="button" data-e="'+k+'" aria-pressed="'+(k===en)+'"><canvas width="240" height="168" data-p="'+k+'"></canvas><b>'+NAMES[k]+"</b><span>"+UL[k].tag+"</span></button>"}).join("");
+  $("rvTabs").addEventListener("click",function(e){var t=e.target.closest(".tab");if(t)show(t.dataset.e)});
+  try{marks=JSON.parse(localStorage.getItem("m0inklab.verdicts")||"{}")||{}}catch(x){marks={}}
+  $("rvSave").textContent="Marks and notes stay in this browser (open the published lab to save them for Claude).";
+  if(window.claude&&claude.use){
+    claude.use("db").then(function(d){if(!d)return;db=d;local=false;marks={};
+      $("rvSave").textContent="Marks and notes save to this page as you go; Claude reads them from there.";
+      db.collection("verdicts").onSnapshot(function(snap){var m={};snap.docs.forEach(function(d){m[d.id]=d.data()});marks=m;Object.keys(BUILT_IDS).forEach(refresh)},
+        function(e){$("rvSave").textContent="Saved marks could not be read ("+(e&&e.code||"error")+"); new marks may not save."});
+    });
+    claude.use("comments").then(function(c){if(!c)return;comments=c;document.querySelectorAll("#rvBody .cm").forEach(function(b){b.hidden=false})});
+  }
+  if(location.hash==="#review")show(en);
+  requestAnimationFrame(tick);
+}
+var BUILT_IDS={};
+function show(type){
+  en=type;if(!G)return;
+  [].forEach.call($("rvTabs").children,function(t){t.setAttribute("aria-pressed",t.dataset.e===type)});
+  if(!built[type])built[type]=build(type);
+  $("rvBody").innerHTML="";$("rvBody").appendChild(built[type].el);players=built[type].players;
+  players.forEach(paint);Object.keys(BUILT_IDS).forEach(refresh);
+}
+function build(type){
+  var wrap=document.createElement("div"),F=FIND[type]||{},cl=clips(type),ps=[];
+  wrap.innerHTML='<div class="over"><figure><img alt="The Scenario parts sheet the '+NAMES[type]+' is cut from" src="'+G.BASE+"sheets/"+SHEET[type]+'.webp"><figcaption>Source: the Scenario parts sheet <code>'+SHEET[type]+'.webp</code>, sliced into the atlas by ink_atlas.py.</figcaption></figure>'+
+    '<div><h2 style="margin-top:0">'+NAMES[type]+": overall</h2><ul>"+(F.overall||[]).map(function(x){return "<li>"+x+"</li>"}).join("")+'</ul><div class="tally" id="rvTally"></div></div></div>'+
+    '<h2>Animations <small>'+cl.length+' clips</small></h2><div class="grid" data-g="anim"></div><h2>Parts <small>'+UL[type].parts.length+' sprites</small></h2><div class="grid" data-g="parts"></div>';
+  var ga=wrap.querySelector('[data-g=anim]'),gp=wrap.querySelector('[data-g=parts]');
+  cl.forEach(function(c){
+    var id=type+"-"+c.id;BUILT_IDS[id]=1;var a=document.createElement("article");a.className="item";a.dataset.id=id;a.setAttribute("data-comment-target","");
+    a.innerHTML="<header><b>"+c.name+'</b><span class="use">'+c.use+'</span><span class="vb">not marked</span></header><canvas class="pl" width="480" height="340" aria-label="'+NAMES[type]+" "+c.name+' animation"></canvas>'+
+      '<div class="ctl"><button class="b" type="button" data-act="prev">◀ Prev</button><button class="b" type="button" data-act="play">Pause</button><button class="b" type="button" data-act="next">Next ▶</button>'+
+      '<button class="b" type="button" data-sp=".25">0.25×</button><button class="b" type="button" data-sp=".5">0.5×</button><button class="b" type="button" data-sp="1" aria-pressed="true">1×</button>'+
+      '<label><input type="checkbox" data-act="onion"> Onion skin</label><label><input type="checkbox" data-act="guides" checked> Ground line</label><span class="fr"></span></div>'+
+      '<div class="strip" role="group" aria-label="Frames"></div><ul class="find">'+((F[c.id]||[]).map(li).join(""))+"</ul>"+markHtml(id,true);
+    var p={id:id,type:type,cl:c,el:a,cv:a.querySelector(".pl"),fr:a.querySelector(".fr"),strip:a.querySelector(".strip"),k:0,acc:0,playing:true,speed:1,onion:false,guides:true};
+    for(var k=0;k<c.n;k++){var b=document.createElement("button");b.type="button";b.dataset.k=k;b.setAttribute("aria-label","Frame "+(k+1));
+      var tc=document.createElement("canvas");tc.width=108;tc.height=76;b.appendChild(tc);var lab=document.createElement("i");lab.textContent=k+1;b.appendChild(lab);p.strip.appendChild(b);
+      frame(off.getContext("2d"),type,c,k);tc.getContext("2d").drawImage(off,0,0,108,76)}
+    wire(p);ps.push(p);ga.appendChild(a);
+  });
+  UL[type].parts.forEach(function(n){
+    var id="part-"+n,s=G.A.sprites[n];BUILT_IDS[id]=1;var a=document.createElement("article");a.className="item";a.dataset.id=id;a.setAttribute("data-comment-target","");
+    var j=Object.keys(s.joints);
+    a.innerHTML="<header><b>"+n+'</b><span class="use">'+(PARTUSE[n]||"")+'</span><span class="vb">not marked</span></header><canvas class="pc" width="600" height="440" aria-label="Sprite part '+n+'"></canvas>'+
+      '<div class="pmeta">'+Math.round(s.w/G.A.store)+" × "+Math.round(s.h/G.A.store)+" px · pivot "+s.pivot.join(", ")+(j.length?" · joints "+j.join(", "):" · no joints")+"</div>"+
+      '<ul class="find">'+((F["part-"+n]||[]).map(li).join(""))+"</ul>"+markHtml(id,false);
+    drawPart(a.querySelector(".pc"),n);wirePart(a,id);gp.appendChild(a);
+  });
+  return {el:wrap,players:ps};
+}
+function li(x){var c=x[0]==="+"?"ok":x[0]==="!"?"warn":"bad";return '<li class="'+c+'"><span>'+x.slice(1).trim()+"</span></li>"}
+/* a part on its own: the pivot in pink, each joint in teal with its name */
+function drawPart(cv,n){
+  var g=cv.getContext("2d"),s=G.A.sprites[n],W=cv.width,H=cv.height,k=Math.min((W-80)/s.w,(H-80)/s.h),x0=(W-s.w*k)/2,y0=(H-s.h*k)/2;
+  g.clearRect(0,0,W,H);g.strokeStyle="rgba(43,36,32,.25)";g.setLineDash([5,5]);g.strokeRect(x0,y0,s.w*k,s.h*k);g.setLineDash([]);
+  g.drawImage(G.atlasImg,s.x,s.y,s.w,s.h,x0,y0,s.w*k,s.h*k);
+  function dot(p,col,label){var x=x0+p[0]*s.w*k,y=y0+p[1]*s.h*k;g.fillStyle=col;g.strokeStyle="#2b2420";g.lineWidth=2;g.beginPath();g.arc(x,y,7,0,6.283);g.fill();g.stroke();
+    g.font="700 18px JetBrains Mono, monospace";g.lineWidth=4;g.strokeStyle="#fffaf0";g.strokeText(label,x+10,y-8);g.fillStyle="#2b2420";g.fillText(label,x+10,y-8)}
+  Object.keys(s.joints).forEach(function(j){dot(s.joints[j],"#7fc4c0",j)});dot(s.pivot,"#ff4f9a","pivot");
+}
+function wire(p){
+  p.el.addEventListener("click",function(e){
+    var b=e.target.closest("button");if(!b)return;
+    if(b.dataset.k!=null){p.k=+b.dataset.k;p.playing=false;p.el.querySelector("[data-act=play]").textContent="Play";paint(p);return}
+    if(b.dataset.sp){p.speed=+b.dataset.sp;p.el.querySelectorAll("[data-sp]").forEach(function(x){x.setAttribute("aria-pressed",x===b)});return}
+    var a=b.dataset.act;
+    if(a==="play"){p.playing=!p.playing;b.textContent=p.playing?"Pause":"Play"}
+    else if(a==="prev"||a==="next"){p.playing=false;p.el.querySelector("[data-act=play]").textContent="Play";p.k=(p.k+(a==="next"?1:-1)+p.cl.n)%p.cl.n;paint(p)}
+    else if(a==="flag"){var f=flags(p.id).slice(),i=f.indexOf(p.k+1);if(i>=0)f.splice(i,1);else{f.push(p.k+1);f.sort(function(x,y){return x-y})}save(p.id,{flags:f,kind:"animation",enemy:p.type});paint(p)}
+    else if(a==="cframe"){openComposer(p.strip.children[p.k])}
+    else markClick(b,p.id,"animation",p.type,p.el);
+  });
+  p.el.addEventListener("change",function(e){var a=e.target.dataset.act;if(a==="onion")p.onion=e.target.checked;if(a==="guides")p.guides=e.target.checked;paint(p)});
+  noteWire(p.el,p.id,"animation",p.type);
+}
+function wirePart(el,id){el.addEventListener("click",function(e){var b=e.target.closest("button");if(b)markClick(b,id,"part",en,el)});noteWire(el,id,"part",en)}
+function markClick(b,id,kind,type,el){
+  if(b.classList.contains("v")){var cur=(marks[id]||{}).verdict;save(id,{verdict:cur===b.dataset.v?null:b.dataset.v,kind:kind,enemy:type})}
+  else if(b.dataset.act==="comment")openComposer(el);
+}
+function noteWire(el,id,kind,type){var ta=el.querySelector("textarea");ta.addEventListener("change",function(){if((marks[id]||{}).note!==ta.value)save(id,{note:ta.value,kind:kind,enemy:type})})}
+function openComposer(target){if(!comments||!target)return;comments.openComposer({element:target}).catch(function(e){if(e&&e.code==="forbidden")document.querySelectorAll("#rvBody .cm").forEach(function(b){b.hidden=true})})}
+
+/* ----- playback ----- */
+var last=0;
+function tick(now){
+  requestAnimationFrame(tick);var dt=Math.min(.1,(now-(last||now))/1000);last=now;
+  if(!document.body.classList.contains("rv"))return;
+  players.forEach(function(p){if(!p.playing)return;p.acc+=dt*p.speed*p.cl.n/p.cl.dur;if(p.acc>=1){p.k=(p.k+Math.floor(p.acc))%p.cl.n;p.acc%=1;
+    var r=p.cv.getBoundingClientRect();if(r.bottom>0&&r.top<innerHeight)paint(p)}});
+}
+
+var PARTUSE={b_torso:"gunner body: hips, gun shoulder",b_thigh:"gunner thigh (both legs)",b_shin:"gunner shin and foot (both legs)",b_arm:"gunner gun arm",
+  l_hull:"loader hull: claw and four leg sockets",l_leg:"loader leg (all four)",l_claw:"loader claw",j_body:"jumper body: two leg sockets and the eye",j_leg:"jumper front leg",j_leg2:"jumper back leg"};
+/* findings from the frame-by-frame pass on 28 Oct 2026: + fine, ! worth a look, x wrong */
+var FIND={
+  bot:{
+    overall:["A cut-out puppet built in code: four parts from one Scenario sheet, posed every frame. None of it is drawn frame by frame.","Drawn facing right only and mirrored to face left, so it has no front or back view when it walks up or down the screen (the same gap as Tim-o).","Its rival palette (slate blue, coral, mustard) reads apart from Tim-o's peach and sage at a glance."],
+    idle:["+ A breathing bob of about 1 px every 2.9 s keeps it alive.","! The bob is tiny at game zoom and nothing else moves: no gun sway, no visor flicker."],
+    walk:["+ Two-bone IK: feet plant and slide back, knees bend forward, and the stride matches the speed, so the feet don't skate.","! Both legs are the same sprite in the same plane, so from frame 13 to 20 they overlap and read as one leg.","! The gun arm stays dead level through the stride, with no sway."],
+    "walk-back":["+ The feet swing the other way, so backing off doesn't look like a moonwalk.","! The same leg overlap as the walk, frames 3 to 5."],
+    aim:["+ The arm is clamped at about 46° up and 54° down, so it never comes off the shoulder (frames 1 to 4 and 10 to 16 sit on the clamp).","! The torso never turns or leans with the aim; only the arm moves, so a low aim pushes the gun into the legs (frames 11 to 15)."],
+    fire:["+ The flash and the orb leave from the barrel tip.","! The recoil kick lasts 0.08 s, so it shows on frame 1 only; the shot reads mostly from the flash.","! The orb leaves a little above the barrels' centre line (see b_arm)."],
+    hit:["+ A 0.14 s white flash over the whole puppet, 4 frames at 30 fps.","! No knockback or flinch pose on a normal hit."],
+    land:["+ The legs dangle in the fall and the body squashes on landing (frame 7), then eases out.","! The squash scales the whole puppet, so the feet slide outward instead of the knees bending.","! The dust cloud is drawn in front and hides the feet from frame 7 to 15."],
+    wreck:["+ It bursts into its own six parts plus bolts, with bounce and dust, so the wreck reads as the same robot.","! Parts settle at whatever angle they land, so a thigh can end standing on end.","! All three enemies share this burst; none has its own wreck."],
+    "part-b_torso":["+ The hip and gun-shoulder joints sit on the hull's edge, so legs and arm attach cleanly.","! The big ring on its left side reads as an eye or lens looking away from the gun. If that is the face, the torso is the wrong way round."],
+    "part-b_thigh":["+ The knee joint sits in the knee ball."],
+    "part-b_shin":["+ The pivot sits in the knee socket.","! The foot is part of the shin, so it can't flex on landing."],
+    "part-b_arm":["+ The shoulder pivot sits in the socket.","! The muzzle point is on the box edge, above the barrels' centre line."]},
+  loader:{
+    overall:["A cut-out puppet: the hull, one leg sprite used four times, and the claw.","Mirrored only, so no front or back view.","The hull carries two mortar tubes (the atlas even cuts a 'mortar' point) but the loader never fires them: either an attack to add or art to drop."],
+    idle:["+ The claw sways gently.","! The hull and legs don't move at rest."],
+    walk:["+ The legs swing in alternating pairs with a small hull bob.","x The crab legs have no IK: they only rotate at the hip, so the feet slide and never plant, and the back legs barely move."],
+    tell:["+ The red \"!\" and the raised claw read clearly from the first frame.","! The claw snaps up in one frame instead of rising, and the ±2 px shake is hard to see at game zoom."],
+    charge:["! It looks almost like the walk: only a 0.08 rad hull tilt and faster legs, with no lowered stance or forward lean.","+ Dust puffs trail it (drawn here as the game draws them)."],
+    recover:["! It reads as a slow walk: no skid, sway or settle after the ram."],
+    hit:["+ The white flash is clearly visible."],
+    land:["+ A heavy squash on landing.","! The same whole-puppet squash as the gunner: the legs stretch sideways instead of bending."],
+    wreck:["+ The claw and legs fly well.","! Parts settle at any angle: a leg ends standing upright on the hull from frame 12."],
+    "part-l_hull":["+ The claw and leg sockets line up with the parts.","! Only two leg sockets for four legs: the front pair is an offset copy of the back pair, which is why the legs bunch up.","! The mortar point is cut but nothing uses it."],
+    "part-l_leg":["+ One clean leg with its pivot in the hip ball.","! The same sprite for all four legs, with no knee, so it can't bend."],
+    "part-l_claw":["+ The pivot sits in the wrist socket and the tip point at the jaws.","! The jaws are one piece, so the claw can't open or snap."]},
+  boss:{
+    overall:["A cut-out puppet: the body and two leg sprites, cut from the sheet named enemy_scuttler.","That sheet was made for the Scuttler, an 18 hp drone in the GDD, but it is used for the 180 hp boss. When the Scuttler is built, one of the two will need new art.","Mirrored only, so no front or back view."],
+    idle:["x Nothing moves at rest: no breathing, leg shift or eye flicker, so every frame is identical."],
+    walk:["+ Four legs swing in alternating pairs with a body bob.","x No IK: the feet slide and never plant.","! The legs look stiff because they only rotate at the hip."],
+    volley:["+ The flash and the three-orb spread read clearly.","! The orbs come out of the body's centre: nothing on the sprite is a gun or a mouth."],
+    crouch:["+ The body drops and the eye flickers bright: a clear tell.","! The legs don't fold; the body sinks between straight legs."],
+    jump:["+ A smooth arc with a shrinking shadow.","! The legs splay the same amount for the whole leap, with no tuck at the top or reach before landing."],
+    slam:["+ The squash, dust and smoke ring sell the impact.","! The dust is drawn in front and hides the lower body for most of the landing."],
+    hit:["+ The white flash is clearly visible."],
+    land:["+ A squash on landing."],
+    wreck:["+ The body and legs scatter with bolts."],
+    "part-j_body":["+ The leg sockets and the eye point line up.","! The circular saw on its side is never used: an attack to add or art to drop."],
+    "part-j_leg":["+ The pivot sits in the hip ball.","! No knee joint, so it can't fold for the crouch or the leap."],
+    "part-j_leg2":["! Nearly the same as j_leg, so the back pair reads as a copy of the front."]}
+};
 })();
 </script>
 </body>

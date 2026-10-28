@@ -65,6 +65,8 @@ kr0 asked for a lab page to see all the enemies in the ink prototype. `prototype
 
 **Where the ink enemies differ from sim.js** (listed on each enemy's card; nothing changed): the bot engages from anywhere with no patrol, pods or line-of-sight check; the loader starts its tell at 5.3 m instead of 2.2 m and has no haul route; the boss is a ground jumper with a triple shot and a jump slam instead of the roof-perching Bounty sniper. These are gaps against GDD-D32 to fix when the ink prototype is worked on again (GDD-D46 has it paused as a look study).
 
+**Animation review (28 October 2026).** kr0 asked for a place to review each enemy's animations and parts. The lab's second view (`ink-enemy-lab.html#review`) has, for each enemy, the Scenario source sheet, every animation as a frame player (play, step, 0.25× to 1×, onion skin, ground line, a frame strip) and every sprite part with its pivot and joints. Each animation and part takes a Keep, Fix, Redo or Drop mark, flagged frames, a note and review comments (the studio's animation review rule). Marks save to the published page's `verdicts` collection, one document per item (`bot-walk`, `part-l_hull`); a local copy keeps them in the browser. The frames are the prototype's own drawing code at fixed times, so they match the game. The first findings are in `feedback/synthetic/2026-10-28-ink-enemy-animation-review.md`.
+
 The lab also lists the enemies in the GDD fun pass (PR #13) that are not in the ink prototype yet: Scuttler, Bulwark, Wrecker, Elite, Sniper pair, Juggernaut and the Warden.
 
 ## Audio

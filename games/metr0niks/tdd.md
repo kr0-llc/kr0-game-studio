@@ -27,7 +27,7 @@ This version ships as plain JavaScript in the browser (TDD-D18), with the rules 
 | Mechanics lab, garage lab, unit lab | `prototypes/mechanics-lab.html` and siblings | Drive the voxel prototype in a frame through test hooks | Test pages, not builds |
 | Ink enemy lab | `prototypes/ink-enemy-lab.html` | The ink prototype's enemies one at a time | Test page |
 | Map check | `simulations/map-check.js` | Node: checks `MAP` (zones, room for two, landmarks) | Built |
-| Runner and rules check | `simulations/run.js`, `simulations/rules-check.js` | Node: whole excursions with a scripted player; one-rule scenarios | To build (TDD-D17) |
+| Runner, pilot and rules check | `simulations/run.js`, `simulations/pilot.js`, `simulations/rules-check.js` | Node: whole excursions with scripted pilots; one-rule scenarios | Built Oct 28 (TDD-D17) |
 
 | Need | Option | Why |
 | --- | --- | --- |
@@ -54,7 +54,7 @@ The rules are a headless, deterministic simulation with no renderer, as [simulat
 
 - **Fixed step:** 1/60 s ticks, never the frame clock. `sim.js` has no DOM, no timers and no browser globals.
 - **Randomness:** one seeded stream per match, owned by the sim. Random draws in the view (particles, pitch variation) never feed back into rules. The climb plan has its own stream (TDD-D10).
-- **One tuning table:** every number the rules use is a key in `T`. `create({tune})` merges overrides over a per-match copy, so sector conditions and sweep variants never change `MetroSim.T` (TDD-D11, to build).
+- **One tuning table:** every number the rules use is a key in `T`. `create({tune})` merges overrides over a per-match copy, so sector conditions and sweep variants never change `MetroSim.T` (TDD-D11, built). `sim.tuneHash()` names the tuning a run used.
 - **Entities:** players, enemies, shots, pods, scrap cubes, clusters (falling pieces) and debris are plain objects in arrays the sim mutates in place. The fun pass adds charges (Wrecker and Breach charges), slag pools and the Warden's linked parts (to build).
 - **Input:** one record per mech per tick: a key bitmask (W 1, A 2, S 4, D 8, Space 16, Q 32), the aim point, and the two mouse buttons. The fun pass adds F 64 (Overtime), Enter or R 128 (extract now), 1 256 and 2 512 (call-ins, aimed at the aim point) (TDD-D15, to build).
 - **Events:** everything a view needs that isn't state is an event (see Events).
@@ -256,8 +256,8 @@ Every number above is a key in `T`; the GDD's numbers are starting values for th
 
 ## Testing
 
-- **Runner (TDD-D17, to build):** `simulations/run.js` plays whole excursions in Node from a campaign, seeds and an override file, with a scripted player (one or two) that fights, takes pods and releases the ring at a set accuracy; it writes one metrics record per run to `tuning-runs/` and replays one run per batch to compare state hashes.
-- **Rules check (to build):** `simulations/rules-check.js` runs short scripted scenarios, one rule each (damage order steps, credit window, combo, stagger, each contract, each condition, save migration, plan determinism).
+- **Runner (TDD-D17, built):** `simulations/run.js` plays whole excursions in Node from a campaign, seeds and an override file, with a scripted pilot (`pilot.js`, one or two) that fights, takes pods and releases the ring at a set accuracy; it writes one metrics record per run to `tuning-runs/` and replays one run per batch to compare state hashes.
+- **Rules check (built):** `simulations/rules-check.js` runs short scripted scenarios, one rule each (damage order steps, credit window, combo, stagger, each contract, each condition, save migration, plan determinism).
 - **Map check:** `simulations/map-check.js` (built).
 - **Labs:** the mechanics, garage and unit labs get a test for each new mechanic, enemy and part.
 - **Co-op:** a two-tab run through a full excursion comparing state hashes and measuring snapshot size.
