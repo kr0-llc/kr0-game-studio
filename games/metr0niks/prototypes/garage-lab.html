@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Metr0niks Garage Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Metr0niks garage lab: the voxel prototype's own garage (prototype.html) in the frame on the left, with every part
+   unlocked and saving switched off, next to a sheet of every part icon. Clicking a part previews it on the turntable mech;
+   Fit equips it. The icons and the mech are drawn by the prototype's code, so they match the game in every art style. */
+:root{
+  color-scheme:dark;
+  --bg:#121316; --panel:#17181c; --panel2:#1d1f24; --line:#30343b;
+  --fg:#e9e6e0; --muted:#a39d93;
+  --rust:#e0702b; --cyan:#3fd6e8; --hazard:#f2c230; --good:#7fdc6a; --bad:#ff5a4a;
+  --r0-pink:#ff4f9a; /* placeholder until kr0 sets the brand pink (studio/brand.md) */
+  --display:"Chakra Petch","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:12px/1.45 var(--mono)}
+body{display:grid;grid-template-columns:minmax(0,1fr) 440px;height:100%;overflow:hidden}
+#stage{position:relative;min-width:0;border-right:1px solid var(--line)}
+#stage{overflow:hidden}
+#game{display:block;width:100%;height:100%;border:0;background:#0f1218;transform-origin:0 0}
+#err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--muted)}
+#panel{overflow-y:auto;background:var(--panel);padding:14px 14px 40px}
+h1{font:700 20px/1.1 var(--display);text-transform:uppercase;margin:0 0 4px;letter-spacing:.02em}
+.r0{color:var(--r0-pink)}
+.sub{color:var(--muted);margin:0 0 10px}
+h2{font:700 12px var(--display);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:16px 0 6px;display:flex;justify-content:space-between;align-items:baseline}
+h2 small{font:500 10px var(--mono);letter-spacing:.04em;text-transform:none}
+.row{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+button.b{background:#0e0f12;color:var(--fg);border:1px solid var(--line);border-radius:3px;padding:5px 8px;font:500 11px var(--mono);cursor:pointer}
+button.b:hover{border-color:#4a505a}
+button.b.hot{border-color:var(--rust);color:var(--rust)}
+button.b:disabled{opacity:.45;cursor:default}
+button:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+select{background:#0e0f12;color:var(--fg);border:1px solid var(--line);border-radius:3px;padding:4px 5px;font:500 11px var(--mono)}
+.sel{border:1px solid var(--line);border-radius:4px;background:var(--panel2);padding:10px 11px;display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:start}
+.sel canvas{width:120px;height:80px;background:#0e0f12;border-radius:3px}
+.sel h3{margin:0;font:700 15px var(--display);text-transform:uppercase}
+.sel p{margin:4px 0 0}
+.slotname{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em}
+.deltas{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.chip{font-size:10px;padding:1px 6px;border-radius:9px;border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip.good{color:var(--good);border-color:rgba(127,220,106,.4)}.chip.bad{color:var(--bad);border-color:rgba(255,90,74,.4)}
+.chip.hook{color:var(--cyan);border-color:rgba(63,214,232,.4)}
+.grp{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin:10px 0 4px;display:flex;justify-content:space-between}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.part{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:3px;padding:5px;border:1px solid var(--line);border-radius:3px;background:var(--panel2);position:relative}
+.part:hover{border-color:#4a505a}
+.part:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+.part[aria-pressed=true]{border-color:var(--rust);background:#2a1d15}
+.part canvas{width:100%;aspect-ratio:3/2;height:auto;background:#0e0f12;border-radius:2px}
+.part b{font:700 11px var(--display);text-transform:uppercase;line-height:1.15}
+.part span{font-size:10px;color:var(--muted)}
+.part .fit{position:absolute;top:4px;right:4px;font-size:9px;color:var(--good);background:rgba(0,0,0,.6);padding:0 4px;border-radius:2px}
+.rar-common{color:#3fd6e8}.rar-rare{color:#e0702b}.rar-epic{color:#ff5a4a}
+.note{color:var(--muted);font-size:11px;margin-top:8px}
+@media (max-width:900px){body{grid-template-columns:1fr;grid-template-rows:62vh auto;overflow:auto;height:auto}#stage{height:62vh;border-right:0;border-bottom:1px solid var(--line)}#panel{overflow:visible}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <iframe id="game" title="Metr0niks garage"></iframe>
+  <div id="err"></div>
+</div>
+<div id="panel">
+  <h1>Metr<span class="r0">0</span>niks garage lab</h1>
+  <p class="sub">The prototype's own garage with every part unlocked and saving switched off. Click a part to see it on the turntable mech; Fit puts it on.</p>
+
+  <div class="sel" id="selCard"></div>
+  <div class="row" style="margin-top:6px">
+    <button class="b hot" id="fit" type="button">Fit this part</button>
+    <button class="b" id="starter" type="button">Starter build</button>
+    <button class="b" id="random" type="button">Random build</button>
+    <button class="b" id="drive" type="button">Test drive</button>
+    <button class="b" id="back" type="button" hidden>Back to garage</button>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <label for="theme" style="color:var(--muted)">Art style</label>
+    <select id="theme"><option value="blockout">Blockout</option><option value="cinematic">Cinematic</option><option value="ink">Ink</option></select>
+  </div>
+
+  <h2>All parts <small id="count"></small></h2>
+  <div id="sheet"></div>
+  <p class="note">Icons and the mech are drawn by the prototype's own code, so they change with the art style. Test drive drops into level 1 with the fitted build; Esc and Back to garage return here. Nothing is written to your campaign save.</p>
+</div>
+
+<script>
+(function(){
+"use strict";
+var PROTO="prototype.html";   /* the voxel prototype, next to this file */
+var $=function(id){return document.getElementById(id)};
+var frame=$("game"),G=null,M=null,PARTS,PART,SLOTS,STARTER,BASE,sel="minigun";
+var RAR={common:"Common",rare:"Rare",epic:"Epic"},RCOL={common:"#3fd6e8",rare:"#e0702b",epic:"#ff5a4a"};
+var STAT=[["power","Power",0],["armor","Armor",0],["speed","Speed",0],["weight","Weight",1],["heat","Heat",1]];   /* lower weight and heat are better */
+var HOOK={gun:"Right-arm gun",pile:"Arm-L weapon",q:"Q ability",noDash:"No dash",immune:"Immune to shove",turn:"Turn ×",torso:"Torso turn ×",magnet:"Scrap magnet",dash:"Dash cooldown ×",dashHeat:"Dash heat ×",regen:"Self-repair"};
+
+function showErr(msg){var e=$("err");e.style.display="flex";e.textContent=msg}
+frame.addEventListener("load",function(){
+  try{G=frame.contentWindow;M=G.MetroSim;if(!G.__m||!M||!G.__m.garage.icon)throw 0}
+  catch(x){showErr("The prototype frame did not load or is blocked. Open this file from a local web server next to prototype.html (for example: python3 -m http.server in games/metr0niks).");return}
+  /* the lab never writes the campaign save: block the prototype's writes and deletes of it in this frame */
+  var St=G.Storage.prototype,set=St.setItem,rem=St.removeItem;
+  St.setItem=function(k,v){if(k==="metr0niks.campaign")return;return set.call(this,k,v)};
+  St.removeItem=function(k){if(/^metr0niks\.(campaign|banked|garage)$/.test(k))return;return rem.call(this,k)};
+  PARTS=M.PARTS;PART=M.PART;SLOTS=M.SLOTS;STARTER=M.STARTER;BASE=M.BASE;
+  G.__m.garage.ownAll();
+  try{$("theme").value=G.__m.theme()}catch(x){}
+  G.__m.garage.open();
+  buildSheet();pick(G.__m.garage.build().armR||"minigun");
+  requestAnimationFrame(loop);
+});
+frame.src=PROTO;
+/* the garage is laid out for a wide window: below GW px the frame renders at GW and is scaled down to fit */
+var GW=1320;
+function fitFrame(){
+  var st=$("stage"),w=st.clientWidth,h=st.clientHeight,k=Math.min(1,w/GW);
+  frame.style.width=w/k+"px";frame.style.height=h/k+"px";frame.style.transform=k<1?"scale("+k+")":"";
+}
+addEventListener("resize",fitFrame);fitFrame();
+
+function curBuild(){return G.__m.garage.build()}
+function buildSheet(){
+  var h="";
+  SLOTS.forEach(function(sl){
+    var ps=PARTS.filter(function(p){return p.slot===sl[0]});
+    h+='<div class="grp"><span>'+sl[1]+'</span><span>'+ps.length+" part"+(ps.length>1?"s":"")+'</span></div><div class="grid">';
+    ps.forEach(function(p){
+      h+='<button class="part" type="button" data-id="'+p.id+'" aria-pressed="false"><span class="fit" hidden>fitted</span><canvas width="240" height="160"></canvas><b>'+esc(p.name)+'</b><span class="rar-'+p.rarity+'">'+RAR[p.rarity]+(p.cost?" · "+p.cost+" scrap":" · starter")+"</span></button>";
+    });
+    h+="</div>";
+  });
+  $("sheet").innerHTML=h;$("count").textContent=PARTS.length+" parts in "+SLOTS.length+" slots";
+  drawIcons();
+}
+function drawIcons(){
+  document.querySelectorAll(".part").forEach(function(b){var p=PART[b.dataset.id];G.__m.garage.icon(b.querySelector("canvas"),p.id,RCOL[p.rarity],3)});
+  var c=$("selCanvas");if(c)G.__m.garage.icon(c,sel,RCOL[PART[sel].rarity],3);
+}
+function marks(){
+  var b=curBuild();
+  document.querySelectorAll(".part").forEach(function(el){var id=el.dataset.id;el.setAttribute("aria-pressed",id===sel);el.querySelector(".fit").hidden=b[PART[id].slot]!==id});
+  $("fit").disabled=b[PART[sel].slot]===sel;$("fit").textContent=b[PART[sel].slot]===sel?"Fitted":"Fit this part";
+}
+/* preview a part: the garage selects it, and the turntable mech wears it until something else is picked */
+function pick(id){
+  sel=id;var p=PART[id];
+  if(G.__m.state!=="garage")toGarage();
+  G.__m.garage.select(id);
+  var b=curBuild(),nb=M.cloneBuild(b);nb[p.slot]=id;
+  var a=M.statsOf(b),z=M.statsOf(nb),chips="";
+  STAT.forEach(function(st){var d=Math.round(z[st[0]]-a[st[0]]),own=p.d[st[0]]||0;
+    if(own)chips+='<span class="chip '+((st[2]?own<0:own>0)?"good":"bad")+'">'+st[1]+" "+(own>0?"+":"")+own+"</span>"});
+  Object.keys(p.hook||{}).forEach(function(k){var v=p.hook[k];chips+='<span class="chip hook">'+HOOK[k]+(typeof v==="number"&&v!==1&&k!=="noDash"&&k!=="immune"&&k!=="magnet"&&k!=="regen"?" "+v:"")+"</span>"});
+  var slot=SLOTS.filter(function(s){return s[0]===p.slot})[0][1];
+  $("selCard").innerHTML='<canvas id="selCanvas" width="240" height="160"></canvas><div><div class="slotname">'+slot+' · <span class="rar-'+p.rarity+'">'+RAR[p.rarity]+"</span>"+(p.cost?" · "+p.cost+" scrap":" · starter part")+"</div><h3>"+esc(p.name)+"</h3><p>"+esc(p.desc)+'</p><div class="deltas">'+(chips||'<span class="chip">No stat change</span>')+"</div></div>";
+  G.__m.garage.icon($("selCanvas"),id,RCOL[p.rarity],3);
+  marks();
+}
+function fit(id){
+  if(G.__m.state!=="garage")toGarage();
+  G.__m.garage.select(id);G.__m.garage.equip();marks();
+}
+function toGarage(){G.__m.garage.open();$("back").hidden=true;$("drive").hidden=false}
+$("sheet").addEventListener("click",function(e){var b=e.target.closest(".part");if(b)pick(b.dataset.id)});
+$("sheet").addEventListener("dblclick",function(e){var b=e.target.closest(".part");if(b)fit(b.dataset.id)});
+$("fit").addEventListener("click",function(){fit(sel)});
+$("starter").addEventListener("click",function(){SLOTS.forEach(function(sl){var b=curBuild();if(STARTER[sl[0]]){if(b[sl[0]]!==STARTER[sl[0]])fit(STARTER[sl[0]])}else if(b[sl[0]]){toGarage();G.__m.garage.select(b[sl[0]]);clearSlot(sl[0])}});pick(sel)});
+function clearSlot(slot){   /* empty a slot that has no starter part: the garage's "none" tile */
+  var t=[].slice.call(G.document.querySelectorAll("#gThumbs .gth")).filter(function(x){return /^Empty/.test(x.textContent)})[0];
+  if(t){t.click();G.__m.garage.equip()}
+}
+$("random").addEventListener("click",function(){
+  SLOTS.forEach(function(sl){var ps=PARTS.filter(function(p){return p.slot===sl[0]});fit(ps[(Math.random()*ps.length)|0].id)});pick(sel);
+});
+$("drive").addEventListener("click",function(){G.__m.start();setTimeout(resume,30);$("drive").hidden=true;$("back").hidden=false;frame.focus();try{G.focus()}catch(x){}});
+$("back").addEventListener("click",function(){toGarage();pick(sel)});
+$("theme").addEventListener("change",function(e){G.__m.setTheme(e.target.value);drawIcons()});
+/* clicking this panel blurs the frame and the prototype pauses itself: carry on unless the player pressed Esc */
+function resume(){if(G.__m.state==="paused")G.__m.start()}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+/* keep the panel in step when parts are changed inside the frame's own garage */
+var lastKey="";
+function loop(){
+  requestAnimationFrame(loop);if(!G||!G.__m)return;
+  var st=G.__m.state;if(st!=="garage"&&$("back").hidden){$("back").hidden=false;$("drive").hidden=true}
+  if(st==="garage"&&!$("back").hidden){$("back").hidden=true;$("drive").hidden=false}
+  if(st==="paused"){var ov=G.document.getElementById("ovText"),ae=document.activeElement;
+    if(ov&&/lost focus/.test(ov.textContent)&&!(ae&&ae.tagName==="SELECT")&&G.document.getElementById("settings").hidden)G.__m.start()}
+  var k=JSON.stringify(curBuild());if(k!==lastKey){lastKey=k;marks()}
+}
+})();
+</script>
+</body>
+</html>
