@@ -2,21 +2,24 @@
    classic <script src="../simulations/sim.js">) and in Node (`import './simulations/sim.js'`, then globalThis.MetroSim). No DOM, no timers,
    no browser globals: time comes in as fixed ticks, and everything a renderer needs that is not state is an event.
 
-   MetroSim.create({seed, builds:[build,...], level?, armor?, colorOf?, clock?}) -> sim
+   MetroSim.create({seed, builds:[build,...], level?, wear?, upgrades?, plan?, colorOf?, clock?}) -> sim
      level    campaign level 1..T.level.max (default 1); enemy counts, hp, damage and scrap scale with it (T.level), sim.level
-     armor    per mech: null = full, a number < 1 = fraction of max armor, >= 1 = absolute armor (clamped to 1..max)
      builds   one garage build per mech ({core,armR,armL,shoulder,legs,reactor}, null = empty); builds[1] is the co-op partner
+     wear     per mech {partId: 0..1} (GDD-D18): worn parts give less of their helpful stats (deriveStats). Every mech starts at full armor
+     upgrades per mech {weaponPartId: 0..2} (GDD-D23): player.upg; player.upMul(partId) = 1 + T.upgrade.dmg x level, read by the hit path
+     plan     this level's climb plan entry {level,zone,condition,contract,bosses:[wave3,wave5]} (Campaign.plan), kept as sim.plan
      colorOf  optional (materialId, structure) -> [r,g,b]; lets a renderer theme debris and falling pieces
      clock    optional () -> ms, only used to time support checks (sim.chk); default is a function returning 0
    sim.T                tunables (shared object, MetroSim.T)
    sim.world            {vox,owner,vdmg (typed arrays), W,D,H, structures, chunks, walk, rev (bumps when voxels change),
                          get(x,y,z), solidAt(x,y,z), blockedCell(cx,cy), rebuildWalk()}
    sim.players, bots, shots, pods, scraps, clusters, debris   live arrays (mutated in place, never replaced)
-   sim.run {wave,queue,breather,done,...}   sim.wave (number)   sim.state 'play'|'dead'|'extracted'
+   sim.run {wave,queue,breather,done,...}   sim.wave (number)   sim.state 'play'|'dead'|'extracted'|'victory'
    sim.tick             completed steps   sim.scrap (shared run total, for the HUD), sim.kills, sim.shake (0..1, decays)
                         each mech also has player.scrap: the cubes it picked up (the wallet that banks at extraction)
+                        and player.taken: armor lost this match, counted when taken even if healed later (wear on extract)
    sim.state            'drop' (until sim.tick >= sim.introTicks: no spawns, no pods; set introTicks right after create(), default 0),
-                        then 'play', then 'dead' | 'extracted'
+                        then 'play', then 'dead' | 'extracted' | 'victory' (extracting level T.level.max)
    sim.setInput(i, {k,ax,ay,az,l,r,rp,seq})   k bitmask W=1 A=2 S=4 D=8 Space=16; ax,ay,az world aim point;
                         l / r held buttons (left arm gun / ATB arm); rp true = right button pressed since the last tick;
                         seq (network inputs only): such an input is released after T.net.inputStale s of silence
@@ -26,21 +29,22 @@
                         ["f",x,y,z,text,css]      floating number    ["s",x,y,z,n,[r,g,b]] sparks   ["m",x,y,z,n,[r,g,b]] smoke
                         ["k",amount]              screen shake       ["p",x,y] drop pod landed
                         ["c",id,voxelIdx[],packedColours[]]  falling cluster created
-                        ["o","dead"|"extracted",message,scrapBanked,detail]  run over; detail = {result,level,scrap:[per mech],armor:[per mech],stats}
+                        ["o","dead"|"extracted"|"victory",message,scrapBanked,detail]  run over; detail = {result,level,scrap:[per mech],damage:[per mech],stats}
+                        (extracted and victory: scrap to bank, damage taken for wear; dead: detail {result,level}, nothing carries on)
                         ["cb",mech,combo,broken]  combo changed (GDD-D35)   ["sg",x,y,z] an enemy was staggered
                         ["mk",mech,count]         multi-kill (GDD-D53)      ["x",type,mech|-1,sourceKind,cubes] an enemy died (kill credit, GDD-D48)
                         ["w",wave,[stats per mech]]  wave cleared, with that wave's GDD-D50 stats
-                        (extracted: scrap and armor to carry on; dead: nothing carries on)
                         ["z",zoneIndex,name]      a sealed zone's gate fell: the map grew (also sent to guests)
    sim.snapshot(full)   co-op host snapshot {t:"snap",tk,ack,sc,k,sh,w,p,b,s,sr,pd,cl,vx,ev}; full=true also carries copies of
                         vox and owner (for a joining guest), clears queued events and resets the diff baseline
    sim.voxelDiffSince(tick)   flat [index,material,owner,...] for voxels changed after `tick`
-   sim.applyBuild(i, build)   re-derive mech i from a build (adds the mech when i === players.length)
+   sim.applyBuild(i, build, wear?, upg?)   re-derive mech i from a build (adds the mech when i === players.length)
    sim.dropPlayer(i)    mech i leaves (hp 0); the run is lost if nobody else is alive
    sim.hitEnemy(e,base,src,x,y,z) / sim.hitMech(q,base,src,x,y,z)  the hit path (GDD-D48 damage order, kill credit); see hitEnemy
    sim.stats            [mech][wave] match stats (GDD-D50): kills by type and source, damage dealt and taken, voxels, grades,
                         best combo, spans, most kills from one collapse, multi-kills, pods, scrap by source, overheats, wave time
    sim.level            the level this sim was created for (opts.level, default 1)
+   sim.plan             opts.plan or null: this level's sector condition, contract and bosses (read by the HUD only until phase 3)
    sim.introTicks       set by create(): ticks of drop-in cinematic before anything may spawn, 0 unless a zone opens this level
    sim.zone             {open, opening, target, openAt, intro}: zones MAP.zones[0..open-1] are open; `opening` is the zone
                         whose gate falls at tick openAt (-1 once it has), `target` that same zone for the whole intro
@@ -50,8 +54,9 @@
    sim.stateHash()      hash of the rules state (players, enemies, pods, voxels, rng) for replay checks
    sim.tuneHash()       hash of this run's tuning; MetroSim.tuneHash(T) for any table
    create({tune})       a partial T merged over a copy of MetroSim.T for this run only (sector conditions, sweeps)
-   Statics: MetroSim.PARTS, PART, SLOTS, STARTER, MAP, MAT, WINDOW, T, hash, W, D, H, deriveStats(build[,T]), moveMech(mech,input,T,dt,pred),
-            clusterGeom(idx,cols), cleanBuild(build), cloneBuild(build), statsOf(build), Campaign (save state, see below) */
+   Statics: MetroSim.PARTS, PART, SLOTS, STARTER, MAP, MAT, WINDOW, T, hash, W, D, H, deriveStats(build[,T[,wear]]), moveMech(mech,input,T,dt,pred),
+            clusterGeom(idx,cols), cleanBuild(build), cloneBuild(build), statsOf(build[,wear]), isWeapon(partId),
+            CONTRACTS, CONDITIONS, BOSSES (climb plan tables, ids and names), Campaign (save state and climb plan, see below) */
 (function(root){
 "use strict";
 
@@ -89,8 +94,9 @@ var T={
   combo:{max:4,step:.1,decay:12,atbAt4:.25},   /* GDD-D35: x1..x4; each step above x1 adds 10% scrap to credited kills; drops after 12 s without a heavy shot; ATB fills 25% faster at x4 */
   stagger:{time:1,taken:.5},                   /* GDD-D35: a Perfect staggers for 1 s; a staggered enemy takes 50% more damage */
   credit:{window:3},multiKill:{window:1.5},demolition:.15,   /* GDD-D48 kill credit window (s); GDD-D53 multi-kill window (s); GDD-D41/D55 collapse and hazard scrap bonus */
-  level:{count:.25,hp:.15,dmg:.15,scrap:.1,max:50,revive:.3},   /* per level above 1: share added to enemy counts, hp, damage, scrap drops; revive: armor share a downed mech returns with */
-  repairCost:3,       /* garage repair: armor restored per scrap */
+  level:{count:.25,hp:.15,dmg:.15,scrap:.1,max:5},   /* per level above 1: share added to enemy counts, hp, damage, scrap drops; extracting level max wins (GDD-D47) */
+  durability:{share:.1,repair:{common:.25,rare:.5,epic:.75}},   /* GDD-D18: wear per extract = share x damage taken / max armor; repair = ceil(price x wear x rate) */
+  upgrade:{dmg:.1,price:{common:[20,40],rare:[35,70],epic:[60,120]}},   /* GDD-D23: damage to enemies x (1 + dmg x level); price[rarity][level] buys the next Mk */
   scrapMagnet:3,
   debrisCap:300,
   structural:.5,      /* share of bullet damage that goes into voxels (minigun: low structural damage) */
@@ -240,14 +246,50 @@ var PARTS=[
   {id:"fusion",slot:"reactor",name:"Cold-fusion cell",rarity:"epic",cost:140,d:{power:20,speed:6,weight:10,heat:-12},hook:{},desc:"Nearly Mk3 power that runs cool. The most expensive part in the garage."}
 ];
 var PART={};PARTS.forEach(function(p){PART[p.id]=p});
+/* ===== Climb plan data (TDD-D10, GDD-D38, GDD-D39, GDD-D51): ids, names and what the plan's filter reads; phase 3 adds the effects.
+   need: "span" = an overpass span must stand in the level's open zones, "sniper" = a sniper boss must come that level;
+   not: a condition the contract can't be done under. mild: level 1 draws its condition from these only. ===== */
+var CONTRACTS=[
+  {id:"crush",name:"Crush",desc:"Kill 3 or more enemies with one collapse",need:"span"},
+  {id:"bringItDown",name:"Bring it down",desc:"Drop 2 overpass spans",need:"span"},
+  {id:"eviction",name:"Eviction",desc:"Knock the sniper off its perch twice",need:"sniper"},
+  {id:"fullCombo",name:"Full combo",desc:"Reach a x4 combo"},
+  {id:"cleanSweep",name:"Clean sweep",desc:"Take every pod that drops (at least 5)",not:"coldFront"},
+  {id:"untouchable",name:"Untouchable",desc:"Clear wave 3 losing less than 20% of max armor"},
+  {id:"closeShave",name:"Close shave",desc:"Extract with less than 15% of max armor"},
+  {id:"blitz",name:"Blitz",desc:"Clear waves 1 and 2 within 75 s of wave 1 starting"},
+  {id:"wreckingCrew",name:"Wrecking crew",desc:"Destroy 400 voxels"},
+  {id:"repoMan",name:"Repo man",desc:"Kill 2 enemies that took a pod"}];
+var CONDITIONS=[
+  {id:"brittle",name:"Brittle city",mild:false,desc:"Chunks break sooner"},
+  {id:"reinforced",name:"Reinforced",mild:true,desc:"Chunks hold longer; collapse scrap doubles"},
+  {id:"loosePillars",name:"Loose pillars",mild:false,desc:"Every pillar starts cracked at the base"},
+  {id:"heatWave",name:"Heat wave",mild:true,desc:"Heat drains 30% slower"},
+  {id:"coldFront",name:"Cold front",mild:true,desc:"Heat drains 30% faster; one pod per wave"},
+  {id:"scrapStorm",name:"Scrap storm",mild:true,desc:"Scrap drops +30%; one more bot per wave"},
+  {id:"blackout",name:"Blackout",mild:false,desc:"Night: enemies see 30% less far"},
+  {id:"podRain",name:"Pod rain",mild:true,desc:"Two pods every wave"},
+  {id:"snipersNest",name:"Sniper's nest",mild:false,desc:"Each boss wave brings an extra Bounty sniper"}];
+/* lv: the levels a boss may come on; wave: the only wave it comes on; sniper: Eviction can be done against it;
+   force: "first" = always level 1 wave 3, "last" = always wave 5 of the last level */
+var BOSSES={sniper:{name:"Bounty sniper",lv:[1,4],sniper:1,force:"first"},sniperPair:{name:"Sniper pair",lv:[2,4],sniper:1},
+  juggernaut:{name:"Juggernaut",lv:[3,5]},warden:{name:"The Warden",lv:[5,5],wave:5,force:"last"}};
 var STARTER={core:null,armR:"minigun",armL:"pile",shoulder:null,legs:"jets",reactor:"mk1"};
 function cloneBuild(b){var o={};SLOTS.forEach(function(s){o[s[0]]=b[s[0]]||null});return o}
 function cleanBuild(b){var o={};SLOTS.forEach(function(sl){var id=b&&b[sl[0]];o[sl[0]]=(id&&PART[id]&&PART[id].slot===sl[0])?id:STARTER[sl[0]]});return o}
-function statsOf(b){var s={},k;for(k in BASE)s[k]=BASE[k];SLOTS.forEach(function(sl){var p=PART[b[sl[0]]];if(p)for(k in p.d)s[k]+=p.d[k]});return s}
+function isStarter(id){var p=PART[id];return !!p&&STARTER[p.slot]===id}
+/* Wear (GDD-D18): a worn part gives (1 - wear) of each helpful change (power, armor, speed up; weight, heat down);
+   costs and hooks stay whole. Starter parts never wear. wear = {partId: 0..1} or nothing. */
+var HELP={power:1,armor:1,speed:1,weight:-1,heat:-1};
+function statsOf(b,wear){var s={},k;for(k in BASE)s[k]=BASE[k];SLOTS.forEach(function(sl){var id=b[sl[0]],p=PART[id];if(!p)return;
+  var w=wear&&!isStarter(id)?Math.max(0,Math.min(1,+wear[id]||0)):0;
+  for(k in p.d){var v=p.d[k];s[k]+=w&&v*HELP[k]>0?v*(1-w):v}});return s}
+/* A weapon (GDD-D23) is a part whose hook grants a gun, an ATB weapon or a Q active that deals damage: it can be upgraded. */
+function isWeapon(id){var p=PART[id],h=p&&p.hook;if(!h)return false;var k=h.gun||h.pile||h.q;return !!(k&&T[k]&&T[k].dmg>0)}
 /* Stats to gameplay numbers. The starter build lands exactly on the T baselines. */
-function deriveStats(b,TT){
+function deriveStats(b,TT,wear){
   TT=TT||T;
-  var s=statsOf(b),Gt=TT.garage,wf=1/(1+(s.weight-100)*Gt.weightDrag),Hk={turn:1,torso:1,gun:"minigun",pile:"pile",noDash:false,immune:false,q:null,magnet:false,dash:1,dashHeat:1,regen:false},P=TT.player;
+  var s=statsOf(b,wear),Gt=TT.garage,wf=1/(1+(s.weight-100)*Gt.weightDrag),Hk={turn:1,torso:1,gun:"minigun",pile:"pile",noDash:false,immune:false,q:null,magnet:false,dash:1,dashHeat:1,regen:false},P=TT.player;
   SLOTS.forEach(function(sl){var p=PART[b[sl[0]]],h=p&&p.hook;if(!h)return;
     if(h.turn)Hk.turn*=h.turn;if(h.torso)Hk.torso*=h.torso;if(h.gun)Hk.gun=h.gun;if(h.pile)Hk.pile=h.pile;if(h.noDash)Hk.noDash=true;if(h.immune)Hk.immune=true;
     if(h.q)Hk.q=h.q;if(h.magnet)Hk.magnet=true;if(h.dash)Hk.dash*=h.dash;if(h.dashHeat)Hk.dashHeat*=h.dashHeat;if(h.regen)Hk.regen=true});
@@ -328,7 +370,8 @@ function create(opts){
   var chk={last:0,max:0,n:0};
   var world={vox:vox,owner:owner,vdmg:vdmg,W:W,D:D,H:H,structures:structures,walk:walk,rev:0,
     get chunks(){return chunks},get:get,solidAt:solidAt,blockedCell:blockedCell,rebuildWalk:rebuildWalk,vi:vi};
-  var sim={T:T,introTicks:0,world:world,players:players,bots:bots,shots:shots,pods:pods,scraps:scraps,clusters:clusters,debris:debris,run:run,chk:chk};
+  var sim={T:T,introTicks:0,world:world,players:players,bots:bots,shots:shots,pods:pods,scraps:scraps,clusters:clusters,debris:debris,run:run,chk:chk,plan:opts.plan||null};
+  var wearOf=(opts.wear||[]).slice(),upgOf=(opts.upgrades||[]).slice();   /* per mech, by index: {partId: wear}, {partId: Mk level} */
 
   function get(x,y,z){return inB(x,y,z)?vox[vi(x,y,z)]:0}
   function solidAt(x,y,z){x=Math.floor(x);y=Math.floor(y);z=Math.floor(z);if(z<0)return 1;return inB(x,y,z)?vox[vi(x,y,z)]:0}
@@ -598,9 +641,11 @@ function create(opts){
   }
 
   /* ----- entities. Player and bots share one shape: position, velocity, armor, radius, height, team. ----- */
+  function upMul(id){return 1+T.upgrade.dmg*((this.upg&&this.upg[id])|0)}   /* GDD-D23: the hit path multiplies a weapon's damage to enemies by this */
   function newPlayer(build,idx){
-    var d=deriveStats(build,T);
-    return {team:0,idx:idx||0,x:MAP.spawn[idx?1:0][0],y:MAP.spawn[idx?1:0][1],z:0,vx:0,vy:0,r:T.player.radius,h:T.player.height,hp:d.maxHp,maxHp:d.maxHp,scrap:0,
+    var d=deriveStats(build,T,wearOf[idx||0]),u={},uo=upgOf[idx||0]||{};
+    for(var id in uo)if(isWeapon(id)&&uo[id]>0)u[id]=Math.min(T.upgrade.price[PART[id].rarity].length,uo[id]|0);
+    return {team:0,idx:idx||0,upg:u,upMul:upMul,taken:0,x:MAP.spawn[idx?1:0][0],y:MAP.spawn[idx?1:0][1],z:0,vx:0,vy:0,r:T.player.radius,h:T.player.height,hp:d.maxHp,maxHp:d.maxHp,scrap:0,
       v:cloneBuild(build),spd:d.spd,acc:d.acc,legT:d.legT,torT:d.torT,dmgMul:d.dmgMul,atbRate:d.atbRate,drain:d.drain,heatMul:d.heatMul,gun:d.gun,pileKind:d.pile,noDash:d.noDash,immune:d.immune,
       q:d.q,sq:0,qPrev:false,magnet:d.magnet,dashMul:d.dashMul,dashHeat:d.dashHeat,regen:d.regen,calm:0,
       leg:Math.PI*.75,aim:Math.PI*.75,step:0,heat:0,over:0,cool:0,dash:0,dashCd:0,flash:0,muzzle:0,ax:16,ay:16,az:.6,
@@ -662,9 +707,10 @@ function create(opts){
   function extract(){
     scraps.forEach(function(s){nearestPlayer(s.x,s.y).scrap++});   /* whatever is still on the floor goes to the nearest mech */
     scrap+=scraps.length;scraps.length=0;
-    var got=scrap,per=players.map(function(q){return q.scrap}),arm=players.map(function(q){return Math.max(Math.ceil(q.hp),Math.ceil(q.maxHp*T.level.revive))});
-    scrap=0;state="extracted";
-    emit(["o","extracted","Level "+level+" cleared. You banked "+got+" scrap"+(players.length>1?" ("+per.join(" + ")+")":"")+". Repair and shop in the garage, then drop into level "+Math.min(T.level.max,level+1)+".",got,{result:"extracted",level:level,scrap:per,armor:arm,stats:stats}]);
+    var got=scrap,per=players.map(function(q){return q.scrap}),dmg=players.map(function(q){return Math.round(q.taken)}),win=level>=T.level.max;
+    scrap=0;state=win?"victory":"extracted";   /* extracting the last level wins the campaign (GDD-D47); it banks like an extract */
+    emit(["o",state,(win?"Level "+level+" cleared: the sector is yours. You banked ":"Level "+level+" cleared. You banked ")+got+" scrap"+(players.length>1?" ("+per.join(" + ")+")":"")+
+      (win?". Parts, upgrades and banked scrap stay for the next climb.":". Repair and shop in the garage, then drop into level "+(level+1)+"."),got,{result:state,level:level,scrap:per,damage:dmg,stats:stats,records:players.map(function(q){return recordsOf(q.idx)})}]);
   }
   /* Drop pods: a marker and countdown, then the crate falls like a bot does and waits to be touched. */
   var POD_TYPES=["repair","overclock"];
@@ -828,7 +874,7 @@ function create(opts){
   }
   function addHeat(p,h){p.heat=Math.min(100,p.heat+h*(p.heatMul||1));if(p.heat>=100&&!p.over){p.over=T.heat.lockout;var hs=st(p.idx);if(hs)hs.overheats++;toast("Overheated: guns locked","var(--bad)",p.idx);smoke(p.x,p.y,1.3,10,[220,220,220])}}
   function damage(e,dmg,x,y,z){
-    if(e.hp<=0)return;e.hp-=dmg;e.flash=.08;if(e.team===0)e.calm=0;
+    if(e.hp<=0)return;if(e.team===0)e.taken+=Math.max(0,Math.min(dmg,e.hp));e.hp-=dmg;e.flash=.08;if(e.team===0)e.calm=0;
     if(e.team===1){floatText(x,y,z+.3,Math.round(dmg),"#f2c230");if(e.state==="patrol"){e.state="engage";e.lost=0}}
     else floatText(x,y,z+.3,Math.round(dmg),"#ff5a4a");
     if(e.hp<=0)(e.team===1?killBot:killPlayer)(e);
@@ -873,6 +919,8 @@ function create(opts){
   function newStats(){return {kills:{},killsBy:{},dealt:{},voxels:0,taken:{},perfect:0,good:0,miss:0,bestCombo:1,spans:0,bestCrush:0,
     multi:{2:0,3:0,4:0,5:0},pods:{taken:0,stolen:0,stolenBack:0},scrap:{},overheats:0,time:0}}
   function st(i){if(!(i>=0)||!players[i])return null;var w=stats[i]||(stats[i]=[]);return w[run.wave-1]||(w[run.wave-1]=newStats())}
+  /* lifetime record fields this match feeds (Campaign.advance reads detail.records); contracts and Overtimes come with phase 3 */
+  function recordsOf(i){var r={combo:1,spans:0,contracts:0,overtimes:0};(stats[i]||[]).forEach(function(w){if(!w)return;if(w.bestCombo>r.combo)r.combo=w.bestCombo;r.spans+=w.spans});return r}
   function setCombo(p,n){
     var was=p.combo;p.combo=n;if(n===was)return;
     emitNet(["cb",p.idx,n,n<was?1:0]);
@@ -1298,9 +1346,10 @@ function create(opts){
     if(inp.seq!==undefined){if(inp.seq<t.seq)return;t.seq=inp.seq}
     t.at=tick;
   }
-  function applyBuild(i,build){
+  function applyBuild(i,build,wear,upg){
+    if(wear)wearOf[i]=wear;if(upg)upgOf[i]=upg;
     var q=newPlayer(cleanBuild(build),i);
-    if(i<players.length){var o=players[i];for(var k in q)if(k!=="x"&&k!=="y"&&k!=="idx")o[k]=q[k]}
+    if(i<players.length){var o=players[i];for(var k in q)if(k!=="x"&&k!=="y"&&k!=="idx"&&k!=="taken")o[k]=q[k]}
     else{players.push(q);inputs.push(mkInput())}
     fieldsDirty=true;
   }
@@ -1309,8 +1358,6 @@ function create(opts){
   buildMap();buildChunks();rebuildWalk();
   spawnCells=openCells();sim.introTicks=zone.intro;   /* the drop-in intro: the zone opens in the middle of it, the waves start after */
   (opts.builds&&opts.builds.length?opts.builds:[STARTER]).forEach(function(b,i){players.push(newPlayer(cleanBuild(b),i));inputs.push(mkInput())});
-  (opts.armor||[]).forEach(function(a,i){var q=players[i];
-    if(q&&typeof a==="number"&&a===a)q.hp=Math.max(1,Math.min(q.maxHp,a<1?a*q.maxHp:a))});
   beginWave(1,true);
   world.rev=1;
 
@@ -1346,22 +1393,34 @@ function create(opts){
   return sim;
 }
 
-/* ===== Campaign: the save. {v:1, seed, level, players:[{build, owned:[ids], scrap, armor}]}.
-   players[0] is the host / single player. A mode field in saves from before Gauntlet was cut (GDD-D29) is ignored.
-   armor: null = full, else absolute armor points. encode() is JSON as base64url (the
-   "campaign code"); decode() returns a clean campaign or null when anything is off (unknown part ids, negative scrap, level outside 1..max). ===== */
+/* ===== Campaign: the save (TDD-D12) and the climb plan (TDD-D10).
+   v2: {v:2, seed, typed, level, live, players:[{build, owned:[ids], scrap, wear:{id:0..1}, upg:{weaponId:0..2}, best,
+        records:{level,combo,spans,contracts,overtimes}, callins:[type|null, type|null]}]}
+   players[0] is the host / single player. seed: the climb's seed (1..2,147,483,000, GDD-D49); typed: the player typed it
+   at level 1, so a restart keeps it. live: written when a match starts (TDD-D8); a save still marked live when it is
+   loaded counts as a death. best: highest level ever extracted (0..max, blueprints). records: lifetime (GDD-D45).
+   callins: the two call-in slots (repair, overclock, strike). A v1 code ({v:1, seed, level, players:[{build, owned,
+   scrap, armor}]}) migrates: no wear, no upgrades, best = its level capped at max, empty records and slots, carried
+   armor dropped. encode() is JSON as base64url (the "campaign code"); decode() returns a clean campaign or null when
+   anything is off. advance/bank/restart/begin return a new campaign; repairAll and upgrade change c in place. ===== */
 var Campaign=(function(){
-  var SCRAP_MAX=10000000;
+  var SCRAP_MAX=10000000,SEED_MAX=2147483000,V1_MAX=50,REC=["level","combo","spans","contracts","overtimes"],CALLINS=["repair","overclock","strike"];
+  function clone(o){return JSON.parse(JSON.stringify(o))}
+  function isInt(x){return typeof x==="number"&&x===Math.floor(x)&&isFinite(x)}
+  function plain(o){return !!o&&typeof o==="object"&&!Array.isArray(o)}
   function starterOwned(){var a=[];SLOTS.forEach(function(sl){if(STARTER[sl[0]])a.push(STARTER[sl[0]])});return a}
-  function player(build,owned,scrap,armor){
-    var b=cleanBuild(build),o=starterOwned();
-    (owned||[]).concat(SLOTS.map(function(sl){return b[sl[0]]})).forEach(function(id){if(id&&PART[id]&&o.indexOf(id)<0)o.push(id)});
-    return {build:b,owned:o,scrap:scrap|0,armor:armor===undefined?null:armor};
+  function records(){var r={};REC.forEach(function(k){r[k]=0});return r}
+  function upMax(id){return T.upgrade.price[PART[id].rarity].length}
+  /* o: optional {wear, upg, best, records, callins} (copied) */
+  function player(build,owned,scrap,o){
+    var b=cleanBuild(build),ow=starterOwned();o=plain(o)?clone(o):{};
+    (owned||[]).concat(SLOTS.map(function(sl){return b[sl[0]]})).forEach(function(id){if(id&&PART[id]&&ow.indexOf(id)<0)ow.push(id)});
+    return {build:b,owned:ow,scrap:scrap|0,wear:o.wear||{},upg:o.upg||{},best:o.best|0,records:o.records||records(),callins:o.callins||[null,null]};
   }
-  function make(builds,_mode,seed){return {v:1,seed:seed||7,level:1,players:(builds||[STARTER]).map(function(b){return player(b)})}}
-  function cleanPlayer(p){
-    if(!p||typeof p!=="object"||!p.build||typeof p.build!=="object"||!Array.isArray(p.owned))return null;
-    var owned=[],i,id;
+  function make(builds,_mode,seed,typed){return {v:2,seed:seed||7,typed:!!typed,level:1,live:false,players:(builds||[STARTER]).map(function(b){return player(b)})}}
+  function cleanPlayer(p,v,level){
+    if(!plain(p)||!plain(p.build)||!Array.isArray(p.owned))return null;
+    var owned=[],i,id,x;
     for(i=0;i<p.owned.length;i++){id=p.owned[i];if(typeof id!=="string"||!PART[id])return null;if(owned.indexOf(id)<0)owned.push(id)}
     var b={};
     for(i=0;i<SLOTS.length;i++){var k=SLOTS[i][0];id=p.build[k];
@@ -1371,17 +1430,27 @@ var Campaign=(function(){
     starterOwned().forEach(function(x){if(owned.indexOf(x)<0)owned.push(x)});
     for(i=0;i<SLOTS.length;i++){id=b[SLOTS[i][0]];if(id&&owned.indexOf(id)<0)return null}   /* fitted parts must be owned */
     if(typeof p.scrap!=="number"||!(p.scrap>=0)||p.scrap>SCRAP_MAX)return null;
-    var ar=p.armor;if(ar!==null&&ar!==undefined&&(typeof ar!=="number"||!(ar>=0)||ar>100000))return null;
-    return {build:b,owned:owned,scrap:Math.floor(p.scrap),armor:ar===null||ar===undefined?null:Math.round(ar)};
+    var out={build:b,owned:owned,scrap:Math.floor(p.scrap),wear:{},upg:{},best:Math.min(T.level.max,level),records:records(),callins:[null,null]};
+    if(v===1){var ar=p.armor;return ar!==null&&ar!==undefined&&(typeof ar!=="number"||!(ar>=0)||ar>100000)?null:out}
+    /* v2: strict */
+    if(!plain(p.wear)||!plain(p.upg)||!plain(p.records)||!Array.isArray(p.callins)||p.callins.length!==2)return null;
+    for(id in p.wear){x=p.wear[id];if(!PART[id]||isStarter(id)||owned.indexOf(id)<0||typeof x!=="number"||!(x>=0&&x<=1))return null;if(x>0)out.wear[id]=x}
+    for(id in p.upg){x=p.upg[id];if(!PART[id]||!isWeapon(id)||owned.indexOf(id)<0||!isInt(x)||x<0||x>upMax(id))return null;if(x>0)out.upg[id]=x}
+    if(!isInt(p.best)||p.best<0||p.best>T.level.max)return null;out.best=p.best;
+    for(i=0;i<REC.length;i++){x=p.records[REC[i]];if(!isInt(x)||x<0||x>SCRAP_MAX||(REC[i]==="level"&&x>T.level.max))return null;out.records[REC[i]]=x}
+    for(i=0;i<2;i++){x=p.callins[i];if(x!==null&&CALLINS.indexOf(x)<0)return null;out.callins[i]=x}
+    return out;
   }
   function validate(c){
-    if(!c||typeof c!=="object"||c.v!==1||!Array.isArray(c.players)||c.players.length<1||c.players.length>2)return null;
-    var lv=c.level,sd=c.seed===undefined?7:c.seed;
-    if(typeof lv!=="number"||lv!==Math.floor(lv)||lv<1||lv>T.level.max)return null;
-    if(typeof sd!=="number"||sd!==Math.floor(sd)||sd<1||sd>2147483000)return null;
+    if(!plain(c)||(c.v!==1&&c.v!==2)||!Array.isArray(c.players)||c.players.length<1||c.players.length>2)return null;
+    var lv=c.level,sd=c.seed===undefined&&c.v===1?7:c.seed;
+    if(!isInt(lv)||lv<1||lv>(c.v===1?V1_MAX:T.level.max))return null;
+    if(!isInt(sd)||sd<1||sd>SEED_MAX)return null;
+    if(c.v===2&&(typeof c.typed!=="boolean"||(c.live!==undefined&&typeof c.live!=="boolean")))return null;
+    lv=Math.min(T.level.max,lv);
     var ps=[];
-    for(var i=0;i<c.players.length;i++){var p=cleanPlayer(c.players[i]);if(!p)return null;ps.push(p)}
-    return {v:1,seed:sd,level:lv,players:ps};
+    for(var i=0;i<c.players.length;i++){var p=cleanPlayer(c.players[i],c.v,lv);if(!p)return null;ps.push(p)}
+    return {v:2,seed:sd,typed:c.v===2&&c.typed,level:lv,live:c.v===2&&!!c.live,players:ps};
   }
   function toB64(str){return (typeof btoa==="function"?btoa(str):Buffer.from(str,"binary").toString("base64")).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
   function fromB64(s){
@@ -1393,18 +1462,92 @@ var Campaign=(function(){
     if(typeof s!=="string"||!s||s.length>20000||!/^[A-Za-z0-9_\-\s]+$/.test(s))return null;
     try{return validate(JSON.parse(fromB64(s)))}catch(e){return null}
   }
-  /* The campaign after a level was extracted: next level, each mech's scrap added, armor carried. detail = the "o" event's detail. */
+  /* Wear on extract (GDD-D18): each fitted non-starter part gains share x damage taken / max armor, capped at 1. */
+  function wearOn(p,taken){
+    if(!(taken>0))return;var add=T.durability.share*taken/deriveStats(p.build,T,p.wear).maxHp;
+    SLOTS.forEach(function(sl){var id=p.build[sl[0]];if(id&&!isStarter(id))p.wear[id]=Math.min(1,Math.round(((p.wear[id]||0)+add)*1e4)/1e4)});
+  }
+  /* Lifetime records: r = {level, combo, spans, contracts, overtimes}; level and combo keep the best, the counters add up. */
+  function addRecords(p,r){if(!r)return;REC.forEach(function(k){var x=Math.round(+r[k]||0);if(x>0)p.records[k]=k==="level"||k==="combo"?Math.max(p.records[k],x):p.records[k]+x})}
+  /* Bank mech k's share of a run-over detail d into player p: scrap, wear, records (d.records[k] once phase 1 reports them). */
+  function bankInto(p,d,k){
+    p.scrap=Math.min(SCRAP_MAX,p.scrap+((d.scrap&&d.scrap[k])|0));
+    wearOn(p,d.damage&&d.damage[k]);
+    addRecords(p,{level:d.level});addRecords(p,d.records&&d.records[k]);
+  }
+  /* The campaign after a level was extracted (d = the "o" event's detail, extract or victory): next level, each mech's
+     scrap banked, wear applied, highest level extracted raised, the in-match mark cleared. A victory stays on the last
+     level: the caller starts the next climb with restart(). */
   function advance(c,d){
-    var n=JSON.parse(JSON.stringify(c));
-    n.level=Math.min(T.level.max,c.level+1);
-    n.players.forEach(function(p,i){p.scrap+=(d.scrap&&d.scrap[i])|0;if(d.armor&&typeof d.armor[i]==="number")p.armor=d.armor[i]});
+    var n=clone(c);d=d||{};
+    n.level=Math.min(T.level.max,c.level+1);n.live=false;
+    n.players.forEach(function(p,i){bankInto(p,d,i);p.best=Math.max(p.best|0,Math.min(T.level.max,c.level))});
     return n;
+  }
+  /* Co-op guest (GDD-D31): only player i's own scrap, wear and records, from mech k of the room's detail; level and seed stay. */
+  function bank(c,i,d,k){var n=clone(c);bankInto(n.players[i||0],d||{},k===undefined?i||0:k);return n}
+  /* A new climb (new campaign, death, victory, or a load still marked live): level 1 on `seed` (drawn by the caller,
+     outside the sim), unless the climb seed was typed. Parts, upgrades, wear, records and banked scrap stay. */
+  function restart(c,seed){
+    var n=clone(c);n.level=1;n.live=false;
+    if(isInt(seed)&&seed>=1&&seed<=SEED_MAX){n.seed=seed;n.typed=false}   /* a typed seed is used for that climb only (GDD-D49) */
+    return n;
+  }
+  /* Match start: the in-match mark, and the highest level reached. */
+  function begin(c){var n=clone(c);n.live=true;n.players.forEach(function(p){addRecords(p,{level:c.level})});return n}
+  /* Repairs (GDD-D18, GDD-D28): ceil(price x wear x rate by rarity); starter parts never wear, so they are free. */
+  function repairPrice(id,w){var p=PART[id];if(!p||isStarter(id)||!(w>0))return 0;return Math.ceil(p.cost*Math.min(1,w)*T.durability.repair[p.rarity]-1e-9)}
+  /* The Repair button: worn fitted parts in slot order, skipping one the banked scrap can't cover. Changes c. */
+  function repairAll(c,i){
+    var p=c.players[i||0],r={spent:0,fixed:[],skipped:[]};
+    SLOTS.forEach(function(sl){var id=p.build[sl[0]],w=id&&p.wear[id];if(!(w>0))return;var pr=repairPrice(id,w);
+      if(pr<=p.scrap){p.scrap-=pr;r.spent+=pr;delete p.wear[id];r.fixed.push(id)}else r.skipped.push(id)});
+    return r;
+  }
+  /* Weapon upgrades (GDD-D23): the price of the next Mk from `level` (0 = Mk I), or null when there is none. */
+  function upgradePrice(id,level){if(!isWeapon(id))return null;var a=T.upgrade.price[PART[id].rarity],l=level|0;return l>=0&&l<a.length?a[l]:null}
+  /* Buy the next Mk of an owned weapon for player i. Changes c; returns the scrap paid, or false. */
+  function upgrade(c,i,id){
+    var p=c.players[i||0],l=p.upg[id]|0,pr=upgradePrice(id,l);
+    if(pr===null||p.owned.indexOf(id)<0||p.scrap<pr)return false;
+    p.scrap-=pr;p.upg[id]=l+1;return pr;
   }
   /* each level plays a different (deterministic) sim seed */
   function levelSeed(c){return ((c.seed+(c.level-1)*7919)%2147483646)+1}
-  return {make:make,player:player,validate:validate,encode:encode,decode:decode,advance:advance,levelSeed:levelSeed,starterOwned:starterOwned};
+  /* overpass spans whose two pillars stand in the open zones of a level (Crush and Bring it down need one) */
+  function openSpans(level){
+    var px=MAP.overpass.pillarsX,x1=MAP.zones[Math.min(level,MAP.zones.length)-1].x1,n=0;
+    for(var k=0;k+1<px.length;k++)if(px[k+1]+1<=x1)n++;
+    return n;
+  }
+  /* The climb plan (TDD-D10): for levels 1..max, {level, zone, condition, contract, bosses:[wave 3, wave 5]}, from the
+     climb seed alone on its own stream (the sim's 16807 generator), so match randomness never changes it. Bosses come
+     first, then the condition, then a contract the level allows; no condition or contract repeats in a climb.
+     Recomputed on load, never saved. */
+  function plan(c){
+    var s=((c.seed*48271)%2147483646)+1,max=T.level.max,out=[],usedC={},usedK={},ids=Object.keys(BOSSES);
+    function rnd(){s=(s*16807)%2147483647;return (s-1)/2147483646}
+    function pick(a){return a.length?a[(rnd()*a.length)|0]:null}
+    rnd();rnd();
+    for(var L=1;L<=max;L++){
+      var bs=[3,5].map(function(w){
+        var f=ids.filter(function(b){var F=BOSSES[b].force;return (F==="first"&&L===1&&w===3)||(F==="last"&&L===max&&w===5)});
+        if(f.length)return f[0];
+        return pick(ids.filter(function(b){var B=BOSSES[b];return B.force!=="last"&&L>=B.lv[0]&&L<=B.lv[1]&&(!B.wave||B.wave===w)}));
+      });
+      var cond=pick(CONDITIONS.filter(function(x){return !usedC[x.id]&&(L>1||x.mild)}));if(cond)usedC[cond.id]=1;
+      var sn=bs.some(function(b){return b&&BOSSES[b].sniper}),sp=openSpans(L)>0;
+      var con=pick(CONTRACTS.filter(function(x){return !usedK[x.id]&&(x.need!=="span"||sp)&&(x.need!=="sniper"||sn)&&(!x.not||!cond||x.not!==cond.id)}));if(con)usedK[con.id]=1;
+      out.push({level:L,zone:MAP.zones[Math.min(L,MAP.zones.length)-1].name,condition:cond&&cond.id,contract:con&&con.id,bosses:bs});
+    }
+    return out;
+  }
+  return {make:make,player:player,validate:validate,encode:encode,decode:decode,advance:advance,bank:bank,restart:restart,begin:begin,
+    repairPrice:repairPrice,repairAll:repairAll,upgradePrice:upgradePrice,upgrade:upgrade,plan:plan,openSpans:openSpans,levelSeed:levelSeed,
+    starterOwned:starterOwned,isStarter:isStarter,SEED_MAX:SEED_MAX,CALLINS:CALLINS};
 })();
 
 root.MetroSim={create:create,mergeTune:mergeTune,tuneHash:tuneHash,Campaign:Campaign,T:T,SHOT_KIND:SHOT_KIND,MAT:MAT,WINDOW:WINDOW,MAP:MAP,PARTS:PARTS,PART:PART,SLOTS:SLOTS,STARTER:STARTER,BASE:BASE,W:W,D:D,H:H,hash:hash,
-  deriveStats:deriveStats,moveMech:moveMech,clusterGeom:clusterGeom,cleanBuild:cleanBuild,cloneBuild:cloneBuild,statsOf:statsOf};
+  deriveStats:deriveStats,moveMech:moveMech,clusterGeom:clusterGeom,cleanBuild:cleanBuild,cloneBuild:cloneBuild,statsOf:statsOf,isWeapon:isWeapon,
+  CONTRACTS:CONTRACTS,CONDITIONS:CONDITIONS,BOSSES:BOSSES};
 })(typeof globalThis!=='undefined'?globalThis:this);
