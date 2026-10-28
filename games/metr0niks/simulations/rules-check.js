@@ -878,5 +878,72 @@ function toChoose(s){var ev=[];for(var t=0;t<60*60&&s.state!=="choose";t++){idle
   ok(r.o&&r.o[4].records[0].contracts===1&&r.o[4].contract.reward===REW(1),"the extract detail reports the contract and the record line");
 })();
 
+/* ----- phase 6 garage: blueprint unlock, "New" marks, the call-in shop and its write-back (GDD-D42, GDD-D54) ----- */
+(function(){
+  var C=M.Campaign,BP=M.PARTS.filter(function(p){return p.zone}).map(function(p){return p.id});
+  var want={arc:2,redline:3,seismic:3,breach:4,overdrive:5,skids:5};
+  ok(BP.length===6&&BP.every(function(id){return M.unlockLevel(id)===want[id]}),"blueprints unlock the first time their zone's level is extracted: Arc 2, Redline and Seismic 3, Breach 4, Overdrive and Skids 5 (on victory)");
+  ok(M.PARTS.filter(function(p){return !p.zone}).every(function(p){return M.unlockLevel(p.id)===1}),"every other part is in the garage from the start");
+  var c=C.make([M.STARTER],null,9),p=c.players[0];
+  function listed(){return BP.filter(function(id){return C.garageParts(c,0).indexOf(id)>=0}).join()}
+  ok(listed()===""&&C.newParts(c,0).length===0&&C.garageParts(c,0).length===M.PARTS.length-6,"a new save lists the 21 garage parts and no blueprint");
+  p.best=2;ok(listed()==="arc"&&C.newParts(c,0).join()==="arc","best 2 lists the Arc caster, marked New");
+  p.best=3;ok(listed()==="arc,redline,seismic","best 3 adds the Redline vent and the Seismic hammer");
+  p.best=4;ok(listed()==="arc,redline,seismic,breach","best 4 adds Breach charges");
+  p.best=5;ok(listed()===BP.join()&&C.unlocked(c,0,"skids")&&!C.unlocked(c,0,"nope"),"best 5 (a victory) lists all six");
+  /* best only rises: a death, a restart or extracting a lower level never hides a blueprint */
+  var d=C.lose(c,55);ok(d.players[0].best===5&&C.garageParts(d,0).length===M.PARTS.length,"a death never removes a blueprint");
+  c.level=2;var a=C.advance(c,{result:"extracted",level:2,scrap:[0],damage:[0]});ok(a.players[0].best===5,"extracting a lower level keeps the highest level");
+  var e=C.make([M.STARTER],null,9);e.level=2;e=C.advance(e,{result:"extracted",level:2,scrap:[0],damage:[0]});
+  ok(e.players[0].best===2&&C.newParts(e,0).join()==="arc","extracting level 2 unlocks the Arc caster as New");
+  /* "New": cleared by looking at a part or by owning it */
+  p.best=3;p.seen=[];ok(C.newParts(c,0).join()==="arc,redline,seismic","unlocked blueprints start as New");
+  ok(C.see(c,0,["arc","breach","minigun","arc"])===1&&C.newParts(c,0).join()==="redline,seismic","looking at one clears its New; locked and non-blueprint ids are ignored");
+  p.owned.push("seismic");ok(C.newParts(c,0).join()==="redline","an owned blueprint is never New");
+  var rt=C.decode(C.encode(c));ok(rt&&same(rt.players[0].seen,["arc"])&&C.newParts(rt,0).join()==="redline","the seen list round-trips through the campaign code");
+  var nos=JSON.parse(JSON.stringify(c));delete nos.players[0].seen;var ns=C.decode(C.encode(nos));
+  ok(ns&&same(ns.players[0].seen,[]),"a v2 code without a seen list loads with none (older v2 codes stay valid)");
+  function rej(name,v){var x=JSON.parse(JSON.stringify(c));x.players[0].seen=v;ok(C.decode(C.encode(x))===null,"rejects a v2 code with "+name)}
+  rej("an unknown id in seen",["laser"]);rej("a non-blueprint in seen",["minigun"]);rej("a seen list that is not an array","arc");
+  var v1=C.decode(C.encode({v:1,seed:5,level:3,players:[{build:M.STARTER,owned:[],scrap:0,armor:null}]}));
+  ok(v1&&same(v1.players[0].seen,[])&&C.newParts(v1,0).join()==="arc,redline,seismic","a v1 code migrates with an empty seen list; its best 3 shows three New blueprints");
+})();
+(function(){
+  var C=M.Campaign;
+  /* call-in prices (GDD-D54): base x (1 + 0.10 x (level - 1)), rounded, for the level about to be played */
+  var exp={repair:[40,44,48,52,56],overclock:[30,33,36,39,42],strike:[50,55,60,65,70]},okP=true,L;
+  for(var t in exp)for(L=1;L<=5;L++){var c0=C.make([M.STARTER],null,9);c0.level=L;if(C.callinPrice(c0,t)!==exp[t][L-1]||M.callinPrice(t,L)!==exp[t][L-1])okP=false}
+  ok(okP,"call-in prices per level: Field repair 40/44/48/52/56, Overclock 30/33/36/39/42, Strike beacon 50/55/60/65/70");
+  ok(C.callinPrice(C.make([M.STARTER],null,9),"cache")===null,"the Scrap cache is not sold as a call-in");
+  /* buying fills the first empty slot from banked scrap */
+  var c=C.make([M.STARTER],null,9),p=c.players[0];c.level=3;p.scrap=200;
+  var b1=C.buyCallin(c,0,"strike");ok(b1&&b1.price===60&&b1.slot===0&&p.scrap===140&&same(p.callins,["strike",null]),"buying a Strike beacon at level 3 costs 60 and fills slot 1");
+  var b2=C.buyCallin(c,0,"repair");ok(b2&&b2.slot===1&&p.scrap===92&&same(p.callins,["strike","repair"]),"the next buy fills slot 2");
+  ok(C.buyCallin(c,0,"overclock")===false&&p.scrap===92,"with both slots full nothing more is sold");
+  p.callins=[null,"repair"];var b3=C.buyCallin(c,0,"overclock");ok(b3&&b3.slot===0&&same(p.callins,["overclock","repair"]),"a buy fills whichever slot is empty");
+  p.callins=[null,null];p.scrap=35;ok(C.buyCallin(c,0,"overclock")===false&&p.scrap===35&&same(p.callins,[null,null]),"no buy without the scrap (Overclock at level 3 costs 36)");
+  ok(C.buyCallin(c,0,"cache")===false&&C.buyCallin(c,0,"nuke")===false,"only Field repair, Overclock and Strike beacon are sold");
+  /* the slots go into the match, and what is left comes back */
+  c.players[0].scrap=500;C.buyCallin(c,0,"strike");C.buyCallin(c,0,"overclock");
+  var s=M.create({seed:6,level:c.level,tune:{wave:{breather:.1}},callins:c.players.map(function(q){return q.callins})}),pl=s.players[0],end=null,t2;
+  ok(same(s.callins[0],["strike","overclock"]),"the save's slots go into MetroSim.create({callins})");
+  steps(s,5);for(t2=0;t2<60*20&&s.state!=="play";t2++){idle(s);s.step()}s.setInput(0,{k:256,ax:pl.x+3,ay:pl.y,az:.6,l:false,r:false,rp:false});s.step();
+  for(t2=0;t2<60*240&&!end;t2++){idle(s);if(s.state==="play")s.killAll();s.step();s.drainEvents().forEach(function(e){if(e[0]==="o")end=e})}
+  var n=end&&C.advance(c,end[4]);
+  ok(end&&end[1]==="extracted"&&n&&same(n.players[0].callins,[null,"overclock"]),"after an extract the save keeps what is left: the used Strike beacon is gone, the Overclock stays");
+  var x=C.advance(c,{result:"extracted",level:3,scrap:[0],damage:[0]});ok(same(x.players[0].callins,["strike","overclock"]),"a detail with no call-in report leaves the slots as they were");
+  var dd=C.carry(c,0,{result:"dead",level:3,callins:[{used:[],left:[null,null]}]});ok(same(dd.players[0].callins,[null,null])&&same(c.players[0].callins,["strike","overclock"]),"a death's report empties the slots (carry returns a new campaign)");
+  var l=C.lose(c,77);ok(same(l.players[0].callins,[null,null])&&l.level===1&&l.seed===77,"lose(): a death restarts the climb and loses the carried call-ins");
+  var r=C.restart(c,78);ok(same(r.players[0].callins,["strike","overclock"]),"a new campaign or victory restart keeps the slots");
+  ok(same(C.carry(c,0,null).players[0].callins,[null,null]),"no report at all (the host left the room) empties the slots");
+  /* co-op: each player's own slots; the guest banks its own share and its own leftovers */
+  var g=C.make([M.STARTER],null,9);g.players[0].callins=["repair","strike"];
+  var gb=C.bank(g,0,{result:"extracted",level:2,scrap:[5,7],damage:[0,0],callins:[{used:[],left:["overclock",null]},{used:["repair"],left:[null,"strike"]}]},1);
+  ok(gb.players[0].scrap===7&&same(gb.players[0].callins,[null,"strike"]),"a co-op guest writes back its own mech's leftovers (mech 1)");
+  var cs=M.create({seed:4,builds:[M.STARTER,M.STARTER],callins:[["strike",null],[null,"repair"]]});
+  ok(same(cs.callins[0],["strike",null])&&same(cs.callins[1],[null,"repair"]),"a co-op match carries each player's own slots");
+  var rt=C.decode(C.encode(n));ok(rt&&same(rt.players[0].callins,[null,"overclock"]),"the written-back slots round-trip through the campaign code");
+})();
+
 console.log(bad?bad+" rule check(s) failed":"rules pass");
 process.exit(bad?1:0);

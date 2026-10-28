@@ -60,6 +60,11 @@ select{background:#0e0f12;color:var(--fg);border:1px solid var(--line);border-ra
 .part .fit{position:absolute;top:4px;right:4px;font-size:9px;color:var(--good);background:rgba(0,0,0,.6);padding:0 4px;border-radius:2px}
 .rar-common{color:#3fd6e8}.rar-rare{color:#e0702b}.rar-epic{color:#ff5a4a}
 .note{color:var(--muted);font-size:11px;margin-top:8px}
+/* phase 6: blueprint unlock and call-in shop tests */
+.part .bp{color:var(--hazard)}
+.bpt{width:100%;border-collapse:collapse;font-size:11px}
+.bpt td{padding:3px 4px;border-bottom:1px solid var(--line)}
+.bpt .lock{color:var(--muted)}.bpt .open{color:var(--good)}.bpt .new{color:var(--hazard);font-weight:700}
 @media (max-width:900px){body{grid-template-columns:1fr;grid-template-rows:62vh auto;overflow:auto;height:auto}#stage{height:62vh;border-right:0;border-bottom:1px solid var(--line)}#panel{overflow:visible}}
 </style>
 </head>
@@ -70,7 +75,7 @@ select{background:#0e0f12;color:var(--fg);border:1px solid var(--line);border-ra
 </div>
 <div id="panel">
   <h1>Metr<span class="r0">0</span>niks garage lab</h1>
-  <p class="sub">The prototype's own garage with every part unlocked and saving switched off. Click a part to see it on the turntable mech; Fit puts it on.</p>
+  <p class="sub">The prototype's own garage with every part unlocked and saving switched off (Test unlocks shows the blueprint rule instead). Click a part to see it on the turntable mech; Fit puts it on.</p>
 
   <div class="sel" id="selCard"></div>
   <div class="row" style="margin-top:6px">
@@ -84,6 +89,20 @@ select{background:#0e0f12;color:var(--fg);border:1px solid var(--line);border-ra
     <label for="theme" style="color:var(--muted)">Art style</label>
     <select id="theme"><option value="blockout">Blockout</option><option value="cinematic">Cinematic</option><option value="ink">Ink</option></select>
   </div>
+
+  <h2>Blueprint unlock <small>GDD-D42</small></h2>
+  <div class="row">
+    <label for="best" style="color:var(--muted)">Highest level extracted</label>
+    <select id="best"><option value="0">0 (new save)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5 (victory)</option></select>
+    <button class="b" id="unown" type="button">Test unlocks</button>
+    <button class="b" id="ownall" type="button">Own every part</button>
+    <button class="b" id="unsee" type="button">Clear seen</button>
+  </div>
+  <table class="bpt" id="bpTable"></table>
+  <p class="note" id="bpNote"></p>
+
+  <h2>Call-in shop <small>GDD-D54</small></h2>
+  <div class="row"><button class="b" id="scrap" type="button">Bank 500 scrap</button><button class="b" id="ciClear" type="button">Empty slots</button><span id="ciTxt" style="color:var(--muted)"></span></div>
 
   <h2>All parts <small id="count"></small></h2>
   <div id="sheet"></div>
@@ -112,7 +131,7 @@ frame.addEventListener("load",function(){
   G.__m.garage.ownAll();
   try{$("theme").value=G.__m.theme()}catch(x){}
   G.__m.garage.open();
-  buildSheet();pick(G.__m.garage.build().armR||"minigun");
+  buildSheet();pick(G.__m.garage.build().armR||"minigun");bpTable();
   requestAnimationFrame(loop);
 });
 frame.src=PROTO;
@@ -131,7 +150,8 @@ function buildSheet(){
     var ps=PARTS.filter(function(p){return p.slot===sl[0]});
     h+='<div class="grp"><span>'+sl[1]+'</span><span>'+ps.length+" part"+(ps.length>1?"s":"")+'</span></div><div class="grid">';
     ps.forEach(function(p){
-      h+='<button class="part" type="button" data-id="'+p.id+'" aria-pressed="false"><span class="fit" hidden>fitted</span><canvas width="240" height="160"></canvas><b>'+esc(p.name)+'</b><span class="rar-'+p.rarity+'">'+RAR[p.rarity]+(p.cost?" · "+p.cost+" scrap":" · starter")+"</span></button>";
+      h+='<button class="part" type="button" data-id="'+p.id+'" aria-pressed="false"><span class="fit" hidden>fitted</span><canvas width="240" height="160"></canvas><b>'+esc(p.name)+'</b><span class="rar-'+p.rarity+'">'+RAR[p.rarity]+(p.cost?" · "+p.cost+" scrap":" · starter")+"</span>"+
+        (p.zone?'<span class="bp">Blueprint · after level '+M.unlockLevel(p.id)+"</span>":"")+"</button>";
     });
     h+="</div>";
   });
@@ -193,7 +213,27 @@ function loop(){
   if(st==="paused"){var ov=G.document.getElementById("ovText"),ae=document.activeElement;
     if(ov&&/lost focus/.test(ov.textContent)&&!(ae&&ae.tagName==="SELECT")&&G.document.getElementById("settings").hidden)G.__m.start()}
   var k=JSON.stringify(curBuild());if(k!==lastKey){lastKey=k;marks()}
+  var gk=JSON.stringify([G.__m.garage.best,G.__m.garage.owned(),G.__m.garage.newParts(),G.__m.garage.callins,G.__m.banked,G.__m.level]);if(gk!==lastBp){lastBp=gk;bpTable()}
 }
+/* ----- phase 6: blueprint unlock (the garage lists a blueprint once the save's highest extracted level reaches its unlock
+   level) and the call-in shop. "Test unlocks" takes the blueprints out of the lab's owned list so the unlock rule shows. ----- */
+var lastBp="";
+function bpTable(){
+  var g=G.__m.garage,listed=g.listed(),nw=g.newParts(),own=g.owned(),h="<tr><td>Blueprint</td><td>Unlocks after</td><td>Garage</td></tr>";
+  PARTS.filter(function(p){return p.zone}).forEach(function(p){
+    var on=listed.indexOf(p.id)>=0,st=own.indexOf(p.id)>=0?'<span class="open">owned</span>':nw.indexOf(p.id)>=0?'<span class="new">New</span>':on?'<span class="open">listed</span>':'<span class="lock">locked</span>';
+    h+="<tr><td>"+esc(p.name)+"</td><td>level "+M.unlockLevel(p.id)+(M.unlockLevel(p.id)===M.T.level.max?" (victory)":"")+"</td><td>"+st+"</td></tr>"});
+  $("bpTable").innerHTML=h;$("best").value=String(g.best);
+  $("bpNote").textContent="Best "+g.best+": the garage lists "+listed.length+" of "+PARTS.length+" parts.";
+  var lv=G.__m.campaign().level;$("ciTxt").textContent="Banked "+G.__m.banked+" · slots "+g.callins.map(function(t){return t?M.POD_NAME[t]:"empty"}).join(", ")+" · level "+lv+" prices: "+
+    M.Campaign.CALLINS.map(function(t){return M.POD_NAME[t]+" "+M.callinPrice(t,lv)}).join(", ");
+}
+$("best").addEventListener("change",function(e){G.__m.garage.setBest(+e.target.value);bpTable()});
+$("unown").addEventListener("click",function(){toGarage();G.__m.garage.disownBlueprints();bpTable();pick("minigun")});
+$("ownall").addEventListener("click",function(){G.__m.garage.ownAll();bpTable()});
+$("unsee").addEventListener("click",function(){G.__m.garage.clearSeen();bpTable()});
+$("scrap").addEventListener("click",function(){G.__m.garage.setBanked(G.__m.banked+500);bpTable()});
+$("ciClear").addEventListener("click",function(){G.__m.garage.setCallins([null,null]);bpTable()});
 })();
 </script>
 </body>

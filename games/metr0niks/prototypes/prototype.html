@@ -186,6 +186,21 @@ body.ing canvas{cursor:default}
 .gplan{margin-bottom:8px;padding:6px 8px;border:1px solid rgba(242,194,48,.5);border-radius:4px;background:rgba(0,0,0,.3);color:var(--muted);font-size:10px;line-height:1.5;text-transform:none;letter-spacing:.02em;white-space:pre-line}
 .gplan b{color:var(--hazard);letter-spacing:.1em;text-transform:uppercase}
 .gbar[hidden]{display:none}
+/* ----- phase 6 garage: "New" blueprint marks and the call-in shop (GDD-D42, GDD-D54) ----- */
+.gth .gnew,.gtab .gnew{color:var(--hazard);font-weight:700;letter-spacing:.12em}
+.gth.new{border-color:var(--hazard);box-shadow:inset 0 0 10px rgba(242,194,48,.25)}
+.gtab .gnew{font-size:8px;line-height:1}
+.gcall{margin-top:8px;padding:6px 8px;border:1px solid rgba(63,214,232,.5);border-radius:4px;background:rgba(0,0,0,.3)}
+.gcall .gch{display:flex;justify-content:space-between;color:var(--cyan);font-weight:700;letter-spacing:.14em;margin-bottom:6px}
+.gcall .gch span+span{color:var(--muted);font-weight:500;letter-spacing:.06em}
+.gcall .gcs{display:flex;gap:6px;margin-bottom:6px}
+.gcall .gcs span{flex:1;padding:4px 6px;border:1px dashed rgba(63,214,232,.4);border-radius:3px;color:var(--muted);font-size:10px}
+.gcall .gcs span.full{border-style:solid;border-color:var(--cyan);color:var(--fg)}
+.gcall .gcb{display:flex;gap:6px}
+.gcall .gcb button{flex:1;padding:5px 4px;border:1px solid var(--cyan);border-radius:3px;background:rgba(63,214,232,.12);font-size:10px;line-height:1.3}
+.gcall .gcb button:disabled{opacity:.45;cursor:default;border-color:var(--line);color:var(--muted);background:transparent}
+body[data-theme="ink"] .gcall{background:#fffaf0;border:2px solid var(--line)}
+body[data-theme="ink"] .gcall .gcb button{background:#e3ecd6;border:2px solid var(--line);color:var(--fg)}
 #gSeed{flex:0 1 130px}
 #gSeedNew{padding:3px 8px;border:1px solid rgba(63,214,232,.5);background:transparent;border-radius:3px;font-size:10px}
 
@@ -335,6 +350,7 @@ body[data-theme="ink"] #gDrop{border:2px solid var(--line);color:#fffaf0;box-sha
       <div class="gthumbs" id="gThumbs"></div>
       <div class="gdesc" id="gDesc"></div>
       <div class="gact"><button id="gEquip" type="button">Equip</button><button id="gUpg" type="button" hidden>Upgrade</button><button id="gRepair" type="button">Repair</button></div>
+      <div class="gcall" id="gCall"><div class="gch"><span>Call-ins</span><span id="gCiNote">keys 1 and 2 in a match</span></div><div class="gcs" id="gCiSlots"></div><div class="gcb" id="gCiBuy"></div></div>
       <div class="gbar"><span>Scrap <b id="gScrap">0</b> &nbsp;Armor <b id="gArmor">100</b></span><a id="gSet" role="button" tabindex="0">Settings</a><a id="gReset" role="button" tabindex="0">Reset save</a></div>
       <div class="gbar" id="gSeedRow"><span>Climb seed</span><input id="gSeed" class="codeIn" type="text" inputmode="numeric" maxlength="10" aria-label="Climb seed" spellcheck="false" autocomplete="off"><button id="gSeedNew" type="button">Random</button></div>
       <div class="gbar"><span>Campaign code</span><input id="gCode" class="codeIn" type="text" readonly aria-label="Campaign code" spellcheck="false"><button id="gCopy" type="button">Copy</button></div>
@@ -479,7 +495,7 @@ var mouse={x:0,y:0,down:false,rdown:false,rpress:false},keys={};
 var banked=0;   /* banked = this player's wallet */
 var Camp=MetroSim.Campaign,CAMP={level:1,seed:7,typed:false},LASTCODE="";
 /* this player's save fields (TDD-D12): part wear, weapon Mk levels, highest level extracted, lifetime records, call-in slots */
-var WEAR={},UPG={},BEST=0,RECORDS=noRecords(),CALLINS=[null,null],MK=["I","II","III"];
+var WEAR={},UPG={},BEST=0,RECORDS=noRecords(),CALLINS=[null,null],SEEN=[],MK=["I","II","III"];   /* SEEN: blueprints looked at ("New" marks, phase 6) */
 var COND={},CONT={},BOSS=MetroSim.BOSSES;MetroSim.CONDITIONS.forEach(function(x){COND[x.id]=x});MetroSim.CONTRACTS.forEach(function(x){CONT[x.id]=x});
 function noRecords(){return {level:0,combo:0,spans:0,contracts:0,overtimes:0}}
 function newSeed(){return 1+Math.floor(Math.random()*Camp.SEED_MAX)}   /* a climb's seed (GDD-D49): drawn here, never in the sim */
@@ -499,7 +515,7 @@ function colorOf(id,s){
 }
 function newSim(builds,ext){
   ext=ext||{};
-  return MetroSim.create({seed:Camp.levelSeed({seed:CAMP.seed,level:CAMP.level}),level:CAMP.level,builds:builds,wear:ext.wear,upgrades:ext.upg,plan:ext.plan,colorOf:colorOf,clock:function(){return performance.now()}});
+  return MetroSim.create({seed:Camp.levelSeed({seed:CAMP.seed,level:CAMP.level}),level:CAMP.level,builds:builds,wear:ext.wear,upgrades:ext.upg,plan:ext.plan,callins:ext.callins,colorOf:colorOf,clock:function(){return performance.now()}});
 }
 function lvHp(base){return Math.round(base*(1+T.level.hp*(CAMP.level-1)))}   /* enemy hp scales with the level (the guest only gets hp numbers) */
 /* Point the renderer at a sim; its arrays are mutated in place, so they are bound once. */
@@ -667,8 +683,9 @@ buildGround();
 /* ===== Run control, effects and input. The sim emits events; here they become particles, floats, toasts and the end screens. ===== */
 function reset(){
   var builds=[BUILD],wear=[WEAR],upg=[UPG];if(Net.hosting&&Net.peer){builds.push(Net.peerBuild);wear.push(Net.peerWear||{});upg.push(Net.peerUpg||{})}
+  var cis=[CALLINS.slice()];if(Net.hosting&&Net.peer)cis.push(Net.peerCallins||[null,null]);   /* phase 6: each player's own call-in slots (GDD-D54) */
   LASTCODE=Camp.encode(curCampaign());   /* what a retry after dying starts from */
-  bind(newSim(builds,{wear:wear,upg:upg,plan:guestSeat()?null:curPlan()}));
+  bind(newSim(builds,{wear:wear,upg:upg,plan:guestSeat()?null:curPlan(),callins:cis}));
   parts.length=0;floats.length=0;shake=0;scrap=0;kills=0;resetMatchView();buildHud();
   camX=px(player.x,player.y,0);camY=py(player.x,player.y,0);
 }
@@ -722,7 +739,7 @@ function runOver(e){
   var lv=campaignOver();deathScreen(msg,d.level||lv,d,k,before);
 }
 /* A death ends the climb at once (saved): level 1 on a new seed (a typed seed is for one climb only). A co-op guest's own campaign stays. */
-function campaignOver(){var lv=CAMP.level;if(!guestSeat()){adoptCampaign(Camp.restart(ownCampaign(),newSeed()),0);saveCampaign()}return lv}
+function campaignOver(){var lv=CAMP.level;if(!guestSeat()){adoptCampaign(Camp.lose(ownCampaign(),newSeed()),0);saveCampaign()}return lv}   /* lose: the carried call-ins go too */
 /* The code shown is the garage the run began from. */
 function deathScreen(msg,lv,d,k,before){
   setTimeout(function(){showOverlay("Campaign over at level "+lv,msg,"New campaign",LASTCODE);if(d)showReport(d,k,before,before,true)},900);
@@ -1601,6 +1618,7 @@ function resetMatchView(){MF.simState="play";MF.chooseT=0;MF.waveRepT=0;MF.choos
 function hostLeft(why){
   if(!Net.live)return;Net.live=false;clearReport();
   var lost=scrap|0;Net.close();state="menu";friendRender();refreshCoop();
+  takeOwn(Camp.carry(ownCampaign(),0,null).players[0]);saveCampaign();   /* phase 6: the match ended unextracted, so its call-ins are gone */
   showOverlay("Metr0niks",(why||"The host left the room.")+" That ends the match for both players: your match scrap"+(lost?" ("+lost+" for the team)":"")+" is lost. Your parts, upgrades, banked scrap and your own campaign are safe.","Drop in");
 }
 
@@ -1613,10 +1631,11 @@ var cloneBuild=MetroSim.cloneBuild,statsOf=MetroSim.statsOf,cleanBuild=MetroSim.
 function derive(b){return MetroSim.deriveStats(b,T,WEAR)}   /* worn parts give less (GDD-D18) */
 function isWeapon(id){return MetroSim.isWeapon(id)}
 /* The save is one campaign code in localStorage ("metr0niks.campaign"), v2 (TDD-D12). The old banked/garage keys migrate into it on first load. */
-function myPlayer(){return Camp.player(BUILD,Object.keys(OWNED),banked,{wear:WEAR,upg:UPG,best:BEST,records:RECORDS,callins:CALLINS})}
+function myPlayer(){return Camp.player(BUILD,Object.keys(OWNED),banked,{wear:WEAR,upg:UPG,best:BEST,records:RECORDS,callins:CALLINS,seen:SEEN})}
 function takeOwn(p){   /* this player's save fields; an older room server may leave some out */
   banked=p.scrap;if(p.wear)WEAR=JSON.parse(JSON.stringify(p.wear));if(p.upg)UPG=JSON.parse(JSON.stringify(p.upg));
   if(typeof p.best==="number")BEST=p.best;if(p.records)RECORDS=JSON.parse(JSON.stringify(p.records));if(p.callins)CALLINS=p.callins.slice();
+  if(Array.isArray(p.seen))SEEN=p.seen.slice();
 }
 function adoptCampaign(c,seat){
   var p=c.players[seat]||c.players[0];
@@ -1644,10 +1663,10 @@ function markLive(){if(guestSeat())return;RECORDS=Camp.begin(ownCampaign()).play
 function newCampaign(){adoptCampaign(Camp.restart(ownCampaign(),newSeed()),0);saveCampaign()}   /* parts, upgrades and scrap stay: the climb starts over */
 function hasProgress(){return CAMP.level>1}
 function loadGarage(){
-  var k,saved=null,c=null;BUILD={};OWNED={};banked=0;WEAR={};UPG={};BEST=0;RECORDS=noRecords();CALLINS=[null,null];CAMP.level=1;CAMP.seed=newSeed();CAMP.typed=false;
+  var k,saved=null,c=null;BUILD={};OWNED={};banked=0;WEAR={};UPG={};BEST=0;RECORDS=noRecords();CALLINS=[null,null];SEEN=[];CAMP.level=1;CAMP.seed=newSeed();CAMP.typed=false;
   for(k in STARTER){BUILD[k]=STARTER[k];if(STARTER[k])OWNED[STARTER[k]]=1}
   c=storedCampaign();
-  if(c){if(c.live)c=Camp.restart(c,newSeed());   /* still marked in a match: the game was left mid-match, which is a death */
+  if(c){if(c.live)c=Camp.lose(c,newSeed());   /* still marked in a match: the game was left mid-match, which is a death (call-ins lost) */
     adoptCampaign(c,0);saveCampaign();return}
   try{banked=parseInt(localStorage.getItem("metr0niks.banked"),10)||0}catch(e){}
   try{saved=JSON.parse(localStorage.getItem("metr0niks.garage"))}catch(e){}
@@ -1708,9 +1727,9 @@ function drawIcon(c,id,col,lw){
   });
 }
 
-var G={slot:"armR",sel:"minigun",pb:null,msg:"",msgT:0,confirm:false},gEl={},gRows=[],gMods=[],gTabs=[],gTime=0,gSp=[];
+var G={slot:"armR",sel:"minigun",pb:null,msg:"",msgT:0,confirm:false,shown:{}},gEl={},gRows=[],gMods=[],gTabs=[],gTime=0,gSp=[];
 function garageInit(){
-  var ids=["garage","gStage","gTabs","gRows","gMods","gThumbs","gStatus","gbName","gDesc","gEquip","gScrap","gReset","gDrop","gArc","gNum","gRead","gMode","gCoop","gRepair","gArmor","gCode","gCopy","gPartner","gUpg","gPlan","gSeedRow","gSeed","gSeedNew"];
+  var ids=["garage","gStage","gTabs","gRows","gMods","gThumbs","gStatus","gbName","gDesc","gEquip","gScrap","gReset","gDrop","gArc","gNum","gRead","gMode","gCoop","gRepair","gArmor","gCode","gCopy","gPartner","gUpg","gPlan","gSeedRow","gSeed","gSeedNew","gCiSlots","gCiBuy"];
   ids.forEach(function(i){gEl[i]=$(i)});
   STATS.forEach(function(st){
     var r=document.createElement("div");r.className="sr";
@@ -1728,6 +1747,7 @@ function garageInit(){
   gEl.gEquip.addEventListener("click",function(){garageEquip()});
   gEl.gRepair.addEventListener("click",function(){garageRepair()});
   gEl.gUpg.addEventListener("click",function(){garageUpgrade()});
+  callinShopInit();
   gEl.gSeed.addEventListener("change",function(){setSeed(gEl.gSeed.value)});
   gEl.gSeed.addEventListener("keydown",function(e){if(e.code==="Enter"){e.preventDefault();setSeed(gEl.gSeed.value);gEl.gSeed.blur()}});
   gEl.gSeedNew.addEventListener("click",function(){CAMP.seed=newSeed();CAMP.typed=false;saveCampaign();refreshGarage()});
@@ -1738,12 +1758,12 @@ function garageInit(){
 }
 function slotIndex(s){for(var i=0;i<SLOTS.length;i++)if(SLOTS[i][0]===s)return i;return 0}
 function pickSlot(s){G.slot=s;G.sel=BUILD[s]||"none";G.msg="";refreshGarage()}
-function garageSelect(id){var p=PART[id];if(!p)return false;G.slot=p.slot;G.sel=id;G.msg="";refreshGarage();return true}
+function garageSelect(id){var p=PART[id];if(!p||!garageListed(id))return false;G.slot=p.slot;G.sel=id;G.msg="";garageSee([id]);refreshGarage();return true}
 function garageEquip(){
   var id=G.sel,cur=BUILD[G.slot]||"none";if(id===cur)return false;
   if(id==="none"){if(STARTER[G.slot])return false;BUILD[G.slot]=null}
   else{var p=PART[id];
-    if(!OWNED[id]){if(banked<p.cost)return false;banked-=p.cost;saveBank();OWNED[id]=1}
+    if(!OWNED[id]){if(banked<p.cost||!garageListed(id))return false;banked-=p.cost;saveBank();OWNED[id]=1}
     BUILD[G.slot]=id}
   saveGarage();G.msg="Upgrade complete\n"+(id==="none"?"Slot cleared":PART[id].name+" fitted");G.msgT=3;refreshGarage();return true;
 }
@@ -1789,7 +1809,7 @@ function resetSave(){
 }
 function pvStats(){var cur=statsOf(BUILD),nb=cloneBuild(BUILD);nb[G.slot]=G.sel==="none"?null:G.sel;return {cur:cur,pv:statsOf(nb),build:nb,d:derive(nb)}}
 function refreshGarage(){
-  var q=pvStats(),mx=T.garage.statMax,sel=PART[G.sel],cur=BUILD[G.slot]||"none";G.pb=q.build;
+  var q=pvStats(),mx=T.garage.statMax,sel=PART[G.sel],cur=BUILD[G.slot]||"none",nwAll=garageNew();G.pb=q.build;
   STATS.forEach(function(st,i){
     var a=q.cur[st[0]],b=q.pv[st[0]],lo=Math.min(a,b),hi=Math.max(a,b),R=gRows[i],better=st[2]?b<a:b>a,dl=Math.round(b-a);
     R.f.style.width=lo/mx*100+"%";R.f.style.backgroundSize=lo>0?(mx/lo*100)+"% 100%":"100% 100%";
@@ -1804,15 +1824,18 @@ function refreshGarage(){
     M.el.classList.toggle("on",sl[0]===G.slot);M.b.textContent=sl[1]+(r?" · "+r.n:"");M.b.style.color=r?(TH.ui.rar&&TH.ui.rar[p.rarity]||r.c):"var(--muted)";
     M.s.textContent=p?[p.name,mkTxt(p.id),wearTxt(p.id)].filter(Boolean).join(" · "):"Empty";drawIcon(M.c,p&&p.id,r?(TH.ui.rar&&TH.ui.rar[p.rarity]||r.c):TH.ui.empty,1.6);
     gTabs[i].el.classList.toggle("on",sl[0]===G.slot);drawIcon(gTabs[i].c,p&&p.id,sl[0]===G.slot?TH.ui.on:TH.ui.idle,1.8);
+    tabNew(gTabs[i],nwAll.some(function(id){return PART[id].slot===sl[0]}));   /* phase 6: a slot with a New blueprint */
   });
-  var list=PARTS.filter(function(p){return p.slot===G.slot&&(!p.zone||OWNED[p.id])}).map(function(p){return p.id});   /* blueprints (p.zone) appear once owned; the unlock by highest level comes with the save */
+  var list=PARTS.filter(function(p){return p.slot===G.slot&&garageListed(p.id)}).map(function(p){return p.id}),nw=garageNew();   /* blueprints appear at their unlock level (phase 6) */
   if(!STARTER[G.slot])list.push("none");
   gEl.gThumbs.innerHTML="";
   list.forEach(function(id){
     var p=PART[id],on=id===G.sel,b=document.createElement("button"),c=document.createElement("canvas"),s=document.createElement("span");
     b.type="button";b.className="gth"+(on?" on":"");c.width=240;c.height=160;
     s.textContent=(p?p.name:"Empty")+"\n"+(id===cur?"equipped":!p||OWNED[id]?"owned":p.cost+" scrap")+(p&&OWNED[id]&&isWeapon(id)?" · "+mkTxt(id):"");s.style.whiteSpace="pre-line";
-    b.appendChild(c);b.appendChild(s);b.addEventListener("click",function(){G.sel=id;G.msg="";refreshGarage()});gEl.gThumbs.appendChild(b);
+    if(nw.indexOf(id)>=0){var nb=document.createElement("span");nb.className="gnew";nb.textContent="New";b.classList.add("new");b.appendChild(nb)}   /* phase 6 */
+    if(p&&p.zone)G.shown[id]=1;
+    b.appendChild(c);b.appendChild(s);b.addEventListener("click",function(){G.sel=id;G.msg="";garageSee([id]);refreshGarage()});gEl.gThumbs.appendChild(b);
     drawIcon(c,id,on?TH.ui.sel:TH.ui.idle,3);
   });
   gEl.gbName.textContent=sel?sel.name:"Empty slot";
@@ -1833,11 +1856,34 @@ function refreshGarage(){
   gEl.gSeedRow.hidden=CAMP.level!==1||guestSeat();if(document.activeElement!==gEl.gSeed)gEl.gSeed.value=CAMP.seed;
   gEl.gSeed.title=CAMP.typed?"Typed seed: kept for this climb":"Random seed";
   gEl.gCode.value=Camp.encode(curCampaign());
+  refreshCallins();
   refreshCoop();
+}
+/* ===== phase 6 garage: blueprint unlock, "New" marks and the call-in shop (GDD-D42, GDD-D54). The rules are in
+   MetroSim.Campaign (unlocked, newParts, see, callinPrice, buyCallin); this block only draws them and saves. ===== */
+function garageListed(id){return Camp.unlocked(ownCampaign(),0,id)}
+function garageNew(){return Camp.newParts(ownCampaign(),0)}
+function garageSee(ids){var c=ownCampaign();if(Camp.see(c,0,ids)){takeOwn(c.players[0]);saveCampaign()}}
+function garageSeeShown(){garageSee(Object.keys(G.shown))}
+function tabNew(t,on){var e=t.el.querySelector(".gnew");if(on&&!e){e=document.createElement("span");e.className="gnew";e.textContent="New";t.el.appendChild(e)}else if(!on&&e)e.remove()}
+var CI_TYPES=Camp.CALLINS,gCiBtn={};
+function callinShopInit(){
+  CI_TYPES.forEach(function(t){var b=document.createElement("button");b.type="button";b.addEventListener("click",function(){garageBuyCallin(t)});gEl.gCiBuy.appendChild(b);gCiBtn[t]=b});
+}
+function garageBuyCallin(t){
+  var c=ownCampaign(),r=Camp.buyCallin(c,0,t);if(!r)return false;
+  takeOwn(c.players[0]);saveCampaign();G.msg="Call-in stocked\n"+MetroSim.POD_NAME[t]+" in slot "+(r.slot+1);G.msgT=3;refreshGarage();return r;
+}
+function refreshCallins(){
+  if(!gEl.gCiSlots)return;var c=ownCampaign(),full=CALLINS.indexOf(null)<0;
+  gEl.gCiSlots.innerHTML="";
+  CALLINS.forEach(function(t,k){var e=document.createElement("span");e.className=t?"full":"";e.textContent=(k+1)+": "+(t?MetroSim.POD_NAME[t]:"empty");gEl.gCiSlots.appendChild(e)});
+  CI_TYPES.forEach(function(t){var b=gCiBtn[t],pr=Camp.callinPrice(c,t);b.textContent=MetroSim.POD_NAME[t]+"\n"+pr+" scrap";b.style.whiteSpace="pre-line";
+    b.disabled=full||banked<pr;b.title=full?"Both slots are full":banked<pr?"Need "+pr+" scrap":"Buy for "+pr+" scrap"});
 }
 function openGarage(){
   state="garage";overlay.hidden=true;Net.live=false;Net.readySent=false;for(var k in keys)keys[k]=false;mouse.down=false;mouse.rdown=false;
-  document.body.classList.add("ing");gEl.garage.hidden=false;G.confirm=false;gEl.gReset.textContent="Reset save";
+  document.body.classList.add("ing");gEl.garage.hidden=false;G.confirm=false;G.shown={};gEl.gReset.textContent="Reset save";
   pickSlot(G.slot);gEl.gDrop.focus({preventScroll:true});
 }
 /* Garage scene: hangar backdrop, blueprint grid, the previewed mech turning slowly. */
@@ -2002,6 +2048,7 @@ Net.hostRecv=function(m){
 function peerKit(m){
   function pick(o,f){var r={};if(o&&typeof o==="object")for(var k in o)if(PART[k]&&typeof o[k]==="number"&&f(k,o[k]))r[k]=o[k];return r}
   Net.peerWear=pick(m.wear,function(k,v){return v>=0&&v<=1});Net.peerUpg=pick(m.upg,function(k,v){return isWeapon(k)&&v===Math.floor(v)&&v>=0&&v<=2});
+  Net.peerCallins=[0,1].map(function(j){var t=Array.isArray(m.callins)&&m.callins[j];return Camp.CALLINS.indexOf(t)>=0?t:null});   /* phase 6: the guest's own slots */
 }
 Net.hostInput=function(m){
   if(!players[1])return;
@@ -2041,7 +2088,8 @@ Net.guestRecv=function(m){
     if(m.kind!=="dead"){   /* the guest banks only its own scrap, wear and records (GDD-D31) */
       if(m.d&&typeof m.d==="object"){takeOwn(Camp.bank(ownCampaign(),0,m.d,Net.idx||1).players[0]);saveCampaign()}else if(m.got){banked+=m.got;saveBank()}}
     var gk=Net.idx||1;
-    if(m.kind==="dead"){state="dead";setTimeout(function(){showOverlay("Mech destroyed",m.msg,"Garage");showReport(m.d,gk,before,before,true)},900)}
+    if(m.kind==="dead"){takeOwn(Camp.carry(ownCampaign(),0,m.d,gk).players[0]);saveCampaign();   /* phase 6: the guest's carried call-ins are lost */
+      state="dead";setTimeout(function(){showOverlay("Mech destroyed",m.msg,"Garage");showReport(m.d,gk,before,before,true)},900)}
     else if(m.kind==="victory"){state="extracted";showOverlay("Victory",m.msg+" The host's campaign starts a new climb; yours stays where it was.","Garage");showReport(m.d,gk,before,banked,false)}
     else{state="extracted";showOverlay("Extracted",m.msg,"Garage");showReport(m.d,gk,before,banked,false)}
   }
@@ -2248,7 +2296,8 @@ function friendInit(){
 
 /* ---- lobby UI ---- */
 function coopDrop(){
-  if(Net.guest){if(Net.readySent||!Net.lobby)return;Net.readySent=true;Net.send({t:"ready",build:cloneBuild(BUILD),owned:Object.keys(OWNED),scrap:banked,wear:WEAR,upg:UPG});refreshCoop();return}
+  garageSeeShown();   /* phase 6: leaving the garage clears "New" on the blueprints the player was shown */
+  if(Net.guest){if(Net.readySent||!Net.lobby)return;Net.readySent=true;Net.send({t:"ready",build:cloneBuild(BUILD),owned:Object.keys(OWNED),scrap:banked,wear:WEAR,upg:UPG,callins:CALLINS});refreshCoop();return}
   if(Net.hosting&&Net.peer&&!Net.peerReady)return;   /* waiting for the partner */
   start();
 }
@@ -2411,7 +2460,12 @@ window.__m={T:T,net:Net,get sim(){return sim},get players(){return players},voxS
   get lastCode(){return LASTCODE},campaign:function(){return curCampaign()},
   garage:{repair:garageRepair,upgrade:garageUpgrade,setSeed:setSeed,maxArmor:maxArmor,setWear:function(w){WEAR=w;saveCampaign();refreshGarage()},select:garageSelect,equip:garageEquip,open:openGarage,preview:function(){var q=pvStats();return {cur:q.cur,pv:q.pv,d:q.d,sel:G.sel,slot:G.slot}},build:function(){return cloneBuild(BUILD)},owned:function(){return Object.keys(OWNED)},derive:derive,setBanked:function(n){banked=n;saveBank();refreshGarage()},
     icon:function(c,id,col,lw){drawIcon(c,id,col||TH.ui.idle,lw||2)},ownAll:function(){PARTS.forEach(function(p){OWNED[p.id]=1});refreshGarage()},   /* the garage lab (garage-lab.html): icon sheet, every part unlocked */
-    reset:function(){G.confirm=true;resetSave()}},
+    reset:function(){G.confirm=true;resetSave()},
+    /* phase 6: blueprint unlock and the call-in shop (garage lab) */
+    setBest:function(n){BEST=Math.max(0,Math.min(T.level.max,n|0));saveCampaign();refreshGarage();return BEST},get best(){return BEST},
+    listed:function(){return Camp.garageParts(ownCampaign(),0)},newParts:garageNew,get seen(){return SEEN.slice()},clearSeen:function(){SEEN=[];saveCampaign();refreshGarage()},
+    disownBlueprints:function(){PARTS.forEach(function(p){if(p.zone){delete OWNED[p.id];SLOTS.forEach(function(sl){if(BUILD[sl[0]]===p.id)BUILD[sl[0]]=STARTER[sl[0]]||null})}});saveCampaign();refreshGarage()},
+    buyCallin:garageBuyCallin,get callins(){return CALLINS.slice()},setCallins:function(c){CALLINS=[0,1].map(function(j){return CI_TYPES.indexOf(c&&c[j])>=0?c[j]:null});saveCampaign();refreshGarage()},drop:coopDrop},
   get shots(){return shots},get pods(){return pods},get run(){return run},get banked(){return banked},get scraps(){return scraps},get chunks(){return sim.world.chunks},get chk(){return sim.chk},
   get player(){return player},get bots(){return bots},get state(){return state},get floats(){return floats},get pools(){return pools},get pickups(){return scraps.length},
   get kills(){return Net.guest&&Net.live?kills:sim.kills},get scrap(){return Net.guest&&Net.live?scrap:sim.scrap},keys:keys,mouse:mouse,start:start,mesh:function(){return mesh.length},
