@@ -12,11 +12,12 @@ From a local web server in `games/metr0niks/` (for example `python3 -m http.serv
 
 ## What it does
 
-- Stops the waves, the wave-clear extraction and the random pods by holding `sim.run` each tick, before `sim.step()`. Nothing in sim.js changes.
+- Stops the waves, the wave-clear extraction and the random pods by holding `sim.run` each tick, before `sim.step()`, unless Real waves is on. Nothing in sim.js changes.
 - 17 tests in four groups: Weapons (minigun, shotgun, plasma, rail, pile-bunker timing, bunker-buster, mag-winch, mortar, flash-vent), Parts (legs and weight, reactor and power), Pickups (drop pods, pod race, scrap and magnet) and World (pillar collapse, loader charge, Bounty sniper). Keys 1 to 9, `[` and `]`.
-- Loadout: any part in any slot, swapped mid-test with `sim.applyBuild`; the prototype relabels its HUD through a new `__m.hud()` hook (the only change to `prototype.html`).
+- Loadout: any part in any slot, swapped mid-test with `sim.applyBuild`; the prototype relabels its HUD through a new `__m.hud()` hook. The `__m.level()` test hook now also sets the level the HUD shows. These are the only changes to `prototype.html`.
 - Measured: DPS over the last 3 s and per burst, damage per target with distance, time from cold to lockout, ring grades, armor taken, speed, shots, kills.
 - Expected: the same figures worked out from `MetroSim.T` and `deriveStats` for the fitted build.
+- Levels: pick any level from 1 to 50 or press Next level. Zones open and enemies scale as in the game (`T.level`), and lab-spawned bots scale too. With waves off a new zone's gate falls at once. Real waves turns the level's five waves, pods and drop-in back on; clearing wave 5 moves the lab up a level, and a death (with Can't die off) restarts the level.
 - Range switches: can't die (armor stops at 1), endless dummies, cold guns, instant ATB, no Q cooldown; spawn dummies, live bots, loaders, a sniper, pods and scrap.
 - Dummies are bots whose AI state the sim does not know, so they stand still and never shoot; dummy loaders are held in their recover state. Each test starts from a fresh level-1 city.
 - The lab drops the sim's run-over event, so it never banks scrap or writes the campaign save.

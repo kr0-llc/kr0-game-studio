@@ -87,6 +87,16 @@ button.b.hot{border-color:var(--rust);color:var(--rust)}
   <div id="scList"></div>
   <div class="card" id="scCard"></div>
 
+  <h2>Level <small id="zoneTxt"></small></h2>
+  <div class="row" style="align-items:center;margin-top:0">
+    <button class="b" id="lvDown" type="button" aria-label="Previous level">&minus;</button>
+    <input id="lvIn" type="number" min="1" max="50" value="1" aria-label="Level" style="width:64px;background:#0e0f12;color:var(--fg);border:1px solid var(--line);border-radius:3px;padding:4px 5px;font:700 13px var(--mono);text-align:center">
+    <button class="b" id="lvUp" type="button" aria-label="Next level">+</button>
+    <button class="b hot" id="lvNext" type="button">Next level</button>
+  </div>
+  <label class="tog"><input type="checkbox" id="oWaves"> Real waves <small>the level's five waves and pods; clear wave 5 to extract and go up a level</small></label>
+  <div class="statline" id="lvStat"></div>
+
   <h2>Measured <small><button class="b" id="zero" type="button">Zero</button></small></h2>
   <div class="tiles" id="tiles"></div>
   <table id="targets" style="margin-top:6px"></table>
@@ -132,7 +142,8 @@ button.b.hot{border-color:var(--rust);color:var(--rust)}
 var PROTO="prototype.html";   /* the voxel prototype, next to this file */
 var $=function(id){return document.getElementById(id)};
 var frame=$("game"),G=null,M=null,T=null,PARTS=null,SLOTS=null,STARTER=null,patched=null;
-var opt={god:true,endless:true,cold:false,atb:false,q:false};
+var opt={god:true,endless:true,cold:false,atb:false,q:false,waves:false};
+var level=1;   /* campaign level: zones open and enemies scale as in the game (T.level) */
 var build=null,cur=0,pendingRestart=0;
 
 /* ----- tests: each sets a build, places the mech, and spawns what it needs ----- */
@@ -262,7 +273,7 @@ function patch(s){
   s.step=function(){pre(s);step();post(s)};
   s.drainEvents=function(){
     return drain().filter(function(e){
-      if(e[0]==="o")return false;   /* the lab handles a death itself; nothing banks, nothing saves */
+      if(e[0]==="o"){over(e);return false}   /* the lab handles the end of a run itself; nothing banks, nothing saves */
       if(e[0]==="f"&&(e[4]==="PERFECT"||e[4]==="Good"||e[4]==="Miss")){grade(e[4]);}
       if(e[0]==="t"&&/took a pod|Field repair|Overclock:/.test(e[1]))note(e[1],"cy");
       if(e[0]==="t"&&/Pillar|Collapse|yanked|brought down|Sniper down|Bounty sniper down/.test(e[1]))note(e[1],"haz");
@@ -272,7 +283,10 @@ function patch(s){
   };
 }
 function pre(s){
-  var R=s.run;R.queue.length=0;R.podAt.length=0;R.breather=0;R.done=true;R.exitT=1e9;s.introTicks=0;   /* done with a far exit: no next wave, no extraction */
+  if(!opt.waves){   /* done with a far exit: no next wave, no extraction; a new zone's gate falls at once, with no drop-in shot */
+    var R=s.run;R.queue.length=0;R.podAt.length=0;R.breather=0;R.done=true;R.exitT=1e9;s.introTicks=0;
+    var Z=s.zone;if(Z.opening>=0)Z.openAt=0;Z.intro=0;
+  }
   var p=s.players[0];
   prevHp.clear();
   s.bots.forEach(function(b){
@@ -333,7 +347,7 @@ function load(i){
   cur=i;var sc=SC[i];pendingRestart=0;
   opt.god=true;opt.endless=sc.opts.endless!==false;opt.cold=!!sc.opts.cold;opt.atb=!!sc.opts.atb;opt.q=false;syncOpts();
   if(G.__m.state!=="play"&&G.__m.state!=="paused")G.__m.start();
-  G.__m.level(1);   /* a fresh city: level 1, Underpass only */
+  G.__m.level(level);   /* a fresh city at the chosen level */
   var s=G.__m.sim;patch(s);
   build=M.cloneBuild(STARTER);for(var k in sc.build)build[k]=sc.build[k];
   s.applyBuild(0,build);G.__m.hud();
@@ -341,7 +355,21 @@ function load(i){
   if(sc.hp)p.hp=Math.round(p.maxHp*sc.hp);
   zero();
   sc.spawn.forEach(function(a){spawn(a[0],a[1],a[2])});
-  renderList();renderCard();syncSlots();resume();
+  renderList();renderCard();syncSlots();syncLevel();resume();
+}
+/* the end of a run (real waves): extraction goes up a level, a death without Can't die restarts the test */
+function over(e){
+  if(e[1]==="extracted"){note("Level "+level+" cleared: dropping into level "+Math.min(T.level.max,level+1),"good");if(!pendingRestart){level=Math.min(T.level.max,level+1);pendingRestart=performance.now()+1800}}
+  else if(!pendingRestart){note("Mech destroyed on wave "+G.__m.sim.run.wave+": restarting level "+level,"bad");pendingRestart=performance.now()+1400}
+}
+function setLevel(l){level=Math.max(1,Math.min(T.level.max,Math.round(+l)||1));load(cur)}
+function lvm(k){return 1+T.level[k]*(level-1)}
+function syncLevel(){
+  $("lvIn").value=level;
+  var Zs=M.MAP.zones,open=Zs.slice(0,Math.min(Zs.length,level)).map(function(z){return z.name});
+  $("zoneTxt").textContent=open.join(" · ");
+  $("lvStat").innerHTML="Enemies <b>×"+f(lvm("count"),2)+"</b> count · <b>×"+f(lvm("hp"),2)+"</b> armor · <b>×"+f(lvm("dmg"),2)+"</b> damage · <b>×"+f(lvm("scrap"),2)+"</b> scrap"+
+    (level>1&&level<=Zs.length?" · "+Zs[level-1].name+" opens this level":"");
 }
 function free(s,x,y){   /* nearest walkable cell centre */
   for(var r=0;r<6;r++)for(var dy=-r;dy<=r;dy++)for(var dx=-r;dx<=r;dx++){
@@ -354,7 +382,7 @@ var tgN=0;
 function tag(s,b,kind){var p=s.players[0];b.tgt={n:kind+" "+(++tgN),b:b,dmg:0,hits:0,d0:Math.hypot(b.x-p.x,b.y-p.y)};S.tgt.push(b.tgt)}
 function newBot(s,x,y,live){
   var B=T.bot,p=s.players[0],c=free(s,x,y),a=Math.atan2(p.y-c[1],p.x-c[0]);
-  var b={team:1,x:c[0],y:c[1],z:0,vz:0,dropping:false,vx:0,vy:0,r:B.radius,h:B.height,hp:B.hp,maxHp:B.hp,head:a,aim:a,
+  var b={team:1,x:c[0],y:c[1],z:0,vz:0,dropping:false,vx:0,vy:0,r:B.radius,h:B.height,hp:Math.round(B.hp*lvm("hp")),maxHp:Math.round(B.hp*lvm("hp")),head:a,aim:a,
     state:live?"patrol":"dummy",wp:null,wpField:null,cd:1+Math.random(),lost:0,flash:0,strafe:Math.random()<.5?1:-1,strafeT:0,step:0,lab:live?"live":"dummy"};
   s.bots.push(b);return b;
 }
@@ -385,7 +413,7 @@ function sniper(s){
   s.perches().forEach(function(c){var d=Math.hypot(c[0]-p.x,c[1]-p.y);if(d<6||d>14)return;
     var sc=Math.abs(d-9)+(s.los3(c[0],c[1],c[2]+.8,p.x,p.y,.9)?0:5);if(sc<bd){bd=sc;best=c}});
   if(!best)return null;
-  var b={team:1,boss:true,x:best[0],y:best[1],z:best[2],vz:0,dropping:false,vx:0,vy:0,r:B.radius,h:B.height,hp:B.hp,maxHp:B.hp,
+  var b={team:1,boss:true,x:best[0],y:best[1],z:best[2],vz:0,dropping:false,vx:0,vy:0,r:B.radius,h:B.height,hp:Math.round(B.hp*lvm("hp")),maxHp:Math.round(B.hp*lvm("hp")),
     head:0,aim:0,state:"boss",flash:0,step:0,mode:"perch",cd:1.5,tell:0,blind:0,stun:0,jt:0,fallZ:0,jumpCd:B.jump[0]+Math.random()*(B.jump[1]-B.jump[0]),lab:"live"};
   s.bots.push(b);return b;
 }
@@ -492,12 +520,17 @@ function loop(now){
 }
 
 /* ----- range controls ----- */
-function syncOpts(){$("oGod").checked=opt.god;$("oEndless").checked=opt.endless;$("oCold").checked=opt.cold;$("oAtb").checked=opt.atb;$("oQ").checked=opt.q}
+function syncOpts(){$("oGod").checked=opt.god;$("oEndless").checked=opt.endless;$("oCold").checked=opt.cold;$("oAtb").checked=opt.atb;$("oQ").checked=opt.q;$("oWaves").checked=opt.waves}
 [["oGod","god"],["oEndless","endless"],["oCold","cold"],["oAtb","atb"],["oQ","q"]].forEach(function(o){
   $(o[0]).addEventListener("change",function(e){opt[o[1]]=e.target.checked;resume()});
 });
 document.querySelectorAll("[data-spawn]").forEach(function(b){b.addEventListener("click",function(){spawn(b.dataset.spawn);resume()})});
 $("reload").addEventListener("click",function(){load(cur)});
+$("lvDown").addEventListener("click",function(){setLevel(level-1)});
+$("lvUp").addEventListener("click",function(){setLevel(level+1)});
+$("lvNext").addEventListener("click",function(){setLevel(level+1)});
+$("lvIn").addEventListener("change",function(e){setLevel(e.target.value)});
+$("oWaves").addEventListener("change",function(e){opt.waves=e.target.checked;load(cur)});   /* a fresh run so wave 1 starts from its drop */
 $("zero").addEventListener("click",function(){var t=S.tgt;zero();S.tgt=t;t.forEach(function(x){x.dmg=0;x.hits=0});resume()});
 $("theme").addEventListener("change",function(e){G.__m.setTheme(e.target.value);resume()});
 renderList();
