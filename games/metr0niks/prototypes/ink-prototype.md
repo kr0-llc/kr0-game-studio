@@ -1,6 +1,6 @@
 # Metr0niks ink prototype: art and audio
 
-Last updated: 27 October 2026 · Requested by kr0 · Status: exploration, nothing here is a GDD rule yet
+Last updated: 28 October 2026 · Requested by kr0 · Status: exploration, nothing here is a GDD rule yet
 
 The ink prototype (`prototypes/prototype-ink.html`) tests whether the game can look like art board style C, sun-bleached ink, instead of voxels. It is a second, separate prototype (prototype 2): `prototypes/prototype.html` is prototype 1 (voxels). The two stay separate builds while kr0 compares the directions, but both observe the same rules: the GDD, keyboard and mouse only, no Gauntlet, and the numbers in `simulations/sim.js` (GDD-D32). It also carries the first music and sound effects the game has had, made cheaply on Scenario.
 
@@ -51,6 +51,19 @@ kr0 decided the ink renderer stays in this prototype and is built out here, not 
 **Performance (28 October 2026).** Measured in headless Chromium with software rendering (no GPU, so absolute numbers are pessimistic) at 1600 × 900, in a heavy battle with nine enemies, wrecked buildings, blasts and the minigun firing. The first renderer round had dropped the prototype from about 41 to 19 frames a second, because the cast shadows were redrawn at full-screen size every frame (about 18 ms of script a frame). Now the ground, the prop shadows and the decals are baked into one map-sized layer that is rebuilt only when a prop is cut or destroyed, and only the mech shadows are drawn each frame. The result is about 45 frames a second, faster than before the renderer round, with about 1.4 ms of script a frame (mech drawing 0.27 ms, flying debris 0.24 ms, game update 0.20 ms). At 4K with a 2× pixel ratio the software renderer is pixel-bound at about 8 frames a second, against 7 before the renderer round; a real GPU should handle that easily, but it is worth a check on kr0's PC.
 
 Still open in the renderer: a back view for walking up the screen, bending legs for the crab and spider enemies, and art for the other 18 parts. Tim-O's animation sets are a separate piece of work, after Asset Desk ships.
+
+## Enemy lab (28 October 2026)
+
+kr0 asked for a lab page to see all the enemies in the ink prototype. `prototypes/ink-enemy-lab.html` loads `prototype-ink.html` in a frame (open it from a local web server at the repo root, or use the published copy in INDEX.md). It is modelled on the voxel units lab and changes nothing in the prototype: it wraps the prototype's own `update`, `updateEnemy`, `hurtMech`, `wrecked` and `drawRing` from outside.
+
+- **Enemies:** the gunner bot (patrol bot role), the heavy loader (crab) and the jumper boss (spider), each with a live portrait, its numbers from `sim.js`, and its atlas parts.
+- **Behaviours on demand:** drop in, walk, fire or triple shot, tell and charge, ram a building, crouch and jump slam, a Perfect pile-bunker hit, a minigun hit, a building collapsing on it, destroy. With Enemy AI off, enemies stand idle between behaviours.
+- **Time:** pause, 0.1×, 0.25×, 0.5× and 1×, plus single-frame and 10-frame steps (fixed 60 Hz steps).
+- **Field:** a line-up of one of each, waves 1 to 5 with their real mix, can't die, range rings (sight, fire range, ram trigger, jump range and slam radius), clear and reset. Waves, extract and the banked scrap are off.
+
+**Where the ink enemies differ from sim.js** (listed on each enemy's card; nothing changed): the bot engages from anywhere with no patrol, pods or line-of-sight check; the loader starts its tell at 5.3 m instead of 2.2 m and has no haul route; the boss is a ground jumper with a triple shot and a jump slam instead of the roof-perching Bounty sniper. These are gaps against GDD-D32 to fix when the ink prototype is worked on again (GDD-D46 has it paused as a look study).
+
+The lab also lists the enemies in the GDD fun pass (PR #13) that are not in the ink prototype yet: Scuttler, Bulwark, Wrecker, Elite, Sniper pair, Juggernaut and the Warden.
 
 ## Audio
 
