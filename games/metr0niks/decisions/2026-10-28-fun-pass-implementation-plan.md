@@ -93,6 +93,8 @@ Done when: each contract has a rules check case that completes it and one that f
 
 Done when: each enemy has a unit lab entry and rules check cases (Bulwark front and back Perfects, Wrecker charge credit, Scuttler blast hitting another enemy), and a level 5 match shows all four.
 
+**Done Oct 28:** `T.zoneThreats`, `T.dropOrder` and the `scuttler`, `bulwark`, `wrecker`, `charge` and `elite` tables; zone spawns in each enemy's home zone; voxel models in the prototype (Elites get gold trim); Scuttler, Bulwark, Wrecker and Elite tabs in the unit lab; 41 rules-check cases. Snapshot bot kinds 3 to 6 and flags 128, 256 and 512 are taken, so phase 7 starts at kind 7. Level 5 is still lethal for the scripted pilot (it was before this phase); that is for the phase 9 sweep.
+
 ## Phase 5: city hazards
 
 **Done Oct 28:** collapse scaling, cluster credit and the demolition bonus came with phase 1; phase 5 added CRUSHED and SPAN DOWN events and callouts, whole-box containers so stacks topple, slag pools from every vat and the gallery, the `props` stat, and 30 rules-check cases (span drop on level-5 bots credited to the last pillar's breaker, a bot burned in slag, each prop falling).
