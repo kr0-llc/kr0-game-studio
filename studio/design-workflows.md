@@ -1,6 +1,6 @@
 # Design workflows
 
-Last updated: 26 October 2026 · Owner: art-director, approved by kr0
+Last updated: 28 October 2026 · Owner: art-director, approved by kr0
 
 Every game makes its characters and generated art with the same tools: three Scenario workflows, the Scenario MCP server and its skills, and the gemini-creative plugin. This page says what each one does, when to use it, and where its output goes. The general art rules are in [art style guides](art-style-guides.md).
 
@@ -72,6 +72,20 @@ All three live in kr0's Scenario project (team `team_pG6MaimfJd9b9PTLYKkYR7fQ`, 
   4. *Frame rate.* The preview video is 6 fps. Set the game's own frame rate when exporting.
   5. *Anchor.* The prompt asks for locked feet, but nothing checks it. Look at the loop for drift and fix it before use.
 
+### Animation review (after every animation run)
+
+kr0 asked on 28 October 2026 for a review like the Tim-o one ([review page](https://claude.ai/artifact/34bv3u8XC7SwX124pWuEC8)) every time an animation workflow runs: the Action Sprite Studio, a direct sprite-sheet call, or the cut-out puppet in the ink prototype. No animation goes into a game or onto main until it has had one. The review is a private Artifact page plus a written record, and it has these parts:
+
+1. **All the relevant art in one place.** The character's approved sheet, the reference image each run was given, the turnaround, any in-game parts, and a screenshot of the game's real camera.
+2. **An on-model check.** The reference beside frame 1 of every set, all at the same scale.
+3. **A frame player per set.** Play, step, frame rate, onion skin, flip, background, and "anchor feet", which lines every frame up on frame 1's feet so drift shows.
+4. **Findings frame by frame.** Each one names the frames (`f4–8`) and the fault: off-model, arm or leg not attached, wrong-way facing, effect from the wrong place, drift, keying fringe. Say what is worth keeping too.
+5. **A check against the game.** The camera, the loadout and the move list from the GDD, so a set that cannot work in the game shows up even if it looks good.
+6. **kr0's marks.** Keep, Fix, Redo or Drop per set, flagged frames and notes, saved to the page's database so the next session can read them.
+7. **Review comments.** The page declares comments, with a "Comment on this frame" and a "Comment on this set" button; kr0 can also use comment mode on any frame. Claude answers in the comment thread.
+
+The agent's own findings go in `games/<game>/feedback/synthetic/<date>-<character>-animation-review.md`. kr0's marks and comments, once given, go in `games/<game>/feedback/human/` under the same name, never in the same file (see [ways of working](ways-of-working.md)). Both get an INDEX row. The `animation-review` skill holds the steps.
+
 ### Before running from an agent
 
 - **Published.** kr0 asked for all three to be published on 26 October 2026, and they are `ready`, so agents can run them with `workflow_run`. Editing a workflow's graph in Scenario does not update its compiled flow: run `workflow_publish` again after any edit, or agents keep running the old version.
@@ -140,4 +154,5 @@ Scenario publishes tested procedures for its tools as skills. Read the one that 
 - **kr0 approves the character sheet** before turnarounds or sprites are made from it.
 - **Record every run** in `art/<game>/prompts/` (inputs, workflow id, model, cost), as with any generated image.
 - **Check before use:** remove garbled AI text, check hand swaps and drift in sprite frames, and say what was fixed in the art README.
+- **Review every animation run** before it is used, as described under Animation review: a review page with all the art, a frame player, frame-by-frame findings, kr0's marks and review comments.
 - **Log spend.** Scenario credits per character go into the game's tuning history next to the story's tokens.
