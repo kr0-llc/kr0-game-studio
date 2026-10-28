@@ -32,3 +32,7 @@ What follows from them:
 - Every set of a character must be drawn at one fixed character height (added to the animation review rule in `studio/design-workflows.md`).
 - The current puppet parts sheet is rejected. The puppet route needs a new, aligned parts sheet before it can be used; the puppet dash on the review page is a motion test only.
 - From the marks: none of the PR #7 sets is kept as it is. Four are Redo and jetpack is Fix. The reactor pack does not match the reference in either the jetpack set or the isometric dash, so the next brief must copy the pack from the character sheet: twin tall cylinders mounted high and upright on the back.
+
+Later comment (28 October 2026, on the four-view turnaround, sent to Claude): "this view is the correct reference. notice the jet pack. the only thing missing here is the eye emotes."
+
+- From it: the four-view turnaround (`art/metr0niks/characters/tim-o/turnaround/four-view.png`) is the main reference for Tim-o, pack included. The eye emotes come from the character sheet.

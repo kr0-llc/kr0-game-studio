@@ -14,6 +14,7 @@ Source collection: **metr0niks** in Scenario (team `team_pG6MaimfJd9b9PTLYKkYR7f
 
 Notes:
 
+- **The four-view turnaround is Tim-o's main reference** (kr0, 28 October 2026, on the review page: "this view is the correct reference. notice the jet pack. the only thing missing here is the eye emotes."). Use `asset_fgDKMUX8fgmRfwyzQSSFqv2s` as the first reference image in every Tim-o run. Copy the reactor pack from it: a big pack that covers almost the whole back, with two tall cylinders capped by round lights on top, rising above the shoulders in the side view. Take the eye emotes (neutral, happy, curious, determined) from the "Head & expressions" panel of `sheet.png`, the one thing the turnaround lacks. Runs before this note used the character sheet and the cut-out instead.
 - The four-view turnaround is not the six-angle set from the turnaround workflow (see [design workflows](../../../../studio/design-workflows.md)). Its last two panels are both rear views. A real turnaround run should go in `turnaround/<angle>.png`.
 - The ink prototype's parts sheets (`art/metr0niks/ink-proto/sheets/`) were made with these images as reference.
 - The art style for Metr0niks is still "Not chosen" in `studio/art-style-guides.md`. These images set the mech's design and palette, not the final rendering style.
