@@ -81,7 +81,7 @@ Still Proposed in the [decision history](gdd-decisions.md): the revive price and
 - [x] Co-op campaign (GDD-D31): if the host leaves mid-match, the room ends for both (kr0, Oct 28, GDD-D52).
 - [ ] Fun pass of Oct 28 ([record](decisions/2026-10-28-fun-pass.md)): kr0 settled the rules in three rounds on Oct 28 (D35 to D43, D45, D47 to D53 accepted; D44 rejected). Still Proposed: every new number (for the sweeps), the GDD-D48 kill credit and damage order rules, and the boss roster and Warden values (GDD-D51).
 - [ ] Wave density on the 1.5× map (PR #12, 216 × 48 m): the same enemy counts now cover about 2.25× the floor. Raise the level-1 counts, add a co-op multiplier, or let the sweep decide?
-- [ ] Fun pass economy: the new scrap sources outgrow the new things to buy. Pick from the [economy options](decisions/2026-10-28-economy-options.md) (recommended: call-in supplies plus rerolls) and set a target such as "climbs to own everything".
+- [x] Fun pass economy: kr0 chose call-in supplies, rerolls and trimmed income on Oct 28 (GDD-D54); prices go to the sweep.
 - [ ] "What makes it fun" stays TBD (GDD-D27); kr0 said on Oct 28 to leave it for now. A draft line is in the fun pass record if it's wanted later.
 - [x] Boss variety (kr0, Oct 28): a boss roster drawn per level and the Warden, a big boss with snipers on its back, in the Terminus Yard (GDD-D51; values Proposed).
 - [ ] Blackout (GDD-D39) needs a night look. With the voxel focus (GDD-D46) that is one look, not three. Does Settings keep Cinematic and Ink during the voxel focus?

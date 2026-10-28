@@ -4,7 +4,7 @@ Updated Oct 28, 2026 · @kr0 · Earlier versions: [Oct 20](superseded/gdd-2026-1
 
 This GDD describes one mode, Excursion, as the prototype plays it plus kr0's decisions of Oct 25 to 27 ([decision history](gdd-decisions.md)). The prototype changes those decisions need are in [prototype changes](prototypes/prototype-changes.md). Dimensions are in metres; one map cell is one metre. Three items are TBD on kr0's instruction (GDD-D27): target audience, player fantasy and what makes it fun. Everything else has a value; values kr0 has not accepted yet are tagged "(proposed, GDD-Dxx)" where they appear.
 
-The Oct 28 fun pass (GDD-D35 to GDD-D53) adds combo and stagger, the Redline vent, Overtime, contracts and sector conditions on every level, an enemy per zone, zone hazards, six blueprint parts, two pods, feel and feedback with multi-kill text, a 5-level campaign, kill credit and a damage order, a new seed per climb, match stats, a boss roster with the Warden, and a host leaving ending the room. kr0 settled the rules over three rounds on Oct 28: accepted rules say "GDD-Dxx", and numbers still to be swept say "proposed"; Crossfire (GDD-D44) was dropped. The economy is still open ([economy options](decisions/2026-10-28-economy-options.md)). Why, the pillar each serves and the build order are in the [fun pass record](decisions/2026-10-28-fun-pass.md), and the review is in the [fun pass critique](feedback/synthetic/2026-10-28-fun-pass-critique.md). The prototypes don't have any of it yet.
+The Oct 28 fun pass (GDD-D35 to GDD-D54) adds combo and stagger, the Redline vent, Overtime, contracts and sector conditions on every level, an enemy per zone, zone hazards, six blueprint parts, two pods, feel and feedback with multi-kill text, a 5-level campaign, kill credit and a damage order, a new seed per climb, match stats, a boss roster with the Warden, and a host leaving ending the room. kr0 settled the rules over three rounds on Oct 28: accepted rules say "GDD-Dxx", and numbers still to be swept say "proposed"; Crossfire (GDD-D44) was dropped. The economy uses call-in supplies, rerolls and trimmed income (GDD-D54, [economy options](decisions/2026-10-28-economy-options.md)). Why, the pillar each serves and the build order are in the [fun pass record](decisions/2026-10-28-fun-pass.md), and the review is in the [fun pass critique](feedback/synthetic/2026-10-28-fun-pass-critique.md). The prototypes don't have any of it yet.
 
 ## Overview
 
@@ -54,7 +54,7 @@ An excursion is five waves on one map. It ends when you clear wave 5 (or Overtim
   | Terminus Yard (5) | Elites | One bot or loader in every wave (Overtime included) becomes an Elite | Overdrive core, Grav-skids |
 
 - **Extract:** when wave 5 clears, a prompt gives you 6 s to choose Extract (Enter or R) or Overtime (F) (GDD-D37). If nobody chooses, you extract. On extract, scrap cubes still on the floor go to the nearest living mech, your scrap is banked and the next level opens. There is no cash-out earlier: scrap is all-or-nothing until you extract. Leaving early, including closing the game mid-match, counts as a death.
-- **Overtime** (GDD-D37, accepted 2026-10-28; values proposed): a sixth wave after the usual 3 s breather (see Waves). Cubes still on the floor when you call it stay where they are. While it runs, every scrap drop counts double. Clearing it extracts you automatically and adds 25% to all match scrap, rounded, before it is banked. Dying in Overtime is a normal death: all match scrap is lost and the campaign goes back to level 1. Big risk, big reward. One Overtime per excursion. In co-op the host chooses and the guest sees the prompt; calling Overtime runs the partner revive check at the end of wave 5 as at the end of waves 1 to 4.
+- **Overtime** (GDD-D37, accepted 2026-10-28; values proposed): a sixth wave after the usual 3 s breather (see Waves). Cubes still on the floor when you call it stay where they are. While it runs, every scrap drop counts 1.5 times (rounded). Clearing it extracts you automatically; there is no bonus on the rest of the match's scrap (trimmed by GDD-D54). Dying in Overtime is a normal death: all match scrap is lost and the campaign goes back to level 1. Big risk, big reward. One Overtime per excursion. In co-op the host chooses and the guest sees the prompt; calling Overtime runs the partner revive check at the end of wave 5 as at the end of waves 1 to 4.
 - **Contracts** (GDD-D38, accepted 2026-10-28; values proposed): every level draws one contract from the climb's seed (see Seed), so each climb brings new ones; no two levels of a climb share a contract. The garage shows it before you drop in and the HUD tracks it. Completing it adds 20 scrap × (1 + 0.10 × (level − 1)), rounded, to the completing mech's match scrap at once, so a death still loses it; in co-op each mech that is alive at that moment gets the full amount. A contract that can't be done on that level (Clean sweep under Cold front, Eviction or Crush when that level has no sniper or no span) is not drawn. Failing one costs nothing. Contract kills follow Kill credit.
 
   | Contract | Do this in one excursion |
@@ -136,6 +136,7 @@ A high-angle isometric twin-stick: the legs and the torso are controlled separat
 | Esc | Pause (single-player only; the window losing focus or the tab being hidden also pauses) |
 | Enter or R | Press the main button of an open overlay; after wave 5, extract now |
 | F | After wave 5, call Overtime (GDD-D37; the host only, in co-op) |
+| 1, 2 | Call in the supply in that slot at the cursor (GDD-D54) |
 
 - **Camera:** a fixed 2:1 dimetric isometric view that follows the mech with an 18% lean toward the aim point. It zooms with the window size, not with the build. Taking damage never moves or zooms the camera. Screen shake comes from your own heavy shots, rail shots and mortar launches, blasts, a loader's charge hitting you, chunks breaking, collapses, pod landings and zone shutters falling.
 - **Low health:** below 35% armor the armor bar turns red and a dark red vignette creeps in from the screen edges, up to 75% opacity at 0%. Collapse shadows and pod markers always draw on top of the vignette.
@@ -318,7 +319,7 @@ The garage is the only place your build changes. Drop pods are one-use boosts in
 - The garage shows the five stats as bars with the selected part's change before you confirm, plus max armor, speed, damage, ATB fill time and cooling.
 - It upgrades the selected weapon one level at a time and shows its level and the price of the next one.
 - It shows each fitted part's wear and the scrap to repair it, and one Repair button that follows the Durability rules; starter parts repair free.
-- **Next level preview** (proposed, GDD-D38, GDD-D39): the garage shows the level you are about to play, the zones and zone enemies in it, its sector condition and its contract, so you can fit parts for them before you drop in. A part newly unlocked as a blueprint is marked "New".
+- **Next level preview** (proposed, GDD-D38, GDD-D39): the garage shows the level you are about to play, the zones and zone enemies in it, its sector condition and its contract, so you can fit parts for them before you drop in. It also offers the paid rerolls and the call-in supplies (GDD-D54). A part newly unlocked as a blueprint is marked "New".
 - The campaign code (your save) is shown in the garage and can be copied. At level 1 the garage also shows the climb's seed and lets you type one (see Seed, GDD-D49). Resetting the save wipes it after two clicks.
 - In co-op the garage is shared: both players shop, then both press Drop in. The room plays the host's campaign; each player's own save receives only their scrap and wear (see Co-op campaign).
 
@@ -356,16 +357,16 @@ Scrap is the only currency. One scrap cube is one scrap. Cubes must be picked up
 | Scuttler (proposed, GDD-D40) | 1 each | Yes |
 | Bulwark (proposed, GDD-D40) | 10 to 12 | Yes |
 | Wrecker (proposed, GDD-D40) | 6 to 8 | Yes |
-| Elite (proposed, GDD-D40) | Triple that enemy's cubes | Yes |
+| Elite (proposed, GDD-D40) | Double that enemy's cubes (trimmed by GDD-D54) | Yes |
 | Contract (proposed, GDD-D38) | 20, into match scrap | Yes |
 | Scrap cache pod (GDD-D43) | 12 | Yes |
-| Overtime (GDD-D37) | Every drop doubled during Overtime, then +25% of all match scrap on clearing it | Yes |
+| Overtime (GDD-D37) | Every drop ×1.5 during Overtime (trimmed by GDD-D54) | Yes |
 | Combo kill (proposed, GDD-D35) | +20%, +40% or +60% at ×2, ×3, ×4 | Yes |
-| Collapse or hazard kill (GDD-D41) | +50% | Yes |
+| Collapse or hazard kill (GDD-D41) | +25% (trimmed by GDD-D54) | Yes |
 
 Sources that scale are multiplied by 1 + 0.10 × (level − 1) and rounded.
 
-**How kill bonuses combine** (proposed): an enemy's cubes = base cubes × the level scale × 2 for a Perfect pile-bunker kill × 2 in Overtime × 3 for an Elite × (1 + the combo and the collapse or hazard percentages added together), rounded once at the end. The doublings multiply; the percentages add. Kills credited to nobody (see Kill credit) get the collapse or hazard bonus but no combo bonus.
+**How kill bonuses combine** (proposed): an enemy's cubes = base cubes × the level scale × 2 for a Perfect pile-bunker kill × 1.5 in Overtime × 2 for an Elite × (1 + the combo and the collapse or hazard percentages added together), rounded once at the end. The doublings multiply; the percentages add. Kills credited to nobody (see Kill credit) get the collapse or hazard bonus but no combo bonus.
 
 | Scrap sink | Cost | Repeatable |
 | --- | --- | --- |
@@ -373,9 +374,17 @@ Sources that scale are multiplied by 1 + 0.10 × (level − 1) and rounded.
 | Upgrade a weapon | 20 to 120 by rarity and level (see Weapon upgrades) | Twice per weapon |
 | Repair a worn part | Price × wear × 25%, 50% or 75% by rarity, rounded up; free for starter parts | Yes |
 | Revive a co-op partner | 40 × (1 + 0.10 × (level − 1)), rounded, from the survivor's match scrap | Yes |
+| Call-in supplies (GDD-D54) | Field repair 40, Overclock 30, Strike beacon 50, × the level's scrap scale, rounded; up to 2 carried | Yes |
+| Reroll the next level's contract or condition (GDD-D54) | Contract 15, condition 25, doubling with each reroll of that kind in a climb | Yes |
 
 - Roof loot drops to street level.
-- Weapon upgrades and repairs keep scrap useful once every part is owned. The fun pass adds more scrap than it adds things to buy; the options are in [economy options](decisions/2026-10-28-economy-options.md), waiting on kr0.
+- Weapon upgrades and repairs keep scrap useful once every part is owned, and call-ins and rerolls keep it useful for good (GDD-D54, below).
+
+**Economy changes** (GDD-D54, accepted 2026-10-28; prices proposed). kr0 chose options A, B and F of the [economy options](decisions/2026-10-28-economy-options.md):
+
+- **Call-in supplies:** in the garage, buy call-ins from banked scrap and carry up to 2 into a match, in two slots. Press 1 or 2 in a match to call one: its pod gets the usual marker and 3 s countdown at the cursor (up to 14 m away), then lands, and it is a race like any pod: an enemy can still take it. Field repair costs 40, Overclock 30 and Strike beacon 50, each × (1 + 0.10 × (level − 1)) for the level you are about to play, rounded. A call-in not used by extract stays in its slot for the next match; one carried into a death is lost. In co-op each player buys and carries their own.
+- **Rerolls:** the next level preview has a Reroll button for the contract (15 scrap) and one for the sector condition (25). Each reroll of that kind in a climb doubles its price (15, 30, 60…), and the prices reset when a new climb starts. A reroll draws from the climb's seed, so the same seed and the same rerolls give the same result. In co-op only the host can reroll, since the room plays the host's campaign.
+- **Trimmed income:** Overtime drops count ×1.5 with no bonus on the rest of the match's scrap, the demolition bonus is +25%, and Elites drop double. The sweep checks whether these trims are enough (tuning history).
 
 ## Destruction and environment
 
@@ -387,7 +396,7 @@ The map is built from voxels, and anything resting on something else can fall.
 - **Landing:** a collapse deals 80 damage to every enemy under it and 40 to every mech, at any level. With GDD-D41 the damage to enemies scales with enemy health, 80 × (1 + 0.15 × (level − 1)), so a span drop still kills a bot at the last level; damage to mechs stays 40. Enemies still dropping in and a sniper on a roof are not hit. Landing voxels at street level may stay as rubble, which blocks walking and can be shot away; the rest breaks into debris. A piece of more than 6 voxels also scatters 2 to 4 scrap cubes.
 - **Terrain reshaping:** heavy weapons carve trenches and punch new doorways, so cover and flanking routes change every match. Damage stays until the match ends.
 - **Shooting structures:** see Damage to structures. The plasma cutter does four times the voxel damage; the pile-bunker, bunker-buster and mortar carve larger holes.
-- **Demolition bonus** (GDD-D41): an enemy killed by a collapse, a toppled stack, a dropped container or slag drops 50% more scrap, and a "CRUSHED" callout counts the kills from one event (see Economy).
+- **Demolition bonus** (GDD-D41): an enemy killed by a collapse, a toppled stack, a dropped container or slag drops 25% more scrap (GDD-D54), and a "CRUSHED" callout counts the kills from one event (see Economy).
 
 **Hazard props** (GDD-D41). Each zone has one kind of prop that turns the city on whoever is near it. How many there are and where they stand is set by the level design.
 
@@ -409,7 +418,7 @@ The map is built from voxels, and anything resting on something else can fall.
 | Scuttler (GDD-D40; Freight Yard; values proposed) | 18 health, 5 m/s, sees 12 m; comes in packs of 4 | Small drone that runs straight at the nearest mech, flashes for 0.4 s within 1.2 m, then explodes: 10 damage within 1.5 m to mechs and enemies alike, and a 1-voxel hole. Shot down, it explodes where it is. Knocked into another enemy, it explodes on contact. Can't take pods |
 | Bulwark (GDD-D40; Smelter Row; values proposed) | 220 health, 1.6 m/s, sees 10 m, turns at 1.2 radians a second | A loader with a riot shield facing its walk. The shield blocks all damage arriving within 60° of its front, except the rail rifle's slug, collapses, slag and blasts landing behind it. At 3 m it bashes: 15 damage and a 2 m shove, then 2 s before it bashes again. A Perfect from the front breaks the shield for 5 s and staggers it, and the hit's damage goes through; a Perfect from behind staggers it as usual. Slow to turn, so one mech holds its attention while the other flanks |
 | Wrecker (GDD-D40; Glass Quarter; values proposed) | 90 health, 2.8 m/s, sees 8 m | Keeps more than 8 m from every mech. Walks to the pillar or building chunk nearest a mech that is at least 8 m from every mech (with none, it holds back and repositions), and plants a charge over 2.5 s; any damage restarts the plant. The charge (20 health, a blinking marker and countdown) goes off 4 s later and destroys its chunk, which can start a collapse. Shooting the charge sets it off early. A Wrecker killed mid-plant drops its charge, which goes off 2 s later where it lies |
-| Elite (GDD-D40; Terminus Yard; values proposed) | Double health, +25% damage | One bot or loader per wave, picked by the seed, with gold trim. Drops triple scrap and a Field repair or Overclock pod where it dies |
+| Elite (GDD-D40; Terminus Yard; values proposed) | Double health, +25% damage | One bot or loader per wave, picked by the seed, with gold trim. Drops double scrap (GDD-D54) and a Field repair or Overclock pod where it dies |
 
 - **Bosses** (GDD-D51; roster accepted 2026-10-28, values proposed): each level draws its wave-3 and wave-5 bosses from the climb's seed, so the boss waves change between levels and climbs. Level 1's wave 3 is always the Bounty sniper, to teach it. A wave-5 boss is the harder variant: 1.5 times the health and attacks 30% faster (the sniper fires every 1.5 s instead of 2.2 s and drops 18 cubes). Level 5's wave 5 is always the Warden.
 
@@ -483,7 +492,7 @@ Title → garage → drop in → five waves → extract, or Overtime then extrac
   - **Play with a friend:** host a room or join one with a room code. A host can paste a campaign code to resume it.
   - **Records** (GDD-D45): the highest level you have ever reached, best combo, spans dropped, contracts completed and Overtimes cleared, across every campaign.
 - **Garage:** see Garage and drop pods. Drop in starts the level.
-- **In match:** the HUD shows armor, heat (or "locked" with seconds), dash, the arm weapon's charge state, the shoulder active's cooldown, overclock time, level, wave, enemies left (or the countdown to the next wave), the match's scrap (the team's total in co-op), enemies downed and a boss bar. A cursor ring shows heat and ATB charge, and the timing ring shows during a press. With the fun pass: the combo beside the heat bar (and on the cursor ring at ×2 or more), the contract and its progress, the sector condition's icon, the Redline glow on the heat bar, the wave report in each breather, and a 6 s Extract or Overtime prompt after wave 5. Toasts announce waves, pods, collapses, zones and partner events. A Settings button sits on the HUD.
+- **In match:** the HUD shows armor, heat (or "locked" with seconds), dash, the arm weapon's charge state, the shoulder active's cooldown, overclock time, level, wave, enemies left (or the countdown to the next wave), the match's scrap (the team's total in co-op), enemies downed and a boss bar. A cursor ring shows heat and ATB charge, and the timing ring shows during a press. With the fun pass: the combo beside the heat bar (and on the cursor ring at ×2 or more), the contract and its progress, the sector condition's icon, the Redline glow on the heat bar, the two call-in slots, the wave report in each breather, and a 6 s Extract or Overtime prompt after wave 5. Toasts announce waves, pods, collapses, zones and partner events. A Settings button sits on the HUD.
 - **Pause (single-player only):** Esc, opening Settings, the window losing focus or the tab being hidden pause the match; the overlay's button resumes.
 - **Extracted:** the excursion report (see Match stats) and a Garage button that opens the next level.
 - **Overtime prompt** (GDD-D37): after wave 5, two buttons, Extract (Enter or R) and Overtime (F), with a 6 s countdown that extracts when it runs out.
@@ -504,13 +513,13 @@ The simulation counts what each player does, wave by wave (GDD-D50, accepted 202
 | City | Spans dropped, stacks and props brought down, most kills from one collapse |
 | Multi-kills | Doubles, triples, quadruples and DEVASTATINGs |
 | Pods | Taken, stolen by enemies, and stolen back (Repo man) |
-| Scrap | Picked up, by source: kills, collapses, pods, contract, Overtime bonus |
+| Scrap | Picked up, by source: kills, collapses, pods, contract, Overtime; scrap spent on call-ins and rerolls |
 | Heat | Overheats and seconds in Redline |
 | Time | Seconds to clear the wave |
 
 - **Wave report:** during each 3 s breather, a strip under the wave-clear toast shows that wave's kills, damage dealt and taken, Perfects and scrap. The game never pauses for it.
 - **Excursion report** (on Extracted and Campaign over):
-  - **Scrap count-up:** this match's scrap counts up line by line (kills, collapses, pods, contract, Overtime bonus), then is added to your banked total, which counts up from what you had before the match to the new total. On a death, the match scrap counts down to zero and is marked lost.
+  - **Scrap count-up:** this match's scrap counts up line by line (kills, collapses, pods, contract, Overtime), then is added to your banked total, which counts up from what you had before the match to the new total. On a death, the match scrap counts down to zero and is marked lost.
   - **Contract:** done or failed, with its progress (for example "Bring it down: 1 of 2 spans").
   - **Sector condition:** the one this level had.
   - **Chart:** one bar pair per wave (damage dealt and damage taken) with a line for scrap picked up; in co-op each player has their own colour.
@@ -644,6 +653,8 @@ Direction: synthwave and retrowave (GDD-D26). Music uses analog-style synth bass
 | Elite | A gold-trimmed enemy with double health, from the Terminus Yard (GDD-D40) |
 | Blueprint | A part unlocked for good by first extracting the level that opens its zone (GDD-D42) |
 | Drop pod | A one-use boost that lands during a wave |
+| Call-in | A drop pod bought in the garage and called in with 1 or 2 (GDD-D54) |
+| Reroll | Paying to redraw the next level's contract or condition (GDD-D54) |
 | Chunk | A 4×4×4 group of voxels that breaks as one |
 | Span | The stretch of overpass deck between two pillars |
 | Perch | A roof edge the sniper stands on |

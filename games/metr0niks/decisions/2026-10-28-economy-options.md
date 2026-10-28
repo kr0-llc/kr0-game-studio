@@ -1,6 +1,6 @@
 # Metr0niks economy options, Oct 28
 
-Oct 28, 2026 · game-designer, for kr0 · suggestions, not decisions
+Oct 28, 2026 · game-designer, for kr0 · **kr0 chose A, B and F on Oct 28 (GDD-D54)**; the rest stay suggestions
 
 kr0: "I don't know what to do about the economy at the moment. Create a few suggestions. Look at other games in research/ for inspiration."
 
