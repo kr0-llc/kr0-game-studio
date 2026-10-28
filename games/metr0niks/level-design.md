@@ -1,6 +1,6 @@
 # Metr0niks level design: Overpass Sector 4 (five sectors)
 
-Updated Oct 28, 2026 · @kr0 · Concepts: [research/level-concepts/](research/level-concepts/README.md) · Concept page: https://claude.ai/artifact/X8y8t7nd96zwL1BeCetdzC
+Updated Oct 28, 2026 · @kr0 · Ink prototype's version: [level-design-ink.md](level-design-ink.md) · Concepts: [research/level-concepts/](research/level-concepts/README.md) · Concept page: https://claude.ai/artifact/X8y8t7nd96zwL1BeCetdzC
 
 On Oct 28 kr0 said the voxel prototype's zones all look very similar and asked for a full map with a breakdown by section. kr0 picked concept **A + B landmarks**: each zone is its own district, with one landmark that falls under the same support rule as the deck. The map is built in `simulations/sim.js` (`MAP`), so the voxel prototype plays it. `node simulations/map-check.js` checks it. Later on Oct 28 kr0 asked to grow the map to five sectors and give the last one room for a big boss fight. That adds the Glass Quarter and the Terminus Yard arena, where the deck ends. kr0 also said to focus on voxel and keep it as it is (GDD-D46), so the map stays voxel data in `sim.js`. Then kr0 asked for bigger sectors so two people can play comfortably, so every sector was scaled up 1.5× with the same layout and landmarks.
 
@@ -118,4 +118,4 @@ The map uses the existing support rule: anything no longer connected to the grou
 
 New materials in `sim.js`: steel, lamp, furnace and neon windows, canvas, tank, iron and slag. `MAP.overpass.x1` sets where the deck ends, `MAP.rubble` places scrap heaps, and `zones[k].arena` paints the arena ring. The loader plows the new windows and the awnings as it does the old windows. The three art styles have hues for every district, and each zone tints its street.
 
-**GDD Map section:** the "47 buildings, 16 barriers and 14 containers" line and the Zone identity paragraph are out of date. Once the fun-pass PR (#13) merges, the Map section gets the district table and landmark list from this document. The Excursion rules line about zones ("level 2 also opens the Freight Yard, level 3 and up open the whole sector") and the drop-in note ("levels 1 and 4 and up have no drop-in shot") change too: one zone opens per level, so only level 1 has no drop-in shot.
+**GDD Map section:** rewritten from this document after the fun pass (#13) merged (GDD-D56): the map size, the deck, the drop-in points, the district table, one zone per level and the water tower as a hazard prop.

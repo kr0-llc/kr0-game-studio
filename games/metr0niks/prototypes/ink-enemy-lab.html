@@ -316,6 +316,7 @@ function idle(e,dt){
 
 /* ----- arena and spawning ----- */
 function arena(){
+  G.level=1;   /* always level 1 (Underpass, no level scaling); the prototype's saved level is left alone */
   G.beginRun();G.run.over=true;   /* run.over keeps the wave director, extract and the result screen out of the lab */
   G.stopMusic();waveQ=[];lastK={};
   G.document.getElementById("wave").style.display="none";   /* no waves here, so no wave counter */

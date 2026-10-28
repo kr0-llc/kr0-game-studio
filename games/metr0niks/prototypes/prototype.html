@@ -1910,7 +1910,9 @@ requestAnimationFrame(frame);
 /* test hook: state is proxied to the current sim */
 window.__m={T:T,net:Net,get sim(){return sim},get players(){return players},voxSum:voxSum,setTheme:function(id){setTheme(id,false)},theme:function(){return themeId},
   get level(){return CAMP.level},get armor(){return ARMOR},get lastCode(){return LASTCODE},campaign:function(){return curCampaign()},
-  garage:{repair:garageRepair,armor:curArmor,maxArmor:maxArmor,setArmor:function(a){ARMOR=a;saveCampaign();refreshGarage()},select:garageSelect,equip:garageEquip,open:openGarage,preview:function(){var q=pvStats();return {cur:q.cur,pv:q.pv,d:q.d,sel:G.sel,slot:G.slot}},build:function(){return cloneBuild(BUILD)},owned:function(){return Object.keys(OWNED)},derive:derive,setBanked:function(n){banked=n;saveBank();refreshGarage()},reset:function(){G.confirm=true;resetSave()}},
+  garage:{repair:garageRepair,armor:curArmor,maxArmor:maxArmor,setArmor:function(a){ARMOR=a;saveCampaign();refreshGarage()},select:garageSelect,equip:garageEquip,open:openGarage,preview:function(){var q=pvStats();return {cur:q.cur,pv:q.pv,d:q.d,sel:G.sel,slot:G.slot}},build:function(){return cloneBuild(BUILD)},owned:function(){return Object.keys(OWNED)},derive:derive,setBanked:function(n){banked=n;saveBank();refreshGarage()},
+    icon:function(c,id,col,lw){drawIcon(c,id,col||TH.ui.idle,lw||2)},ownAll:function(){PARTS.forEach(function(p){OWNED[p.id]=1});refreshGarage()},   /* the garage lab (garage-lab.html): icon sheet, every part unlocked */
+    reset:function(){G.confirm=true;resetSave()}},
   get shots(){return shots},get pods(){return pods},get run(){return run},get banked(){return banked},get scraps(){return scraps},get chunks(){return sim.world.chunks},get chk(){return sim.chk},
   get player(){return player},get bots(){return bots},get state(){return state},get floats(){return floats},get pickups(){return scraps.length},
   get kills(){return Net.guest&&Net.live?kills:sim.kills},get scrap(){return Net.guest&&Net.live?scrap:sim.scrap},keys:keys,mouse:mouse,start:start,mesh:function(){return mesh.length},
