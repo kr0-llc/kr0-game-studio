@@ -55,3 +55,18 @@ Frame-1 heights across the isometric sets run from 229 to 285 px, so they still 
 ## Puppet moves (28 October 2026)
 
 `puppet/puppet-moves.js` animates Tim-o in code on parts sheet v2.1 (`puppet/atlas-v2-1.webp`, joints in `puppet/rig-v2-1.js`). It has dash, pile-bunker charge/fire/retract, jump-jets from the legs, overheat vent and destroyed break-apart. It uses the ink prototype's joints and two-bone IK legs and costs no credits. The review page plays every move. The same parts and poses are in `games/metr0niks/prototypes/prototype-ink.html` (copied to `ink-proto/sprites/timo_v21.*`). The route is written up as section 4 of `studio/design-workflows.md`.
+
+## Item parts (28 October 2026)
+
+kr0 asked for an item lab where every item can be put on Tim-o. `items/` holds 17 new puppet parts, one per garage part in `sim.js` that the v2.1 sheet doesn't already have. They are drawn on parts sheet v2.1 and the four-view turnaround, at the v2.1 camera and scale. The lab is `games/metr0niks/prototypes/item-lab.html` (brief `item-lab.md`).
+
+| File | What it is | Scenario asset | Credits |
+| --- | --- | --- | --- |
+| `items/sheet-arms.webp` | Shotgun, plasma cutter, rail rifle, bunker-buster cannon and mag-winch arms, each on the v2.1 shoulder pad | `asset_VTWXHBWXrybY9EXD27DkQSC4` | 4 |
+| `items/sheet-mounts.webp` | Shoulder modules: cryo-vent heatsink, twin-pod siege mortar, cryo flash-vent, salvage magnet | `asset_myR97B466TmiQbXWesrJpun9` | 4 |
+| `items/sheet-cores.webp` | Torso variants: ablative slag-plating, composite frame, nanite repair core | `asset_Aj9dtCb7DD98cbL4jBBo9dEq` | 4 |
+| `items/sheet-packs.webp` | Reactor packs: Mk2, Mk3, cold-fusion cell | `asset_LpYL7SUParEAQiuREdau6tJq` | 4 |
+| `items/sheet-legs.webp` | Strider servo-leg thigh and shin, siege tread thigh and tread unit | `asset_mQhKKr6uAhTXRU8gEXHossVL` | 4 |
+| `items/atlas.webp`, `items/rig.js` | All item parts plus the v2.1 base parts, re-cut at twice the v2.1 store size, with pivots and joints (`window.TIMO_ITEMS`) | built by `../../source/timo_items_atlas.py` | 0 |
+
+Model: GPT Image 2.5 Sunburst, 1536 × 1024, medium, transparent. Prompts: `../../prompts/tim-o-items-v1.txt`. Not yet reviewed by kr0 and not yet in the ink prototype.
