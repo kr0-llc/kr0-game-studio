@@ -42,6 +42,8 @@ kr0 chose to redraw jetpack and win first, isometric and at one height. Brief ch
 
 Prompts: `../../prompts/tim-o-sprites-jetpack-iso.txt` and `../../prompts/tim-o-sprites-win-iso.txt`. Frame-1 heights: dash 229 px, jump-jets 239 px, win 225 px (in 366 × 323 frames).
 
+Round 4: `sprites/jetpack-iso-r4/` re-runs the jump-jets with the four-view turnaround as the first reference (`asset_6GYo8kL4SHBX3euYMvjCbVa6`, GPT Image 2, 13 credits, prompt `../../prompts/tim-o-sprites-jetpack-iso-r4.txt`). It faces the lower right with the minigun on the near arm, the pack matches the turnaround, and frame 12 ends 17 px above frame 1. Which moves and facings are still missing: `animation-coverage.md`.
+
 ## Puppet moves (28 October 2026)
 
 `puppet/puppet-moves.js` animates Tim-o in code on parts sheet v2.1 (`puppet/atlas-v2-1.webp`, joints in `puppet/rig-v2-1.js`). It has dash, pile-bunker charge/fire/retract, jump-jets from the legs, overheat vent and destroyed break-apart. It uses the ink prototype's joints and two-bone IK legs and costs no credits. The review page plays every move. The same parts and poses are in `games/metr0niks/prototypes/prototype-ink.html` (copied to `ink-proto/sprites/timo_v21.*`). The route is written up as section 4 of `studio/design-workflows.md`.
