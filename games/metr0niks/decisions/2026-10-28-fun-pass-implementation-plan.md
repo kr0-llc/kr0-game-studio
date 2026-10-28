@@ -95,6 +95,8 @@ Done when: each enemy has a unit lab entry and rules check cases (Bulwark front 
 
 ## Phase 5: city hazards
 
+**Done Oct 28:** collapse scaling, cluster credit and the demolition bonus came with phase 1; phase 5 added CRUSHED and SPAN DOWN events and callouts, whole-box containers so stacks topple, slag pools from every vat and the gallery, the `props` stat, and 30 rules-check cases (span drop on level-5 bots credited to the last pillar's breaker, a bot burned in slag, each prop falling).
+
 - **Collapse damage** to enemies scales with level (`T.collapse.botDmg` × the hp scale); 40 to mechs at any level.
 - **Credit on clusters:** when a chunk breaks, the cluster records the mech whose hit broke it (from `hitVoxel`'s source), or nobody for an enemy's charge, blast or Juggernaut. `land()` passes it to `hitEnemy` as the hazard source.
 - **Demolition bonus and CRUSHED:** collapse, topple, container and slag kills get `T.demolition` (+15%) through `killScrap`, and one event per collapse counts its kills.
