@@ -175,7 +175,37 @@ var U={
       ["loader","Elite loader","an Elite heavy loader beside you"],
       ["engage","Engage and fire","+25% orb damage"],
       ["hit","Hit flash","takes 20 damage"],
-      ["kill","Destroy","1.5 times the scrap and a pod"]]}
+      ["kill","Destroy","1.5 times the scrap and a pod"]]},
+  /* phase 7 bosses (GDD-D51, TDD-D14) */
+  pair:{name:"Sniper pair",tag:"2 x 120 hp · in turn",
+    about:"A boss on wave 3 or 5, levels 2 to 4. Two snipers with two thirds of the sniper's health and 9 cubes each. They never perch within 8 m of each other and fire in turn, so one is always telling. On wave 5 each has 1.5 times the health, fires every 1.5 s and drops 14 cubes.",
+    acts:[["spawn","Spawn the pair","two perches at least 8 m apart"],
+      ["aim","Fire in turn","AI on for 10 s: watch the tells alternate"],
+      ["jump","Both jump","each lands at least 8 m from where the other is or lands"],
+      ["hard","Wave-5 pair","1.5 times the health, 1.5 s between shots"],
+      ["one","Kill one","the other fires on its own cadence"],
+      ["kill","Destroy both","9 cubes each"]]},
+  juggernaut:{name:"Juggernaut",tag:"450 hp · plows",
+    about:"A boss loader on wave 3 or 5, levels 3 to 5: 450 health, armored like a loader, 1.8 m/s. From 6 m it tells for 0.6 s and charges for up to 2 s, plowing through buildings and pillar chunks as well as barriers, so it can bring a span down on you or on itself. Its collapses credit nobody. A Perfect stagger stops a charge. 20 cubes.",
+    acts:[["drop","Drop in","lands like a loader"],
+      ["chase","Hunt","drives at you and charges from 6 m"],
+      ["charge","Tell and charge","0.6 s shake, then up to 2 s at 6.5 m/s at you"],
+      ["pillar","Charge a pillar","the next pillar is already gone: it plows the pillar and the span falls"],
+      ["perfect","Perfect mid-charge","a Perfect pile hit staggers it and ends the charge"],
+      ["hard","Wave-5 Juggernaut","1.5 times the health, a 30% shorter cooldown, 30 cubes"],
+      ["kill","Destroy","20 cubes"]]},
+  warden:{name:"The Warden",tag:"1,500 hp · walker",
+    about:"Level 5 wave 5. A walker 5 m up with 1,500 health and 60 cubes; three platforms (150) each carry a Bounty sniper, and while any rider is up it takes half damage. Four legs (300) take full damage: a break staggers it 2 s and slows it 25%; four bring it down as a collapse (400 to itself, then +50% damage, no walking or stomping). A barrage every 8 s; below 50% a belly Scuttler pack every 15 s and a stomp. This tab moves you to the Terminus Yard at level 5.",
+    acts:[["walk","Walk in","spawns at the far end of the yard and walks to the arena"],
+      ["barrage","Barrage","four shells toward you, 2 s ground warning"],
+      ["pack","Belly pack","four Scuttlers drop from its belly"],
+      ["stomp","Stomp","you are put under it: 0.8 s tell, then 25 within 3 m"],
+      ["cover","Hit the body","100 damage: 50 while a rider is up"],
+      ["plat","Break a platform","its rider falls with fall damage and stun"],
+      ["leg","Break a leg","2 s stagger, 25% slower"],
+      ["legs","Break all four legs","it comes down as a collapse"],
+      ["low","Below 50%","health to 45%: packs and stomps start (AI on)"],
+      ["kill","Destroy the body","every linked part goes with it; 60 cubes"]]}
 };
 
 function showErr(msg){var e=$("err");e.style.display="flex";e.textContent=msg}
@@ -216,7 +246,7 @@ function pre(s){
   s.bots.forEach(function(b){
     if(b.until&&s.tick>=b.until)b.until=0;
     if(opt.ai||b.until||b.dropping||b.kind==="charge")return;   /* AI off: hold each unit idle unless a behaviour is playing (a charge's fuse always runs) */
-    if(b.boss){if(b.mode==="perch"){b.cd=Math.max(b.cd,.5);b.jumpCd=Math.max(b.jumpCd,.5);b.blind=0;b.tell=0}}
+    if(b.boss){if(b.mode==="perch"||b.mode==="ride"){b.cd=Math.max(b.cd,.5);b.jumpCd=Math.max(b.jumpCd,.5);b.blind=0;b.tell=0}}
     else if(b.loader){b.state="recover";b.t=1;b.vx=b.vy=0}
     else{b.state="idle";b.vx=b.vy=0}
   });
@@ -227,6 +257,7 @@ function post(s){
   if(p.hp<=0&&opt.god){p.hp=1;note("A hit that would have destroyed you (Can't die is on)","bad")}
   else if(M_.hp-p.hp>0)note("You took "+Math.round(M_.hp-p.hp),"bad");
   s.bots.forEach(function(b){
+    if(b.labPerfect&&s.tick>=b.labPerfect){b.labPerfect=0;var was=b.state;s.hitEnemy(b,T.pile.dmg,{by:0,kind:"heavy",grade:"Perfect",pow:1,w:"pile"},b.x,b.y,.8);note(was==="charge"?"Perfect mid-charge: staggered, the charge ends":"Perfect landed ("+was+")","haz")}
     var k=b.boss?b.mode+(b.tell>0?"-tell":"")+(b.stun>0?"-stun":""):b.dropping?"drop":b.state;
     if(b.lastK!==k){if(b.lastK)note(name(b)+": "+label(b,k),"cy");b.lastK=k}
     if(b.hp<=0&&!b.gone){b.gone=true;note(name(b)+" destroyed","good")}
@@ -272,19 +303,22 @@ function mkZone(s,kind,x,y,drop){   /* phase 4 units through the sim's own spawn
 }
 function spawn(kind,drop){
   var s=G.__m.sim,x=13+Math.random()*6,y=HOME[1]+(Math.random()-.5);
+  if(kind==="pair"||kind==="juggernaut"||kind==="warden")return bossSpawn(s,kind,drop);
   if(kind==="scuttler")return mkZone(s,drop?"pack":"scuttler",x,y,drop);
   if(kind==="bulwark"||kind==="wrecker")return mkZone(s,kind,x,y,drop);
   if(kind==="elite")return mkZone(s,"elite-bot",x,y,drop);
   return kind==="sniper"?mkSniper(s):kind==="loader"?mkLoader(s,x,y,drop):mkBot(s,x,y,drop);
 }
-function units(kind){return G.__m.sim.bots.filter(function(b){return b.hp>0&&(kind==="sniper"?b.boss:kind==="elite"?b.elite:kind==="loader"?b.loader&&!b.elite:
+function units(kind){return G.__m.sim.bots.filter(function(b){return b.hp>0&&(kind==="pair"?b.pair:kind==="juggernaut"?b.jugg:kind==="warden"?b.kind==="wbody":kind==="sniper"?b.boss&&!b.pair&&!b.rider:kind==="elite"?b.elite:kind==="loader"?b.loader&&!b.elite:
   kind==="scuttler"||kind==="bulwark"||kind==="wrecker"?b.kind===kind:!b.boss&&!b.loader&&!b.kind&&!b.elite)})}
 function target(kind){var u=units(kind);return u.length?u[u.length-1]:spawn(kind)}
-function name(b){return (b.label||(b.boss?"Sniper":b.loader?"Loader":"Bot"))+" "+(b.lid||"")}
+function name(b){return (b.label||PART_NAME[b.kind]||(b.rider?"Rider":b.pair?"Pair sniper":b.boss?"Sniper":b.loader?"Loader":"Bot"))+" "+(b.lid||(b.slot!=null?b.slot+1:b.rider&&b.ride?(b.ride.slot!=null?b.ride.slot+1:"(body)"):""))}
+var PART_NAME={wleg:"Warden leg",wplat:"Warden platform"};
 function label(b,k){
   var L={idle:"idle",patrol:b.loader?"hauling":"patrolling",engage:"engaging",seekpod:"going for a pod",tell:"tell (about to ram)",charge:"charging",recover:"recovering",drop:"dropping in",
     perch:b.z>.05?"perched":"on the street","perch-tell":"aiming","perch-stun":"stunned",jump:"jumping",fall:"falling",
-    flash:"flashing: about to blow",blown:"blown",move:"walking to a support",plant:"planting a charge",flee:"backing off",hold:"holding back",armed:"armed"};
+    flash:"flashing: about to blow",blown:"blown",move:"walking to a support",plant:"planting a charge",flee:"backing off",hold:"holding back",armed:"armed",
+    ride:"riding",walkin:"walking in",fight:"hunting",linked:"linked","ride-tell":"aiming"};
   return L[k]||k;
 }
 
@@ -294,6 +328,7 @@ function act(a){
   if(a==="drop"){b=spawn(unit==="sniper"?"bot":unit,true);hold(b,2);note(name(b)+": dropping in","cy");return resume()}
   if(a==="loader"&&unit==="elite"){b=mkZone(s,"elite-loader",p.x+4,p.y);note(name(b)+": double health, gold trim","cy");return resume()}
   if(zoneAct(s,p,a,hold))return resume();
+  if(bossAct(s,p,a,hold))return resume();
   b=target(unit);if(!b){note("No roof in range for a sniper here","bad");return resume()}
   switch(a){
     case "patrol":if(b.loader){b.state="patrol";b.wp=null}else{b.state="patrol";b.wp=null}hold(b,6);break;
@@ -346,6 +381,64 @@ function zoneAct(s,p,a,hold){
   }
   return false;
 }
+/* ----- phase 7 bosses: spawn through the sim's own spawnBoss; each behaviour sets the sim's state or calls sim.bossAct ----- */
+var ARENA=[186.5,24.5];
+function toArena(s){   /* the Warden fights in the Terminus Yard: level 5, your mech in the arena */
+  if(level<5){level=5;$("lv").value=5;fresh();s=G.__m.sim}
+  var p=s.players[0];if(p.x<168){p.x=ARENA[0];p.y=ARENA[1];p.vx=p.vy=0}return s;
+}
+function bossSpawn(s,kind,drop,hard){
+  var p=s.players[0],b;
+  function hold(b,sec){b.until=s.tick+Math.round(sec*60)}
+  if(kind==="warden"){s=toArena(s);s.bots.forEach(function(e){if(e.wid)e.hp=0});b=s.spawnBoss("warden",s.players[0].x+12,s.players[0].y);b.lid=++nid;return b}
+  if(kind==="juggernaut"){var c=free(s,p.x+8,p.y);b=s.spawnBoss("juggernaut",c[0],c[1],{hard:!!hard,drop:!!drop});b.lid=++nid;b.head=face(s,b.x,b.y);if(drop)hold(b,2);return b}
+  var pr=s.spawnBoss("pair",0,0,{hard:!!hard});pr.forEach(function(m){m.lid=++nid});return pr[1];
+}
+function bossAct(s,p,a,hold){
+  if(unit!=="pair"&&unit!=="juggernaut"&&unit!=="warden")return false;
+  var b;
+  if(unit==="pair"){
+    if(a==="spawn"||a==="hard"){s.bots.filter(function(e){return e.pair}).forEach(function(e){e.hp=0});b=bossSpawn(s,"pair",false,a==="hard");
+      var m=b.pair.m;note("Pair perched "+Math.hypot(m[0].x-m[1].x,m[0].y-m[1].y).toFixed(1)+" m apart"+(a==="hard"?" (wave-5: "+m[0].maxHp+" health each)":""),"cy");return true}
+    var pr=units("pair");if(!pr.length){bossSpawn(s,"pair");pr=units("pair")}
+    if(a==="aim"){pr.forEach(function(m){m.cd=Math.min(m.cd,.3);m.blind=0;hold(m,10)});return true}
+    if(a==="jump"){pr.forEach(function(m){m.jumpCd=0;m.cd=Math.max(m.cd,2);hold(m,T.boss.jumpTime+.6)});return true}
+    if(a==="one"){s.damage(pr[0],1e6,pr[0].x,pr[0].y,pr[0].z+.8);if(pr[1])hold(pr[1],10);return true}
+    if(a==="kill"){pr.forEach(function(m){s.damage(m,1e6,m.x,m.y,m.z+.8)});return true}
+    return true;
+  }
+  if(unit==="juggernaut"){
+    if(a==="drop"){b=bossSpawn(s,"juggernaut",true);note(name(b)+": dropping in","cy");return true}
+    if(a==="hard"){b=bossSpawn(s,"juggernaut",false,true);note(name(b)+": "+b.maxHp+" health, cooldown "+b.L.cooldown.toFixed(2)+" s","haz");return true}
+    b=target("juggernaut");var J=b.L||T.juggernaut;
+    if(a==="chase"){b.state="engage";b.lost=0;b.cd=0;hold(b,10);return true}
+    if(a==="charge"||a==="perfect"){placeInSight(s,b,5);var d=Math.hypot(p.x-b.x,p.y-b.y)||1;b.state="tell";b.t=J.tell;b.cx=(p.x-b.x)/d;b.cy=(p.y-b.y)/d;hold(b,J.tell+J.charge+J.recover+.2);
+      if(a==="perfect")b.labPerfect=s.tick+Math.round((J.tell+.25)*60);   /* post() lands the Perfect a quarter second into the charge */
+      return true}
+    if(a==="pillar"){   /* pillar 29 goes first (nobody's), then it charges east through pillar 17 under the deck */
+      var W=s.world;s.asMech(-1,function(){for(var z=0;z<5;z++)for(var y=23;y<25;y++)for(var x=29;x<31;x++)if(W.get(x,y,z))s.setVox(x,y,z,0)});
+      b.x=13.6;b.y=23.5;b.z=0;b.dropping=false;b.state="tell";b.t=J.tell;b.cx=1;b.cy=0;b.head=0;hold(b,J.tell+J.charge+J.recover+.5);
+      note("Pillar 29 is gone: the Juggernaut charges pillar 17","haz");return true}
+    if(a==="kill"){s.damage(b,1e6,b.x,b.y,.8);return true}
+    return true;
+  }
+  s=toArena(s);p=s.players[0];
+  b=units("warden")[0]||bossSpawn(s,"warden");
+  var parts=s.bots.filter(function(e){return e.wid===b.wid&&e.hp>0});
+  switch(a){
+    case "walk":b=bossSpawn(s,"warden");b.x=213;b.y=24;b.state="walkin";hold(b,30);note("The Warden walks in from the far end","haz");break;
+    case "barrage":s.bossAct(b,"barrage");note("Barrage: 4 shells, 2 s warning","haz");break;
+    case "pack":s.bossAct(b,"pack");break;
+    case "stomp":p.x=b.x+1;p.y=b.y;p.vx=p.vy=0;s.bossAct(b,"tell");hold(b,1.2);break;
+    case "cover":var n=s.hitEnemy(b,100,{by:0,kind:"light",pow:1},b.x,b.y,b.z+.5);note("100 on the body: it took "+n+(n<100?" (a rider is up)":""),"cy");break;
+    case "plat":var pl=parts.filter(function(e){return e.kind==="wplat"})[0];if(!pl){note("No platform left","bad");break}s.hitEnemy(pl,1e4,{by:0,kind:"light",pow:1},pl.x,pl.y,pl.z+.2);break;
+    case "leg":var lg=parts.filter(function(e){return e.kind==="wleg"})[0];if(!lg){note("No leg left","bad");break}s.hitEnemy(lg,1e4,{by:0,kind:"light",pow:1},lg.x,lg.y,1);hold(b,4);break;
+    case "legs":parts.filter(function(e){return e.kind==="wleg"}).forEach(function(e){s.hitEnemy(e,1e4,{by:0,kind:"light",pow:1},e.x,e.y,1)});hold(b,3);break;
+    case "low":b.hp=Math.round(b.maxHp*.45);if(!opt.ai){opt.ai=true;$("oAi").checked=true}note("The Warden at 45%: packs and stomps (AI on)","haz");break;
+    case "kill":s.hitEnemy(b,1e7,{by:0,kind:"light",pow:1},b.x,b.y,b.z+.5);break;
+  }
+  return true;
+}
 function act2tell(s,b){var p=s.players[0],L=T.loader;placeInSight(s,b,2);var d=Math.hypot(p.x-b.x,p.y-b.y)||1;b.state="tell";b.t=L.tell;b.cx=(p.x-b.x)/d;b.cy=(p.y-b.y)/d;b.until=s.tick+Math.round((L.tell+L.charge+L.recover)/T.vent.slowMul*60)}
 /* a unit that is too far or behind a wall is moved into the open street, the given distance east of you */
 function placeInSight(s,b,dist){
@@ -393,6 +486,9 @@ function stats(k){
   else if(k==="bulwark"){var K=T.bulwark;r=[["Armor",Math.round(K.hp*hp)+" (bullets × "+T.loader.minigunMult+")"],["Speed",K.speed+" m/s, turns "+K.turn+" rad/s"],["Shield",K.arc+"° either side of its front; a Perfect breaks it for "+K.broken+" s"],["Ignores the shield","rail slug, collapses, slag"],["Bash",f(K.bashDmg*dm)+" within "+K.bash+" m, "+K.shove+" m shove, every "+K.bashEvery+" s"],["Scrap",K.scrap.join(" to ")]]}
   else if(k==="wrecker"){var R=T.wrecker,Q=T.charge;r=[["Armor",Math.round(R.hp*hp)],["Speed",R.speed+" m/s"],["Keeps",R.keep+" m from every mech"],["Plant",R.plant+" s; any damage restarts it"],["Charge",Q.hp+" health, "+Q.fuse+" s fuse ("+Q.dropFuse+" s when dropped)"],["Breaks","its chunk (a pillar's whole base); credits nobody"],["Scrap",R.scrap.join(" to ")]]}
   else if(k==="elite"){var E=T.elite;r=[["Armor","× "+E.hp+" ("+Math.round(B.hp*hp*E.hp)+" bot, "+Math.round(L.hp*hp*E.hp)+" loader)"],["Damage","× "+E.dmg+" (orb "+f(B.shotDmg*dm*E.dmg)+", ram "+f(L.dmg*dm*E.dmg)+")"],["Scrap","× "+E.scrap],["On death","a "+E.pods.join(" or ")+" pod"],["Per wave","one bot or loader, from level 5"]]}
+  else if(k==="pair"){var Pq=T.pair;r=[["Armor",Math.round(S.hp*Pq.hp*hp)+" each (wave 5: "+Math.round(S.hp*Pq.hp*S.hard.hp*hp)+")"],["Apart","never perched within "+Pq.apart+" m of each other"],["Fire","in turn: "+f(S.dmg*dm)+" after a "+S.tell+" s tell, every "+S.fireEvery+" s (wave 5: "+S.hard.fireEvery+" s)"],["Scrap",Pq.scrap+" each (wave 5: "+Math.round(Pq.scrap*S.hard.scrap/S.scrap)+")"]]}
+  else if(k==="juggernaut"){var J=T.juggernaut;r=[["Armor",Math.round(J.hp*hp)+" (bullets × "+L.minigunMult+"; wave 5 × "+S.hard.hp+")"],["Speed",J.speed+" m/s"],["Charge","within "+J.engage+" m: tell "+J.tell+" s, up to "+J.charge+" s at "+J.chargeSpeed+" m/s"],["Ram",f(J.dmg*dm)+" damage, "+J.shove+" m shove"],["Plows","buildings, pillars, barriers, containers; collapses credit nobody"],["Cooldown",J.cooldown+" s (wave 5 × "+S.hard.rate+")"],["Scrap",J.scrap]]}
+  else if(k==="warden"){var Wd=T.warden;r=[["Body",Math.round(Wd.hp*hp)+" health, "+Wd.z+" m up, "+Wd.speed+" m/s"],["Cover","× "+Wd.cover+" while a rider is up"],["Legs","4 × "+Math.round(Wd.leg.hp*hp)+": "+Wd.leg.stagger+" s stagger, −"+Wd.leg.slow*100+"% speed each"],["Platforms","3 × "+Math.round(Wd.platform.hp*hp)+", a Bounty sniper on each"],["Down","four legs: "+Math.round(Wd.fall.dmg*hp)+" to itself, then × "+Wd.fall.taken],["Barrage","every "+Wd.barrage.every+" s: 4 shells, "+Wd.barrage.warn+" s warning, "+f(Wd.barrage.mechDmg*dm)+" to mechs, "+f(Wd.barrage.enemyDmg*hp)+" to enemies"],["Below 50%","a pack every "+Wd.pack.every+" s; stomp "+Wd.stomp.tell+" s tell, "+f(Wd.stomp.dmg*dm)+" within "+Wd.stomp.radius+" m"],["Scrap",Wd.scrap]]}
   else r=[["Armor",Math.round(S.hp*hp)],["Shot",f(S.dmg*dm)+" damage after a "+S.tell+" s tell, every "+S.fireEvery+" s"],["Sight",S.sight+" m"],["Jumps","every "+S.jump.join(" to ")+" s, up to "+S.jumpRange+" m, "+S.jumpTime+" s in the air"],["Fall",S.fallMin+" m or more: "+S.fallDmg+" damage, "+S.stun+" s stun"],["Scrap",S.scrap]];
   return r.map(function(x){return "<tr><td>"+x[0]+"</td><td>"+x[1]+"</td></tr>"}).join("");
 }
@@ -418,9 +514,11 @@ function cls(k){return /tell|charge|aim|engage/.test(k)?"hot":/seekpod|jump|fall
 function renderLive(){
   var s=G.__m.sim,p=s.players[0],rows=s.bots.filter(function(b){return b.hp>0}).map(function(b){
     var k=b.boss?b.mode+(b.tell>0?"-tell":"")+(b.stun>0?"-stun":""):b.dropping?"drop":b.state,t="";
-    if(b.boss)t=b.tell>0?"shot in "+f(b.tell,2)+" s":b.stun>0?"stun "+f(b.stun,1)+" s":b.mode==="perch"?"fire "+f(Math.max(0,b.cd),1)+" · jump "+f(Math.max(0,b.jumpCd),1):"";
+    if(b.pair)t=(b.pair.turn===b.pairIdx?"its turn · ":"waiting · ");
+    if(b.boss)t+=b.tell>0?"shot in "+f(b.tell,2)+" s":b.stun>0?"stun "+f(b.stun,1)+" s":b.mode==="perch"?"fire "+f(Math.max(0,b.cd),1)+" · jump "+f(Math.max(0,b.jumpCd),1):"";
     else if(b.loader)t=b.state==="tell"||b.state==="charge"||b.state==="recover"?f(Math.max(0,b.t),2)+" s left":"cooldown "+f(Math.max(0,b.cd),1);
     else if(b.kind==="charge")t="fuse "+f(Math.max(0,b.t),1)+" s";
+    else if(b.kind==="wbody")t=(b.down?"down · ":"")+(b.stag>0?"staggered "+f(b.stag,1)+" s · ":"")+(b.tell>0?"STOMP in "+f(b.tell,2)+" s · ":"")+"barrage "+f(Math.max(0,b.barT),1)+" s"+(b.hp<b.maxHp*T.warden.below?" · pack "+f(Math.max(0,b.packT),1)+" s":"");
     else if(b.kind==="scuttler")t=b.state==="flash"?"blast in "+f(Math.max(0,b.t),2)+" s":"";
     else if(b.kind==="wrecker")t=b.state==="plant"?"planted in "+f(Math.max(0,b.t),1)+" s":"";
     else if(b.kind==="bulwark")t=(b.shieldEnd>s.tick?"shield back in "+f((b.shieldEnd-s.tick)/60,1)+" s":"shield up")+" · bash "+f(Math.max(0,b.cd),1);
