@@ -1,8 +1,8 @@
 # Metr0niks prototype changes
 
-Oct 25, 2026 · updated Oct 27, 2026 · @kr0 · kept by the producer
+Oct 25, 2026 · updated Oct 28, 2026 · @kr0 · kept by the producer
 
-What `prototypes/prototype.html` (the voxel prototype, prototype 1) and `simulations/sim.js` must change to match the [GDD](../gdd.md) and [TDD](../tdd.md). Sections 1 and 7 were done on Oct 27, 2026; the rest is not done. Line numbers are for the files as of Oct 25, 2026 (P = `prototypes/prototype.html`, S = `simulations/sim.js`) and have shifted since the Oct 27 removals. Values marked **new** are numbers the GDD sets that the prototype doesn't have yet; each says whether kr0 has accepted it (GDD-D18, D20 and D23 values were accepted on Oct 26 as starting values; the revive values are Proposed). The ink prototype (`prototype-ink.html`, prototype 2) is separate and not covered here (GDD-D32).
+What `prototypes/prototype.html` (the voxel prototype, prototype 1) and `simulations/sim.js` must change to match the [GDD](../gdd.md) and [TDD](../tdd.md). Sections 1 and 7 were done on Oct 27, 2026; the rest is not done. Section 18 (level design) was done on Oct 28. Section 19 (the fun pass) was approved by kr0 on Oct 28 and isn't built; the [implementation plan](../decisions/2026-10-28-fun-pass-implementation-plan.md) folds sections 2 to 15 into its phases. Line numbers are for the files as of Oct 25, 2026 (P = `prototypes/prototype.html`, S = `simulations/sim.js`) and have shifted since the Oct 27 removals. Values marked **new** are numbers the GDD sets that the prototype doesn't have yet; each says whether kr0 has accepted it (GDD-D18, D20 and D23 values were accepted on Oct 26 as starting values; the revive values are Proposed). The ink prototype (`prototype-ink.html`, prototype 2) is separate and not covered here (GDD-D32).
 
 ## 1. Remove Gauntlet (done Oct 27)
 
@@ -121,3 +121,19 @@ These GDD statements already match the prototype: the controls table, the dimetr
 
 kr0 picked concept A + B landmarks ([level design](../level-design.md)). Done in `simulations/sim.js` and the voxel prototype: the new `MAP` (216 × 48 m, five zones, the deck ending over the Terminus Yard arena; every sector scaled 1.5× so two players fit side by side, with a second drop-in point for player 2), materials, landmark builders and district hues in all three art styles. `node simulations/map-check.js` passes, including a room-for-two check per zone. The ground canvas drops to half resolution on the big map to stay small. Still to do if kr0 accepts GDD-D41: the slag spill pool where a vat lands. Today vats fall like any other collapse.
 
+## 19. Fun pass (not started; build order in the [implementation plan](../decisions/2026-10-28-fun-pass-implementation-plan.md))
+
+Decisions: GDD-D35 to GDD-D55 ([record](../decisions/2026-10-28-fun-pass.md)). kr0 accepted every rule on Oct 28 (D44 rejected); every value is a starting value for the sweep. Rules go into `simulations/sim.js` first so both prototypes get them (GDD-D32); the voxel build is the focus (GDD-D46).
+
+- **New `T` keys:** `combo {max:4, step:0.1, decay:12, atbAt4:0.25}`, `stagger {time:1.0, taken:0.5}`, `redline {time:5, cap:130, armorPerHeat:0.5, lockPer10:1, recharge:14}`, `overtime {choose:6, drops:1.5, bonus:0}`, `contract {scrap:15}`, `credit {window:3}`, `collapse.scaleHp:true`, `demolition:0.15`, `elite.scrap:1.5`, `cache {cubes:8}`, `callin {slots:2, price:{repair:40, overclock:30, strike:50}, range:14}`, `pods.odds [0.5,0.2,0.15,0.15]`, `level.max:5`, `conditions` on every level (level 1 mild only), `multiKill {window:1.5}`, a `zoneThreats` table (zone, enemy, replaces, waves), enemy blocks for `scuttler`, `bulwark`, `wrecker`, `elite`, and the six blueprint parts in `PARTS` with a zone field (the Redline vent among them).
+- **Bosses (GDD-D51):** a boss roster drawn per level (Bounty sniper, Sniper pair, Juggernaut) and the Warden for level 5 wave 5: a walker entity with three rider snipers on platforms, four breakable legs, a barrage, Scuttler drops and a stomp.
+- **Co-op (GDD-D52):** the host leaving ends the room for both.
+- **Damage:** one function applies the GDD-D48 order to every hit on an enemy, and one to every hit on a mech.
+- **Seed:** a new random seed on a new campaign, a death and a victory restart, unless the player typed one at level 1 (GDD-D49). `levelSeed` stays as it is.
+- **Stats:** a per-player, per-wave stats record (GDD-D50) kept by the sim, sent with the wave-clear and run-over events, and written to the tuning runner's metrics record.
+- **Sim events** for the new sounds, voice lines, stamps and callouts (combo step and break, stagger, Redline start and end, contract progress and completion, Overtime prompt and call, crushed count per collapse).
+- **Garage:** the next level preview (zones and their enemies, condition, contract), the call-in shop and slots, and "New" marks on blueprint parts. Keys 1 and 2 call in a supply.
+- **Screens:** the wave report strip in each breather, and the excursion report (scrap count-up into the banked total, contract, condition, per-wave chart, highlights) on Extracted and Campaign over.
+- **Save:** the highest level ever extracted and lifetime records, kept through deaths and new campaigns. Old codes load with it set to their current level.
+- **Hazard props:** container stacks, the gantry crane, slag vats and the billboard are placed in `MAP` by PR #12; the slag spill pool is the rule left to build.
+- **Presentation:** hit-stop freezes the effect only, never an enemy or `sim.step()`.
