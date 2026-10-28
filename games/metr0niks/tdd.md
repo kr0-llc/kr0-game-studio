@@ -221,14 +221,14 @@ One camera at a fixed 2:1 dimetric angle (20 px by 10 px per cell, 22 px per hei
 - **Cutaway:** voxels in front of the mech inside an ellipse draw at 16% opacity.
 - **Aim height:** the first solid wall face under the cursor up to about 2 m, or an enemy under the cursor within 34 px (how the rooftop sniper and Warden riders are targeted).
 - **Drop-in:** the shutter shot runs on the sim clock for 5.5 s; input locked, no damage.
-- **HUD:** armor, heat (and lockout or Redline), dash, ATB state, shoulder cooldown, Overclock, level, wave, enemies left or countdown, match scrap, kills, boss bar (the Warden's with rider and leg pips, to build); the combo beside the heat bar and on the cursor ring at ×2 or more; contract progress; the condition icon; two call-in slots; the wave report strip; the 6 s Extract or Overtime prompt.
-- **Screens:** title (continue, new campaign, settings, co-op, records), garage, pause (single-player), extracted, campaign over, victory, settings (art style, music and effects volume, saved on the device).
+- **HUD:** armor, heat (and lockout or Redline), dash, ATB state, shoulder cooldown, Overclock, level, wave, enemies left or countdown, match scrap, kills, boss bar (the Warden's with rider and leg pips, to build); the combo beside the heat bar and on the cursor ring at ×2 or more (built); contract progress with a bar (built); the condition icon (built); two call-in slots as key chips (built); the wave report strip; the 6 s Extract or Overtime prompt.
+- **Screens:** title (continue, new campaign, settings, co-op, records), garage, pause (single-player), extracted, campaign over, victory, settings (art style, music and effects volume, screen shake, hit-stop and cockpit speech, saved on the device).
 - **Blackout (built Oct 28):** a night pass in each art style: darkness everywhere except within 12 m of each mech, muzzle flashes, blasts and slag.
 
 ## Feel and audio
 
-- **Feel (TDD-D16, to build):** hit-stop freezes the impact effect for 60 ms, flashes the enemy white and punches the camera 4%, never the sim; grade stamps; SPAN DOWN and CRUSHED ×N; multi-kill text (DOUBLE, TRIPLE, QUADRUPLE KILL, DEVASTATING); screen shake from the GDD's list.
-- **Audio:** the view plays music and effects from sim events and match state; volumes are saved on the device; repeated sounds are pooled and pitch-varied; warnings mix above music. Music cues: title and garage, combat loop, boss layer, Warden theme, breather, Overtime layer, extract, campaign over, victory. The cockpit voice is a view rule over events: ten lines, at most one per 3 s, warnings first.
+- **Feel (TDD-D16, built Oct 28):** hit-stop freezes the impact effect for 60 ms, flashes the enemy white and punches the camera 4%, never the sim; grade stamps at the struck enemy with the combo beside a Perfect; SPAN DOWN and CRUSHED ×N as stamps; multi-kill text (DOUBLE, TRIPLE, QUADRUPLE KILL, DEVASTATING) over each mech; a STAGGER readout on staggered enemies; the Redline glow; screen shake from the GDD's list. Screen shake and hit-stop can be switched off in Settings (saved on the device). The view code is the "Phase 8" block in `prototypes/prototype.html`; it wraps view functions by name and never writes to the sim.
+- **Audio (built Oct 28 as placeholders):** the view plays music and effects from sim events and match state; volumes are saved on the device; repeated sounds are pooled and pitch-varied; warnings mix above music. Music cues: title and garage, combat loop, boss layer, Warden theme, breather, Overtime layer, extract, campaign over, victory. The cockpit voice is a view rule over events: ten lines, at most one per 3 s, warnings first. Built: captions for all ten lines, with optional browser speech synthesis (off by default). Every sound and cue is the ink prototype's Scenario files or a procedural WebAudio placeholder until kr0 approves final audio (plan, phase 8).
 
 ## Events
 
@@ -236,7 +236,8 @@ The sim's events are arrays (`drainEvents()`). Built today: toast `t`, floating 
 
 | Event | Carries |
 | --- | --- |
-| Grade | mech, Perfect, Good or Miss, position |
+| Grade (built: `g`) | mech, Perfect, Good or Miss, position |
+| Span unstable (built: `su`) | pillar id, position (a pillar chunk broke; for the cockpit voice) |
 | Combo | mech, new value, broken or not |
 | Stagger | enemy id, position |
 | Redline | mech, start or end, lockout seconds |
