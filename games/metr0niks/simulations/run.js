@@ -4,6 +4,8 @@
    node games/metr0niks/simulations/run.js [options]
      --runs N        excursions to play (default 20); run k uses seed = --seed + k, so batches share paired seeds
      --seed S        first seed (default 1)
+     --stride K      seed spacing: run k uses seed = --seed + k x K (default 1). Consecutive climb seeds give correlated
+                     level-1 plans (phase 3 note), so sweeps spread them, e.g. --stride 7919
      --level L       campaign level to play (default 1)
      --climb         play a climb instead: level 1 up, the next level after each extract, until a death or --to
      --to L          last level of a climb (default 5)
@@ -27,9 +29,9 @@ require("./sim.js");require("./pilot.js");
 var M=globalThis.MetroSim,P=globalThis.MetroPilot;
 
 function args(argv){
-  var o={runs:20,seed:1,level:1,climb:false,to:5,players:1,accuracy:"mix",tune:null,max:900,out:null,replay:true,overtime:false,plan:true};
+  var o={runs:20,seed:1,stride:1,level:1,climb:false,to:5,players:1,accuracy:"mix",tune:null,max:900,out:null,replay:true,overtime:false,plan:true};
   for(var i=2;i<argv.length;i++){var a=argv[i],v=argv[i+1];
-    if(a==="--runs"){o.runs=+v;i++}else if(a==="--seed"){o.seed=+v;i++}else if(a==="--level"){o.level=+v;i++}
+    if(a==="--runs"){o.runs=+v;i++}else if(a==="--seed"){o.seed=+v;i++}else if(a==="--stride"){o.stride=+v;i++}else if(a==="--level"){o.level=+v;i++}
     else if(a==="--climb")o.climb=true;else if(a==="--to"){o.to=+v;i++}else if(a==="--players"){o.players=+v;i++}
     else if(a==="--accuracy"){o.accuracy=v;i++}else if(a==="--tune"){o.tune=JSON.parse(fs.readFileSync(v,"utf8"));i++}
     else if(a==="--max"){o.max=+v;i++}else if(a==="--out"){o.out=v;i++}else if(a==="--no-replay")o.replay=false;
@@ -76,7 +78,7 @@ function climb(o,seed){
 
 function main(){
   var o=args(process.argv),recs=[],t0=Date.now();
-  for(var k=0;k<o.runs;k++)recs.push(o.climb?climb(o,o.seed+k):match(o,o.seed+k,o.level));
+  for(var k=0;k<o.runs;k++)recs.push(o.climb?climb(o,o.seed+k*o.stride):match(o,o.seed+k*o.stride,o.level));
   var ms=Date.now()-t0;
   if(o.out){fs.mkdirSync(path.dirname(o.out),{recursive:true});fs.writeFileSync(o.out,recs.map(function(r){return JSON.stringify(r)}).join("\n")+"\n")}
   /* summary */
