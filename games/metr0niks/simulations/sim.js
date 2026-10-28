@@ -41,6 +41,9 @@
    sim.markOpen(k)      bookkeeping only (a guest applying the ["z",k,name] event): zone k counts as open
    Debug hooks (tests): killAll(), damage(e,dmg,x,y,z), hitVoxel(x,y,z,dmg), setVox(x,y,z,m), spawnPod(type,x,y,counting),
                         spawnLoader(x,y), perches(), los3(...), collide(e), flowField(), chk, dbg(), stepDebris(dt), debrisPiece(...)
+   sim.stateHash()      hash of the rules state (players, enemies, pods, voxels, rng) for replay checks
+   sim.tuneHash()       hash of this run's tuning; MetroSim.tuneHash(T) for any table
+   create({tune})       a partial T merged over a copy of MetroSim.T for this run only (sector conditions, sweeps)
    Statics: MetroSim.PARTS, PART, SLOTS, STARTER, MAP, MAT, WINDOW, T, hash, W, D, H, deriveStats(build[,T]), moveMech(mech,input,T,dt,pred),
             clusterGeom(idx,cols), cleanBuild(build), cloneBuild(build), statsOf(build), Campaign (save state, see below) */
 (function(root){
@@ -87,6 +90,20 @@ var T={
   zone:{intro:5.5,open:2.6,gateH:3},   /* drop-in cinematic when a zone opens: seconds of intro before spawns, second the gate falls, gate wall height */
   net:{rate:20,delay:100,snapErr:.3,snapFar:2.5,diffMax:800,inputStale:.5,shotMax:120,scrapMax:80,eventMax:200}   /* snapshots per second; render delay ms; prediction error (units) before a gentle pull / a hard snap; (unused) voxel changes per snapshot; seconds before a silent partner's keys are released */
 };
+/* Per-run tuning (TDD-D11): tuneFor(over) returns T itself, or a deep copy of T with `over` merged in (objects merge,
+   anything else replaces). create({tune}) uses it, so sector conditions and sweep variants never touch MetroSim.T. */
+function mergeTune(base,over){
+  var o=JSON.parse(JSON.stringify(base));
+  (function m(dst,src){Object.keys(src).forEach(function(k){var v=src[k];
+    if(v&&typeof v==="object"&&!Array.isArray(v)&&dst[k]&&typeof dst[k]==="object"&&!Array.isArray(dst[k]))m(dst[k],v);
+    else dst[k]=JSON.parse(JSON.stringify(v))})})(o,over||{});
+  return o;
+}
+function tuneFor(over){return over&&Object.keys(over).length?mergeTune(T,over):T}
+/* FNV-1a over a list of numbers and strings: state hashes for the replay check, and the tuning hash. */
+function fnv(list){var h=2166136261>>>0;for(var i=0;i<list.length;i++){var v=list[i],s=typeof v==="number"?(Math.round(v*1000)|0).toString(36):String(v);
+  for(var j=0;j<s.length;j++){h^=s.charCodeAt(j);h=Math.imul(h,16777619)>>>0}h^=44;h=Math.imul(h,16777619)>>>0}return ("0000000"+h.toString(16)).slice(-8)}
+function tuneHash(TT){return fnv([JSON.stringify(TT||T)])}
 
 /* Materials: base colour and voxel hit points. */
 var MAT={
@@ -280,6 +297,7 @@ function defaultColor(id,s){
 
 function create(opts){
   opts=opts||{};
+  var T=tuneFor(opts.tune);   /* this run's tuning: MetroSim.T unless opts.tune overrides some keys */
   var seed=(opts.seed|0)||7;if(seed<=0)seed=7;
   var colorOf=opts.colorOf||defaultColor,clock=opts.clock||function(){return 0};
   function rnd(){seed=(seed*16807)%2147483647;return (seed-1)/2147483646}
@@ -1208,6 +1226,16 @@ function create(opts){
 
   sim.setInput=setInput;sim.step=step;sim.snapshot=snapshot;sim.voxelDiffSince=voxelDiffSince;sim.applyBuild=applyBuild;sim.dropPlayer=dropPlayer;
   sim.drainEvents=function(){var e=events.slice();events.length=0;return e};
+  /* One hash of the rules state, for the runner's replay check: same seed, tuning and inputs give the same hash. */
+  sim.stateHash=function(){
+    var a=[tick,seed,state,run.wave,run.queue.length,scrap,kills,zone.open,bots.length,shots.length,pods.length,scraps.length,clusters.length];
+    players.forEach(function(q){a.push(q.x,q.y,q.hp,q.heat,q.atb,q.ring,q.scrap,q.over,q.oc)});
+    bots.forEach(function(b){a.push(b.x,b.y,b.z,b.hp,b.state||"")});
+    pods.forEach(function(o){a.push(o.type,o.x,o.y,o.z)});
+    var v=0;for(var i=0;i<N;i++)if(vox[i])v=(Math.imul(v,31)+i*16+vox[i])|0;a.push(v);
+    return fnv(a);
+  };
+  sim.tuneHash=function(){return tuneHash(T)};
   Object.defineProperties(sim,{
     tick:{get:function(){return tick}},state:{get:function(){return state}},wave:{get:function(){return run.wave}},
     scrap:{get:function(){return scrap},set:function(v){scrap=v}},kills:{get:function(){return kills}},
@@ -1287,6 +1315,6 @@ var Campaign=(function(){
   return {make:make,player:player,validate:validate,encode:encode,decode:decode,advance:advance,levelSeed:levelSeed,starterOwned:starterOwned};
 })();
 
-root.MetroSim={create:create,Campaign:Campaign,T:T,SHOT_KIND:SHOT_KIND,MAT:MAT,WINDOW:WINDOW,MAP:MAP,PARTS:PARTS,PART:PART,SLOTS:SLOTS,STARTER:STARTER,BASE:BASE,W:W,D:D,H:H,hash:hash,
+root.MetroSim={create:create,mergeTune:mergeTune,tuneHash:tuneHash,Campaign:Campaign,T:T,SHOT_KIND:SHOT_KIND,MAT:MAT,WINDOW:WINDOW,MAP:MAP,PARTS:PARTS,PART:PART,SLOTS:SLOTS,STARTER:STARTER,BASE:BASE,W:W,D:D,H:H,hash:hash,
   deriveStats:deriveStats,moveMech:moveMech,clusterGeom:clusterGeom,cleanBuild:cleanBuild,cloneBuild:cloneBuild,statsOf:statsOf};
 })(typeof globalThis!=='undefined'?globalThis:this);

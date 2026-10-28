@@ -32,6 +32,8 @@ Sizes are relative: S is a day or two of focused work, M about a week, L more. P
 
 ## Phase 0: harness
 
+**Done Oct 28** (PR after #13): `create({tune})`, `sim.stateHash()` and `sim.tuneHash()` in `sim.js`; `simulations/pilot.js`, `simulations/run.js` and `simulations/rules-check.js` (23 cases). 100 level-1 runs take about 30 s and the replay check passes. The baseline is in the [tuning history](../tuning-history.md).
+
 Without a runner, none of the fun pass numbers can be swept, and the studio standard requires one before the first tuning change ([simulation and tuning](../../../studio/simulation-and-tuning.md)).
 
 - **Tuning overrides per run (TDD-D11):** `create({tune})` deep-merges an override object over a copy of `MetroSim.T` and uses that copy for the whole run. Sector conditions (phase 3) and sweep variants both use it. `MetroSim.T` stays the shared default and is never mutated.
