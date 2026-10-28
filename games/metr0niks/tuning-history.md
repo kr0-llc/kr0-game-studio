@@ -32,7 +32,7 @@ Questions that need sweeps:
 - Co-op revive (GDD-D24): how often a survivor can afford the revive price by wave, by level. Needs the runner, a two-bot scenario and kr0's target.
 - Weapon upgrades (GDD-D23): how many extracts it takes to take a weapon to Mk III, and how much each level shortens a wave. Planned variants: damage per level 0.05, 0.10 and 0.15, crossed with upgrade cost ×0.5, ×1 and ×2, on paired seeds at level 1 and level 3, single-player, the starter build and one rare build. Needs the runner and kr0's targets first.
 
-- Fun pass (GDD-D35 to GDD-D50, Oct 28): every number in it is a starting value. Before kr0 fixes the values, the runner should answer: how often a bot-driven player reaches a ×4 combo (step 20%, decay 12 s); how much armor a Redline vent costs per use (5 s, cap 130, 0.5 armor per heat); the extract rate and scrap per run with and without Overtime at levels 1, 5 and 10 (×2 drops, +25%); whether scaled collapse damage keeps a span drop lethal to bots at level 10; the scrap curve with every kill bonus stacked (combo, demolition, Elite, Overtime) against what there is to buy; whether each zone's enemy raises the death rate by a step rather than a cliff; and whether a 10-level climb is the right length. The GDD-D50 stats record is the metrics record the runner needs. Needs the runner, a scripted player that uses the ring, and kr0's targets.
+- Fun pass (GDD-D35 to GDD-D50, Oct 28): every number in it is a starting value. Before kr0 fixes the values, the runner should answer: how often a bot-driven player reaches a ×4 combo (step 20%, decay 12 s); how much armor a Redline vent costs per use (5 s, cap 130, 0.5 armor per heat); the extract rate and scrap per run with and without Overtime at levels 1, 3 and 5 (×2 drops, +25%); whether scaled collapse damage keeps a span drop lethal to bots at level 5; how long the Warden fight takes with and without leg breaks; how often a player sees a multi-kill; the scrap curve with every kill bonus stacked (combo, demolition, Elite, Overtime) against what there is to buy; whether each zone's enemy raises the death rate by a step rather than a cliff; and whether a 5-level climb is the right length. The GDD-D50 stats record is the metrics record the runner needs. Needs the runner, a scripted player that uses the ring, and kr0's targets.
 
 ## Baseline: tuning in the prototype (Oct 25, 2026)
 
@@ -47,7 +47,7 @@ The values in `sim.js` `T` and `PARTS`, carried over unchanged. They are the pro
 | Waves | 3 bots; 4 bots and 1 loader; 4 bots and the boss; 6 bots and 2 loaders; 5 bots, 1 loader and the boss |
 | Enemies | Bot hp 60; loader hp 160; boss hp 180, 18 damage |
 | Pods | 1 per wave plus 0.4 extra; Field repair heals 40%; Overclock ×2 for 15 s |
-| Levels | Per level above 1: enemy count +25%, hp +15%, damage +15%, scrap +10%; maximum level 50 (10 proposed, GDD-D47); a downed co-op mech returns with 30% armor |
+| Levels | Per level above 1: enemy count +25%, hp +15%, damage +15%, scrap +10%; maximum level 50 (5 accepted, GDD-D47); a downed co-op mech returns with 30% armor |
 | Repair | 3 armor restored per scrap |
 | Collapse | Warning 0.9 s; bot damage 80; player damage 40; debris cap 300 |
 | Parts | 21 parts; prices 0 to 140 scrap across three rarity tiers (see the GDD parts list) |
