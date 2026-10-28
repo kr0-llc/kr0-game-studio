@@ -13,7 +13,7 @@ From a local web server in `games/metr0niks/` (for example `python3 -m http.serv
 ## What it does
 
 - Stops the waves, the wave-clear extraction and the random pods by holding `sim.run` each tick, before `sim.step()`, unless Real waves is on. Nothing in sim.js changes.
-- 17 tests in four groups: Weapons (minigun, shotgun, plasma, rail, pile-bunker timing, bunker-buster, mag-winch, mortar, flash-vent), Parts (legs and weight, reactor and power), Pickups (drop pods, pod race, scrap and magnet) and World (pillar collapse, loader charge, Bounty sniper). Keys 1 to 9, `[` and `]`.
+- 23 tests in five groups: Weapons (minigun, shotgun, plasma, rail, pile-bunker timing, bunker-buster, mag-winch, mortar, flash-vent), Parts (legs and weight, reactor and power), Pickups (drop pods, pod race, scrap and magnet), World (pillar collapse, loader charge, Bounty sniper) and Blueprints (Arc caster chain, Redline vent armor cost, Breach charges on a pillar, Seismic hammer, Grav-skids and Overdrive core, call-ins). Keys 1 to 9, `[` and `]`; in the call-ins test, keys 1 and 2 pressed in the game call in instead. The spawn row adds Scrap cache and Strike beacon pods, and No Q cooldown also refills Breach charges.
 - Loadout: any part in any slot, swapped mid-test with `sim.applyBuild`; the prototype relabels its HUD through a new `__m.hud()` hook. The `__m.level()` test hook now also sets the level the HUD shows. These are the only changes to `prototype.html`.
 - Measured: DPS over the last 3 s and per burst, damage per target with distance, time from cold to lockout, ring grades, armor taken, speed, shots, kills.
 - Expected: the same figures worked out from `MetroSim.T` and `deriveStats` for the fitted build.
@@ -28,7 +28,7 @@ Fixed Oct 28, 2026 (kr0: sync with the GDD): guns fired slower than `T` says bec
 
 ## Garage lab
 
-`prototypes/garage-lab.html` (Oct 28, 2026, kr0 asked to see how parts look on the mech, with every icon) loads the same prototype into its own garage. Every part is unlocked, and the frame's writes to the campaign save are blocked. The side panel has a sheet of all 21 part icons by slot, drawn by the prototype's `drawIcon`. Click a part to preview it on the turntable mech, press Fit (or double-click) to equip it, and use Starter build, Random build or Test drive. The art style switch redraws the icons and the mech. It adds two garage test hooks to `prototype.html`, `__m.garage.icon()` and `__m.garage.ownAll()`. Below 1320 px wide the garage frame is drawn at 1320 px and scaled to fit.
+`prototypes/garage-lab.html` (Oct 28, 2026, kr0 asked to see how parts look on the mech, with every icon) loads the same prototype into its own garage. Every part is unlocked, and the frame's writes to the campaign save are blocked. The side panel has a sheet of all 27 part icons by slot (the six phase 6 blueprints included), drawn by the prototype's `drawIcon`. Click a part to preview it on the turntable mech, press Fit (or double-click) to equip it, and use Starter build, Random build or Test drive. The art style switch redraws the icons and the mech. It adds two garage test hooks to `prototype.html`, `__m.garage.icon()` and `__m.garage.ownAll()`. Below 1320 px wide the garage frame is drawn at 1320 px and scaled to fit.
 
 ## Units lab
 
