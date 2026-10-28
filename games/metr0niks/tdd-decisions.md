@@ -26,6 +26,7 @@ Newest first. Status is Proposed until kr0 accepts or rejects it. The [TDD](tdd.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-28 | TDD rewritten to cover the whole GDD: builds and tools, match flow, contracts and conditions tables, climb plan, kill credit and damage, blueprint part hooks, pods and call-ins, economy and garage, every enemy and boss, co-op, match stats, save v2, HUD and screens, feel, events, tuning data, testing, open questions |
 | 2026-10-28 | TDD updated for the approved fun pass (GDD-D35 to D55) and the five-sector map: hit path, kill credit, climb plan, tuning overrides, save v2, match stats, zone enemies and bosses, runner (TDD-D9 to TDD-D17). Build order in `decisions/2026-10-28-fun-pass-implementation-plan.md`. Previous TDD in `superseded/tdd-2026-10-27.md` |
 | 2026-10-27 | Oct 26 critique fixes in the TDD: timing ring in seconds, Perfect radius limited to the pile-bunker, collapse rubble and scrap, engine table, header; TDD-D1 and TDD-D5 wording. Previous TDD in `superseded/tdd-2026-10-26.md` |
 | 2026-10-26 | In-match save mark and co-op revive (TDD-D8); audio section added to the TDD |
