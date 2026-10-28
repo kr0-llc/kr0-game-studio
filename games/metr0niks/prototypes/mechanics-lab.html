@@ -124,6 +124,8 @@ button.b.hot{border-color:var(--rust);color:var(--rust)}
     <button class="b" data-spawn="sniper" type="button">+ Sniper</button>
     <button class="b" data-spawn="repair" type="button">+ Repair pod</button>
     <button class="b" data-spawn="overclock" type="button">+ Overclock pod</button>
+    <button class="b" data-spawn="cache" type="button">+ Scrap cache pod</button>
+    <button class="b" data-spawn="strike" type="button">+ Strike beacon pod</button>
     <button class="b" data-spawn="scrap" type="button">+ 12 scrap</button>
     <button class="b" data-spawn="hurt" type="button">Take 40 damage</button>
     <button class="b" data-spawn="clear" type="button">Clear enemies</button>
@@ -231,7 +233,38 @@ var SC=[
     build:{armL:"winch"},at:[15.5,11.5],face:0,opts:{atb:true},
     spawn:[["sniper",0,0]],
     tip:"A live sniper perches on a roof. Winch it off, or shoot the roof out from under it.",
-    look:"A fall of 1.5 m or more stuns it for 2 s and deals 60."}
+    look:"A fall of 1.5 m or more stuns it for 2 s and deals 60."},
+  /* phase 6: blueprint parts and call-ins (GDD-D54). The pillar at (6, 23) holds up the road over the west street. */
+  {g:"Blueprints",id:"arc",name:"Arc caster chain",
+    build:{armR:"arc"},at:[3.5,LANE],face:0,opts:{},
+    spawn:[["dummy",9.5,LANE],["dummy",12.5,LANE],["dloader",15.5,LANE],["dummy",21,LANE]],
+    tip:"Hold left mouse on the first dummy. Each bolt jumps to the nearest enemy within 4 m, twice. The last dummy is 5.5 m past the loader, out of reach.",
+    look:"9 on the dummy you aim at, 6 on each of the next two, the loader takes half (3). Nothing on the last dummy. Walls stop the bolt but take no damage."},
+  {g:"Blueprints",id:"redline",name:"Redline vent armor cost (Q)",
+    build:{shoulder:"redline"},at:[3.5,LANE],face:0,opts:{},
+    spawn:[["dummy",9.5,LANE],["dummy",12.5,LANE-.6]],
+    tip:"Fire until heat is near 100%, press Q, keep firing. Heat climbs past 100 to 130 without locking. Let go before the 5 s end to stay out of lockout.",
+    look:"Armor drops 1 for every 2 heat above 100, and at the 130 cap every shot still costs armor (taken shows in Armor). Ending above 100 locks the guns for 3 s plus 1 s per 10 heat over. 14 s recharge from the end."},
+  {g:"Blueprints",id:"breach",name:"Breach charges on a pillar (Q)",
+    build:{shoulder:"breach"},at:[6,19],face:Math.PI*.5,opts:{},
+    spawn:[["dloader",7.6,22],["dummy",9,25.5]],
+    tip:"Put the cursor on the pillar base to the south and tap Q: the charge sticks. Hold Q (0.35 s) to set it off. Tap twice to place both, then tap again with none in hand.",
+    look:"Every block within 2 m is gone and the pillar falls; the loader beside it takes 40. Each charge is back 8 s after its throw. Throws stop at 10 m."},
+  {g:"Blueprints",id:"seismic",name:"Seismic hammer",
+    build:{armL:"seismic"},at:[23.5,17.5],face:0,opts:{atb:true},
+    spawn:[["dloader",25.5,17.5],["dloader",27.8,17.5]],
+    tip:"Hold right mouse, release on the ring. A Good shock hits ground enemies within 3 m, a Perfect within 4 m and staggers them. At level 3 and up, a Perfect near stacked containers knocks the bottom box out.",
+    look:"Good: 50 on the near loader only. Perfect: 100 on both, a 4 m ring, and a perched sniper within 10 m is shaken off its roof."},
+  {g:"Blueprints",id:"skids",name:"Grav-skids and Overdrive core",
+    build:{legs:"skids",core:"overdrive"},at:[3.5,LANE],face:0,opts:{},hp:.3,
+    spawn:[["dummy",11.5,LANE]],
+    tip:"Dash twice in a row with Space: two charges, each back 1.6 s after use. Armor starts at 30%, under the 35% Overdrive line: fire, then press Take 40 damage or swap the Core to compare.",
+    look:"Dash shows 2 of 2. Overdrive adds 30 power (damage and arm bar) and drains heat 1.5x while armor is under 35%. Loaders shove you 1.5x as far."},
+  {g:"Blueprints",id:"callin",name:"Call-ins (1 and 2)",
+    build:{},at:[3.5,LANE],face:0,opts:{},hp:.5,callins:["strike","repair"],
+    spawn:[["dummy",9.5,LANE],["dummy",12.5,LANE],["hurtbot",20,LANE]],
+    tip:"Cursor on the street, press 1: a Strike beacon pod drops there (14 m at most). Take it and aim down the lane. Press 2 for a Field repair. Keys 1 and 2 call in, not change test, while this test runs.",
+    look:"1.5 s after you take the beacon, four shells land 3, 6, 9 and 12 m along your aim (40 each, credited to you; they never hurt a mech). The slot empties when used. A bot that takes a beacon aims it at you."}
 ];
 
 /* ----- frame wiring ----- */
@@ -253,6 +286,7 @@ addEventListener("keydown",hotkey);
 function hotkey(e){
   if(e.target&&(e.target.tagName==="SELECT"||e.target.tagName==="INPUT"))return;
   var d=/^Digit([1-9])$/.exec(e.code);
+  if(d&&+d[1]<=2&&SC[cur].callins&&G&&e.target&&e.target.ownerDocument===G.document)return;   /* call-in keys in the game */
   if(d&&+d[1]<=SC.length){load(+d[1]-1);e.preventDefault()}
   else if(e.code==="BracketRight"){load((cur+1)%SC.length);e.preventDefault()}
   else if(e.code==="BracketLeft"){load((cur+SC.length-1)%SC.length);e.preventDefault()}
@@ -275,7 +309,7 @@ function patch(s){
     return drain().filter(function(e){
       if(e[0]==="o"){over(e);return false}   /* the lab handles the end of a run itself; nothing banks, nothing saves */
       if(e[0]==="f"&&(e[4]==="PERFECT"||e[4]==="Good"||e[4]==="Miss")){grade(e[4]);}
-      if(e[0]==="t"&&/took a pod|Field repair|Overclock:/.test(e[1]))note(e[1],"cy");
+      if(e[0]==="t"&&/took a pod|Field repair|Overclock:|Scrap cache|Strike beacon|Call-in|Redline|Overdrive/.test(e[1]))note(e[1],"cy");
       if(e[0]==="t"&&/Pillar|Collapse|yanked|brought down|Sniper down|Bounty sniper down/.test(e[1]))note(e[1],"haz");
       if(e[0]==="t"&&/Overheated/.test(e[1]))note("Overheated: guns locked","bad");
       return true;
@@ -299,7 +333,7 @@ function pre(s){
   });
   M_.pHp=p.hp;
   if(opt.atb&&p.ring<0&&p.retract<=0)p.atb=T.atb.fill;
-  if(opt.q)p.sq=0;
+  if(opt.q){p.sq=0;if(p.q==="breach"){p.bHeld=T.breach.held;p.bRe.length=0}}
 }
 var M_={pHp:0};
 function post(s){
@@ -350,7 +384,8 @@ function load(i){
   G.__m.level(level);   /* a fresh city at the chosen level */
   var s=G.__m.sim;patch(s);
   build=M.cloneBuild(STARTER);for(var k in sc.build)build[k]=sc.build[k];
-  s.applyBuild(0,build);G.__m.hud();
+  s.applyBuild(0,build);
+  if(sc.callins)G.__m.callins(0,sc.callins.slice());G.__m.hud();
   var p=s.players[0];p.x=sc.at[0];p.y=sc.at[1];p.vx=p.vy=0;p.leg=p.aim=sc.face;
   if(sc.hp)p.hp=Math.round(p.maxHp*sc.hp);
   zero();
@@ -398,7 +433,7 @@ function spawn(kind,x,y){
       if(kind==="dloader"){b.lab="dummy";b.state="recover";b.t=1e9}else b.lab="live";
       tag(s,b,kind==="dloader"?"Dummy loader":"Loader");break;
     case "sniper":b=sniper(s,kind);if(b)tag(s,b,"Sniper");break;
-    case "repair":case "overclock":c=free(s,x,y);s.spawnPod(kind,c[0],c[1],true);note((kind==="repair"?"Repair":"Overclock")+" pod incoming","cy");break;
+    case "repair":case "overclock":case "cache":case "strike":c=free(s,x,y);s.spawnPod(kind,c[0],c[1],true);note(M.POD_NAME[kind]+" pod incoming","cy");break;
     case "scrap":
       for(var k=0;k<12;k++){var an=k/12*6.283,r=4+(k%3);c=free(s,p.x+Math.cos(an)*r,p.y+Math.sin(an)*r);
         s.scraps.push({x:c[0],y:c[1],z:.4,vx:0,vy:0,vz:0,t:1,spin:an})}
@@ -459,24 +494,30 @@ function syncSlots(){
   $("statline").innerHTML="Power <b>"+st.power+"</b> · Armor <b>"+d.maxHp+"</b> · Speed <b>"+d.spd.toFixed(2)+"</b> m/s · Weight <b>"+st.weight+"</b> · Heat <b>"+st.heat+"</b>";
   renderExpect(d);
 }
-var GUN={minigun:"Minigun",shotgun:"Shotgun",plasma:"Plasma cutter",rail:"Rail rifle"},ARM={pile:"Pile-bunker",buster:"Bunker-buster",winch:"Mag-winch"};
+var GUN={minigun:"Minigun",shotgun:"Shotgun",plasma:"Plasma cutter",rail:"Rail rifle",arc:"Arc caster"},ARM={pile:"Pile-bunker",buster:"Bunker-buster",winch:"Mag-winch",seismic:"Seismic hammer"};
 function f(n,k){return (+n).toFixed(k===undefined?1:k).replace(/\.0+$/,"")}
 function renderExpect(d){
   var g=T[d.gun],n=g.pellets||1,nom=g.rate||1/g.every,per=g.dmg*d.dmgMul;
   var rate=nom,dps=per*n*rate,hps=g.heat*d.heatMul*rate,net=hps-d.drain;
   var rows=[[GUN[d.gun]+" damage",f(per)+(n>1?" × "+n+" pellets":"")+" per shot"],["Rate",f(rate,2)+" /s"],["DPS (all hits)",f(dps)],
-    ["Range",f(g.speed*g.life)+" m"],["Heat",f(hps)+" /s in, "+f(d.drain)+" /s drain"],["Lockout after",net>0?f(100/net,2)+" s of fire":"never"]];
+    ["Range",f(g.range||g.speed*g.life)+" m"],["Heat",f(hps)+" /s in, "+f(d.drain)+" /s drain"],["Lockout after",net>0?f(100/net,2)+" s of fire":"never"]];
   if(d.gun==="minigun"||d.gun==="shotgun")rows.push(["vs loader","× "+T.loader.minigunMult+" (armored)"]);
   if(d.gun==="plasma")rows.push(["Walls","× "+T.plasma.struct+" structural; ignores loader armor"]);
   if(d.gun==="rail")rows.push(["Pierces",T.rail.pen+" targets or thin walls"]);
+  if(d.gun==="arc")rows.push(["Chain",T.arc.jumps+" jumps within "+T.arc.jumpR+" m, "+f(T.arc.jumpDmg*d.dmgMul)+" each; × "+T.arc.loaderMult+" on loaders; no wall damage"]);
   var fill=T.atb.fill/d.atbRate,R=T.ring,sp=(R.start-R.target)/R.duration;
   rows.push([ARM[d.pile]+" bar",f(fill,2)+" s ("+f(fill/T.pods.overclock.mult,2)+" s overclocked)"]);
   if(d.pile==="pile")rows.push(["Hit",f(T.pile.dmg*d.dmgMul)+" Good, "+f(T.pile.dmg*2*d.dmgMul)+" Perfect, "+f(T.pile.dmg*.5*d.dmgMul)+" Miss"]);
   if(d.pile==="buster")rows.push(["Shell",f(T.buster.dmg*d.dmgMul)+" on Good, recoil "+T.buster.recoil+" m"]);
+  if(d.pile==="seismic")rows.push(["Shock",f(T.seismic.dmg*d.dmgMul)+" within "+T.seismic.radius+" m on Good, "+f(T.seismic.dmg*2*d.dmgMul)+" within "+T.seismic.perfect+" m on Perfect"]);
   if(d.pile==="winch")rows.push(["Cable",T.winch.reach+" m ("+T.winch.perfect+" m Perfect), "+f(T.winch.dmg*d.dmgMul)+" damage"]);
   rows.push(["Ring windows","Perfect ±"+f(R.perfect*R.start/sp,3)+" s, Good ±"+f(R.good*R.start/sp,3)+" s at "+R.duration+" s"]);
   if(d.q==="mortar")rows.push(["Q mortar",T.mortar.shells+" × "+f(T.mortar.dmg*d.dmgMul)+", "+T.mortar.minR+" to "+T.mortar.maxR+" m, every "+T.mortar.every+" s"]);
+  if(d.q==="redline"){var RL=T.redline;rows.push(["Q Redline",RL.time+" s, heat to "+RL.cap+", "+RL.armor+" armor per heat over 100, lockout 3 s + 1 s per 10 over, every "+RL.every+" s"])}
+  if(d.q==="breach"){var BR=T.breach;rows.push(["Q Breach",BR.held+" charges, "+f(BR.dmg*d.dmgMul)+" within "+BR.radius+" m, throw "+BR.range+" m, each back "+BR.recharge+" s after its throw"])}
   if(d.q==="vent")rows.push(["Q vent","dump heat, "+T.vent.dmg+" damage, slow × "+T.vent.slowMul+" for "+T.vent.slow+" s, every "+T.vent.every+" s"]);
+  if(build&&build.legs==="skids")rows.push(["Skids",T.skids.dashes+" dash charges, each back "+T.skids.recharge+" s; loader shove × "+T.skids.shove]);
+  if(build&&build.core==="overdrive")rows.push(["Overdrive","+"+T.overdrive.power+" power, drain × "+(1+T.overdrive.drain)+" below "+Math.round(T.overdrive.below*100)+"% armor"]);
   rows.push(["Dash",d.noDash?"none (treads)":f(T.player.dashCooldown*d.dashMul,2)+" s cooldown, +"+f(T.player.dashHeat*d.dashHeat)+" heat"]);
   rows.push(["Scrap pull",d.magnet+" m"]);
   if(d.regen)rows.push(["Nanite","+"+T.nanite.regen+" armor/s after "+T.nanite.delay+" s calm"]);
