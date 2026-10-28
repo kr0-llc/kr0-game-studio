@@ -14,6 +14,8 @@ kr0 (Oct 28): the voxel prototype's stages all look very similar; make a full ma
 
 **Recommendation:** A as the base with one landmark from B per zone.
 
+**Swappable look (kr0, Oct 28).** kr0 is focusing on the voxel game and wants the renderer swappable for shaders, textures and models later. Layouts are therefore stored as kinds of box (building, container, leg, span, vat and so on) with sizes and positions, not as voxels. The full map keeps that form: gameplay reads boxes and support links, and the voxel build is one way of drawing them.
+
 ## Files
 
 - `levels.html`: the concept page (isometric and plan views, per-zone cards, today's map for comparison). Loads `concepts.js` and `../../simulations/sim.js`.
