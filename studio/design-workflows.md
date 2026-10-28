@@ -78,11 +78,13 @@ kr0 asked on 28 October 2026 for a review like the Tim-o one ([review page](http
 
 1. **All the relevant art in one place.** The character's approved sheet, the reference image each run was given, the turnaround, any in-game parts, and a screenshot of the game's real camera.
 2. **An on-model check.** The reference beside frame 1 of every set, all at the same scale.
-3. **A frame player per set.** Play, step, frame rate, onion skin, flip, background, and "anchor feet", which lines every frame up on frame 1's feet so drift shows.
+3. **A frame player per set.** Play, step, frame rate, onion skin, flip, background, "same size", which scales every set so frame 1 stands at one height, and "anchor feet", which lines every frame up on frame 1's feet so drift shows.
 4. **Findings frame by frame.** Each one names the frames (`f4–8`) and the fault: off-model, arm or leg not attached, wrong-way facing, effect from the wrong place, drift, keying fringe. Say what is worth keeping too.
 5. **A check against the game.** The camera, the loadout and the move list from the GDD, so a set that cannot work in the game shows up even if it looks good.
 6. **kr0's marks.** Keep, Fix, Redo or Drop per set, flagged frames and notes, saved to the page's database so the next session can read them.
 7. **Review comments.** The page declares comments, with a "Comment on this frame" and a "Comment on this set" button; kr0 can also use comment mode on any frame. Claude answers in the comment thread.
+
+**One height per character** (kr0, 28 October 2026): every animation set of a character is drawn at the same character height, so sets can be compared and cut together. State the height in every sprite brief, and flag a set that breaks it.
 
 The agent's own findings go in `games/<game>/feedback/synthetic/<date>-<character>-animation-review.md`. kr0's marks and comments, once given, go in `games/<game>/feedback/human/` under the same name, never in the same file (see [ways of working](ways-of-working.md)). Both get an INDEX row. The `animation-review` skill holds the steps.
 

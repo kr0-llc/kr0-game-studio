@@ -7,3 +7,5 @@ Art and audio for `games/metr0niks/prototypes/prototype-ink.html` (see `games/me
 - `audio/`: sound effects (Sonilo V1.1) and music (Lyria 3 Clip and Pro) from Scenario, trimmed and loudness-normalized with ffmpeg. Prompts: `../prompts/p_inkproto_audio.txt`.
 
 `../source/ink_scenario_gen.py` is the small Scenario API helper used to run the generations. No AI pseudo-text appears in these sheets; the garage background was regenerated without the concept's UI text.
+
+`sheets/player_parts.webp` (Tim-o's puppet parts) was rejected by kr0 on 28 October 2026: the parts don't align and shouldn't be used. The prototype still loads it until a new, aligned parts sheet replaces it (see `games/metr0niks/feedback/human/2026-10-28-tim-o-animation-review.md`).
