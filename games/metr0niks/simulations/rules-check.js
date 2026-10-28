@@ -153,5 +153,76 @@ function kills(s){return s.drainEvents().filter(function(e){return e[0]==="x"})}
   ok(!s.drainEvents().some(function(e){return e[0]==="mk"}),"a kill more than 1.5 s later starts a new count");
 })();
 
+/* ----- phase 5: city hazards (GDD-D41, D48, D55; Destruction and environment) ----- */
+function smash(s,x,y,z){for(var k=0;k<8&&s.world.get(x,y,z);k++)s.hitVoxel(x,y,z,999)}
+function pillarOut(s,px){var py=Math.floor((M.MAP.overpass.y0+M.MAP.overpass.y1)/2);for(var x=px;x<px+2;x++)for(var y=py;y<py+2;y++)for(var z=0;z<4;z++)smash(s,x,y,z)}
+function idleAll(s){s.players.forEach(function(p,i){s.setInput(i,{k:0,ax:p.x+1,ay:p.y+1,az:.6})})}
+function settle(s,n){for(var t=0;t<n;t++){idleAll(s);s.step()}}
+(function(){
+  /* level 5, two mechs: mech 0 breaks pillar 17, mech 1 breaks pillar 29, and the span between them falls on four bots */
+  var s=M.create({seed:8,level:5,builds:[M.STARTER,M.STARTER],tune:calm});s.introTicks=1e9;settle(s,5);
+  var bs=[[20.5,22.5],[23.5,23.5],[26.5,22.5],[25.5,25]].map(function(c){var b=s.spawnBot(c[0],c[1]);b.state="dummy";return b});
+  var hp=bs[0].maxHp;
+  s.asMech(0,function(){pillarOut(s,17)});settle(s,3);
+  ok(!s.clusters.some(function(c){return c.span}),"one pillar down leaves the span standing (cantilevered)");
+  s.asMech(1,function(){pillarOut(s,29)});settle(s,3);
+  var span=s.clusters.filter(function(c){return c.span})[0];
+  ok(span&&span.by===1,"the span's piece is credited to the mech that broke the last pillar chunk (mech "+(span&&span.by)+")");
+  s.drainEvents();settle(s,150);var ev=s.drainEvents(),xs=ev.filter(function(e){return e[0]==="x"}),cr=ev.filter(function(e){return e[0]==="cr"}),sd=ev.filter(function(e){return e[0]==="sd"});
+  ok(Math.round(T.collapse.botDmg*(1+T.level.hp*4))>=hp&&bs.every(function(b){return b.hp<=0}),"a span drop at level 5 kills patrol bots ("+hp+" health, "+Math.round(T.collapse.botDmg*(1+T.level.hp*4))+" collapse damage)");
+  ok(xs.length===4&&xs.every(function(e){return e[2]===1&&e[3]==="collapse"}),"each kill is credited to mech 1 as a collapse kill");
+  ok(cr.length===1&&cr[0][2]===4&&cr[0][5]===1&&cr[0][6]==="collapse","one CRUSHED event counts the four kills from that collapse ("+(cr[0]&&cr[0][2])+")");
+  ok(sd.length===1&&sd[0][1]===span.id,"the span landing sends one SPAN DOWN event");
+  var w=s.stats[1][s.wave-1];ok(w.spans===1&&w.bestCrush===4&&w.killsBy.collapse===4,"the stats give mech 1 the span, its best crush (4) and the collapse kills");
+  ok(!(s.stats[0][s.wave-1]&&s.stats[0][s.wave-1].spans),"mech 0, who broke the first pillar, gets no span");
+})();
+(function(){
+  /* a street vat: mech 0 shoots out its leg frame; it falls and spills a pool next to a bot and the mech */
+  var s=M.create({seed:8,tune:{bot:{shotDmg:0,dmg:0,scrap:[10,10]},loader:{dmg:0},boss:{dmg:0},heat:{drain:0}}});s.introTicks=1e9;settle(s,5);
+  var v=M.MAP.vats[0],b=s.spawnBot(v[0]+2.6,v[1]+2.5),p=s.players[0];b.state="dummy";p.x=v[0]-.5;p.y=v[1]-.5;
+  s.asMech(0,function(){smash(s,v[0],v[1],0)});settle(s,2);
+  ok(s.clusters.length===1&&s.clusters[0].by===0&&s.clusters[0].vats.length===1,"a vat whose leg frame breaks falls as a collapse credited to the breaker");
+  s.drainEvents();var t=0;while(!s.pools.length&&t<200){settle(s,1);t++}
+  var o=s.pools[0],S=T.slag;
+  ok(o&&o.x1-o.x0===S.size&&o.y1-o.y0===S.size&&o.by===0&&Math.abs(o.t-S.time)<.05,"where it lands it spills a "+S.size+" x "+S.size+" m pool for "+S.time+" s, credited to the vat breaker");
+  ok(s.drainEvents().some(function(e){return e[0]==="sp"&&e[1]===o.id}),"the spill sends an event");
+  var b0=b.hp,h0=p.hp,q0=p.heat;settle(s,60);
+  ok(b0-b.hp===S.botDps,"the pool burns an enemy for "+S.botDps+" a second ("+(b0-b.hp)+")");
+  ok(h0-p.hp===S.mechDps&&Math.abs(p.heat-q0-S.heat)<1e-6,"a mech in it takes "+S.mechDps+" a second and "+S.heat+" heat a second ("+(h0-p.hp)+", "+(p.heat-q0).toFixed(1)+")");
+  p.skids=true;h0=p.hp;q0=p.heat;settle(s,60);
+  ok(h0-p.hp===S.mechDps*S.skids&&Math.abs(p.heat-q0-S.heat*S.skids)<1e-6,"Grav-skids (p.skids) halve the pool's damage and heat ("+(h0-p.hp)+", "+(p.heat-q0).toFixed(1)+")");
+  var ev=[];for(t=0;t<60*S.time&&s.pools.length;t++){settle(s,1);ev=ev.concat(s.drainEvents())}
+  var x=ev.filter(function(e){return e[0]==="x"})[0],cr=ev.filter(function(e){return e[0]==="cr"});
+  ok(b.hp<=0&&x&&x[2]===0&&x[3]==="hazard","a bot burns to death in the pool and the kill is credited to the vat breaker");
+  ok(x&&x[4]===Math.round(10*(1+T.demolition)),"a hazard kill drops the demolition bonus (10 cubes -> "+(x&&x[4])+")");
+  ok(!s.pools.length&&cr.length===1&&cr[0][2]===1&&cr[0][6]==="slag"&&cr[0][5]===0,"the pool cools after "+S.time+" s and sends one CRUSHED event with its kill count");
+  var w=s.stats[0][s.wave-1];ok(w.props===1&&w.killsBy.hazard===1&&w.taken.slag>0,"stats: one prop brought down, a hazard kill, slag damage taken");
+})();
+(function(){
+  /* a 3-high container stack: one chunk of the bottom box goes, the whole box goes, and the two above fall */
+  var s=M.create({seed:8,tune:calm});s.introTicks=1e9;settle(s,5);
+  var c=M.MAP.containers.filter(function(c){return c[5]===3&&c[2]>4})[0];
+  s.asMech(0,function(){smash(s,c[0],c[1],0)});settle(s,2);
+  var left=0;for(var x=c[0];x<c[0]+c[2];x++)for(var z=0;z<2;z++)if(s.world.get(x,c[1],z))left++;
+  ok(left===0,"breaking one chunk of a container destroys the whole box (T.hazard.wholeBox)");
+  ok(s.clusters.length===1&&s.clusters[0].by===0&&s.clusters[0].prop,"the containers stacked on it fall as one collapse credited to the breaker");
+  ok(s.stats[0][s.wave-1].props===1,"the stack counts as a prop brought down");
+  var n=0;for(x=c[0];x<c[0]+c[2];x++)for(z=2;z<6;z++)if(s.world.get(x,c[1],z))n++;
+  ok(n===0,"nothing of the stack stays up");
+})();
+(function(){
+  /* the landmarks: break every leg as mech 0; each falls after the 0.9 s warning, credited to mech 0, as one prop */
+  var MP=M.MAP,C=MP.crane,props=[["water tower",MP.tower.legs,0],["gantry crane",[[C.x0,C.y0],[C.x1,C.y0],[C.x0,C.y1],[C.x1,C.y1]],0],
+    ["billboard",MP.billboard.legs,0],["slag gallery",MP.gallery.legs,MP.gallery.vats.length]];
+  props.forEach(function(pr){
+    var s=M.create({seed:8,tune:calm});s.introTicks=1e9;settle(s,5);
+    s.asMech(0,function(){pr[1].forEach(function(l){smash(s,l[0],l[1],0)})});settle(s,2);
+    var c=s.clusters.filter(function(c){return c.prop})[0];
+    ok(c&&c.by===0&&c.creak>T.collapse.warn-.1&&c.off===0,pr[0]+": all legs gone, it falls after the warning, credited to the breaker");
+    settle(s,180);
+    ok(s.stats[0][s.wave-1].props===1&&s.pools.length===pr[2],pr[0]+": one prop brought down"+(pr[2]?", and each of its "+pr[2]+" vats spills a pool":""));
+  });
+})();
+
 console.log(bad?bad+" rule check(s) failed":"rules pass");
 process.exit(bad?1:0);

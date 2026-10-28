@@ -11,7 +11,7 @@
    sim.T                tunables (shared object, MetroSim.T)
    sim.world            {vox,owner,vdmg (typed arrays), W,D,H, structures, chunks, walk, rev (bumps when voxels change),
                          get(x,y,z), solidAt(x,y,z), blockedCell(cx,cy), rebuildWalk()}
-   sim.players, bots, shots, pods, scraps, clusters, debris   live arrays (mutated in place, never replaced)
+   sim.players, bots, shots, pods, scraps, clusters, debris, pools   live arrays (mutated in place, never replaced)
    sim.run {wave,queue,breather,done,...}   sim.wave (number)   sim.state 'play'|'dead'|'extracted'
    sim.tick             completed steps   sim.scrap (shared run total, for the HUD), sim.kills, sim.shake (0..1, decays)
                         each mech also has player.scrap: the cubes it picked up (the wallet that banks at extraction)
@@ -30,16 +30,18 @@
                         ["cb",mech,combo,broken]  combo changed (GDD-D35)   ["sg",x,y,z] an enemy was staggered
                         ["mk",mech,count]         multi-kill (GDD-D53)      ["x",type,mech|-1,sourceKind,cubes] an enemy died (kill credit, GDD-D48)
                         ["w",wave,[stats per mech]]  wave cleared, with that wave's GDD-D50 stats
+                        ["cr",id,kills,x,y,mech|-1,"collapse"|"slag"]  CRUSHED: the kills of one landed piece or one slag pool (phase 5)
+                        ["sd",clusterId,x,y,mech|-1]  a deck span landed (SPAN DOWN)   ["sp",poolId,x,y,mech|-1]  a slag vat spilled
                         (extracted: scrap and armor to carry on; dead: nothing carries on)
                         ["z",zoneIndex,name]      a sealed zone's gate fell: the map grew (also sent to guests)
-   sim.snapshot(full)   co-op host snapshot {t:"snap",tk,ack,sc,k,sh,w,p,b,s,sr,pd,cl,vx,ev}; full=true also carries copies of
+   sim.snapshot(full)   co-op host snapshot {t:"snap",tk,ack,sc,k,sh,w,p,b,s,sr,pd,cl,sl,vx,ev}; sl = slag pools [id,x0,y0,x1,y1,z,secondsLeft]; full=true also carries copies of
                         vox and owner (for a joining guest), clears queued events and resets the diff baseline
    sim.voxelDiffSince(tick)   flat [index,material,owner,...] for voxels changed after `tick`
    sim.applyBuild(i, build)   re-derive mech i from a build (adds the mech when i === players.length)
    sim.dropPlayer(i)    mech i leaves (hp 0); the run is lost if nobody else is alive
    sim.hitEnemy(e,base,src,x,y,z) / sim.hitMech(q,base,src,x,y,z)  the hit path (GDD-D48 damage order, kill credit); see hitEnemy
    sim.stats            [mech][wave] match stats (GDD-D50): kills by type and source, damage dealt and taken, voxels, grades,
-                        best combo, spans, most kills from one collapse, multi-kills, pods, scrap by source, overheats, wave time
+                        best combo, spans, props brought down, most kills from one collapse or pool, multi-kills, pods, scrap by source, overheats, wave time
    sim.level            the level this sim was created for (opts.level, default 1)
    sim.introTicks       set by create(): ticks of drop-in cinematic before anything may spawn, 0 unless a zone opens this level
    sim.zone             {open, opening, target, openAt, intro}: zones MAP.zones[0..open-1] are open; `opening` is the zone
@@ -89,6 +91,9 @@ var T={
   combo:{max:4,step:.1,decay:12,atbAt4:.25},   /* GDD-D35: x1..x4; each step above x1 adds 10% scrap to credited kills; drops after 12 s without a heavy shot; ATB fills 25% faster at x4 */
   stagger:{time:1,taken:.5},                   /* GDD-D35: a Perfect staggers for 1 s; a staggered enemy takes 50% more damage */
   credit:{window:3},multiKill:{window:1.5},demolition:.15,   /* GDD-D48 kill credit window (s); GDD-D53 multi-kill window (s); GDD-D41/D55 collapse and hazard scrap bonus */
+  /* ----- phase 5: city hazards (GDD-D41) ----- */
+  slag:{size:4,time:8,botDps:25,mechDps:10,heat:15,skids:.5,pulse:.2},   /* a landed vat's pool: m square, s; per second to enemies (x the level's hp scale), to mechs, heat to mechs; Grav-skids share; damage tick (s) */
+  hazard:{wholeBox:1},   /* 1: a container is one box, so breaking any chunk of it destroys all of it and drops what it carries */
   level:{count:.25,hp:.15,dmg:.15,scrap:.1,max:50,revive:.3},   /* per level above 1: share added to enemy counts, hp, damage, scrap drops; revive: armor share a downed mech returns with */
   repairCost:3,       /* garage repair: armor restored per scrap */
   scrapMagnet:3,
@@ -524,6 +529,7 @@ function create(opts){
     }
     c.count=0;supportDirty=true;lastBreakBy=curBy;
     if(n){sparks(fx/n+.5,fy/n+.5,fz/n+.5,10,[255,200,120]);smoke(fx/n+.5,fy/n+.5,fz/n+.5,3,[140,136,128]);addShake(.08)}
+    propBreak(c);   /* phase 5 */
   }
 
   /* ----- supports and collapse ----- */
@@ -554,11 +560,13 @@ function create(opts){
     chk.last=clock()-t0;chk.n++;if(chk.last>chk.max)chk.max=chk.last;
   }
   function makeCluster(idx){
+    var hz=hazardInfo(idx);   /* phase 5: read the props in the piece before its voxels are cleared */
     var cols=idx.map(function(i){return voxColor(i)}),g=clusterGeom(idx,cols),span=idx.some(function(i){var o=structures[owner[i]];return o&&o.span});
     idx.forEach(function(i){var z=(i/(W*D))|0;if(z<=1)markWalk(i%W,((i/W)|0)%D)});
     idx.forEach(function(i){vox[i]=0;owner[i]=0;vdmg[i]=0;chunkOf[i]=-1;touch(i)});
     var c={id:++cid,vs:g.vs,foot:g.foot,off:0,vz:0,creak:T.collapse.warn,t:0,by:lastBreakBy};clusters.push(c);
     var cs=c.by>=0&&st(c.by);if(cs&&span)cs.spans++;
+    hazardCluster(c,hz,span);   /* phase 5 */
     emitNet(["c",c.id,idx,cols.map(packCol)]);
     if(c.vs.length>30){bigFall=true;toast("Collapse! Get out of the red","var(--bad)")}
   }
@@ -595,7 +603,87 @@ function create(opts){
     var mid=c.vs[(c.vs.length/2)|0],n=C.scrap[0]+((rnd()*(C.scrap[1]-C.scrap[0]+1))|0);
     for(var k=0;k<n&&c.vs.length>6;k++)scraps.push({x:mid.x+.5,y:mid.y+.5,z:.6,vx:(rnd()-.5)*5,vy:(rnd()-.5)*5,vz:3+rnd()*2,t:0,spin:rnd()*6,src:"collapse"});
     world.rev++;c.foot.forEach(function(f){markWalk(f%W,(f/W)|0)});
+    hazardLanded(c,L,crushed);   /* phase 5: CRUSHED, SPAN DOWN, slag spill */
   }
+
+  /* ===== phase 5: city hazards (GDD-D41, Destruction and environment: Hazard props). Every prop falls through the
+     normal support rule above; this block adds what happens around a fall. A cluster carries c.by, the mech whose hit
+     broke the last chunk under it (-1: nobody, e.g. a loader's plow or an enemy's shot), and its landing, CRUSHED
+     count, spill and props stat all go to that mech.
+     - Container stacks: a container is one box (T.hazard.wholeBox), so breaking any chunk of it destroys the whole
+       box and the containers stacked on it fall as a collapse.
+     - Slag spill: each vat in a piece that lands leaves a T.slag.size square pool for T.slag.time s, centred on where
+       the vat came down. Every T.slag.pulse s it burns enemies in it (T.slag.botDps a second x the level's hp scale,
+       kind "hazard", credited to the vat breaker) and mechs in it (T.slag.mechDps a second, kind "slag", plus
+       T.slag.heat heat a second; x T.slag.skids for a mech whose part flag p.skids is set). One pool per entity per tick.
+     - Events: ["cr",id,kills,x,y,by,"collapse"|"slag"] CRUSHED, one per landed piece or per pool (sent when the pool
+       cools), only when it killed something; ["sd",clusterId,x,y,by] a deck span landed; ["sp",poolId,x,y,by] a vat spilled. */
+  var PROP_KINDS={container:1,crane:1,tank:1,sign:1,vat:1,gallery:1};
+  var pools=[];sim.pools=pools;
+  /* the props in a loose piece, read before makeCluster clears its voxels: vats by structure, with their lowest corner */
+  function hazardInfo(idx){
+    var o={props:false,vats:{}};
+    for(var k=0;k<idx.length;k++){var i=idx[k],s=structures[owner[i]];if(!s||!PROP_KINDS[s.kind])continue;o.props=true;
+      if(s.kind!=="vat")continue;
+      var x=i%W,y=((i/W)|0)%D,z=(i/(W*D))|0,v=o.vats[s.id]||(o.vats[s.id]={x0:x,y0:y,x1:x,y1:y,z0:z});
+      v.x0=Math.min(v.x0,x);v.y0=Math.min(v.y0,y);v.x1=Math.max(v.x1,x);v.y1=Math.max(v.y1,y);v.z0=Math.min(v.z0,z)}
+    o.vats=Object.keys(o.vats).map(function(k){return o.vats[k]});
+    return o;
+  }
+  function hazardCluster(c,hz,span){
+    c.span=!!span;c.vats=hz.vats;c.prop=hz.props;
+    var s=hz.props&&c.by>=0&&st(c.by);if(s)s.props++;
+  }
+  /* a container is one box: the rest of it goes with the broken chunk */
+  function propBreak(c){
+    if(!T.hazard.wholeBox)return;var s=structures[c.s];if(!s||s.kind!=="container")return;
+    for(var k=0;k<chunks.length;k++){var o=chunks[k];if(o.alive&&o.s===c.s)breakChunk(o)}
+  }
+  function emitCrushed(id,n,x,y,by,what){
+    if(n<=0)return;emitNet(["cr",id,n,r2(x),r2(y),by,what]);
+    var s=by>=0&&st(by);if(s&&n>s.bestCrush)s.bestCrush=n;
+  }
+  function hazardLanded(c,L,n){
+    var fx=0,fy=0;c.foot.forEach(function(f){fx+=f%W+.5;fy+=((f/W)|0)+.5});fx/=c.foot.length||1;fy/=c.foot.length||1;
+    emitCrushed(c.id,n,fx,fy,c.by,"collapse");
+    if(c.span)emitNet(["sd",c.id,r2(fx),r2(fy),c.by]);
+    (c.vats||[]).forEach(function(v){
+      var S=T.slag,cx=(v.x0+v.x1+1)/2,cy=(v.y0+v.y1+1)/2,o={id:++cid,x:cx,y:cy,x0:cx-S.size/2,y0:cy-S.size/2,x1:cx+S.size/2,y1:cy+S.size/2,
+        z:Math.max(0,v.z0+L),t:S.time,by:c.by,kills:0};
+      pools.push(o);emitNet(["sp",o.id,r2(cx),r2(cy),c.by]);
+      sparks(cx,cy,o.z+.3,24,[255,140,50]);smoke(cx,cy,o.z+.4,8,[120,80,60]);
+    });
+  }
+  function inPool(o,e){var z=e.z||0;return e.x>=o.x0&&e.x<o.x1&&e.y>=o.y0&&e.y<o.y1&&z>=o.z-1.5&&z<=o.z+.5}
+  /* damage carried as a fraction per entity, so each pulse deals a whole number and the rate per second is exact */
+  function slagShare(e,amt){amt+=e.slagC||0;var n=Math.floor(amt+1e-9);e.slagC=amt-n;return n}
+  function updatePools(dt){
+    if(!pools.length)return;
+    var S=T.slag,pt=Math.max(1,Math.round(S.pulse*60)),pulse=tick%pt===0,per=pt/60;
+    for(var i=pools.length-1;i>=0;i--){
+      var o=pools[i];o.t-=dt;
+      if(rnd()<.3)emit(["s",o.x0+rnd()*(o.x1-o.x0),o.y0+rnd()*(o.y1-o.y0),o.z+.05,1,[255,150,60]]);
+      if(pulse&&o.t>0){
+        var src={by:o.by,kind:"hazard",hz:"slag"};
+        bots.forEach(function(b){
+          if(b.hp<=0||b.dropping||aloft(b)||b.slagT===tick||!inPool(o,b))return;b.slagT=tick;
+          var d=slagShare(b,S.botDps*lvm("hp")*per);if(d<=0)return;
+          hitEnemy(b,d,src,b.x,b.y,(b.z||0)+.6);if(b.hp<=0){o.kills++;var s=o.by>=0&&st(o.by);if(s&&o.kills>s.bestCrush)s.bestCrush=o.kills}
+        });
+        players.forEach(function(q){
+          if(q.hp<=0||q.slagT===tick||!inPool(o,q))return;q.slagT=tick;
+          var f=q.skids?S.skids:1,d=slagShare(q,S.mechDps*f*per);
+          addHeat(q,S.heat*f*per/(q.heatMul||1));   /* T.slag.heat is heat points, not scaled by the mech's heat stat */
+          if(d>0)hitMech(q,d,{kind:"slag"},q.x,q.y,1);
+        });
+      }
+      if(o.t<=0){emitCrushed(o.id,o.kills,o.x,o.y,o.by,"slag");pools.splice(i,1)}
+    }
+  }
+  /* test hooks: a level-scaled patrol bot standing at x,y; run fn as if mech `by` were hitting (voxel breaks credit it) */
+  sim.spawnBot=function(x,y){var b=newBot();b.x=x;b.y=y;b.z=0;b.vz=0;b.dropping=false;bots.push(b);return b};
+  sim.asMech=function(by,fn){var was=curBy;curBy=by;try{fn()}finally{curBy=was}};
+  /* ===== end phase 5 ===== */
 
   /* ----- entities. Player and bots share one shape: position, velocity, armor, radius, height, team. ----- */
   function newPlayer(build,idx){
@@ -870,7 +958,7 @@ function create(opts){
   }
   /* Match stats (GDD-D50): one record per mech per wave. */
   var stats=[],curBy=-1,lastBreakBy=-1;
-  function newStats(){return {kills:{},killsBy:{},dealt:{},voxels:0,taken:{},perfect:0,good:0,miss:0,bestCombo:1,spans:0,bestCrush:0,
+  function newStats(){return {kills:{},killsBy:{},dealt:{},voxels:0,taken:{},perfect:0,good:0,miss:0,bestCombo:1,spans:0,props:0,bestCrush:0,
     multi:{2:0,3:0,4:0,5:0},pods:{taken:0,stolen:0,stolenBack:0},scrap:{},overheats:0,time:0}}
   function st(i){if(!(i>=0)||!players[i])return null;var w=stats[i]||(stats[i]=[]);return w[run.wave-1]||(w[run.wave-1]=newStats())}
   function setCombo(p,n){
@@ -1257,7 +1345,7 @@ function create(opts){
     if(state==="play")updateWave(dt);
     if(state!=="drop")updatePods(dt);updateShots(dt);curBy=-1;updateScraps(dt);stepDebris(dt);
     if(supportDirty)checkSupports();
-    updateClusters(dt);flushWalk();
+    updateClusters(dt);updatePools(dt);flushWalk();
     tick++;
   }
 
@@ -1284,6 +1372,7 @@ function create(opts){
     pods.forEach(function(o){if(!o.id)o.id=++eid;s.pd.push([o.id,o.type==="repair"?0:1,r2(o.x),r2(o.y),r2(o.z),r2(Math.max(0,o.t)),o.landed?1:0])});
     clusters.forEach(function(c){s.cl.push([c.id,r2(c.off),r2(c.creak),r2(c.t)])});
     s.q=players.map(function(q){return r2(q.sq||0)});   /* shoulder recharge per seat */
+    s.sl=pools.map(function(o){return [o.id,o.x0,o.y0,o.x1,o.y1,o.z,r2(o.t)]});   /* phase 5: slag pools */
     if(full){s.full=true;s.vox=vox.slice();s.owner=owner.slice();s.vx=[];s.ev=[];netEv.length=0}
     else{s.vx=voxelDiffSince(snapBase);s.ev=netEv.splice(0,60)}
     snapBase=tick;
