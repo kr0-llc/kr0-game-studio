@@ -24,7 +24,7 @@ From a local web server in `games/metr0niks/` (for example `python3 -m http.serv
 
 ## Found while building it
 
-Guns fire slower than `T` says. The sim resets a gun's cooldown to `1/rate` after each shot and only fires on a 60 Hz tick, so the minigun fires 10 times a second, not 11 (40 DPS, not 44), and the plasma cutter 12, not 14. The lab shows both numbers. Whether to carry the leftover time into the next shot (so the rates match `T`) is kr0's call; it is not changed here.
+Fixed Oct 28, 2026 (kr0: sync with the GDD): guns fired slower than `T` says because the sim reset a gun's cooldown to `1/rate` after each shot and only fires on a 60 Hz tick (minigun 10 a second, plasma 12). The sim now carries the tick's leftover time into the next shot, so the minigun fires 11 a second and the plasma cutter 14, as the GDD says. Measured over 10 s of held fire: minigun 11, plasma 14.1, shotgun 1.9, rail 1.0 a second.
 
 ## Garage lab
 

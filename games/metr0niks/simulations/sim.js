@@ -973,7 +973,7 @@ function create(opts){
     if(p.over){p.over-=dt;p.heat=Math.max(0,p.heat-dt*100/T.heat.lockout);if(rnd()<.3)smoke(p.x,p.y,1.4,1,[200,200,200]);if(p.over<=0){p.over=0;toast("Cooled down","var(--good)",p.idx)}}
     else p.heat=Math.max(0,p.heat-p.drain*dt);
     p.cool-=dt;
-    if(inp.l&&!p.over&&p.cool<=0){fireMinigun(p);var gg=T[p.gun];p.cool=gg.every||1/gg.rate}
+    if(inp.l&&!p.over&&p.cool<=0){fireMinigun(p);var gg=T[p.gun];p.cool=Math.max(p.cool,-dt)+(gg.every||1/gg.rate)}   /* carry the tick's leftover so rates match T on 60 Hz ticks */
     var press=inp.rp||(inp.r&&!p.rPrev);p.rPrev=inp.r;inp.rp=false;p.rDown=inp.r;
     updatePile(p,dt,press);
     p.muzzle-=dt;p.flash-=dt;if(p.oc>0)p.oc=Math.max(0,p.oc-dt);
