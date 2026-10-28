@@ -541,7 +541,7 @@ addEventListener("resize",resize);resize();
 
 /* Ground: pre-rendered once (asphalt, sidewalks, lane marks, the overpass shadow). */
 var ground=document.createElement("canvas");
-var GS=2,GX0=-D*HW,GY0=0;
+var GS=W+D>200?1:2,GX0=-D*HW,GY0=0;   /* ground canvas scale, 1 on the big map to keep the canvas small */
 function zoneOf(x){var Z=MAP.zones;for(var k=0;k<Z.length;k++)if(x<=Z[k].x1)return Z[k];return Z[Z.length-1]}
 function buildGround(){
   ground.width=(W+D)*HW*GS;ground.height=(W+D)*HH*GS;
@@ -564,14 +564,14 @@ function buildGround(){
       wg.addColorStop(0,"rgba("+cc+","+(.18+hash(k,4,4)*.15)+")");wg.addColorStop(1,"rgba("+cc+",0)");g.fillStyle=wg;g.fillRect(px(wx,wy,0)-wr,py(wx,wy,0)-wr,wr*2,wr*2)}
   }
   if(Gd.cracks){   /* asphalt cracks and oil stains */
-    for(k=0;k<70;k++){var cx0=1+hash(k,7,7)*(W-2),cy0=1+hash(k,8,8)*(D-2),X0=px(cx0,cy0,0),Y0=py(cx0,cy0,0);
+    for(k=0;k<Math.round(70*W*D/2560);k++){var cx0=1+hash(k,7,7)*(W-2),cy0=1+hash(k,8,8)*(D-2),X0=px(cx0,cy0,0),Y0=py(cx0,cy0,0);
       g.strokeStyle="rgba(0,0,0,.45)";g.lineWidth=.8;g.beginPath();g.moveTo(X0,Y0);
       for(var q=0;q<5;q++){X0+=(hash(k,q,1)-.5)*22;Y0+=(hash(k,q,2)-.5)*12;g.lineTo(X0,Y0)}g.stroke();
       if(k%3===0){var og=g.createRadialGradient(X0,Y0,0,X0,Y0,16);og.addColorStop(0,"rgba(0,0,0,.35)");og.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=og;g.fillRect(X0-16,Y0-16,32,32)}}
   }
   g.strokeStyle=Gd.lane;g.lineWidth=Gd.laneW;g.setLineDash(Gd.dash);
   var lx1=o.x1!==undefined?o.x1+1:W-1;
-  [[1,11.5],[1,19.5]].forEach(function(l){g.beginPath();g.moveTo(px(l[0],l[1],0),py(l[0],l[1],0));g.lineTo(px(lx1,l[1],0),py(lx1,l[1],0));g.stroke()});
+  [[1,o.y0-1.5],[1,o.y1+1.5]].forEach(function(l){g.beginPath();g.moveTo(px(l[0],l[1],0),py(l[0],l[1],0));g.lineTo(px(lx1,l[1],0),py(lx1,l[1],0));g.stroke()});
   g.setLineDash([]);
   MAP.zones.forEach(function(Z){var A=Z.arena;if(!A)return;   /* the arena's painted ring: where the big fight happens */
     g.strokeStyle=Gd.lane;g.lineWidth=Gd.laneW*2;g.setLineDash(Gd.dash.map(function(v){return v*2}));g.beginPath();

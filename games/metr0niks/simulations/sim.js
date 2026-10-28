@@ -111,7 +111,7 @@ var MAT={
 };
 var WINDOW={6:1,12:1,13:1,18:1};   /* window materials: the loader plows them, the renderer lights them */
 
-var W=144,D=32,H=8,N=W*D*H;   /* five zones of streets along one overpass; MAP.zones says where each begins */
+var W=216,D=48,H=8,N=W*D*H;   /* five zones of streets along one overpass; MAP.zones says where each begins */
 var SHOT_KIND={bullet:0,shell:1,orb:2,plasma:3,rail:4,mortar:5};   /* snapshot codes */
 var NB6=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
 var N8=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
@@ -129,54 +129,55 @@ var MAP={
   /* Sector 4 is one long overpass. The streets under it come in zones: level 1 plays in the first, each level after
      opens the next (its gate wall falls during the drop-in), until the whole sector is one battlefield.
      win: the window material of the zone's buildings; ground: a tint for the street under it. */
-  zones:[{name:"Underpass",x0:0,x1:31,win:6,ground:[1,1,1]},{name:"Freight Yard",x0:32,x1:55,win:12,ground:[1.22,1.2,1.12]},{name:"Smelter Row",x0:56,x1:79,win:13,ground:[1.12,.9,.84]},
-    {name:"Glass Quarter",x0:80,x1:111,win:18,ground:[.94,.98,1.12]},{name:"Terminus Yard",x0:112,x1:143,win:12,ground:[1.16,1.08,.96],arena:{x:128,y:15.5,r:8}}],
+  zones:[{name:"Underpass",x0:0,x1:47,win:6,ground:[1,1,1]},{name:"Freight Yard",x0:48,x1:83,win:12,ground:[1.22,1.2,1.12]},{name:"Smelter Row",x0:84,x1:119,win:13,ground:[1.12,.9,.84]},
+    {name:"Glass Quarter",x0:120,x1:167,win:18,ground:[.94,.98,1.12]},{name:"Terminus Yard",x0:168,x1:215,win:12,ground:[1.16,1.08,.96],arena:{x:192,y:24,r:12}}],
   /* the deck ends at x1, over the Terminus Yard's entrance: the last zone is open sky, room for a big fight */
-  overpass:{y0:13,y1:18,z:5,x1:111,pillarsX:[3,11,19,27,35,43,51,59,67,75,83,91,99,107]},
+  spawn:[[23.5,17.5],[26,17.5]],   /* drop-in points of player 1 and 2, at the Underpass plaza */
+  overpass:{y0:20,y1:27,z:5,x1:167,pillarsX:[5,17,29,41,53,65,77,89,101,113,125,137,149,161]},
   blocks:[ /* x,y,w,d,h,hue (MAP.hues) */
     /* Underpass, shanty market: shacks of 2 to 4 m on 2 m alleys; the plaza in the middle is the water tower's */
-    [2,1,3,3,2,0],[7,1,2,3,3,1],[2,6,2,2,3,3],[6,6,3,2,2,2],
-    [21,1,2,3,3,1],[25,1,2,2,4,0],[29,1,2,3,2,2],[21,6,2,3,3,2],[24,5,3,3,2,3],[29,6,2,2,3,1],
-    [2,20,3,3,2,1],[7,20,2,2,3,2],[11,21,3,2,2,3],[16,20,3,3,4,0],[21,21,2,2,2,1],[25,20,3,2,3,2],[29,21,2,2,2,3],
-    [2,26,2,3,3,2],[6,25,3,3,2,0],[11,26,2,3,3,1],[15,26,3,2,2,2],[20,25,3,3,5,3],[25,26,2,3,2,0],[28,25,3,3,3,1],
+    [3,2,5,4,2,0],[11,2,3,4,3,1],[3,9,3,3,3,3],[9,9,5,3,2,2],
+    [32,2,3,4,3,1],[38,2,3,3,4,0],[44,2,3,4,2,2],[32,9,3,5,3,2],[36,8,5,4,2,3],[44,9,3,3,3,1],
+    [3,30,5,5,2,1],[11,30,3,3,3,2],[17,32,4,3,2,3],[24,30,5,5,4,0],[32,32,3,3,2,1],[38,30,4,3,3,2],[44,32,3,3,2,3],
+    [3,39,3,5,3,2],[9,38,5,4,2,0],[17,39,3,5,3,1],[23,39,4,3,2,2],[30,38,5,4,5,3],[38,39,3,5,2,0],[42,38,5,4,3,1],
     /* Freight Yard, container yard: one long warehouse and two sheds north, a shed south */
-    [34,1,12,4,4,7],[48,1,4,3,2,6],[53,2,2,2,3,6],[53,25,2,3,2,8],
+    [51,2,18,6,4,7],[72,2,6,4,2,6],[80,3,3,3,3,6],[80,38,3,4,2,8],
     /* Smelter Row, furnace canyons: one long smelter hall north, tall halls on 3 m canyons south */
-    [57,1,21,4,6,10],[61,10,3,2,2,11],[71,10,3,2,2,9],
-    [57,20,5,4,5,11],[64,20,6,4,7,10],[72,20,6,3,4,9],
-    [57,26,4,4,3,9],[63,27,5,3,4,11],[70,26,3,4,6,10],[75,26,3,4,3,11],
+    [86,2,31,6,6,10],[92,15,4,3,2,11],[107,15,4,3,2,9],
+    [86,30,7,6,5,11],[96,30,9,6,7,10],[108,30,9,5,4,9],
+    [86,39,6,6,3,9],[95,41,7,4,4,11],[105,39,5,6,6,10],[113,39,4,6,3,11],
     /* Glass Quarter, financial district: glass towers of 4 to 7 m in a grid of 2 to 3 m streets, with a plaza in
        the north half under the billboard */
-    [82,1,5,5,7,14],[90,1,4,4,6,15],[97,1,6,4,7,16],[105,1,5,5,6,14],[82,8,3,3,4,17],[103,8,4,3,4,15],
-    [82,20,4,4,6,16],[88,21,3,3,5,17],[93,20,5,4,7,14],[100,20,3,3,4,15],[105,20,5,5,6,16],
-    [82,26,6,4,4,15],[91,26,4,4,6,14],[97,26,3,4,3,17],[102,27,8,3,5,16],
+    [123,2,8,7,7,14],[135,2,6,6,6,15],[146,2,9,6,7,16],[158,2,7,7,6,14],[123,12,5,5,4,17],[155,12,6,5,4,15],
+    [123,30,6,6,6,16],[132,32,5,4,5,17],[140,30,7,6,7,14],[150,30,5,5,4,15],[158,30,7,8,6,16],
+    [123,39,9,6,4,15],[137,39,6,6,6,14],[146,39,4,6,3,17],[153,41,12,4,5,16],
     /* Terminus Yard, the arena: four pylons in the corners and two bunkers mid-wall around an open floor */
-    [114,2,3,3,6,18],[139,2,3,3,6,18],[114,27,3,3,6,18],[139,27,3,3,6,18],[126,1,4,2,3,19],[126,29,4,2,3,19]
+    [171,3,5,5,6,18],[209,3,4,5,6,18],[171,41,5,4,6,18],[209,41,4,4,6,18],[189,2,6,3,3,19],[189,44,6,3,3,19]
   ],
   barriers:[ /* x,y,w,d: 1 m high; the Underpass ones are market stalls */
-    [6,14,1,1],[8,17,1,1],[14,14,2,1],[16,17,1,1],[22,14,1,1],[24,17,2,1],[29,14,1,1],[10,3,1,1],[18,3,1,1],[10,9,1,1],
-    [38,14,1,2],[47,17,2,1],[54,14,1,2],
-    [62,14,1,2],[71,17,2,1],[78,13,1,1],
-    [89,7,2,1],[99,11,1,1],[94,12,2,1],[86,14,1,2],[95,17,2,1],[103,14,1,2],[110,16,1,1],
-    [118,6,2,1],[136,6,2,1],[118,25,2,1],[136,25,2,1]],
+    [9,21,1,1],[12,26,1,1],[21,21,3,1],[24,26,1,1],[33,21,1,1],[36,26,3,1],[44,21,1,1],[15,5,1,1],[27,5,1,1],[15,14,1,1],
+    [57,21,1,3],[71,26,3,1],[81,21,1,3],
+    [93,21,1,3],[107,26,3,1],[117,20,1,1],
+    [134,11,3,1],[149,17,1,1],[141,18,3,1],[129,21,1,3],[143,26,3,1],[155,21,1,3],[165,24,1,1],
+    [177,9,3,1],[204,9,3,1],[177,38,3,1],[204,38,3,1]],
   containers:[ /* x,y,w,d,colour,stack: a stack of 2 or 3 falls when its bottom box is shot out or plowed */
-    [4,29,2,1,[176,74,44],1],
-    [35,8,4,1,[176,74,44],2],[41,8,4,1,[52,108,132],3],[47,8,4,1,[106,128,64],2],[52,9,2,1,[150,62,40],1],[35,10,2,1,[52,108,132],1],[45,10,2,1,[150,62,40],2],
-    [39,21,3,1,[106,128,64],2],[48,21,3,1,[176,74,44],3],[39,26,3,1,[150,62,40],3],[48,26,3,1,[52,108,132],2],
-    [34,21,2,1,[176,74,44],1],[53,22,1,2,[106,128,64],2],[34,29,3,1,[52,108,132],1],
-    [117,9,2,1,[176,74,44],2],[137,9,2,1,[52,108,132],1],[117,22,2,1,[106,128,64],1],[137,22,2,1,[150,62,40],2]],
+    [6,44,3,1,[176,74,44],1],
+    [53,12,6,1,[176,74,44],2],[62,12,6,1,[52,108,132],3],[71,12,6,1,[106,128,64],2],[78,14,3,1,[150,62,40],1],[53,15,3,1,[52,108,132],1],[68,15,3,1,[150,62,40],2],
+    [59,32,4,1,[106,128,64],2],[72,32,5,1,[176,74,44],3],[59,39,4,1,[150,62,40],3],[72,39,5,1,[52,108,132],2],
+    [51,32,3,1,[176,74,44],1],[80,33,1,3,[106,128,64],2],[51,44,5,1,[52,108,132],1],
+    [176,14,3,1,[176,74,44],2],[206,14,3,1,[52,108,132],1],[176,33,3,1,[106,128,64],1],[206,33,3,1,[150,62,40],2]],
   rubble:[ /* x,y,w,d,h: scrap heaps, block walking and can be shot away */
-    [116,14,2,3,1],[140,14,2,3,2],[128,5,2,1,1],[128,26,2,1,1]],
-  billboard:{legs:[[92,9],[97,9]],legH:4,sign:[91,9,8,2,3]},   /* Glass Quarter: a neon sign on two legs over the plaza */
+    [174,21,3,5,1],[210,21,3,5,2],[192,8,3,1,1],[192,39,3,1,1]],
+  billboard:{legs:[[138,14],[146,14]],legH:4,sign:[137,14,12,3,3]},   /* Glass Quarter: a neon sign on two legs over the plaza */
   awnings:[ /* x,y,w,d,z,colour: canvas strung between shack walls; you walk under it */
-    [5,2,2,2,2,[196,84,60]],[23,2,2,2,2,[214,170,70]],[27,6,2,2,2,[52,140,136]],
-    [9,21,2,2,2,[214,170,70]],[19,21,2,2,2,[52,140,136]],[4,26,2,2,2,[196,84,60]],[23,24,2,2,2,[214,170,70]]],
+    [8,3,3,3,2,[196,84,60]],[35,3,3,3,2,[214,170,70]],[41,9,3,3,2,[52,140,136]],
+    [14,32,3,3,2,[214,170,70]],[29,32,3,3,2,[52,140,136]],[6,39,3,3,2,[196,84,60]],[35,36,3,3,2,[214,170,70]]],
   /* Landmarks: legs stand on the street and hold what sits on them. Break every leg and the rest falls as a collapse. */
-  tower:{legs:[[12,4],[16,4],[12,8],[16,8]],legH:4,tank:[12,4,5,5,3]},          /* Underpass: tank x,y,w,d,h on 4 m legs */
-  crane:{x0:37,y0:20,x1:52,y1:29,h:6,trolleyX:44,load:[44,24,3,2]},              /* Freight Yard: frame at 6 m, a container on the hook */
-  gallery:{x:59,y:6,w:16,d:3,z:3,legs:[[60,7],[66,7],[72,7]],vats:[[61,6],[67,7],[71,6]]},   /* Smelter Row: slag vats on a gallery */
-  vats:[[68,11],[62,24],[73,24]],   /* standalone slag vats on a leg frame */
-  chimneys:[[58,10,8],[77,10,8],[70,22,8]],
+  tower:{legs:[[18,6],[25,6],[18,13],[25,13]],legH:4,tank:[18,6,8,8,3]},          /* Underpass: tank x,y,w,d,h on 4 m legs */
+  crane:{x0:56,y0:30,x1:79,y1:44,h:6,trolleyX:66,load:[66,36,4,3]},              /* Freight Yard: frame at 6 m, a container on the hook */
+  gallery:{x:89,y:9,w:24,d:5,z:3,legs:[[90,11],[99,11],[108,11]],vats:[[91,10],[96,11],[102,10],[108,11]]},   /* Smelter Row: slag vats on a gallery */
+  vats:[[102,17],[93,36],[110,36]],   /* standalone slag vats on a leg frame */
+  chimneys:[[87,15,8],[117,15,8],[105,33,8]],
   hues:[ /* 0-5 Underpass brick and ochre, 6-8 Freight Yard sheds, 9-13 Smelter Row iron and soot, 14-17 Glass Quarter glass and stone, 18-19 Terminus Yard */
     [150,92,64],[172,150,116],[96,108,124],[140,70,56],[120,104,88],[112,122,112],
     [128,126,120],[104,116,108],[136,112,92],
@@ -343,7 +344,7 @@ function create(opts){
       fill(cuts[k],o.y0,o.z,w,o.y1-o.y0+1,1,3,sp);
       fill(cuts[k],o.y0,o.z+1,w,1,1,4,sp);fill(cuts[k],o.y1,o.z+1,w,1,1,4,sp);
     }
-    o.pillarsX.forEach(function(px){var p=structure("pillar",null,true);p.x=px;p.y=15;fill(px,15,0,2,2,o.z,1,p)});
+    o.pillarsX.forEach(function(px){var p=structure("pillar",null,true);p.x=px;var py=Math.floor((o.y0+o.y1)/2);p.y=py;fill(px,py,0,2,2,o.z,1,p)});
     function zoneAt(x){for(var k=0;k<ZS.length;k++)if(x<=ZS[k].x1)return ZS[k];return ZS[ZS.length-1]}
     MAP.blocks.forEach(function(b){
       var hue=b[5]%MAP.hues.length,s=structure("building",MAP.hues[hue]),win=zoneAt(b[0]).win||6;s.hue=hue;
@@ -567,7 +568,7 @@ function create(opts){
   /* ----- entities. Player and bots share one shape: position, velocity, armor, radius, height, team. ----- */
   function newPlayer(build,idx){
     var d=deriveStats(build,T);
-    return {team:0,idx:idx||0,x:idx?17:15.5,y:11,z:0,vx:0,vy:0,r:T.player.radius,h:T.player.height,hp:d.maxHp,maxHp:d.maxHp,scrap:0,
+    return {team:0,idx:idx||0,x:MAP.spawn[idx?1:0][0],y:MAP.spawn[idx?1:0][1],z:0,vx:0,vy:0,r:T.player.radius,h:T.player.height,hp:d.maxHp,maxHp:d.maxHp,scrap:0,
       v:cloneBuild(build),spd:d.spd,acc:d.acc,legT:d.legT,torT:d.torT,dmgMul:d.dmgMul,atbRate:d.atbRate,drain:d.drain,heatMul:d.heatMul,gun:d.gun,pileKind:d.pile,noDash:d.noDash,immune:d.immune,
       q:d.q,sq:0,qPrev:false,magnet:d.magnet,dashMul:d.dashMul,dashHeat:d.dashHeat,regen:d.regen,calm:0,
       leg:Math.PI*.75,aim:Math.PI*.75,step:0,heat:0,over:0,cool:0,dash:0,dashCd:0,flash:0,muzzle:0,ax:16,ay:16,az:.6,

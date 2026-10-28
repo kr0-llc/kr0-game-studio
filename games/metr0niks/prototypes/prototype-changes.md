@@ -119,5 +119,5 @@ These GDD statements already match the prototype: the controls table, the dimetr
 
 ## 18. Level design: five sectors with landmarks (done Oct 28, 2026)
 
-kr0 picked concept A + B landmarks ([level design](../level-design.md)). Done in `simulations/sim.js` and the voxel prototype: the new `MAP` (144 m long, five zones, the deck ending over the Terminus Yard arena), materials, landmark builders and district hues in all three art styles. `node simulations/map-check.js` passes. Still to do if kr0 accepts GDD-D41: the slag spill pool where a vat lands. Today vats fall like any other collapse.
+kr0 picked concept A + B landmarks ([level design](../level-design.md)). Done in `simulations/sim.js` and the voxel prototype: the new `MAP` (216 × 48 m, five zones, the deck ending over the Terminus Yard arena; every sector scaled 1.5× so two players fit side by side, with a second drop-in point for player 2), materials, landmark builders and district hues in all three art styles. `node simulations/map-check.js` passes, including a room-for-two check per zone. The ground canvas drops to half resolution on the big map to stay small. Still to do if kr0 accepts GDD-D41: the slag spill pool where a vat lands. Today vats fall like any other collapse.
 

@@ -79,7 +79,7 @@ code{font:13px var(--mono);color:var(--fg)}
   </header>
 
   <section class="fixed" aria-label="Kept in every concept">
-    <div><b>Grid</b>The concepts use the old 80 × 32 × 8 m grid. The built map is 144 m long, with five sectors.</div>
+    <div><b>Grid</b>The concepts use the old 80 × 32 × 8 m grid. The built map is 216 × 48 m, with five sectors, scaled up 1.5× so two players have room.</div>
     <div><b>Overpass</b>Deck at 5 m on fourteen pillars, ending where the arena begins. Break two in a row and the road falls.</div>
     <div><b>Sectors</b>Underpass (level 1), Freight Yard (2), Smelter Row (3), Glass Quarter (4), Terminus Yard arena (5 and up).</div>
     <div><b>Props</b>Placed to match the GDD round in progress: deck spans, container stacks and a gantry crane, slag vats.</div>
@@ -136,13 +136,13 @@ code{font:13px var(--mono);color:var(--fg)}
 
   var COPY={
     M:{zones:[
-      {lv:"Level 1",look:"Shacks of 2 to 4 m on 2 m alleys with awnings, and an open plaza at the drop-in point with a water tower on four legs.",play:"The first fight in the plaza, then alleys. Pillars 11 and 19 frame the plaza, so the first span drop covers it.",enemy:"Patrol bots in the alleys; loaders bog down in the stalls.",props:"Water tower (break all four legs), deck spans."},
-      {lv:"Level 2",look:"A 12 m warehouse and sheds on the north wall, 13 container stacks of 1 to 3, and a gantry crane over the south yard with a box on its hook.",play:"Long lanes and open ground. Shoot out a stack's bottom box and the boxes above fall; drop all four crane legs and the frame falls across the yard.",enemy:"Loaders get their longest charges; few roofs, so the sniper is easy to spot.",props:"Container stacks, gantry crane."},
-      {lv:"Level 3",look:"A 21 m smelter hall, an iron gallery at 3 m carrying three slag vats, tall halls of up to 7 m on 3 m canyons, 8 m chimneys.",play:"Vertical, with the sniper above you. Walk under the gallery and drop it on whatever follows you; vats at the canyon crossings drop when their frames go.",enemy:"The sniper and the wave-5 boss own the roofs.",props:"Slag gallery, street vats, chimneys."},
-      {lv:"Level 4",look:"Glass towers of 4 to 7 m with pink neon windows, on a grid of 2 to 3 m streets, and a plaza under a neon billboard on two legs.",play:"Tall, glassy and fast: windows shatter, and the towers give the sniper roofs on every corner. Drop the billboard on the plaza.",enemy:"The sniper has the most perches here; bots work the street grid.",props:"Billboard (break both legs), deck spans."},
-      {lv:"Level 5+",look:"Where the deck ends: open sky over a 30 × 30 m yard with four 6 m pylons in the corners, two bunkers, scrap heaps and short container stacks on the edge of a painted ring.",play:"The finale. The middle is an 18 m clear floor with room to circle a big boss; cover sits only at the rim.",enemy:"Built for a big boss (not in the GDD yet). Today the wave-5 sniper perches on the pylons.",props:"Container stacks, scrap heaps."}],
-      cost:"Built: <code>sim.js</code> MAP, new materials and builders; the three art styles have district hues. <code>node simulations/map-check.js</code> passes.",
-      risk:"The slag spill from the GDD fun pass is not in yet, and the big boss itself is not designed: the arena is the space for it."},
+      {lv:"Level 1",look:"Shacks of 2 to 4 m on 3 m alleys with awnings, and an open plaza at the drop-in point with a water tower on four legs.",play:"The first fight in the plaza, then alleys. Pillars 17 and 29 frame the plaza, so the first span drop covers it.",enemy:"Patrol bots in the alleys; loaders bog down in the stalls.",props:"Water tower (break all four legs), deck spans."},
+      {lv:"Level 2",look:"An 18 m warehouse and sheds on the north wall, 13 container stacks of 1 to 3, and a gantry crane over the south yard with a box on its hook.",play:"Long lanes and open ground. Shoot out a stack's bottom box and the boxes above fall; drop all four crane legs and the frame falls across the yard.",enemy:"Loaders get their longest charges; few roofs, so the sniper is easy to spot.",props:"Container stacks, gantry crane."},
+      {lv:"Level 3",look:"A 31 m smelter hall, an iron gallery at 3 m carrying four slag vats, tall halls of up to 7 m on 3 to 4 m canyons, 8 m chimneys.",play:"Vertical, with the sniper above you. Walk under the gallery and drop it on whatever follows you; vats at the canyon crossings drop when their frames go.",enemy:"The sniper and the wave-5 boss own the roofs.",props:"Slag gallery, street vats, chimneys."},
+      {lv:"Level 4",look:"Glass towers of 4 to 7 m with pink neon windows, on a grid of 3 to 4 m streets, and a plaza under a neon billboard on two legs.",play:"Tall, glassy and fast: windows shatter, and the towers give the sniper roofs on every corner. Drop the billboard on the plaza.",enemy:"The sniper has the most perches here; bots work the street grid.",props:"Billboard (break both legs), deck spans."},
+      {lv:"Level 5",look:"Where the deck ends: open sky over a 46 × 46 m yard with four 6 m pylons in the corners, two bunkers, scrap heaps and short container stacks on the edge of a painted ring.",play:"The finale. The middle is a 27 m clear floor with room for two mechs to circle a big boss; cover sits only at the rim.",enemy:"Built for the Warden, the big boss proposed in the GDD (not in sim.js yet). Today the wave-5 sniper perches on the pylons.",props:"Container stacks, scrap heaps."}],
+      cost:"Built: <code>sim.js</code> MAP, new materials and builders; the three art styles have district hues. <code>node simulations/map-check.js</code> passes, including a room-for-two check in every zone. Every sector is 1.5× its first size, so two players fit side by side.",
+      risk:"The slag spill from the GDD fun pass is not in yet, and the Warden is not in sim.js. Waves are unchanged, so the bigger map feels sparser solo."},
     A:{zones:[
       {lv:"Level 1",look:"Low shacks of 2 to 4 m on 2 m alleys, canvas awnings strung over the alleys, market stalls between the pillars.",play:"Close range with a corner every few metres; bots come out of alleys. The space under the deck is the only open ground, so you learn the pillars here.",enemy:"Patrol bots. Loaders bog down plowing stalls.",props:"Deck spans (as today)."},
       {lv:"Level 2",look:"One long warehouse, a wide apron, container rows 1 to 2 high with 3 m lanes, a rail line and a gantry crane over the south rows.",play:"Long sightlines and open ground; the dash matters. Containers are cover the loader smashes through.",enemy:"Heavy loaders get long charge lanes. Few roofs, so the sniper is easy to find.",props:"Container stacks, gantry crane."},
@@ -180,7 +180,7 @@ code{font:13px var(--mono);color:var(--fg)}
   /* ---------- voxelize ---------- */
   function hash(x,y,z){var h=x*374761393+y*668265263+z*2147483647;h=(h^(h>>>13))*1274126177;return ((h^(h>>>16))>>>0)/4294967295}
   function fromSim(c){
-    var S=MetroSim.create({seed:7,level:4,builds:[MetroSim.STARTER]}),w=S.world,M=MetroSim.MAT,MP=MetroSim.MAP,col=new Array(W*D*H),ground=new Array(W*D);
+    var S=MetroSim.create({seed:7,level:MetroSim.MAP.zones.length,builds:[MetroSim.STARTER]}),w=S.world,M=MetroSim.MAT,MP=MetroSim.MAP,col=new Array(W*D*H),ground=new Array(W*D);
     for(var i=0;i<w.vox.length;i++){var m=w.vox[i];if(!m)continue;var st=w.structures[w.owner[i]],v=M[m].col;
       if(!v){v=st&&st.hue!==undefined?MP.hues[st.hue]:(st&&st.col)||[128,128,128];if(m===7)v=[v[0]*.72,v[1]*.72,v[2]*.72]}col[i]=v}
     var GR=[[40,43,50],[52,54,56],[44,38,36],[38,42,52],[54,50,44]];
@@ -240,11 +240,11 @@ code{font:13px var(--mono);color:var(--fg)}
 
   /* ---------- plan draw ---------- */
   function drawPlan(c){
-    cv.height=1100;var cw=cv.width,ch=cv.height;g.fillStyle="#0a0d12";g.fillRect(0,0,cw,ch);
+    cv.height=Math.round(Math.min(1100,D*(cv.width-80)/W+140));var cw=cv.width,ch=cv.height;g.fillStyle="#0a0d12";g.fillRect(0,0,cw,ch);
     var s=Math.min((cw-80)/W,(ch-140)/D),ox=(cw-W*s)/2,oy=90;
-    if(c.fromSim){var m=build(c);for(var y=0;y<D;y++)for(var x=0;x<W;x++){var top=-1,v=m.ground[x+y*W];for(var z=H-1;z>=0;z--){var q=m.col[x+y*W+z*W*D];if(q&&!(z===5&&y>=13&&y<=18)&&!(z===6&&(y===13||y===18))){top=z;v=q;break}}
+    if(c.fromSim){var m=build(c),OV=MetroSim.MAP.overpass;for(var y=0;y<D;y++)for(var x=0;x<W;x++){var top=-1,v=m.ground[x+y*W];for(var z=H-1;z>=0;z--){var q=m.col[x+y*W+z*W*D];if(q&&!(z===OV.z&&y>=OV.y0&&y<=OV.y1)&&!(z===OV.z+1&&(y===OV.y0||y===OV.y1))){top=z;v=q;break}}
         var k=top<0?1:.75+top*.06;g.fillStyle="rgb("+Math.min(255,v[0]*k|0)+","+Math.min(255,v[1]*k|0)+","+Math.min(255,v[2]*k|0)+")";g.fillRect(ox+x*s,oy+y*s,s+.5,s+.5)}
-      g.fillStyle="rgba(63,214,232,.10)";g.fillRect(ox,oy+13*s,((MetroSim.MAP.overpass.x1||W-1)+1)*s,6*s);
+      g.fillStyle="rgba(63,214,232,.10)";g.fillRect(ox,oy+OV.y0*s,((OV.x1||W-1)+1)*s,(OV.y1-OV.y0+1)*s);
       ZN.slice(1).map(function(z){return z.x0}).forEach(function(x){g.strokeStyle="#f2b632";g.setLineDash([10,8]);g.lineWidth=3;g.beginPath();g.moveTo(ox+(x+.5)*s,oy+s);g.lineTo(ox+(x+.5)*s,oy+(D-1)*s);g.stroke();g.setLineDash([])});
       g.fillStyle="#ff4fa3";g.beginPath();g.arc(ox+15.5*s,oy+11*s,s*.45,0,7);g.fill();
       g.font="600 "+Math.round(s*1.05)+"px 'Chakra Petch',sans-serif";g.textAlign="center";
@@ -295,7 +295,7 @@ code{font:13px var(--mono);color:var(--fg)}
     var seen={},a=[];z.items.forEach(function(it){if(it[0]==="bld"&&it[7]){var k=it[7].join();if(!seen[k]){seen[k]=1;a.push(it[7])}}});return a.slice(0,5)}
 
   function render(){
-    var c=list[cur];if(c.fromSim){W=MetroSim.W;ZN=MetroSim.MAP.zones}else{W=L.W;ZN=L.ZONES}document.getElementById("cname").textContent=(c.today?"":c.id+" · ")+c.name;document.getElementById("cpitch").textContent=c.pitch;
+    var c=list[cur];if(c.fromSim){W=MetroSim.W;D=MetroSim.D;ZN=MetroSim.MAP.zones}else{W=L.W;D=L.D;ZN=L.ZONES}document.getElementById("cname").textContent=(c.today?"":c.id+" · ")+c.name;document.getElementById("cpitch").textContent=c.pitch;
     [].forEach.call(document.querySelectorAll(".tab"),function(t,i){t.setAttribute("aria-selected",i===cur?"true":"false")});
     (view==="iso"?drawIso:drawPlan)(c);
     var st=stats(c),cp=COPY[c.id],html="";
