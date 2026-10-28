@@ -5,7 +5,8 @@
    3. Each zone has room for two mechs: at least 75% of its street cells sit in a clear 4 x 4 m square.
    4. Each landmark stands while one leg does and falls once every leg is gone. */
 require("./sim.js");var M=globalThis.MetroSim,W=M.W,D=M.D,H=M.H,bad=0;
-function make(){var s=M.create({seed:7,level:M.MAP.zones.length+1,builds:[M.STARTER]});s.setInput(0,{k:0,ax:15,ay:20,az:.6});return s}
+/* a level past the last zone has every zone open with no drop-in; T.level.max (5) stops there, so this run lifts it */
+function make(){var L=M.MAP.zones.length+1,s=M.create({seed:7,level:L,builds:[M.STARTER],tune:{level:{max:L}}});s.setInput(0,{k:0,ax:15,ay:20,az:.6});return s}
 function run(s,n){for(var t=0;t<n;t++)s.step()}
 function kill(s,x,y,z){for(var k=0;k<8&&s.world.get(x,y,z);k++)s.hitVoxel(x,y,z,999)}
 function vox(s,mat){var n=0,v=s.world.vox;for(var i=0;i<v.length;i++)if(v[i]===mat)n++;return n}

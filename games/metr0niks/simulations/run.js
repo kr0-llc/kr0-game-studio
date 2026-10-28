@@ -63,7 +63,7 @@ function climb(o,seed){
   var last=levels[levels.length-1];
   return {seed:seed,climb:true,players:o.players,accuracy:o.accuracy,tuneHash:last.tuneHash,
     result:last.result==="extracted"?"victory":last.result,reached:last.level,
-    scrap:levels.reduce(function(a,x){return x.result==="extracted"?a.map(function(v,i){return v+(x.scrap[i]|0)}):a},levels[0].scrap.map(function(){return 0})),
+    scrap:levels.reduce(function(a,x){return x.result==="extracted"||x.result==="victory"?a.map(function(v,i){return v+(x.scrap[i]|0)}):a},levels[0].scrap.map(function(){return 0})),
     levels:levels};
 }
 
@@ -79,7 +79,7 @@ function main(){
     console.log("victories "+cnt(function(r){return r.result==="victory"})+" · mean level reached "+mean(function(r){return r.reached})+" · mean banked scrap "+mean(function(r){return r.scrap.reduce(function(a,b){return a+b},0)}));
     var by={};recs.forEach(function(r){by[r.reached]=(by[r.reached]||0)+1});console.log("level reached: "+JSON.stringify(by));
   } else {
-    console.log("extracted "+cnt(function(r){return r.result==="extracted"})+" · dead "+cnt(function(r){return r.result==="dead"})+" · timeout "+cnt(function(r){return r.result==="timeout"}));
+    console.log("extracted "+cnt(function(r){return r.result==="extracted"||r.result==="victory"})+" · dead "+cnt(function(r){return r.result==="dead"})+" · timeout "+cnt(function(r){return r.result==="timeout"}));
     console.log("mean seconds "+mean(function(r){return r.seconds})+" · mean kills "+mean(function(r){return r.kills})+" · mean scrap "+mean(function(r){return r.scrap.reduce(function(a,b){return a+b},0)}));
     var dw={};recs.forEach(function(r){if(r.result==="dead")dw[r.wave]=(dw[r.wave]||0)+1});console.log("deaths by wave: "+JSON.stringify(dw));
   }
