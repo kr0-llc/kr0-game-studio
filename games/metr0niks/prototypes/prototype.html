@@ -506,7 +506,7 @@ function lvHp(base){return Math.round(base*(1+T.level.hp*(CAMP.level-1)))}   /* 
 function bind(s){
   sim=s;var w=s.world;vox=w.vox;owner=w.owner;vdmg=w.vdmg;structures=w.structures;
   players=s.players;player=players[0];bots=s.bots;pods=s.pods;shots=s.shots;scraps=s.scraps;debris=s.debris;clusters=s.clusters;pools=s.pools||[];run=s.run;
-  breaches=s.breaches||[];strikes=s.strikes||[];
+  breaches=s.breaches||[];strikes=s.strikes||[];wshells=s.wshells||[];
   meshDirty=true;meshRev=w.rev;
 }
 bind(newSim([MetroSim.STARTER]));
@@ -704,6 +704,7 @@ function handleEvent(e){
     case "w":waveReport(e);break;   /* phase 3: the wave report strip */
     case "ct":contractEvent(e);break;
     case "ch":MF.simState=e[1]==="prompt"?"choose":e[1]==="overtime"?"overtime":MF.simState;if(e[1]==="prompt")MF.chooseT=e[2];break;
+    case "wd":wardenEvent(e);break;   /* phase 7: the Warden */
     case "rv":if(e[1]===player.idx)floats.push({x:player.x,y:player.y,z:2,txt:"REVIVED",col:"#7fdc6a",t:1.2});break;
   }
 }
@@ -1141,7 +1142,7 @@ function voxEdges(v,X,Y,hw,hh,vh){
 var ZONE_DRAW={scuttler:drawScuttler,bulwark:drawBulwark,wrecker:drawWrecker,charge:drawCharge};
 var ZONE_KINDS={3:"scuttler",4:"bulwark",5:"wrecker",6:"charge"};   /* snapshot kind codes (sim.js snapshot) */
 var ELITE_GOLD=[242,194,48];
-function drawerOf(b){return b.boss?drawBoss:b.loader?drawLoader:ZONE_DRAW[b.kind]||drawBot}
+function drawerOf(b){return BOSS_DRAW[b.kind]||(b.boss?drawBoss:b.loader?drawLoader:ZONE_DRAW[b.kind]||drawBot)}   /* phase 7 bosses first */
 function hpBar(b,z,w){
   if(!(b.hp<b.maxHp)||b.dropping)return;
   var x=SX(b.x,b.y,z),y=SY(b.x,b.y,z);w*=zoom;
@@ -1227,6 +1228,116 @@ function drawChargeMark(b){   /* over the voxels: a dashed ring and the fuse, so
   ctx.textAlign="center";ctx.font="700 "+Math.round(12*zoom)+"px 'JetBrains Mono',monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,.8)";ctx.fillStyle="#ff5a4a";
   var X=SX(b.x,b.y,.8),Y=SY(b.x,b.y,.8),t="CHARGE "+left.toFixed(1)+"s";ctx.strokeText(t,X,Y);ctx.fillText(t,X,Y);
 }
+/* ===== Phase 7 bosses (GDD-D51, TDD-D14): the Juggernaut, the Warden (body, legs, platforms; its riders are snipers and use
+   drawBoss), barrage warnings, the stomp tell, the boss bar's name and the Warden's rider and leg pips, the "wd" events, and
+   the co-op guest's view of the boss rows (sim.js snapshot: kinds 7..10, flags 2048 wave-5 variant, 4096 pair, 8192 rider,
+   16384 the Warden down; s.wb barrage warnings). Nothing here changes a rule. ===== */
+var BOSS_DRAW={juggernaut:drawJuggernaut,wbody:drawWardenBody,wplat:drawWardenPlat,wleg:drawWardenLeg};
+var BOSS_KINDS={7:"juggernaut",8:"wbody",9:"wplat",10:"wleg"};
+var wshells;   /* barrage warnings: the sim's array (bind) or, on a guest, the snapshot's; no initializer, so bind's value stays */
+function wardenBody(b){if(b.body)return b.body;var w=null;bots.forEach(function(x){if(x.kind==="wbody"&&(b.bodyId===undefined||x.id===b.bodyId))w=x});return w}
+/* depth key for the entity sort: the body and its platforms and riders sort as one stack above its centre */
+function entKey(b){
+  if(b.kind==="wbody")return b.x+b.y+3;
+  if(b.kind==="wplat"){var w=wardenBody(b);return w?w.x+w.y+3.3:b.x+b.y+3.3}
+  if(b.rider&&b.mode==="ride"){var n=null,nd=1e9;bots.forEach(function(x){if(x.kind!=="wbody")return;var d=Math.hypot(x.x-b.x,x.y-b.y);if(d<nd){nd=d;n=x}});if(n&&nd<4)return n.x+n.y+3.6}
+  return b.x+b.y+(b.z>.05&&b.boss?1.45:0);
+}
+function drawJuggernaut(b){
+  var tell=b.state==="tell",chg=b.state==="charge",z=b.z,x=b.x+(tell?Math.sin(time*90)*.06:0),y=b.y+(tell?Math.cos(time*77)*.06:0);
+  var hull=tell||chg?[214,70,44]:[128,46,36],dark=[72,30,26],blade=chg?[255,214,120]:[150,150,156];
+  if(b.slow>0&&!b.dropping)frostRing(b);
+  if(b.dropping)dropRing(b,.9);else shadow(b.x,b.y,1.1,.45);
+  var hc=Math.cos(b.head),hs=Math.sin(b.head),P=[];
+  [-1,1].forEach(function(s){P.push({x:x-hs*s*.6,y:y+hc*s*.6,z:z,hw:.85,hd:.2,h:.45,a:b.head,col:[40,40,42]})});   /* treads */
+  P.push({x:x,y:y,z:z+.38,hw:.72,hd:.58,h:.62,a:b.head,col:hull});
+  P.push({x:x-hc*.12,y:y-hs*.12,z:z+1,hw:.5,hd:.5,h:.48,a:b.head,col:dark});   /* armored cab */
+  P.push({x:x+hc*.3,y:y+hs*.3,z:z+1.32,hw:.06,hd:.32,h:.1,a:b.head,col:tell||chg?[255,80,50]:[255,150,60]});   /* visor slit */
+  [-1,1].forEach(function(s){P.push({x:x-hs*s*.62-hc*.1,y:y+hc*s*.62-hs*.1,z:z+1.02,hw:.34,hd:.16,h:.36,a:b.head,col:b.hard?[242,120,40]:[96,40,32]})});   /* shoulder plates; orange on the wave-5 variant */
+  P.push({x:x+hc*.92,y:y+hs*.92,z:z+.1,hw:.1,hd:.8,h:.7,a:b.head,col:blade});   /* plow blade */
+  P.push({x:x+hc*.98,y:y+hs*.98,z:z+.78,hw:.06,hd:.62,h:.12,a:b.head,col:[90,90,96]});
+  drawParts(P,b.flash>0);
+  hpBar(b,2.3,58);
+}
+function wardenLegs(b){   /* legs standing and riders up: the sim's parts (host) or the row's fields (guest) */
+  if(b.parts)return {legs:b.parts.filter(function(e){return e.kind==="wleg"&&e.hp>0}).length,riders:b.riders.filter(function(r){return r.hp>0&&r.mode==="ride"}).length};
+  var m=b.legMask|0,n=0;for(var k=0;k<4;k++)if(m&(1<<k))n++;return {legs:n,riders:b.ridersUp|0};
+}
+function drawWardenBody(b){
+  var z=b.z,fl=b.flash>0,hc=Math.cos(b.head),hs=Math.sin(b.head),ac=Math.cos(b.aim),as=Math.sin(b.aim),P=[],tell=b.tell>0;
+  shadowAt(b.x,b.y,0,3.2,b.down?.5:.32);
+  var hull=tell?[170,70,56]:[92,88,84],plate=[120,114,104],bob=b.down?0:Math.sin(b.step*.8)*.05;
+  P.push({x:b.x,y:b.y,z:z+bob,hw:2.8,hd:2.8,h:.9,a:b.head,col:hull});
+  P.push({x:b.x-hc*.3,y:b.y-hs*.3,z:z+.9+bob,hw:2.2,hd:2.4,h:.25,a:b.head,col:plate});   /* deck plate the platforms sit on */
+  P.push({x:b.x,y:b.y,z:z-.3+bob,hw:1,hd:1,h:.3,a:b.head,col:[60,56,52]});   /* belly hatch: the Scuttler packs come out here */
+  P.push({x:b.x+ac*2.7,y:b.y+as*2.7,z:z+.2+bob,hw:.5,hd:.7,h:.55,a:b.aim,col:[70,66,62]});   /* command head */
+  P.push({x:b.x+ac*3.15,y:b.y+as*3.15,z:z+.48+bob,hw:.06,hd:.5,h:.1,a:b.aim,col:tell?[255,60,40]:[255,120,60]});
+  [-1,1].forEach(function(s){P.push({x:b.x-hc*1.6-hs*s*1.9,y:b.y-hs*1.6+hc*s*1.9,z:z+.9+bob,hw:.5,hd:.3,h:.5,a:b.head,col:[78,74,70]})});   /* barrage tubes */
+  drawParts(P,fl);
+  if(b.down){ctx.strokeStyle="rgba(255,140,60,.5)";ctx.lineWidth=2*zoom;ring(b.x,b.y,0,3.1);ctx.stroke()}
+  if(b.hp<b.maxHp){var X=SX(b.x,b.y,z+2.2),Y=SY(b.x,b.y,z+2.2),w=120*zoom;
+    ctx.fillStyle="rgba(0,0,0,.6)";ctx.fillRect(X-w/2-1,Y-1,w+2,6);ctx.fillStyle="#ff5a4a";ctx.fillRect(X-w/2,Y,w*Math.max(0,b.hp/b.maxHp),4)}
+}
+function drawWardenLeg(b){
+  var w=wardenBody(b),top=b.h||(w?w.z:T.warden.z),hc=Math.cos(b.head),hs=Math.sin(b.head),knee=top*.48,sw=w&&!w.down?Math.sin(w.step*.8+b.slot*1.6)*.12:0;
+  shadow(b.x,b.y,.6,.35);
+  var col=[104,98,90];
+  drawParts([{x:b.x+hc*sw,y:b.y+hs*sw,z:0,hw:.55,hd:.55,h:.25,a:b.head,col:[58,56,54]},
+    {x:b.x+hc*sw*.5,y:b.y+hs*sw*.5,z:.25,hw:.32,hd:.32,h:knee-.25,a:b.head,col:col},
+    {x:b.x,y:b.y,z:knee,hw:.42,hd:.42,h:.3,a:b.head,col:[70,66,62]},
+    {x:b.x,y:b.y,z:knee+.3,hw:.36,hd:.36,h:Math.max(.1,top-knee-.3),a:b.head,col:col}],b.flash>0);
+  hpBar(b,Math.min(top,3)+.3,40);
+}
+function drawWardenPlat(b){
+  drawParts([{x:b.x,y:b.y,z:b.z,hw:.72,hd:.72,h:b.h||.35,a:b.head,col:[132,124,108]},
+    {x:b.x,y:b.y,z:b.z+(b.h||.35),hw:.74,hd:.06,h:.25,a:b.head+Math.PI/2,col:[214,170,52]}],b.flash>0);
+  hpBar(b,b.z+1.5,34);
+}
+/* over the voxels: each barrage warning's four circles filling as the shells come in, and the stomp's ring under the body */
+function drawBossMarks(){
+  var A=T.warden.barrage,pl=.5+.5*Math.sin(time*12);
+  (wshells||[]).forEach(function(k){var u=1-Math.max(0,k.t)/A.warn;
+    k.pts.forEach(function(pt){
+      ctx.fillStyle=TH.ink?"rgba(150,40,30,"+(.1+.25*u)+")":"rgba(255,50,30,"+(.08+.3*u)+")";ring(pt[0],pt[1],0,A.radius*Math.max(.15,u));ctx.fill();
+      ctx.strokeStyle="rgba(255,60,40,"+(.45+.45*pl)+")";ctx.lineWidth=2*zoom;ring(pt[0],pt[1],0,A.radius);ctx.stroke()});
+    var e=k.pts[k.pts.length-1],X=SX(e[0],e[1],.4),Y=SY(e[0],e[1],.4),t="BARRAGE "+Math.max(0,k.t).toFixed(1)+"s";
+    ctx.textAlign="center";ctx.font="700 "+Math.round(12*zoom)+"px 'JetBrains Mono',monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,.8)";ctx.fillStyle="#ff5a4a";ctx.strokeText(t,X,Y);ctx.fillText(t,X,Y)});
+  bots.forEach(function(b){if(b.kind!=="wbody"||!(b.tell>0))return;var S=T.warden.stomp,u=1-b.tell/S.tell;
+    ctx.fillStyle="rgba(255,60,40,"+(.12+.3*u)+")";ring(b.x,b.y,0,S.radius);ctx.fill();
+    ctx.strokeStyle="rgba(255,80,50,"+(.6+.4*pl)+")";ctx.lineWidth=(2+3*u)*zoom;ring(b.x,b.y,0,S.radius*(1-.6*u)+.2);ctx.stroke();
+    var X=SX(b.x,b.y,.6),Y=SY(b.x,b.y,.6);ctx.textAlign="center";ctx.font="700 "+Math.round(13*zoom)+"px 'JetBrains Mono',monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,.8)";ctx.fillStyle="#ff5a4a";ctx.strokeText("STOMP",X,Y);ctx.fillText("STOMP",X,Y)});
+}
+function wardenEvent(e){
+  var w=e[1],x=e[2],y=e[3],z=e[4];
+  if(w==="shell")rings.push({x:x,y:y,z:z,r:T.warden.barrage.radius,t:.35,max:.35,col:"255,150,70"});
+  else if(w==="stomp")rings.push({x:x,y:y,z:0,r:T.warden.stomp.radius,t:.4,max:.4,col:"255,110,60"});
+  else if(w==="leg")floats.push({x:x,y:y,z:3,txt:"LEG BROKEN",col:"#f2c230",t:1.4,big:1.5});
+  else if(w==="platform")floats.push({x:x,y:y,z:z+1,txt:"PLATFORM DOWN",col:"#f2c230",t:1.2,big:1.3});
+  else if(w==="down")floats.push({x:x,y:y,z:3,txt:"WARDEN DOWN",col:"#ff8a3a",t:2,big:2});
+}
+/* the boss bar: the Warden first (with rider and leg pips), then the Juggernaut, then the snipers (a pair as one bar) */
+function bossBar(){
+  var w=null,j=null,sn=[];bots.forEach(function(b){if(b.hp<=0)return;if(b.kind==="wbody")w=b;else if(b.kind==="juggernaut")j=b;else if(b.boss&&!b.rider)sn.push(b)});
+  var name="",hp=0,mx=0,pairs=sn.filter(function(b){return b.pair});
+  if(w){var L=wardenLegs(w);name="The Warden  "+"●".repeat(L.riders)+"○".repeat(Math.max(0,3-L.riders))+"  legs "+"■".repeat(L.legs)+"□".repeat(4-L.legs);hp=w.hp;mx=w.maxHp}
+  else if(j){name="Juggernaut";hp=j.hp;mx=j.maxHp}
+  else if(pairs.length){name="Sniper pair";pairs.forEach(function(b){hp+=b.hp;mx+=b.maxHp})}
+  else if(sn.length){name="Bounty sniper";hp=sn[0].hp;mx=sn[0].maxHp}
+  hudEls.bb.hidden=!mx;if(!mx)return;
+  var sp=hudEls.bb.querySelector(".bl span");if(sp&&sp.textContent!==name)sp.textContent=name;
+  hudEls.bbT.textContent=Math.ceil(hp);hudEls.bbI.style.width=Math.max(0,hp/mx*100)+"%";
+}
+/* guest: the boss fields of a snapshot row (botView has built the rest) */
+function bossView(o,r,k,f){
+  if(f&2048)o.hard=true;if(f&4096)o.pair=true;if(f&8192){o.rider=true;o.mode=o.mode==="jump"?"jump":"ride"}
+  if(k===2)o.maxHp=lvHp(T.boss.hp*(o.pair?T.pair.hp:1)*(o.hard?T.boss.hard.hp:1));
+  if(k<7)return;
+  o.kind=BOSS_KINDS[k];o.t=r[9];o.maxHp=r[10];o.boss=false;
+  if(k===7){o.jugg=true;o.r=T.juggernaut.radius}
+  else if(k===8){o.legMask=r[11];o.ridersUp=r[12];o.tell=r[13];o.down=!!(f&16384);o.air=true;o.r=T.warden.radius;o.h=T.warden.height;o.step=(o.x+o.y)*3}
+  else{o.bodyId=r[11];o.slot=r[12];o.part=true;o.r=k===10?T.warden.leg.radius:T.warden.platform.radius;o.h=k===9?T.warden.platform.height:0}
+}
+/* ===== end of phase 7 ===== */
 function render(){
   if(meshDirty)rebuildMesh();
   ctx.fillStyle=TH.bg;ctx.fillRect(0,0,cw,ch);
@@ -1244,7 +1355,7 @@ function render(){
   /* Merge entities into the sorted voxel list by depth (x+y). */
   var ents=[],p=focusP();
   players.forEach(function(q){if(q.hp>0)ents.push({k:q.x+q.y,f:drawPlayer,o:q})});
-  bots.forEach(function(b){ents.push({k:b.x+b.y+(b.z>.05&&b.boss?1.45:0),f:drawerOf(b),o:b})});
+  bots.forEach(function(b){ents.push({k:entKey(b),f:drawerOf(b),o:b})});   /* entKey: phase 7 stacks the Warden above its centre */
   pods.forEach(function(o){if(o.landed||o.t<=0)ents.push({k:o.x+o.y,f:drawPod,o:o})});
   breaches.forEach(function(c){ents.push({k:c.x+c.y,f:drawCharge,o:c})});
   shots.forEach(function(s){ents.push({k:s.x+s.y,f:drawShot,o:s})});
@@ -1271,7 +1382,7 @@ function render(){
   bots.forEach(function(b){if(b.boss)drawBossFx(b);else if(b.kind==="charge")drawChargeMark(b)});
   drawCables();
   pods.forEach(drawPodMark);   /* on top of the voxels so a pod under the overpass stays visible */
-  strikes.forEach(drawStrikeMark);drawRings();drawBolts();
+  strikes.forEach(drawStrikeMark);drawBossMarks();drawRings();drawBolts();
   drawZoneLabels();
   drawParticles();drawFloats();drawPodText();drawTags();drawPost();drawCrosshair();drawVignette();
   camX-=shx;camY-=shy;
@@ -1447,8 +1558,7 @@ function hud(){
   hudEls.w.textContent=ot?"OT":R.wave+" / "+T.waves.length;hudEls.wl.textContent=ot?"Overtime":"Wave";
   hudEls.el.textContent=chs?"Extract in":br?"Next wave in":"Enemies";hudEls.e.textContent=chs?Math.ceil(chooseLeft())+"s":br?R.breather.toFixed(1)+"s":enemyCount();
   hudMatch();
-  bots.forEach(function(b){if(b.boss&&b.hp>0)bs=b});
-  hudEls.bb.hidden=!bs;if(bs){hudEls.bbT.textContent=Math.ceil(bs.hp);hudEls.bbI.style.width=Math.max(0,bs.hp/bs.maxHp*100)+"%"}
+  bossBar();   /* phase 7: the boss's name, the Warden's rider and leg pips */
 }
 
 /* ===== Phase 3, match flow view (GDD-D37, D38, D39, D50, D52): contract and condition on the HUD, the wave report strip,
@@ -2115,6 +2225,7 @@ function botView(r,pr,u){
   o.x=pr?lerp(pr[2],r[2],u):r[2];o.y=pr?lerp(pr[3],r[3],u):r[3];o.z=pr?lerp(pr[4],r[4],u):r[4];
   o.head=pr?lerpAng(pr[5],r[5],u):r[5];o.aim=pr?lerpAng(pr[6],r[6],u):r[6];
   if(k===2){o.tell=r[9];o.base=r[10];if(f&16){o.mode="jump";o.j1=[r[11],r[12],r[13]]}}
+  if(k>=7||f&(2048|4096|8192))bossView(o,r,k,f);   /* phase 7 */
   return o;
 }
 /* Build what render() reads (bots, shots, pods, scraps, clusters, the other mech) ~T.net.delay behind the newest snapshot. */
@@ -2130,6 +2241,7 @@ function guestView(){
   scraps=m.sr.map(function(r){var pr=ma.sr[r[0]];return {x:pr?lerp(pr[1],r[1],u):r[1],y:pr?lerp(pr[2],r[2],u):r[2],z:pr?lerp(pr[3],r[3],u):r[3],spin:r[4]}});
   pods=m.pd.map(function(r){var pr=ma.pd[r[0]];return {type:MetroSim.POD_TYPES[r[1]]||"repair",x:r[2],y:r[3],z:pr?lerp(pr[4],r[4],u):r[4],t:r[5],landed:!!r[6]}});
   breaches=(m.bc||[]).map(function(r){return {id:r[0],by:r[1],x:r[2],y:r[3],z:r[4]}});
+  wshells=(m.wb||[]).map(function(r){var o={id:r[0],t:r[1],pts:[]};for(var k=2;k<r.length;k+=2)o.pts.push([r[k],r[k+1]]);return o});   /* phase 7 */
   strikes=(m.sk||[]).map(function(r){var o={id:r[0],by:r[1],t:r[2],x:r[3],y:r[4],pts:null};if(r.length>5){o.pts=[];for(var k=5;k<r.length;k+=2)o.pts.push([r[k],r[k+1]])}return o});
   var keep=[];   /* falling pieces exist while either surrounding snapshot lists them */
   clusters.forEach(function(c){var rb=m.cl.filter(function(r){return r[0]===c.id})[0],ra=ma.cl[c.id],r=rb||ra;
