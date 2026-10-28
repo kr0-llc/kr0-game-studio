@@ -17,3 +17,14 @@ Notes:
 - The four-view turnaround is not the six-angle set from the turnaround workflow (see [design workflows](../../../../studio/design-workflows.md)). Its last two panels are both rear views. A real turnaround run should go in `turnaround/<angle>.png`.
 - The ink prototype's parts sheets (`art/metr0niks/ink-proto/sheets/`) were made with these images as reference.
 - The art style for Metr0niks is still "Not chosen" in `studio/art-style-guides.md`. These images set the mech's design and palette, not the final rendering style.
+
+## Round 2 (28 October 2026)
+
+Made after kr0's review comments on the [animation review page](https://claude.ai/artifact/34bv3u8XC7SwX124pWuEC8). kr0 approved both runs. The masters stay in Scenario; these are previews.
+
+| File | What it is | Scenario asset | Model | Credits |
+| --- | --- | --- | --- | --- |
+| `parts/sheet-v2.webp` | Puppet parts sheet v2: torso, thigh, shin, reactor pack, minigun arm, pile-bunker arm, all at one scale with ball joints. It replaces the rejected `ink-proto/sheets/player_parts.webp` once kr0 approves it | `asset_AMDXu4YY3qLgskrTWtqTKnE6` | GPT Image 2.5 Sunburst | 4 |
+| `sprites/dash-iso/` | Isometric dash, frame-by-frame: `sheet.webp` (the 4 × 3 grid) and `frame-01.webp` to `frame-12.webp` (366 × 323, white keyed out, scaled to fit) | `asset_1c381Us51PCRqc88pdNj9rzh` | GPT Image 2 | 13 |
+
+Prompts: `../../prompts/tim-o-parts-v2.txt` and `../../prompts/tim-o-sprites-dash-iso.txt`. Known issues with the dash are listed on the review page: frames 11 and 12 stand taller than frame 1, the pack is mostly hidden, and he faces the camera while dashing sideways.

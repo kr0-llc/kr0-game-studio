@@ -1,0 +1,17 @@
+Tim-o puppet parts sheet, v2 (replaces ink-proto/sheets/player_parts.webp, rejected by kr0 on 2026-10-28: parts don't align)
+Tool: Scenario, GPT Image 2.5 Sunburst (model_openai-gpt-image-2-5-sunburst), 1536 x 1024, quality medium, background transparent
+References: asset_aST66TQJhq3jT1eHFbAsnexF (Tim-o character sheet), asset_fgDKMUX8fgmRfwyzQSSFqv2s (four-view turnaround)
+Approved by kr0 on 2026-10-28 ("go ahead", with the isometric dash). Run job_4BRQQfYEz8aQvdSCwukB7wCg, output asset_AMDXu4YY3qLgskrTWtqTKnE6, 4 credits. Preview: ../characters/tim-o/parts/sheet-v2.webp. Not yet wired into the ink prototype.
+
+Prompt:
+Game sprite parts sheet for a 2D cut-out puppet of the mech in the reference images: Tim-o, a 2.4 metre heavy salvage mech. Copy his design exactly from the character sheet: a big round peach torso with sage-green armour bands and a single round lens set in a sage ring on the front, broad rounded sage-green shoulder pads, chunky peach legs with round sage knee plates, and a pressurised reactor backpack. Heavy and solid, not small or cute.
+Every part is drawn at THE SAME SCALE, as if the assembled mech were taken apart, from the same camera: a high three-quarter view, camera about 35 degrees above, the mech facing to the RIGHT and slightly toward the viewer. All parts face the same way.
+Draw each part SEPARATELY on a transparent background, with generous empty space between parts, none touching or overlapping, laid out in a neat grid:
+1) the torso alone, no arms, no legs, no pack: the round body with its lens, with a round shoulder socket on the near (right-facing) side and two round hip sockets underneath;
+2) one thigh: a straight upper leg piece, rounded ball joint at the top end (hip) and at the bottom end (knee), drawn vertical;
+3) one shin with its chunky foot: rounded ball joint at the top end (knee), the foot flat on the bottom, drawn vertical;
+4) the right arm: a sage shoulder pad on a rounded ball joint at the shoulder end, upper arm, forearm ending in a stubby rotary minigun, the whole arm pointing straight out horizontally to the right;
+5) the left arm: the same shoulder pad and ball joint, forearm ending in a hydraulic pile-bunker spike, pointing straight out horizontally to the right;
+6) the reactor backpack alone, seen from the same side, with two short downward-angled thruster nozzles at its bottom.
+Joint ends are plain round caps so the parts can rotate around them without showing gaps. No shading that only makes sense in one pose.
+ART STYLE: sun-bleached ligne-claire comic ink like the reference: confident clean black outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0), simple soft cel shading. No text, no labels, no numbers, no ground shadow, no background.

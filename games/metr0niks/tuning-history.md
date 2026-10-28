@@ -72,3 +72,10 @@ None yet.
 ## Tokens per story
 
 None logged yet.
+
+## Scenario credits per character
+
+| Date | Character | What | Credits |
+| --- | --- | --- | --- |
+| 2026-10-28 | Tim-o | Puppet parts sheet v2 (GPT Image 2.5 Sunburst, medium, transparent) | 4 |
+| 2026-10-28 | Tim-o | Isometric dash sprite sheet (GPT Image 2, medium) | 13 |
