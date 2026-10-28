@@ -540,7 +540,7 @@ Direction: synthwave and retrowave (GDD-D26). Music uses analog-style synth bass
 | Enemies | Scuttler skitter, flash and pop | A pack moves; one is about to explode; it explodes |
 | Enemies | Bulwark shield block, bash, shield break | A shot hits the shield; it bashes; a Perfect breaks the shield |
 | Enemies | Wrecker charge plant beep, charge blast | A charge is being planted or counting down; it goes off |
-| World | Container topple, crane hook snap, slag spill and sizzle | A stack falls; a hook is shot; a vat tips and its pool burns |
+| World | Container topple, crane collapse, slag spill and sizzle | A stack falls; the crane comes down; a vat falls and its pool burns |
 | Pods | Scrap cache burst, strike beacon whistle | A cache opens; a strike line is about to land |
 | Match | Contract complete, Overtime called, Crossfire | A contract is done; the host calls Overtime; a Crossfire lands |
 
