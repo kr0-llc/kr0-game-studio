@@ -841,12 +841,15 @@ function drawBot(b){
     shadow(b.x,b.y,.5,.25+.3*(1-b.z/T.bot.dropHeight));
   } else shadow(b.x,b.y,.55);
   if(b.slow>0)frostRing(b);
+  if(b.elite&&!b.dropping)eliteRing(b);
   var P=[],hc=Math.cos(b.head),hs=Math.sin(b.head),ac=Math.cos(b.aim),as=Math.sin(b.aim);
   [-1,1].forEach(function(s){P.push({x:b.x-hs*s*.3,y:b.y+hc*s*.3,z:z,hw:.42,hd:.1,h:.28,a:b.head,col:[40,40,42]})});
   P.push({x:b.x,y:b.y,z:z+.18,hw:.34,hd:.26,h:.3,a:b.head,col:[140,70,56]});
+  if(b.elite)P.push({x:b.x,y:b.y,z:z+.44,hw:.36,hd:.28,h:.05,a:b.head,col:ELITE_GOLD});   /* Elite: gold trim */
   drawParts(P,fl);
   var U=[];
   U.push({x:b.x,y:b.y,z:z+.48,hw:.22,hd:.22,h:.26,a:b.aim,col:[170,90,60]});
+  if(b.elite)U.push({x:b.x,y:b.y,z:z+.74,hw:.14,hd:.14,h:.05,a:b.aim,col:ELITE_GOLD});
   U.push({x:b.x+ac*.34,y:b.y+as*.34,z:z+.6,hw:.18,hd:.05,h:.08,a:b.aim,col:[50,50,54]});
   U.push({x:b.x+ac*.2,y:b.y+as*.2,z:z+.66,hw:.04,hd:.12,h:.06,a:b.aim,col:[255,90,74]});
   drawParts(U,fl);
@@ -860,6 +863,7 @@ function drawLoader(b){
   var tell=b.state==="tell",hot=tell||b.state==="charge",z=b.z,x=b.x+(tell?Math.sin(time*90)*.05:0),y=b.y+(tell?Math.cos(time*77)*.05:0);
   var base=hot?[255,214,40]:[168,142,48],dark=hot?[230,180,30]:[134,114,38];
   if(b.slow>0&&!b.dropping)frostRing(b);
+  if(b.elite&&!b.dropping)eliteRing(b);
   if(b.dropping){
     ctx.strokeStyle="rgba(255,90,74,.8)";ctx.lineWidth=2;ring(b.x,b.y,0,.7+Math.min(1,b.z/T.bot.dropHeight)*.6);ctx.stroke();
     shadow(b.x,b.y,.7,.25+.3*(1-b.z/T.bot.dropHeight));
@@ -873,6 +877,7 @@ function drawLoader(b){
   P.push({x:x-hc*.5,y:y-hs*.5,z:z+.78,hw:.3,hd:.42,h:.46,a:b.head,col:[112,72,50]});   /* ore bucket */
   P.push({x:x-hc*.5,y:y-hs*.5,z:z+1.24,hw:.22,hd:.32,h:.1,a:b.head,col:[52,50,48]});
   P.push({x:x-hc*.46,y:y-hs*.46+.05,z:z+1.34,hw:.1,hd:.1,h:.08,a:b.head+.5,col:[74,70,66]});
+  if(b.elite){P.push({x:x,y:y,z:z+.72,hw:.53,hd:.41,h:.06,a:b.head,col:ELITE_GOLD});P.push({x:x+hc*.18,y:y+hs*.18,z:z+1.08,hw:.25,hd:.31,h:.04,a:b.head,col:ELITE_GOLD})}   /* Elite: gold trim */
   drawParts(P,b.flash>0);
   if(b.hp<b.maxHp&&!b.dropping){
     var sx=SX(b.x,b.y,1.7),sy=SY(b.x,b.y,1.7),w=44*zoom;
@@ -989,6 +994,97 @@ function voxEdges(v,X,Y,hw,hh,vh){
   if(e&256)L(X-hw,Y+hh,X,Y+2*hh);if(e&512)L(X-hw,Y+hh+vh,X,Y+2*hh+vh);if(e&1024)L(X,Y+2*hh,X,Y+2*hh+vh);if(e&2048)L(X-hw,Y+hh,X-hw,Y+hh+vh);
   ctx.strokeStyle=TH.ink;ctx.lineWidth=Math.min(2.6,1.15*zoom);ctx.stroke();ctx.lineWidth=1;   /* quads stroke their seams at width 1 */
 }
+/* ===== Phase 4 zone enemies (GDD-D40): Scuttler, Bulwark, Wrecker and its charge, and the Elite's gold trim. Each draws
+   from sim fields or, on a co-op guest, from the snapshot row that botView unpacks (kind, elite, state, t, shieldOff). ===== */
+var ZONE_DRAW={scuttler:drawScuttler,bulwark:drawBulwark,wrecker:drawWrecker,charge:drawCharge};
+var ZONE_KINDS={3:"scuttler",4:"bulwark",5:"wrecker",6:"charge"};   /* snapshot kind codes (sim.js snapshot) */
+var ELITE_GOLD=[242,194,48];
+function drawerOf(b){return b.boss?drawBoss:b.loader?drawLoader:ZONE_DRAW[b.kind]||drawBot}
+function hpBar(b,z,w){
+  if(!(b.hp<b.maxHp)||b.dropping)return;
+  var x=SX(b.x,b.y,z),y=SY(b.x,b.y,z);w*=zoom;
+  ctx.fillStyle="rgba(0,0,0,.6)";ctx.fillRect(x-w/2-1,y-1,w+2,5);
+  ctx.fillStyle=b.elite?"#f2c230":"#ff5a4a";ctx.fillRect(x-w/2,y,w*Math.max(0,b.hp/b.maxHp),3);
+}
+function dropRing(b,r){
+  ctx.strokeStyle="rgba(255,90,74,.8)";ctx.lineWidth=2;ring(b.x,b.y,0,r+Math.min(1,b.z/T.bot.dropHeight)*.6);ctx.stroke();
+  shadow(b.x,b.y,r,.25+.3*(1-b.z/T.bot.dropHeight));
+}
+function eliteRing(b){   /* Elites wear gold: a gold ring at their feet */
+  ctx.strokeStyle=TH.ink?"rgba(150,110,20,.9)":"rgba(242,194,48,.85)";ctx.lineWidth=2*zoom;ring(b.x,b.y,0,b.r+.25);ctx.stroke();
+}
+function shieldDown(b){return b.shieldOff!==undefined?b.shieldOff:b.shieldEnd>sim.tick}
+/* Scuttler: a low, four-legged drone with an amber shell; it flashes red and white for 0.4 s before it blows. */
+function drawScuttler(b){
+  var z=b.z,fl=b.flash>0,boom=b.state==="flash",blink=boom&&Math.sin(time*60)>0;
+  if(b.dropping)dropRing(b,.35);else shadow(b.x,b.y,.36,.35);
+  if(b.slow>0&&!b.dropping)frostRing(b);
+  if(boom){var R=T.scuttler.blast,a=.25+.35*(1-Math.max(0,b.t)/T.scuttler.flash);   /* the blast's reach on the ground */
+    ctx.fillStyle=TH.ink?"rgba(217,96,74,"+a*.6+")":"rgba(255,90,74,"+a*.5+")";ring(b.x,b.y,0,R);ctx.fill();
+    ctx.strokeStyle="rgba(255,90,74,"+(a+.3)+")";ctx.lineWidth=2*zoom;ring(b.x,b.y,0,R);ctx.stroke()}
+  var hc=Math.cos(b.head),hs=Math.sin(b.head),P=[],sw=Math.sin(b.step*6)*.06;
+  [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(function(q,i){var o=(i%2?sw:-sw);
+    P.push({x:b.x+hc*(q[0]*.17+o)-hs*q[1]*.2,y:b.y+hs*(q[0]*.17+o)+hc*q[1]*.2,z:z,hw:.05,hd:.05,h:.16,a:b.head,col:[40,40,42]})});
+  P.push({x:b.x,y:b.y,z:z+.12,hw:.24,hd:.2,h:.14,a:b.head,col:blink?[255,255,255]:boom?[255,90,74]:[214,160,40]});
+  P.push({x:b.x-hc*.04,y:b.y-hs*.04,z:z+.26,hw:.14,hd:.13,h:.08,a:b.head,col:[96,84,60]});
+  P.push({x:b.x+hc*.22,y:b.y+hs*.22,z:z+.18,hw:.04,hd:.08,h:.05,a:b.head,col:boom?[255,255,255]:[255,90,74]});
+  drawParts(P,fl);
+  hpBar(b,.9,22);
+}
+/* Bulwark: a steel loader body behind a tall riot shield on its walk side; a broken shield hangs as a stub. */
+function drawBulwark(b){
+  var z=b.z,fl=b.flash>0,hc=Math.cos(b.head),hs=Math.sin(b.head),down=shieldDown(b),push=b.bashT>0||b.state==="bash"?.3:0;
+  if(b.dropping)dropRing(b,.7);else shadow(b.x,b.y,.8,.4);
+  if(b.slow>0&&!b.dropping)frostRing(b);
+  if(b.elite)eliteRing(b);
+  var P=[];
+  [-1,1].forEach(function(s){P.push({x:b.x-hs*s*.42,y:b.y+hc*s*.42,z:z,hw:.56,hd:.13,h:.32,a:b.head,col:[46,46,48]})});
+  P.push({x:b.x-hc*.08,y:b.y-hs*.08,z:z+.28,hw:.46,hd:.4,h:.56,a:b.head,col:[110,120,134]});
+  P.push({x:b.x-hc*.2,y:b.y-hs*.2,z:z+.84,hw:.24,hd:.28,h:.3,a:b.head,col:[84,92,104]});
+  P.push({x:b.x+hc*.02,y:b.y+hs*.02,z:z+.98,hw:.04,hd:.2,h:.08,a:b.head,col:[255,140,60]});   /* visor */
+  drawParts(P,fl);
+  var sx=b.x+hc*(.66+push),sy=b.y+hs*(.66+push),S=[];
+  if(!down){
+    S.push({x:sx,y:sy,z:z+.06,hw:.07,hd:.68,h:1.28,a:b.head,col:[70,92,116]});
+    S.push({x:sx+hc*.05,y:sy+hs*.05,z:z+1.22,hw:.05,hd:.62,h:.06,a:b.head,col:[200,220,255]});   /* lit rim: the side it blocks */
+    S.push({x:sx+hc*.06,y:sy+hs*.06,z:z+.6,hw:.04,hd:.12,h:.24,a:b.head,col:[32,40,50]});   /* view slit */
+  } else {
+    S.push({x:sx,y:sy,z:z+.06,hw:.07,hd:.3,h:.5,a:b.head+.35,col:[60,64,70]});
+    if(Math.sin(time*20)>0)S.push({x:sx,y:sy,z:z+.56,hw:.04,hd:.18,h:.04,a:b.head+.35,col:[255,170,60]});
+  }
+  drawParts(S,fl);
+  hpBar(b,1.9,46);
+}
+/* Wrecker: a lean purple walker with a rack of red charges on its back; planting, it kneels and a ring fills over it. */
+function drawWrecker(b){
+  var z=b.z,fl=b.flash>0,hc=Math.cos(b.head),hs=Math.sin(b.head),plant=b.state==="plant",kneel=plant?.12:0,sw=Math.sin(b.step*3.5)*.12;
+  if(b.dropping)dropRing(b,.45);else shadow(b.x,b.y,.5,.35);
+  if(b.slow>0&&!b.dropping)frostRing(b);
+  var P=[];
+  [-1,1].forEach(function(s){var o=plant?0:sw*s;P.push({x:b.x-hs*s*.16+hc*o,y:b.y+hc*s*.16+hs*o,z:z,hw:.06,hd:.06,h:.5-kneel,a:b.head,col:[52,40,60]})});
+  P.push({x:b.x,y:b.y,z:z+.48-kneel,hw:.2,hd:.24,h:.34,a:b.head,col:[150,64,170]});
+  P.push({x:b.x-hc*.26,y:b.y-hs*.26,z:z+.5-kneel,hw:.1,hd:.2,h:.32,a:b.head,col:[64,52,70]});   /* the charge rack */
+  [-1,1].forEach(function(s){P.push({x:b.x-hc*.32-hs*s*.09,y:b.y-hs*.32+hc*s*.09,z:z+.62-kneel,hw:.05,hd:.05,h:.14,a:b.head,col:[220,60,50]})});
+  P.push({x:b.x+hc*.04,y:b.y+hs*.04,z:z+.82-kneel,hw:.14,hd:.14,h:.16,a:b.head,col:[190,110,210]});
+  P.push({x:b.x+hc*(plant?.42:.22),y:b.y+hs*(plant?.42:.22),z:z+(plant?.18:.5),hw:plant?.2:.06,hd:.05,h:.06,a:b.head,col:[52,40,60]});   /* the arm */
+  drawParts(P,fl);
+  if(plant&&!b.dropping){var u=1-Math.max(0,b.t)/T.wrecker.plant,X=SX(b.x,b.y,1.5),Y=SY(b.x,b.y,1.5);
+    ctx.lineWidth=3*zoom;ctx.strokeStyle="rgba(0,0,0,.55)";ctx.beginPath();ctx.arc(X,Y,7*zoom,0,6.283);ctx.stroke();
+    ctx.strokeStyle="#ff5a4a";ctx.beginPath();ctx.arc(X,Y,7*zoom,-1.571,-1.571+6.283*u);ctx.stroke()}
+  hpBar(b,1.3,30);
+}
+/* Wrecker charge: a squat box with a red lamp that blinks faster as the fuse runs down. */
+function drawCharge(b){
+  var left=Math.max(0,b.t),on=Math.sin(time*(8+40/(left+.3)))>0;
+  shadow(b.x,b.y,.3,.4);
+  drawParts([{x:b.x,y:b.y,z:0,hw:.2,hd:.16,h:.2,a:.4,col:[58,58,62]},{x:b.x,y:b.y,z:.2,hw:.06,hd:.06,h:.07,a:.4,col:on?[255,70,50]:[110,30,26]}],b.flash>0);
+}
+function drawChargeMark(b){   /* over the voxels: a dashed ring and the fuse, so a charge behind a pillar still reads */
+  var left=Math.max(0,b.t),a=.5+.5*Math.sin(time*12);
+  ctx.strokeStyle="rgba(255,90,74,"+(.45+.45*a)+")";ctx.lineWidth=2;ctx.setLineDash([4,3]);ring(b.x,b.y,0,.55);ctx.stroke();ctx.setLineDash([]);
+  ctx.textAlign="center";ctx.font="700 "+Math.round(12*zoom)+"px 'JetBrains Mono',monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,.8)";ctx.fillStyle="#ff5a4a";
+  var X=SX(b.x,b.y,.8),Y=SY(b.x,b.y,.8),t="CHARGE "+left.toFixed(1)+"s";ctx.strokeText(t,X,Y);ctx.fillText(t,X,Y);
+}
 function render(){
   if(meshDirty)rebuildMesh();
   ctx.fillStyle=TH.bg;ctx.fillRect(0,0,cw,ch);
@@ -1005,7 +1101,7 @@ function render(){
   /* Merge entities into the sorted voxel list by depth (x+y). */
   var ents=[],p=focusP();
   players.forEach(function(q){if(q.hp>0)ents.push({k:q.x+q.y,f:drawPlayer,o:q})});
-  bots.forEach(function(b){ents.push({k:b.x+b.y+(b.z>.05&&b.boss?1.45:0),f:b.boss?drawBoss:b.loader?drawLoader:drawBot,o:b})});
+  bots.forEach(function(b){ents.push({k:b.x+b.y+(b.z>.05&&b.boss?1.45:0),f:drawerOf(b),o:b})});
   pods.forEach(function(o){if(o.landed||o.t<=0)ents.push({k:o.x+o.y,f:drawPod,o:o})});
   shots.forEach(function(s){ents.push({k:s.x+s.y,f:drawShot,o:s})});
   scraps.forEach(function(s){ents.push({k:s.x+s.y,f:drawScrap,o:s})});
@@ -1027,7 +1123,7 @@ function render(){
     drawVoxel(v,a,0,dm);
   }
   while(e<ents.length){ents[e].f(ents[e].o);e++}
-  bots.forEach(function(b){if(b.boss)drawBossFx(b)});
+  bots.forEach(function(b){if(b.boss)drawBossFx(b);else if(b.kind==="charge")drawChargeMark(b)});
   drawCables();
   pods.forEach(drawPodMark);   /* on top of the voxels so a pod under the overpass stays visible */
   drawZoneLabels();
@@ -1617,15 +1713,16 @@ Net.apply=function(e){
   if(vx.length){meshDirty=true;sim.world.rebuildWalk()}
   var cur={};m.b.forEach(function(r){cur[r[0]]=1});
   (Net.prevB||[]).forEach(function(r){if(cur[r[0]])return;   /* a bot that vanished was destroyed */
-    var c=r[1]===2?[63,214,232]:r[1]===1?[176,150,52]:[140,70,56];
+    var c=r[1]===2?[63,214,232]:r[1]===1?[176,150,52]:r[1]===3?[214,160,40]:r[1]===4?[110,120,134]:r[1]===5?[150,64,170]:r[1]===6?[58,58,62]:[140,70,56];
     for(var k=0;k<10;k++)debrisPiece(r[2],r[3],r[4]+.5,k%2?c:[60,62,66]);
     sparks(r[2],r[3],r[4]+.6,18,[255,170,60]);smoke(r[2],r[3],r[4]+.5,8,[90,90,90])});
   Net.prevB=m.b;
 };
 var SHOT_NAME=[];for(var sk in MetroSim.SHOT_KIND)SHOT_NAME[MetroSim.SHOT_KIND[sk]]=sk;
 function botView(r,pr,u){
-  var k=r[1],f=r[8],o={id:r[0],team:1,boss:k===2,loader:k===1,dropping:!!(f&1),flash:f&2?.08:0,hp:r[7],maxHp:lvHp(k===2?T.boss.hp:k===1?T.loader.hp:T.bot.hp),
-    state:f&4?"tell":f&8?"charge":"engage",slow:f&32?1:0,mode:"perch",tell:0,step:0,r:k===1?T.loader.radius:k===2?T.boss.radius:T.bot.radius};
+  var k=r[1],f=r[8],zk=ZONE_KINDS[k],ZT=zk?T[zk]:null,o={id:r[0],team:1,boss:k===2,loader:k===1,dropping:!!(f&1),flash:f&2?.08:0,hp:r[7],maxHp:(zk==="charge"?ZT.hp:lvHp(ZT?ZT.hp:k===2?T.boss.hp:k===1?T.loader.hp:T.bot.hp))*(f&128?T.elite.hp:1),
+    state:f&4?"tell":f&8?"charge":"engage",slow:f&32?1:0,mode:"perch",tell:0,step:0,r:ZT?ZT.radius:k===1?T.loader.radius:k===2?T.boss.radius:T.bot.radius,elite:!!(f&128)};
+  if(zk){o.kind=zk;o.t=r[9];if(f&256)o.state=zk==="scuttler"?"flash":zk==="wrecker"?"plant":"bash";o.shieldOff=!!(f&512)}   /* phase 4 kinds */
   o.x=pr?lerp(pr[2],r[2],u):r[2];o.y=pr?lerp(pr[3],r[3],u):r[3];o.z=pr?lerp(pr[4],r[4],u):r[4];
   o.head=pr?lerpAng(pr[5],r[5],u):r[5];o.aim=pr?lerpAng(pr[6],r[6],u):r[6];
   if(k===2){o.tell=r[9];o.base=r[10];if(f&16){o.mode="jump";o.j1=[r[11],r[12],r[13]]}}
