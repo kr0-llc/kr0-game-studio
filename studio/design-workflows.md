@@ -1,6 +1,6 @@
 # Design workflows
 
-Last updated: 26 October 2026 · Owner: art-director, approved by kr0
+Last updated: 28 October 2026 · Owner: art-director, approved by kr0
 
 Every game makes its characters and generated art with the same tools: three Scenario workflows, the Scenario MCP server and its skills, and the gemini-creative plugin. This page says what each one does, when to use it, and where its output goes. The general art rules are in [art style guides](art-style-guides.md).
 
@@ -72,6 +72,33 @@ All three live in kr0's Scenario project (team `team_pG6MaimfJd9b9PTLYKkYR7fQ`, 
   4. *Frame rate.* The preview video is 6 fps. Set the game's own frame rate when exporting.
   5. *Anchor.* The prompt asks for locked feet, but nothing checks it. Look at the loop for drift and fix it before use.
 
+### 4. Cut-out puppet (in-game animation)
+
+- **What it is:** the character is drawn once as separate rigid parts, and code animates them. This is the route for anything the player controls, because the parts are joined at fixed points: arms can't detach, the legs and torso turn separately, and a weapon swap is a sprite swap. kr0 compared it with frame-by-frame on Tim-o's dash on 28 October 2026 ([review page](https://claude.ai/artifact/34bv3u8XC7SwX124pWuEC8)).
+- **Steps:**
+  1. *Parts sheet.* GPT Image 2.5 Sunburst (`model_openai-gpt-image-2-5-sunburst`), 1536 × 1024, medium, transparent background, with the character sheet and turnaround as references. Ask for every part at one scale, from the game's camera, all facing the same way: torso with round shoulder and hip sockets, thigh, shin with foot, each arm with its weapon pointing straight out, and the pack. Joint ends are plain round caps. About 4 credits a sheet. Tim-o's prompt: `art/metr0niks/prompts/tim-o-parts-v2.txt`.
+  2. *Fix with an edit, not a re-roll.* To change one part, run the same model as an edit with the sheet as the first reference and "keep every part exactly as it is" (Tim-o v2.1 removed an extra torso socket this way for 4 credits).
+  3. *Slice and joint.* Cut the parts apart by alpha, scale them to the atlas store size, and set each part's pivot and joints as fractions of its box: torso `armF armB hipF hipB pack eye`, thigh `knee`, arms `muzzle` or `tip`. Use `rot` when an arm is drawn slightly tilted. Check the joints on a grid overlay before animating. Tim-o's are in `art/metr0niks/characters/tim-o/puppet/rig-v2-1.js`. `art/metr0niks/source/ink_atlas.py` does the same for the ink prototype's own sheets.
+  4. *Animate in code.* Two-bone IK legs with planted feet, arms that track the aim (clamped to about -0.8 to 0.95 rad so the flat arms don't read as detached), and keyed timelines for set moves. `art/metr0niks/characters/tim-o/puppet/puppet-moves.js` has dash, pile-bunker charge/fire/retract, jump-jets, overheat vent and destroyed break-apart. `games/metr0niks/prototypes/prototype-ink.html` plays the same poses in the game.
+  5. *Review.* Every move gets the animation review below. The puppet section of the page plays each move live, shows a 12-moment strip, and takes Keep/Fix/Redo/Drop marks and comments.
+- **Limits:** the parts are drawn from one side and mirrored, so there is no back view, and the rigid parts read as a cut-out rather than drawn squash and stretch. Each extra facing needs its own parts sheet. Use the action sprite studio for acting reference and for screens outside gameplay.
+
+### Animation review (after every animation run)
+
+kr0 asked on 28 October 2026 for a review like the Tim-o one ([review page](https://claude.ai/artifact/34bv3u8XC7SwX124pWuEC8)) every time an animation workflow runs: the Action Sprite Studio, a direct sprite-sheet call, or the cut-out puppet in the ink prototype. No animation goes into a game or onto main until it has had one. The review is a private Artifact page plus a written record, and it has these parts:
+
+1. **All the relevant art in one place.** The character's approved sheet, the reference image each run was given, the turnaround, any in-game parts, and a screenshot of the game's real camera.
+2. **An on-model check.** The reference beside frame 1 of every set, all at the same scale.
+3. **A frame player per set.** Play, step, frame rate, onion skin, flip, background, "same size", which scales every set so frame 1 stands at one height, and "anchor feet", which lines every frame up on frame 1's feet so drift shows.
+4. **Findings frame by frame.** Each one names the frames (`f4–8`) and the fault: off-model, arm or leg not attached, wrong-way facing, effect from the wrong place, drift, keying fringe. Say what is worth keeping too.
+5. **A check against the game.** The camera, the loadout and the move list from the GDD, so a set that cannot work in the game shows up even if it looks good.
+6. **kr0's marks.** Keep, Fix, Redo or Drop per set, flagged frames and notes, saved to the page's database so the next session can read them.
+7. **Review comments.** The page declares comments, with a "Comment on this frame" and a "Comment on this set" button; kr0 can also use comment mode on any frame. Claude answers in the comment thread.
+
+**One height per character** (kr0, 28 October 2026): every animation set of a character is drawn at the same character height, so sets can be compared and cut together. State the height in every sprite brief, and flag a set that breaks it.
+
+The agent's own findings go in `games/<game>/feedback/synthetic/<date>-<character>-animation-review.md`. kr0's marks and comments, once given, go in `games/<game>/feedback/human/` under the same name, never in the same file (see [ways of working](ways-of-working.md)). Both get an INDEX row. The `animation-review` skill holds the steps.
+
 ### Before running from an agent
 
 - **Published.** kr0 asked for all three to be published on 26 October 2026, and they are `ready`, so agents can run them with `workflow_run`. Editing a workflow's graph in Scenario does not update its compiled flow: run `workflow_publish` again after any edit, or agents keep running the old version.
@@ -140,4 +167,5 @@ Scenario publishes tested procedures for its tools as skills. Read the one that 
 - **kr0 approves the character sheet** before turnarounds or sprites are made from it.
 - **Record every run** in `art/<game>/prompts/` (inputs, workflow id, model, cost), as with any generated image.
 - **Check before use:** remove garbled AI text, check hand swaps and drift in sprite frames, and say what was fixed in the art README.
+- **Review every animation run** before it is used, as described under Animation review: a review page with all the art, a frame player, frame-by-frame findings, kr0's marks and review comments.
 - **Log spend.** Scenario credits per character go into the game's tuning history next to the story's tokens.

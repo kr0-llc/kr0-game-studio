@@ -1,0 +1,76 @@
+Tim-o item parts sheets, v1 (28 Oct 2026, for the ink item lab, games/metr0niks/prototypes/item-lab.html)
+Asked for by kr0 on 2026-10-28: "create an item lab artifact where I can see the different items and also equip them on tim0 and see how they look."
+Tool: Scenario, GPT Image 2.5 Sunburst (model_openai-gpt-image-2-5-sunburst), 1536 x 1024, quality medium, background transparent, one image per sheet.
+References (in this order): asset_Rzs92LmBTZFho7qvgetHLigv (parts sheet v2.1, for scale, camera and line) and asset_fgDKMUX8fgmRfwyzQSSFqv2s (four-view turnaround, Tim-o's main reference).
+Five runs, about 4 credits each (about 20 in all). Previews: ../characters/tim-o/items/sheet-<name>.webp. Sliced by ../source/timo_items_atlas.py.
+The minigun, pile-bunker, Reactor Mk1 and jump-jet legs (and the bare torso, "standard frame") are the v2.1 parts themselves; these sheets draw the other 17 of the 21 garage parts from sim.js (MetroSim.PARTS).
+
+=== sheet-arms (output asset_VTWXHBWXrybY9EXD27DkQSC4) ===
+Edit-style continuation of the first reference image, a cut-out puppet parts sheet of the mech Tim-o. Make a NEW parts sheet of extra equipment for the same puppet. Match the first reference exactly: the same camera (high three-quarter view, about 35 degrees above, facing to the RIGHT and slightly toward the viewer), the same scale (each part the same size as the matching part in the first reference), the same line weight and the same flat pastel colours. The second reference, the four-view turnaround, is Tim-o's main design reference.
+Draw each part SEPARATELY on a transparent background, with generous empty space between parts, none touching or overlapping, laid out in a neat grid.
+
+Draw FIVE weapon arms. Every arm starts exactly like the arms in the first reference: the same broad sage-green shoulder pad on a rounded ball joint at the left (shoulder) end, the same sand upper arm and peach forearm housing, the whole arm pointing straight out horizontally to the right at the same length. Only the weapon at the right end changes:
+1) SHOTGUN arm: a short, fat double-barrelled riot shotgun with a wide flared muzzle and a pump grip under the forearm;
+2) PLASMA CUTTER arm: a stubby torch nozzle with a ceramic sand-coloured heat shield, cooling fins and a small bright blue-white flame tip;
+3) RAIL RIFLE arm: a long slim twin-rail rifle with copper coils between the rails, reaching a little further than the others;
+4) BUNKER-BUSTER CANNON arm: a heavy short wide-bore cannon with a thick recoil sleeve and a muzzle brake, bigger than the others;
+5) MAG-WINCH arm: a drum winch on the forearm with steel cable feeding forward to a big round electromagnet head.
+Lay them out in three rows (two, two, one).
+
+Joint ends are plain round caps, exactly like the first reference, so the parts can rotate around them without gaps. No shading that only makes sense in one pose.
+ART STYLE: sun-bleached ligne-claire comic ink like the reference: confident clean black outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0) and gunmetal, simple soft cel shading. No text, no labels, no numbers, no ground shadow, no background.
+
+=== sheet-mounts (output asset_myR97B466TmiQbXWesrJpun9) ===
+Edit-style continuation of the first reference image, a cut-out puppet parts sheet of the mech Tim-o. Make a NEW parts sheet of extra equipment for the same puppet. Match the first reference exactly: the same camera (high three-quarter view, about 35 degrees above, facing to the RIGHT and slightly toward the viewer), the same scale (each part the same size as the matching part in the first reference), the same line weight and the same flat pastel colours. The second reference, the four-view turnaround, is Tim-o's main design reference.
+Draw each part SEPARATELY on a transparent background, with generous empty space between parts, none touching or overlapping, laid out in a neat grid.
+
+Draw FOUR shoulder-mounted modules, each sitting on a small sage-green mounting plate with a round socket underneath so it can be clipped on top of the reactor backpack from the first reference. Each module is about half the size of the backpack:
+1) CRYO-VENT HEATSINK: a stack of pale blue-white cooling fins in a sand frame, with thin frost on the edges;
+2) TWIN-POD SIEGE MORTAR: two short fat mortar tubes side by side angled up and forward, olive-sage with peach caps;
+3) CRYO FLASH-VENT: a round pressure canister with a big flared exhaust vent pointing up, pale blue with a sage band and a hazard stripe;
+4) SALVAGE MAGNET: a horseshoe electromagnet on a short swivel arm, peach and gunmetal, with copper coil windings.
+Lay them out in two rows of two.
+
+Joint ends are plain round caps, exactly like the first reference, so the parts can rotate around them without gaps. No shading that only makes sense in one pose.
+ART STYLE: sun-bleached ligne-claire comic ink like the reference: confident clean black outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0) and gunmetal, simple soft cel shading. No text, no labels, no numbers, no ground shadow, no background.
+
+=== sheet-cores (output asset_Aj9dtCb7DD98cbL4jBBo9dEq) ===
+Edit-style continuation of the first reference image, a cut-out puppet parts sheet of the mech Tim-o. Make a NEW parts sheet of extra equipment for the same puppet. Match the first reference exactly: the same camera (high three-quarter view, about 35 degrees above, facing to the RIGHT and slightly toward the viewer), the same scale (each part the same size as the matching part in the first reference), the same line weight and the same flat pastel colours. The second reference, the four-view turnaround, is Tim-o's main design reference.
+Draw each part SEPARATELY on a transparent background, with generous empty space between parts, none touching or overlapping, laid out in a neat grid.
+
+Draw THREE versions of the torso from the first reference (the big round peach body with the single lens in a sage ring, round shoulder socket on the near side and two round hip sockets underneath). Keep the exact same outline, size, lens position and sockets on all three; only the armour changes:
+1) ABLATIVE SLAG-PLATING: thick riveted dark-iron plates bolted over the peach shell, with orange-crusted slag edges, chunkier and heavier;
+2) COMPOSITE FRAME: lighter trimmed panels with exposed slim sand frame struts and charcoal composite inserts in place of some sage bands;
+3) NANITE REPAIR CORE: the normal shell with a glowing mint-green hex-cell panel across the belly and thin glowing seams.
+Lay them out in one row.
+
+Joint ends are plain round caps, exactly like the first reference, so the parts can rotate around them without gaps. No shading that only makes sense in one pose.
+ART STYLE: sun-bleached ligne-claire comic ink like the reference: confident clean black outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0) and gunmetal, simple soft cel shading. No text, no labels, no numbers, no ground shadow, no background.
+
+=== sheet-packs (output asset_LpYL7SUParEAQiuREdau6tJq) ===
+Edit-style continuation of the first reference image, a cut-out puppet parts sheet of the mech Tim-o. Make a NEW parts sheet of extra equipment for the same puppet. Match the first reference exactly: the same camera (high three-quarter view, about 35 degrees above, facing to the RIGHT and slightly toward the viewer), the same scale (each part the same size as the matching part in the first reference), the same line weight and the same flat pastel colours. The second reference, the four-view turnaround, is Tim-o's main design reference.
+Draw each part SEPARATELY on a transparent background, with generous empty space between parts, none touching or overlapping, laid out in a neat grid.
+
+Draw THREE versions of the reactor backpack from the first reference, each the same size and seen from the same side, each with the two short downward-angled thruster nozzles at its bottom:
+1) REACTOR MK2: the pack with a bigger glowing amber core window and extra cooling ribs;
+2) REACTOR MK3: a taller pack with two tall upright cylinders capped by round orange lights, heavy cabling and a bright amber core;
+3) COLD-FUSION CELL: a sleek pack with a glass containment ring showing a pale blue glow, frost-white fittings and sage bands.
+Lay them out in one row.
+
+Joint ends are plain round caps, exactly like the first reference, so the parts can rotate around them without gaps. No shading that only makes sense in one pose.
+ART STYLE: sun-bleached ligne-claire comic ink like the reference: confident clean black outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0) and gunmetal, simple soft cel shading. No text, no labels, no numbers, no ground shadow, no background.
+
+=== sheet-legs (output asset_mQhKKr6uAhTXRU8gEXHossVL) ===
+Edit-style continuation of the first reference image, a cut-out puppet parts sheet of the mech Tim-o. Make a NEW parts sheet of extra equipment for the same puppet. Match the first reference exactly: the same camera (high three-quarter view, about 35 degrees above, facing to the RIGHT and slightly toward the viewer), the same scale (each part the same size as the matching part in the first reference), the same line weight and the same flat pastel colours. The second reference, the four-view turnaround, is Tim-o's main design reference.
+Draw each part SEPARATELY on a transparent background, with generous empty space between parts, none touching or overlapping, laid out in a neat grid.
+
+Draw FOUR leg parts, each drawn vertical like the thigh and shin in the first reference, at the same height as those parts:
+1) STRIDER THIGH: a slimmer, lighter upper leg with exposed sand servo pistons, ball joints at both ends;
+2) STRIDER SHIN: a slim reverse-shaped lower leg with a sprung blade foot and a small heel spur, ball joint at the top;
+3) SIEGE TREAD THIGH: a short, very thick armoured upper leg with heavy sage plates, ball joints at both ends;
+4) SIEGE TREAD UNIT: in place of a shin and foot, a compact bulldozer track unit (a short tank tread on wheels with a front scraper blade), ball joint at the top, the tread flat on the bottom.
+Lay them out in one row.
+
+Joint ends are plain round caps, exactly like the first reference, so the parts can rotate around them without gaps. No shading that only makes sense in one pose.
+ART STYLE: sun-bleached ligne-claire comic ink like the reference: confident clean black outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0) and gunmetal, simple soft cel shading. No text, no labels, no numbers, no ground shadow, no background.
+

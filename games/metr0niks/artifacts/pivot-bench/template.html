@@ -1,0 +1,400 @@
+<title>Metr0niks Pivot Bench</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Kalam:wght@700&display=swap">
+<style>
+/* Layout: a workbench. Rig tabs on top; part list | part editor | live puppet. Stacks to one column on phones. */
+:root{
+  --bg:#ebe7e1; --surface:#faf8f5; --sunk:#e2ddd5; --ink:#2b2420; --muted:#6c635b; --line:#d3ccc2;
+  --pivot:#d92f74; --joint:#17807a; --ghost:#9b928a; --chk1:#f2efea; --chk2:#e4dfd8; --ok:#3d7a3a; --warn:#a4561b;
+  --display:"Kalam","Comic Neue",cursive; --body:"Atkinson Hyperlegible",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#181513; --surface:#221e1b; --sunk:#2b2623; --ink:#eee6dc; --muted:#a69c92; --line:#3a332e;
+  --pivot:#ff5c9d; --joint:#4cc7ba; --ghost:#7d746c; --chk1:#2a2522; --chk2:#211d1a; --ok:#7cc077; --warn:#e39a5e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#181513; --surface:#221e1b; --sunk:#2b2623; --ink:#eee6dc; --muted:#a69c92; --line:#3a332e;
+  --pivot:#ff5c9d; --joint:#4cc7ba; --ghost:#7d746c; --chk1:#2a2522; --chk2:#211d1a; --ok:#7cc077; --warn:#e39a5e; color-scheme:dark}
+html,body{height:auto}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 28px}
+h1{font:700 30px/1.1 var(--display);margin:0;letter-spacing:.2px}
+h1 .z{color:var(--pivot)}
+h2{font:700 13px/1.2 var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 22px;margin-bottom:10px}
+.top p{margin:0;color:var(--muted);max-width:68ch}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0}
+button,select,input,textarea{font:inherit;color:inherit}
+button{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,canvas:focus-visible{outline:2px solid var(--pivot);outline-offset:2px}
+.tabs button{font-weight:700}
+.status{margin-left:auto;font:13px var(--mono);color:var(--muted)}
+.status.ok{color:var(--ok)} .status.warn{color:var(--warn)}
+.bench{display:grid;grid-template-columns:170px minmax(0,1.35fr) minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:1050px){.bench{grid-template-columns:150px minmax(0,1fr)}.prev{grid-column:1/-1}}
+@media (max-width:640px){.bench{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.parts{display:flex;flex-direction:column;gap:6px}
+@media (max-width:640px){.parts{flex-direction:row;overflow-x:auto;padding-bottom:4px}}
+.part{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center;text-align:left;padding:5px 6px;min-width:130px}
+.part canvas{width:44px;height:44px;background:var(--sunk);border-radius:4px}
+.part b{display:block;font-size:13px}
+.part small{display:block;font:11px var(--mono);color:var(--muted)}
+.part .ed{color:var(--pivot);font-weight:700}
+.part[aria-pressed="true"] small{color:inherit;opacity:.8}
+.part[aria-pressed="true"] .ed{color:inherit}
+.cv{width:100%;display:block;border-radius:6px;touch-action:none;background:var(--sunk)}
+#ed{height:min(62vh,540px);cursor:crosshair}
+#pv{height:min(52vh,440px)}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.row label{display:flex;gap:6px;align-items:center;font-size:14px}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:5px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-weight:700;color:var(--muted);font-size:12px;padding:4px 6px;border-bottom:1px solid var(--line)}
+td{padding:3px 6px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+td input{width:76px;font:13px var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:2px 4px}
+td.d{font:12px var(--mono);color:var(--muted)}
+td.d.mv{color:var(--pivot)}
+tr.sel td{background:var(--sunk)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+textarea{width:100%;min-height:58px;resize:vertical;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:14px}
+.rot{display:flex;gap:8px;align-items:center;font-size:14px}
+.rot input[type=range]{flex:1;min-width:0}
+.rot output{font:13px var(--mono);width:56px;text-align:right}
+.note{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding-left:10px;margin:0}
+</style>
+
+<header class="top">
+  <h1>Metr<span class="z">0</span>niks Pivot Bench</h1>
+  <p>Drag the pink pivot (where a part turns) and the teal joints (where the next part attaches) onto the right spot in the art. The puppet on the right moves with your marks. Every change saves for Claude to read and apply to the rig.</p>
+</header>
+
+<div class="bar tabs" id="tabs" role="group" aria-label="Rig"></div>
+<div class="bar">
+  <button id="undo" type="button" title="Undo (Ctrl+Z)">Undo</button>
+  <button id="resetPart" type="button">Reset this part</button>
+  <button id="copy" type="button">Copy rig JSON</button>
+  <span class="status" id="status" role="status">Loading…</span>
+</div>
+
+<main class="bench">
+  <section class="panel" aria-labelledby="hParts">
+    <h2 id="hParts">Parts</h2>
+    <div class="parts" id="parts"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="hEd">
+    <div class="row"><h2 id="hEd">Part</h2><b id="partName"></b>
+      <label style="margin-left:auto">Zoom <input id="zoom" type="range" min="0.6" max="4" step="0.1" value="1"></label>
+      <button id="fit" type="button">Fit</button></div>
+    <canvas id="ed" class="cv" tabindex="0" aria-label="Part editor. Drag markers; arrow keys nudge the selected marker, Shift for bigger steps."></canvas>
+    <div class="row">
+      <label><input type="checkbox" id="ctx" checked> Show the rest of the puppet</label>
+      <label><input type="checkbox" id="ghost" checked> Show original marks</label>
+    </div>
+    <div class="legend"><span><i style="background:var(--pivot)"></i>pivot: the part turns here and sits on its parent's joint</span><span><i style="background:var(--joint)"></i>joint: where a child part's pivot goes</span><span><i style="border:2px solid var(--ghost)"></i>original</span></div>
+    <div class="tw"><table><thead><tr><th>Mark</th><th>x (share)</th><th>y (share)</th><th>moved</th><th></th></tr></thead><tbody id="marks"></tbody></table></div>
+    <div class="rot" id="rotRow"><span>Rest angle</span><input id="rot" type="range" min="-60" max="60" step="0.5"><output id="rotOut"></output></div>
+    <label for="partNote" class="hint">Note for Claude about this part (optional)</label>
+    <textarea id="partNote" placeholder="e.g. the knee ball is hidden behind the thigh plate; the shin should tuck in further"></textarea>
+  </section>
+
+  <section class="panel prev" aria-labelledby="hPv">
+    <div class="row"><h2 id="hPv">Live puppet</h2>
+      <select id="mode" aria-label="Motion"></select>
+      <button id="play" type="button" aria-pressed="true">Pause</button>
+      <select id="speed" aria-label="Speed"><option value="0.25">¼×</option><option value="0.5">½×</option><option value="1" selected>1×</option></select></div>
+    <canvas id="pv" class="cv" aria-label="Live preview of the puppet using your pivots"></canvas>
+    <div class="row">
+      <label><input type="checkbox" id="cmp" checked> Original beside yours</label>
+      <label><input type="checkbox" id="dots"> Show pivots</label>
+      <label><input type="range" id="scrub" min="0" max="1" step="0.001" value="0" aria-label="Scrub time"> <span id="tOut" class="hint"></span></label>
+    </div>
+    <p class="hint" id="modeHint"></p>
+    <p class="note" id="rigNoteText"></p>
+    <label for="rigNote" class="hint">Note for Claude about the whole rig (optional)</label>
+    <textarea id="rigNote" placeholder="e.g. arms should hang lower at rest; the pack sits too far back"></textarea>
+  </section>
+</main>
+
+<script>
+(function(){
+const ATLAS=/*ATLAS*/;
+const img=new Image();img.src=ATLAS.img;
+const SP=ATLAS.sprites;
+const q=id=>document.getElementById(id);
+const deep=o=>JSON.parse(JSON.stringify(o));
+const r3=v=>Math.round(v*1000)/1000;
+/* original rig data, and the working copy kr0 edits */
+const ORIG={},CUR={};
+for(const n in SP){const s=SP[n];ORIG[n]={pivot:s.pivot.slice(),joints:deep(s.joints),rot:s.rot||0,note:""};CUR[n]=deep(ORIG[n])}
+
+const RIGS={
+ timo:{label:"Tim-o v2.1",kind:"biped",R:{torso:"p_torso",thigh:"p_thigh",shin:"p_shin",armF:"p_armR",armB:"p_armL",pack:"p_pack",scale:1.15,legLen:.82},
+  parts:["p_torso","p_thigh","p_shin","p_armR","p_armL","p_pack"],
+  names:{p_torso:"Torso",p_thigh:"Thigh (both legs)",p_shin:"Shin (both legs)",p_armR:"Minigun arm (front)",p_armL:"Pile-bunker arm (back)",p_pack:"Jump pack"},
+  jl:{armF:"front arm",armB:"back arm",hipF:"front thigh",hipB:"back thigh",pack:"jump pack",eye:"eye glow",knee:"shin",muzzle:"muzzle flash",tip:"pile spike",glow:"pack glow"},
+  info:"Parts from the v2.1 sheet, drawn by the same code as the ink prototype and the review page. Legs use two-bone IK: thigh length is pivot to knee, shin length is pivot to the bottom of the shin art."},
+ gunner:{label:"Gunner bot",kind:"biped",R:{torso:"b_torso",thigh:"b_thigh",shin:"b_shin",armF:"b_arm",scale:1,legLen:.8},
+  parts:["b_torso","b_thigh","b_shin","b_arm"],
+  names:{b_torso:"Torso",b_thigh:"Thigh (both legs)",b_shin:"Shin (both legs)",b_arm:"Gun arm"},
+  jl:{armF:"gun arm",hipF:"front thigh",hipB:"back thigh",knee:"shin",muzzle:"muzzle flash"},
+  info:"The ink prototype's bot, same biped code as Tim-o, no back arm or pack."},
+ loader:{label:"Loader",kind:"crab",R:{hull:"l_hull",leg:"l_leg",claw:"l_claw",scale:1},
+  parts:["l_hull","l_leg","l_claw"],
+  names:{l_hull:"Hull",l_leg:"Leg (all four)",l_claw:"Claw"},
+  jl:{claw:"claw",legA:"back leg pair",legB:"front leg pair",mortar:"mortar shell",tip:"claw tip"},
+  info:"Each leg pair is drawn twice, nudged sideways in code (−18/+14 px and −14/+20 px) and 10 px up. Claude keeps those nudges unless you say otherwise in a note."},
+ boss:{label:"Boss",kind:"spider",R:{body:"j_body",leg:"j_leg",leg2:"j_leg2",scale:1.15},
+  parts:["j_body","j_leg","j_leg2"],
+  names:{j_body:"Body",j_leg:"Leg A",j_leg2:"Leg B"},
+  jl:{legA:"left legs",legB:"right legs",eye:"eye glow"},
+  info:"Four legs hang from two joints, spread sideways in code and 22–30 px up. Claude keeps those nudges unless you say otherwise in a note."}
+};
+/* parts whose rest angle may change: nothing hangs off them in the game code */
+const ROT_OK=new Set(["p_shin","p_armR","p_armL","p_pack","b_shin","b_arm","l_leg","l_claw","j_leg","j_leg2"]);
+const MODES={
+ biped:[["walk","Walk","Walk cycle with the gun drifting."],["aim","Aim sweep","Standing, both arms sweep the full aim range the game allows (−46° to +54°)."],["stress","Stress","Deep knee bends, walking and full aim at once: gaps at a bad pivot show up here first."],["rest","Rest","Standing still, arms level."]],
+ crab:[["walk","Walk","Leg pairs scuttle, claw drifts."],["aim","Claw sweep","Standing, claw sweeps up and down."],["stress","Stress","Legs swing twice as far as the game, claw sweeps."],["rest","Rest","Standing still."]],
+ spider:[["walk","Walk","Legs swing in pairs."],["aim","Crouch and jump","Body crouches, then legs fold for the jump."],["stress","Stress","Walk with legs swinging twice as far, folding for jumps."],["rest","Rest","Standing still."]]
+};
+
+/* ---------- rig maths, copied from prototype-ink.html ---------- */
+function disp(n){const s=SP[n];return {w:s.w/s.store,h:s.h/s.store}}
+function joint(D,n,j){const s=SP[n],d=D[n],k=1/s.store,p=d.joints[j]||[d.pivot[0],d.pivot[1]];return {x:(p[0]-d.pivot[0])*s.w*k,y:(p[1]-d.pivot[1])*s.h*k}}
+function legLens(D,R){const k=R.legLen,kn=joint(D,R.thigh,"knee"),sh=SP[R.shin];return {l1:Math.hypot(kn.x,kn.y)*k,l2:sh.h/sh.store*(1-D[R.shin].pivot[1])*k*.94,base:Math.atan2(-kn.x,kn.y)}}
+const DEG=180/Math.PI,BIPED_RATE=.034;
+function op(D,ops,base,n,x,y,r,sx,sy,tag){ops.push({n,tag:tag||n,m:base.translate(x,y).rotate((r||0)*DEG).scale(sx||1,sy||sx||1).rotate((D[n].rot||0)*DEG)})}
+function bipedOps(D,R,P){
+  const ops=[],L=legLens(D,R),hip=joint(D,R.torso,"hipF"),walk=P.walk,ph=P.ph;
+  const by=-((L.l1+L.l2)*.93+hip.y),bob=Math.abs(Math.sin(ph))*-4*Math.min(1,walk)+Math.sin(P.t*2.2)*1.2*(1-Math.min(1,walk));
+  const base=new DOMMatrix().scale(R.scale,R.scale),ty=by+bob+(P.c||0),tilt=P.tilt||0;
+  function leg(side,ph2){
+    const hp=joint(D,R.torso,side),k=R.legLen,hx=hp.x,hy=ty+hp.y,stride=walk/(BIPED_RATE*R.scale),lift=Math.max(0,Math.cos(ph2))*(L.l1+L.l2)*.2*Math.min(1,walk);
+    const fx=hx+Math.sin(ph2)*stride+(P.spread||0)*(side==="hipF"?1:-1),fy=-lift;
+    const dx=fx-hx,dy=fy-hy,d=Math.min(Math.hypot(dx,dy),(L.l1+L.l2)*.999),aF=Math.atan2(-dx,dy);
+    const bend=Math.acos(Math.max(-1,Math.min(1,(L.l1*L.l1+d*d-L.l2*L.l2)/(2*L.l1*d)))),r1=aF-bend;
+    const kx=hx-Math.sin(r1)*L.l1,ky=hy+Math.cos(r1)*L.l1,r2=Math.atan2(-(fx-kx),fy-ky);
+    op(D,ops,base,R.thigh,hx,hy,r1-L.base,k,k,R.thigh+"@"+side);
+    op(D,ops,base,R.shin,kx,ky,r2+lift*.004,k,k,R.shin+"@"+side);
+  }
+  leg("hipB",ph+Math.PI);
+  if(R.armB){const sb=joint(D,R.torso,"armB");op(D,ops,base.translate(sb.x,ty+sb.y).rotate((P.aim*.9+tilt)*DEG),R.armB,0,0,0,.92,.92)}
+  if(R.pack){const pk=joint(D,R.torso,"pack");op(D,ops,base,R.pack,pk.x-6,ty+pk.y,tilt,.7,.7)}
+  leg("hipF",ph);
+  op(D,ops,base,R.torso,0,ty,tilt,1,1);
+  const sa=joint(D,R.torso,"armF");op(D,ops,base.translate(sa.x,ty+sa.y).rotate((P.aim+tilt*.5)*DEG),R.armF,0,0,0,1,1);
+  return ops;
+}
+function crabOps(D,R,P){
+  const ops=[],walk=P.walk,ph=P.ph,base=new DOMMatrix().scale(R.scale,R.scale);
+  const H=disp(R.hull),hy=-H.h*.55+Math.abs(Math.sin(ph*2))*-3*Math.min(1,walk);
+  const leg=(j,ph2,dx,tag)=>{const p=joint(D,R.hull,j);op(D,ops,base,R.leg,p.x+dx,hy+p.y-10,Math.sin(ph2)*.35*walk-.1,.85,.85,R.leg+"@"+tag)};
+  leg("legA",ph+Math.PI,-18,"legA back");leg("legB",ph,-14,"legB back");
+  op(D,ops,base,R.hull,0,hy,0,1,1);
+  leg("legA",ph,14,"legA");leg("legB",ph+Math.PI,20,"legB");
+  const c=joint(D,R.hull,"claw");op(D,ops,base,R.claw,c.x-10,hy+c.y,P.aim,.85,.85);
+  return ops;
+}
+function spiderOps(D,R,P){
+  const ops=[],s=R.scale,walk=P.walk,ph=P.ph*1.6,base=new DOMMatrix().scale(s,s);
+  const B=disp(R.body),hy=-B.h*.62+Math.sin(ph*2)*-3*Math.min(1,walk)+(P.crouch||0)*14;
+  const legs=[["legA",R.leg2,-26,0],["legB",R.leg,24,Math.PI],["legA",R.leg,-6,Math.PI],["legB",R.leg2,8,0]];
+  legs.slice(0,2).forEach(l=>{const p=joint(D,R.body,l[0]);op(D,ops,base,l[1],p.x+l[2]*1.4,hy+p.y-30,Math.sin(ph+l[3])*.3*walk+(P.jump||0)*.5,1,1,l[1]+"@"+l[0]+" back")});
+  op(D,ops,base,R.body,0,hy,0,1,1);
+  legs.slice(2).forEach(l=>{const p=joint(D,R.body,l[0]);op(D,ops,base,l[1],p.x+l[2]*1.6,hy+p.y-22,Math.sin(ph+l[3])*.3*walk+(P.jump||0)*.5,1.05,1.05,l[1]+"@"+l[0])});
+  return ops;
+}
+function pose(kind,mode,t){
+  const sw=(a,b,f)=>a+(b-a)*(.5+.5*Math.sin(t*f));
+  if(mode==="rest")return {t:0,walk:0,ph:0,aim:0};
+  if(kind==="biped"){
+    if(mode==="walk")return {t,walk:1,ph:t*7,aim:Math.sin(t*.8)*.2};
+    if(mode==="aim")return {t,walk:0,ph:0,aim:sw(-.8,.95,1.4)};
+    return {t,walk:1,ph:t*5,aim:sw(-.8,.95,1.1),c:sw(0,26,1.7),spread:sw(0,14,1.3)};
+  }
+  if(kind==="crab"){
+    if(mode==="walk")return {t,walk:1,ph:t*6,aim:Math.sin(t)*.2};
+    if(mode==="aim")return {t,walk:0,ph:0,aim:sw(-.7,.7,1.4)};
+    return {t,walk:2,ph:t*5,aim:sw(-.7,.7,1.1)};
+  }
+  if(mode==="walk")return {t,walk:1,ph:t*4};
+  const cyc=(t*.6)%1,crouch=cyc<.5?Math.sin(cyc*2*Math.PI):0,jump=cyc>=.5?Math.sin((cyc-.5)*2*Math.PI):0;
+  if(mode==="aim")return {t,walk:0,ph:0,crouch,jump};
+  return {t,walk:2,ph:t*4,crouch,jump};
+}
+function rigOps(D,rid,P){const g=RIGS[rid];return g.kind==="biped"?bipedOps(D,g.R,P):g.kind==="crab"?crabOps(D,g.R,P):spiderOps(D,g.R,P)}
+function drawOp(c,view,o,D,alpha){const s=SP[o.n],d=D[o.n],w=s.w/s.store,h=s.h/s.store;c.setTransform(view.multiply(o.m));c.globalAlpha=alpha;
+  c.drawImage(img,s.x,s.y,s.w,s.h,-d.pivot[0]*w,-d.pivot[1]*h,w,h);c.globalAlpha=1}
+function opBounds(D,ops){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;ops.forEach(o=>{const s=SP[o.n],d=D[o.n],w=s.w/s.store,h=s.h/s.store;
+  [[0,0],[1,0],[0,1],[1,1]].forEach(([u,v])=>{const p=o.m.transformPoint({x:(u-d.pivot[0])*w,y:(v-d.pivot[1])*h});x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y)})});return {x0,y0,x1,y1}}
+
+/* ---------- state ---------- */
+let rid="timo",sel="p_torso",mk="pivot",zoomU=1,pan={x:0,y:0};
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+let COL={};const readCols=()=>{COL={pivot:css("--pivot"),joint:css("--joint"),ghost:css("--ghost"),ink:css("--ink"),c1:css("--chk1"),c2:css("--chk2"),line:css("--line"),muted:css("--muted"),surface:css("--surface")}};
+readCols();try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{readCols();drawEd();thumbs()});new MutationObserver(()=>{readCols();drawEd();thumbs()}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]})}catch(e){}
+const notes={};for(const k in RIGS)notes[k]="";
+const undo=[];
+const near=(a,b)=>Math.abs(a-b)<.0015;
+function edited(n){const a=CUR[n],b=ORIG[n];if(!near(a.pivot[0],b.pivot[0])||!near(a.pivot[1],b.pivot[1])||Math.abs((a.rot||0)-(b.rot||0))>.001||a.note)return true;
+  for(const j in b.joints)if(!near(a.joints[j][0],b.joints[j][0])||!near(a.joints[j][1],b.joints[j][1]))return true;return false}
+
+/* ---------- tabs and part list ---------- */
+const tabs=q("tabs");
+for(const k in RIGS){const b=document.createElement("button");b.type="button";b.dataset.rig=k;b.textContent=RIGS[k].label;b.onclick=()=>setRig(k);tabs.appendChild(b)}
+function setRig(k){rid=k;sel=RIGS[k].parts[0];mk="pivot";pan={x:0,y:0};zoomU=1;q("zoom").value=1;
+  tabs.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.rig===k)));
+  const ms=q("mode");ms.innerHTML="";MODES[RIGS[k].kind].forEach(([v,l])=>{const o=document.createElement("option");o.value=v;o.textContent=l;ms.appendChild(o)});
+  q("rigNoteText").textContent=RIGS[k].info;q("rigNote").value=notes[k]||"";
+  buildParts();selectPart(sel);fitPreview();modeHint()}
+function buildParts(){const box=q("parts");box.innerHTML="";RIGS[rid].parts.forEach(n=>{const b=document.createElement("button");b.type="button";b.className="part";b.dataset.n=n;
+  b.innerHTML='<canvas width="88" height="88"></canvas><span><b></b><small></small></span>';b.querySelector("b").textContent=RIGS[rid].names[n];b.onclick=()=>selectPart(n);box.appendChild(b)});thumbs();paintParts()}
+function thumbs(){document.querySelectorAll("#parts .part").forEach(b=>{const n=b.dataset.n,s=SP[n],c=b.querySelector("canvas").getContext("2d");c.clearRect(0,0,88,88);const k=Math.min(80/s.w,80/s.h);
+  if(img.complete)c.drawImage(img,s.x,s.y,s.w,s.h,(88-s.w*k)/2,(88-s.h*k)/2,s.w*k,s.h*k)})}
+function paintParts(){document.querySelectorAll("#parts .part").forEach(b=>{const n=b.dataset.n,e=edited(n);b.setAttribute("aria-pressed",String(n===sel));
+  const sm=b.querySelector("small");sm.innerHTML=e?'<span class="ed">● edited</span>':"original"})}
+function selectPart(n){sel=n;mk="pivot";pan={x:0,y:0};q("partName").textContent=RIGS[rid].names[n];paintParts();
+  const ok=ROT_OK.has(n);q("rotRow").hidden=!ok;q("partNote").value=CUR[n].note||"";syncRot();buildMarks();drawEd()}
+function syncRot(){const d=CUR[sel].rot*DEG;q("rot").value=d.toFixed(1);q("rotOut").textContent=d.toFixed(1)+"°"}
+
+/* ---------- marks table ---------- */
+function markList(n){return [["pivot",CUR[n].pivot,ORIG[n].pivot]].concat(Object.keys(ORIG[n].joints).map(j=>[j,CUR[n].joints[j],ORIG[n].joints[j]]))}
+function markLabel(m){return m==="pivot"?"pivot":m+" → "+(RIGS[rid].jl[m]||m)}
+function buildMarks(){const tb=q("marks");tb.innerHTML="";const s=SP[sel];
+  markList(sel).forEach(([m,c,o])=>{const tr=document.createElement("tr");tr.dataset.m=m;if(m===mk)tr.className="sel";
+    const dx=(c[0]-o[0])*s.w/s.store,dy=(c[1]-o[1])*s.h/s.store,mv=Math.hypot(dx,dy);
+    tr.innerHTML='<td><span class="sw"></span></td><td><input type="number" step="0.001"></td><td><input type="number" step="0.001"></td><td class="d"></td><td><button type="button">Reset</button></td>';
+    const sw=tr.querySelector(".sw");sw.style.background=m==="pivot"?"var(--pivot)":"var(--joint)";sw.after(document.createTextNode(markLabel(m)));
+    const [ix,iy]=tr.querySelectorAll("input");ix.value=r3(c[0]);iy.value=r3(c[1]);ix.setAttribute("aria-label",markLabel(m)+" x");iy.setAttribute("aria-label",markLabel(m)+" y");
+    const td=tr.querySelector(".d");td.textContent=mv<.05?"·":mv.toFixed(1)+" px";if(mv>=.05)td.classList.add("mv");
+    const upd=()=>{const vx=parseFloat(ix.value),vy=parseFloat(iy.value);if(!isFinite(vx)||!isFinite(vy))return;snap();c[0]=r3(vx);c[1]=r3(vy);changed()};
+    ix.onchange=upd;iy.onchange=upd;
+    tr.querySelector("button").onclick=()=>{snap();c[0]=o[0];c[1]=o[1];changed()};
+    tr.onclick=e=>{if(e.target.tagName==="INPUT"||e.target.tagName==="BUTTON")return;mk=m;buildMarks();drawEd()};
+    tb.appendChild(tr)})}
+
+/* ---------- editor canvas ---------- */
+const ed=q("ed");let ex=null,EW=0,EH=0;
+function fitCanvas(c){const r=c.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);c.width=Math.max(1,Math.round(r.width*d));c.height=Math.max(1,Math.round(r.height*d));return {w:r.width,h:r.height,d}}
+let edDim={w:1,h:1,d:1};
+function edGeom(){const s=disp(sel),Z=Math.min(edDim.w*.55/s.w,edDim.h*.55/s.h)*zoomU;return {Z,x0:edDim.w/2-s.w*Z/2+pan.x,y0:edDim.h/2-s.h*Z/2+pan.y,w:s.w,h:s.h}}
+function toScr(u,v){const g=edGeom();return {x:g.x0+u*g.w*g.Z,y:g.y0+v*g.h*g.Z}}
+function fromScr(x,y){const g=edGeom();return [(x-g.x0)/(g.w*g.Z),(y-g.y0)/(g.h*g.Z)]}
+function drawEd(){if(!img.complete||!ex)return;const g=edGeom(),c=ex,dp=edDim.d;
+  c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,ed.width,ed.height);
+  /* checkerboard */
+  c.setTransform(dp,0,0,dp,0,0);const cs=14;for(let y=0;y<edDim.h;y+=cs)for(let x=0;x<edDim.w;x+=cs){c.fillStyle=((x+y)/cs)%2?COL.c1:COL.c2;c.fillRect(x,y,cs,cs)}
+  const d=CUR[sel],view=new DOMMatrix().scale(dp,dp).translate(g.x0+d.pivot[0]*g.w*g.Z,g.y0+d.pivot[1]*g.h*g.Z).scale(g.Z,g.Z);
+  if(q("ctx").checked){
+    const ops=rigOps(CUR,rid,pose(RIGS[rid].kind,"rest",0)),mine=ops.filter(o=>o.n===sel),me=mine[mine.length-1];
+    if(me){const inv=me.m.inverse(),vSel=view;
+      /* every other part, placed relative to this one exactly as the rest pose puts it */
+      ops.forEach(o=>{if(o===me)return;drawOp(c,vSel.multiply(inv),o,CUR,o.n===sel?.15:.32)})}
+  }
+  /* the part itself, unrotated so its marks sit in its own pixels */
+  {const s=SP[sel],w=s.w/s.store,h=s.h/s.store;c.setTransform(view);c.drawImage(img,s.x,s.y,s.w,s.h,-d.pivot[0]*w,-d.pivot[1]*h,w,h)}
+  c.setTransform(dp,0,0,dp,0,0);
+  c.setLineDash([4,4]);c.strokeStyle=COL.muted;c.lineWidth=1;c.strokeRect(g.x0,g.y0,g.w*g.Z,g.h*g.Z);c.setLineDash([]);
+  const list=markList(sel);
+  if(q("ghost").checked)list.forEach(([m,cu,o])=>{const a=toScr(o[0],o[1]),b=toScr(cu[0],cu[1]);c.strokeStyle=COL.ghost;c.lineWidth=2;
+    c.beginPath();c.arc(a.x,a.y,7,0,6.283);c.stroke();if(Math.hypot(a.x-b.x,a.y-b.y)>3){c.setLineDash([3,3]);c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();c.setLineDash([])}});
+  c.font="600 12px "+css("--mono");c.textBaseline="middle";
+  list.forEach(([m,cu])=>{const p=toScr(cu[0],cu[1]),isP=m==="pivot",on=m===mk,col=isP?COL.pivot:COL.joint;
+    c.lineWidth=on?3:2;c.strokeStyle=col;c.fillStyle=col;
+    if(isP){c.beginPath();c.arc(p.x,p.y,9,0,6.283);c.stroke();c.beginPath();c.moveTo(p.x-15,p.y);c.lineTo(p.x+15,p.y);c.moveTo(p.x,p.y-15);c.lineTo(p.x,p.y+15);c.stroke()}
+    else{c.beginPath();c.arc(p.x,p.y,6,0,6.283);c.fill();c.strokeStyle=COL.surface;c.lineWidth=1.5;c.stroke();if(on){c.strokeStyle=col;c.lineWidth=2;c.beginPath();c.arc(p.x,p.y,11,0,6.283);c.stroke()}}
+    const lb=markLabel(m),tw=c.measureText(lb).width;c.fillStyle=COL.surface;c.globalAlpha=.85;c.fillRect(p.x+13,p.y-17,tw+8,16);c.globalAlpha=1;c.fillStyle=col;c.fillText(lb,p.x+17,p.y-9)});
+}
+let drag=null;
+function hit(x,y){let best=null,bd=18;markList(sel).forEach(([m,cu])=>{const p=toScr(cu[0],cu[1]),dd=Math.hypot(p.x-x,p.y-y);if(dd<bd){bd=dd;best=m}});return best}
+const markRef=m=>m==="pivot"?CUR[sel].pivot:CUR[sel].joints[m];
+ed.addEventListener("pointerdown",e=>{const r=ed.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,m=hit(x,y);ed.setPointerCapture(e.pointerId);
+  if(m){mk=m;snap();const ref=markRef(m),p=toScr(ref[0],ref[1]);drag={m,ox:p.x-x,oy:p.y-y};buildMarks()}else drag={pan:true,sx:x-pan.x,sy:y-pan.y};drawEd()});
+ed.addEventListener("pointermove",e=>{const r=ed.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  if(!drag){ed.style.cursor=hit(x,y)?"grab":"crosshair";return}
+  if(drag.pan){pan={x:x-drag.sx,y:y-drag.sy};drawEd();return}
+  const uv=fromScr(x+drag.ox,y+drag.oy),ref=markRef(drag.m);ref[0]=r3(Math.max(-.5,Math.min(1.5,uv[0])));ref[1]=r3(Math.max(-.5,Math.min(1.5,uv[1])));drawEd();liveTable()});
+const endDrag=()=>{if(drag&&!drag.pan)changed();drag=null};
+ed.addEventListener("pointerup",endDrag);ed.addEventListener("pointercancel",endDrag);
+ed.addEventListener("wheel",e=>{if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();zoomU=Math.max(.6,Math.min(4,zoomU*(e.deltaY<0?1.1:.9)));q("zoom").value=zoomU;drawEd()},{passive:false});
+ed.addEventListener("keydown",e=>{const k=e.key;if(!k.startsWith("Arrow"))return;e.preventDefault();const s=SP[sel],st=(e.shiftKey?10:1)*s.store,ref=markRef(mk);
+  snap();if(k==="ArrowLeft")ref[0]=r3(ref[0]-st/s.w);if(k==="ArrowRight")ref[0]=r3(ref[0]+st/s.w);if(k==="ArrowUp")ref[1]=r3(ref[1]-st/s.h);if(k==="ArrowDown")ref[1]=r3(ref[1]+st/s.h);changed()});
+function liveTable(){const s=SP[sel];document.querySelectorAll("#marks tr").forEach(tr=>{const m=tr.dataset.m,c=markRef(m),o=m==="pivot"?ORIG[sel].pivot:ORIG[sel].joints[m],[ix,iy]=tr.querySelectorAll("input");
+  ix.value=r3(c[0]);iy.value=r3(c[1]);const mv=Math.hypot((c[0]-o[0])*s.w/s.store,(c[1]-o[1])*s.h/s.store),td=tr.querySelector(".d");td.textContent=mv<.05?"·":mv.toFixed(1)+" px";td.classList.toggle("mv",mv>=.05)})}
+q("zoom").oninput=e=>{zoomU=+e.target.value;drawEd()};
+q("fit").onclick=()=>{zoomU=1;q("zoom").value=1;pan={x:0,y:0};drawEd()};
+q("ctx").onchange=drawEd;q("ghost").onchange=drawEd;
+q("rot").oninput=e=>{CUR[sel].rot=+e.target.value/DEG;q("rotOut").textContent=(+e.target.value).toFixed(1)+"°";drawEd()};
+q("rot").onpointerdown=()=>snap();q("rot").onchange=()=>changed();
+q("partNote").oninput=e=>{CUR[sel].note=e.target.value;queueSave()};
+q("partNote").onchange=()=>paintParts();
+q("rigNote").oninput=e=>{notes[rid]=e.target.value;queueSave()};
+
+/* ---------- undo ---------- */
+function snap(){undo.push({n:sel,d:deep(CUR[sel])});if(undo.length>200)undo.shift()}
+function doUndo(){const u=undo.pop();if(!u)return;CUR[u.n]=u.d;if(RIGS[rid].parts.includes(u.n)){sel=u.n}changed(true)}
+q("undo").onclick=doUndo;
+document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();doUndo()}});
+q("resetPart").onclick=()=>{snap();const note=CUR[sel].note;CUR[sel]=deep(ORIG[sel]);CUR[sel].note=note;changed()};
+function changed(){selectPartSoft();paintParts();queueSave()}
+function selectPartSoft(){q("partName").textContent=RIGS[rid].names[sel];syncRot();buildMarks();drawEd();paintParts()}
+
+/* ---------- preview ---------- */
+const pv=q("pv");let px=null,pvDim={w:1,h:1,d:1},pvZ=1,pvOx=0,playing=!matchMedia("(prefers-reduced-motion: reduce)").matches,speed=1,T=0,last=0;
+function fitPreview(){/* zoom so the rest pose of the original fills about 70% of the height */
+  const b=opBounds(ORIG,rigOps(ORIG,rid,pose(RIGS[rid].kind,"rest",0))),cmp=q("cmp").checked;
+  pvZ=Math.min(pvDim.h*.68/(b.y1-b.y0),pvDim.w*(cmp?.36:.7)/(b.x1-b.x0));pvOx=-(b.x0+b.x1)/2*pvZ}
+function drawPv(){if(!img.complete||!px)return;const c=px,dp=pvDim.d,cmp=q("cmp").checked,mode=q("mode").value,P=pose(RIGS[rid].kind,mode,T);
+  c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,pv.width,pv.height);c.setTransform(dp,0,0,dp,0,0);
+  const gy=pvDim.h*.86;c.strokeStyle=COL.line;c.lineWidth=2;c.beginPath();c.moveTo(0,gy);c.lineTo(pvDim.w,gy);c.stroke();
+  const sets=cmp?[[ORIG,pvDim.w*.27,"Original"],[CUR,pvDim.w*.73,"Yours"]]:[[CUR,pvDim.w*.5,null]];
+  sets.forEach(([D,x,lab])=>{x+=pvOx;const view=new DOMMatrix().scale(dp,dp).translate(x,gy).scale(pvZ,pvZ),ops=rigOps(D,rid,P);
+    c.setTransform(dp,0,0,dp,0,0);c.fillStyle="rgba(92,64,44,.18)";c.beginPath();c.ellipse(x,gy,46*pvZ,14*pvZ,0,0,6.283);c.fill();
+    ops.forEach(o=>drawOp(c,view,o,D,D===ORIG&&cmp?.85:1));
+    if(q("dots").checked)ops.forEach(o=>{const s=SP[o.n],d=D[o.n],w=s.w/s.store,h=s.h/s.store,M=view.multiply(o.m);c.setTransform(1,0,0,1,0,0);
+      const pp=M.transformPoint({x:0,y:0});c.fillStyle=COL.pivot;c.beginPath();c.arc(pp.x,pp.y,4*dp,0,6.283);c.fill();
+      for(const j in d.joints){const jp=M.transformPoint({x:(d.joints[j][0]-d.pivot[0])*w,y:(d.joints[j][1]-d.pivot[1])*h});c.strokeStyle=COL.joint;c.lineWidth=2*dp;c.beginPath();c.arc(jp.x,jp.y,4*dp,0,6.283);c.stroke()}});
+    if(lab){c.setTransform(dp,0,0,dp,0,0);c.fillStyle=COL.muted;c.font="700 13px "+css("--body");c.textAlign="center";c.fillText(lab,x-pvOx,pvDim.h-8);c.textAlign="start"}});
+  q("tOut").textContent=T.toFixed(2)+" s"}
+function modeHint(){const m=MODES[RIGS[rid].kind].find(x=>x[0]===q("mode").value);q("modeHint").textContent=m?m[2]:""}
+q("mode").onchange=()=>{modeHint();drawPv()};
+q("cmp").onchange=()=>{fitPreview();drawPv()};q("dots").onchange=drawPv;
+q("speed").onchange=e=>speed=+e.target.value;
+const syncPlay=()=>{q("play").textContent=playing?"Pause":"Play";q("play").setAttribute("aria-pressed",String(playing))};
+q("play").onclick=()=>{playing=!playing;syncPlay()};
+q("scrub").oninput=e=>{playing=false;syncPlay();T=+e.target.value*8;drawPv()};
+function tick(now){if(playing&&last){T=(T+(now-last)/1000*speed)%8;q("scrub").value=T/8;drawPv()}last=now;requestAnimationFrame(tick)}
+
+/* ---------- saving for Claude ---------- */
+let db=null,saveTimer=null,dirty=new Set();
+const st=(t,cls)=>{const e=q("status");e.textContent=t;e.className="status"+(cls?" "+cls:"")};
+function rigDoc(k){const parts={},ed=[];RIGS[k].parts.forEach(n=>{const d=CUR[n];parts[n]={pivot:d.pivot.map(r3),joints:Object.fromEntries(Object.entries(d.joints).map(([j,v])=>[j,v.map(r3)])),rot:r3(d.rot||0),note:d.note||""};if(edited(n))ed.push(n)});
+  return {rig:k,label:RIGS[k].label,parts,edited:ed,note:notes[k]||"",updatedAt:new Date().toISOString()}}
+function queueSave(){dirty.add(rid);clearTimeout(saveTimer);if(!db){st("Not saving: open this page on claude.ai to save for Claude. Copy rig JSON still works.","warn");return}st("Unsaved changes…");saveTimer=setTimeout(saveNow,700)}
+async function saveNow(){const ks=[...dirty];dirty.clear();if(!db)return;st("Saving…");
+  try{for(const k of ks)await db.collection("pivots").doc(k).set(rigDoc(k));st("Saved for Claude "+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}),"ok")}
+  catch(e){ks.forEach(k=>dirty.add(k));st("Not saved: "+((e&&e.message)||"the store refused the write")+". Copy rig JSON to send it instead.","warn")}}
+q("copy").onclick=async()=>{const txt=JSON.stringify(rigDoc(rid),null,1);try{await navigator.clipboard.writeText(txt);st("Copied "+RIGS[rid].label+" JSON","ok")}catch(e){st("Copy was blocked here; use the saved marks instead.","warn")}};
+function applyDoc(v){if(!v||!v.parts||!RIGS[v.rig])return;for(const n in v.parts){if(!CUR[n])continue;const p=v.parts[n];
+  if(Array.isArray(p.pivot))CUR[n].pivot=p.pivot.slice();if(p.joints)for(const j in CUR[n].joints)if(Array.isArray(p.joints[j]))CUR[n].joints[j]=p.joints[j].slice();
+  if(typeof p.rot==="number")CUR[n].rot=p.rot;CUR[n].note=p.note||""}notes[v.rig]=v.note||""}
+(async()=>{try{db=window.claude?await window.claude.use("db"):null}catch(e){db=null}
+  if(!db){st("Not saving: open this page on claude.ai to save for Claude. Copy rig JSON still works.","warn");return}
+  st("Loading saved marks…");
+  try{const snap=await db.collection("pivots").get();(snap.docs||[]).forEach(d=>applyDoc(d.data?d.data():d));st("Ready. Changes save for Claude.","ok")}
+  catch(e){st("Could not load saved marks: "+((e&&e.message)||"store unavailable"),"warn")}
+  q("rigNote").value=notes[rid]||"";selectPart(sel);drawPv()})();
+
+/* ---------- boot ---------- */
+function resize(){edDim=fitCanvas(ed);ex=ed.getContext("2d");pvDim=fitCanvas(pv);px=pv.getContext("2d");fitPreview();drawEd();drawPv()}
+let ready=false;
+function boot(){if(ready)return;ready=true;setRig("timo");resize();syncPlay();requestAnimationFrame(tick);
+  try{new ResizeObserver(()=>resize()).observe(ed)}catch(e){addEventListener("resize",resize)}}
+if(img.complete)boot();else img.onload=boot;
+})();
+</script>
