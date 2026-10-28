@@ -1902,6 +1902,7 @@ window.__m={T:T,net:Net,get sim(){return sim},get players(){return players},voxS
   spawnPod:function(){return sim.spawnPod.apply(sim,arguments)},spawnLoader:function(x,y){return sim.spawnLoader(x,y)},perches:function(){return sim.perches()},los3:function(){return sim.los3.apply(sim,arguments)},
   blocked:blockedCell,damage:function(e,d,x,y,z){sim.damage(e,d,x,y,z)},setVox:function(x,y,z,m){sim.setVox(x,y,z,m)},hit:function(x,y,z,d){sim.hitVoxel(x,y,z,d)},killAll:function(){sim.killAll()},dbg:function(){return sim.dbg()},
   proj:function(x,y,z){return [SX(x,y,z),SY(x,y,z)]},
+  hud:function(){buildHud()},   /* the mechanics lab (mechanics-lab.html) swaps parts mid-run, then relabels the HUD */
   /* zones: rebind a single-player sim at level l (its drop-in intro plays if a zone opens), read the camera */
   level:function(l){bind(MetroSim.create({seed:7,builds:[BUILD],colorOf:colorOf,level:l}));camX=px(player.x,player.y,0);camY=py(player.x,player.y,0);zoneFx={k:-1,t:9};return sim.zone},
   get cam(){return {x:camX,y:camY,zoom:zoom,base:baseZoom,cine:cineAt()}},
