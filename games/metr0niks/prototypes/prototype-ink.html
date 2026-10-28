@@ -143,7 +143,7 @@ cv.addEventListener("contextmenu",function(e){e.preventDefault()});
 function $(id){return document.getElementById(id)}
 
 /* ---------- atlas ---------- */
-var A,atlasImg=new Image(),groundImg=new Image(),garageImg=new Image(),groundPat=null;
+var A,atlasImg=new Image(),groundImg=new Image(),garageImg=new Image();
 function boot(){
   A=window.INK_ATLAS;var n=3,done=function(){if(--n===0)start()};
   atlasImg.onload=groundImg.onload=garageImg.onload=done;
@@ -293,7 +293,6 @@ function newMech(type,x,y){
 /* ---------- start / screens ---------- */
 function start(){
   $("loading").style.display="none";resize();
-  groundPat=ctx.createPattern(groundImg,"repeat");
   $("drop").onclick=function(){initAudio();sfx("ui_confirm");beginRun()};
   $("rBtn").onclick=function(){sfx("ui_click");toGarage()};
   $("mute").onclick=function(){initAudio();toggleMute();sfx("ui_click")};
@@ -319,7 +318,7 @@ function toGarage(){
 function beginRun(){
   mode="battle";paused=false;$("garage").style.display="none";$("result").style.display="none";
   ["hud","wave","scr","keys"].forEach(function(id){$(id).style.display="block"});
-  buildMap();resetDecals();bots=[];shots=[];eshots=[];debris=[];scraps=[];parts=[];floats=[];fxs=[];
+  buildMap();resetDecals();shDirty=true;bots=[];shots=[];eshots=[];debris=[];scraps=[];parts=[];floats=[];fxs=[];
   player=newMech("player",WW/2,WH/2);player.z=520;player.vz=0;player.dropping=true;
   cam.x=player.x;cam.y=player.y;
   run={wave:0,queue:[],spawnT:0,breather:1.6,over:false,endT:0,kills:0};
@@ -382,7 +381,7 @@ function hurtProp(p,dmg,x,y,quiet){
   if(p.hp<=0)destroyProp(p);else if(p.fw>50)recut(p);
 }
 function destroyProp(p){
-  p.dead=true;p.fall=0.001;var b=BUILD[p.kind],big=p.fw>50;
+  p.dead=true;p.fall=0.001;var b=BUILD[p.kind],big=p.fw>50;shDirty=true;
   sfx(big?"collapse":"explode",{vol:big?.9:.6});shake=Math.min(1,shake+(big?.55:.2));
   fx("boom",p.x,p.y-p.fd,big?140:60,.45,0);decal("dust",p.x,p.y-p.fd*.4,p.fw*1.5);
   for(var i=0;i<(big?5:2);i++)fx("dust",p.x+rr(-p.fw,p.fw),p.y-rr(0,30),rr(60,big?150:80),rr(.8,1.4),rr(.15,.4));
@@ -670,26 +669,36 @@ function drawProp(q){
 }
 /* ---------- ink renderer: cast shadows, chunked building damage, ground decals, comic bursts ---------- */
 /* Sun from the upper left. Every standing prop and mech casts its silhouette onto the ground toward the lower right.
-   All silhouettes go into one layer first, so overlaps don't darken twice, and the layer is filled with an ink hatch. */
-var SUN={c:-.62,d:-.34},shCv=document.createElement("canvas"),shx=shCv.getContext("2d"),hatch=null;
-function makeHatch(){var c=document.createElement("canvas");c.width=c.height=12;var g=c.getContext("2d");
-  g.fillStyle="rgb(104,72,50)";g.fillRect(0,0,12,12);g.strokeStyle="rgb(43,30,24)";g.lineWidth=1.3;
-  g.beginPath();g.moveTo(-3,15);g.lineTo(15,-3);g.moveTo(-3,3);g.lineTo(3,-3);g.moveTo(9,15);g.lineTo(15,9);g.stroke();return shx.createPattern(c,"repeat")}
+   Prop shadows only change when a prop is cut or destroyed, so they are baked once into a half-resolution canvas the size
+   of the map (silhouettes unioned, so overlaps don't darken twice, then filled with an ink hatch) and redrawn only when
+   marked dirty. Mech shadows move, so they are drawn each frame straight onto the ground with the same hatch.
+   (Perf pass 28 Oct: redoing the whole layer every frame at screen size cost about 18 ms a frame.) */
+var SUN={c:-.62,d:-.34},SHK=.5,shCv=null,shDirty=true,hatchW=null,hatchS=null,SHADOW_A=.34;
+function hatchTile(n,lw){var c=document.createElement("canvas");c.width=c.height=n;var g=c.getContext("2d"),e=n/4;
+  g.fillStyle="rgb(104,72,50)";g.fillRect(0,0,n,n);g.strokeStyle="rgb(43,30,24)";g.lineWidth=lw;
+  g.beginPath();g.moveTo(-e,n+e);g.lineTo(n+e,-e);g.moveTo(-e,e);g.lineTo(e,-e);g.moveTo(n-e,n+e);g.lineTo(n+e,n-e);g.stroke();return c}
 var CAST={player:[34,118],bot:[30,104],loader:[90,62],boss:[96,74]};   /* mech shadow width, height */
-function drawCastShadows(){
-  if(shCv.width!==cv.width||shCv.height!==cv.height){shCv.width=cv.width;shCv.height=cv.height}
-  shx.setTransform(1,0,0,1,0,0);shx.globalCompositeOperation="source-over";shx.clearRect(0,0,shCv.width,shCv.height);
-  var M=ctx.getTransform(),vx=cw/2/zoom+450,vy=ch/2/zoom+450;shx.setTransform(M);shx.fillStyle="#000";
-  props.forEach(function(q){if(q.dead&&q.fall>=1)return;if(Math.abs(q.x-cam.x)>vx||Math.abs(q.y-cam.y)>vy)return;
-    var s=A.sprites[q.kind],k=1/A.store,w=s.w*k,h=s.h*k,fy=q.dead?1-q.fall*.85:1;
-    shx.save();shx.translate(q.x,q.y);shx.transform(1,0,SUN.c,SUN.d*fy,0,0);
-    shx.drawImage(q.cv||atlasImg,q.cv?0:s.x,q.cv?0:s.y,s.w,s.h,-s.pivot[0]*w,-s.pivot[1]*h,w,h);shx.restore()});
+function bakeShadows(){
+  if(!shCv){shCv=document.createElement("canvas");shCv.width=WW*SHK;shCv.height=WH*SHK}
+  var g=shCv.getContext("2d");g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation="source-over";g.clearRect(0,0,shCv.width,shCv.height);
+  g.setTransform(SHK,0,0,SHK,0,0);
+  props.forEach(function(q){if(q.dead)return;var s=A.sprites[q.kind],k=1/A.store,w=s.w*k,h=s.h*k;
+    g.save();g.translate(q.x,q.y);g.transform(1,0,SUN.c,SUN.d,0,0);
+    g.drawImage(q.cv||atlasImg,q.cv?0:s.x,q.cv?0:s.y,s.w,s.h,-s.pivot[0]*w,-s.pivot[1]*h,w,h);g.restore()});
+  if(!hatchS)hatchS=g.createPattern(hatchTile(6,.8),"repeat");   /* 6 px here is the 12 px world hatch */
+  g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation="source-in";g.fillStyle=hatchS;g.fillRect(0,0,shCv.width,shCv.height);
+  shDirty=false;
+}
+function drawWorldGround(){
+  if(shDirty||!groundCv)bakeGround();
+  drawLayer(groundCv,1);ctx.save();ctx.globalAlpha=SHADOW_A;
+  if(!hatchW)hatchW=ctx.createPattern(hatchTile(12,1.3),"repeat");
+  ctx.fillStyle=hatchW;ctx.beginPath();
+  /* path points take the transform current when they are added, so each mech's skew goes into one shared path and one fill */
   [player].concat(bots).forEach(function(m){if(m.dead||m.z>4||!CAST[m.type])return;var c=CAST[m.type],sc=m.rig.scale||1;
-    shx.save();shx.translate(m.x,m.y);shx.transform(1,0,SUN.c,SUN.d,0,0);shx.beginPath();
-    shx.ellipse(0,-c[1]*sc*.5,c[0]*sc*.5,c[1]*sc*.5,0,0,6.283);shx.fill();shx.restore()});
-  if(!hatch)hatch=makeHatch();hatch.setTransform(M);
-  shx.setTransform(1,0,0,1,0,0);shx.globalCompositeOperation="source-in";shx.fillStyle=hatch;shx.fillRect(0,0,shCv.width,shCv.height);
-  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=.34;ctx.drawImage(shCv,0,0);ctx.restore();
+    ctx.save();ctx.translate(m.x,m.y);ctx.transform(1,0,SUN.c,SUN.d,0,0);ctx.moveTo(c[0]*sc*.5,-c[1]*sc*.5);
+    ctx.ellipse(0,-c[1]*sc*.5,c[0]*sc*.5,c[1]*sc*.5,0,0,6.283);ctx.restore()});
+  ctx.fill();ctx.restore();
 }
 /* Big buildings lose bites as they take damage: holes with a dark inner rim and an ink edge, re-cut at 40% and 70% damage.
    The cut copy lives in q.cv and is drawn (and casts its shadow) in place of the atlas cell. */
@@ -708,26 +717,31 @@ function recut(q){
     g.globalCompositeOperation="source-atop";path(1.3);g.fillStyle="#6b4f3c";g.fill();g.lineJoin="round";g.lineWidth=3*A.store;g.strokeStyle=INK;g.stroke();
     g.globalCompositeOperation="destination-out";path(1);g.fill();
   }
-  g.globalCompositeOperation="source-over";q.cv=c;
+  g.globalCompositeOperation="source-over";q.cv=c;shDirty=true;
   spawnDebris(DEB[BUILD[q.kind].set],6,q.x,q.y-q.fd*2,q.fw*.5,260,.9);
 }
 /* Ground decals (scorch marks, collapse dust, the boss's landing crater, footprints) paint into one half-resolution
    canvas the size of the map, so they stay for the whole run at no per-frame cost. */
 var decCv=null,dcx=null,DECK=.5;
+/* draw only the visible part of a map-sized layer: drawing the whole map every frame cost a few ms of raster time */
+function drawLayer(c,k,a){var hw=cw/2/zoom+20,hh=ch/2/zoom+20,x0=Math.max(0,cam.x-hw),y0=Math.max(0,cam.y-hh),x1=Math.min(WW,cam.x+hw),y1=Math.min(WH,cam.y+hh);
+  if(x1<=x0||y1<=y0)return;if(a!=null){ctx.save();ctx.globalAlpha=a}ctx.drawImage(c,x0*k,y0*k,(x1-x0)*k,(y1-y0)*k,x0,y0,x1-x0,y1-y0);if(a!=null)ctx.restore()}
 function resetDecals(){decCv=document.createElement("canvas");decCv.width=WW*DECK;decCv.height=WH*DECK;dcx=decCv.getContext("2d");dcx.scale(DECK,DECK)}
 function decal(kind,x,y,r){
-  if(!dcx)return;var g=dcx;g.save();
-  if(kind==="step"){g.fillStyle="rgba(92,64,44,"+(.12*r)+")";g.beginPath();g.ellipse(x,y,9,4,0,0,6.283);g.fill();g.restore();return}
-  var dark=kind==="scorch"?"43,30,24":"110,84,60",gr=g.createRadialGradient(x,y,0,x,y,r);
-  gr.addColorStop(0,"rgba("+dark+","+(kind==="scorch"?.5:.28)+")");gr.addColorStop(.65,"rgba("+dark+",.18)");gr.addColorStop(1,"rgba("+dark+",0)");
-  g.translate(x,y);g.scale(1,.55);g.fillStyle=gr;g.translate(-x,-y);g.beginPath();g.arc(x,y,r,0,6.283);g.fill();
-  g.strokeStyle="rgba(43,36,32,"+(kind==="dust"?.25:.5)+")";g.fillStyle=g.strokeStyle;g.lineCap="round";
-  var n=kind==="crater"?14:kind==="dust"?6:10;
-  for(var i=0;i<n;i++){var a=Math.random()*6.283,l=r*(.55+Math.random()*.6),i0=kind==="crater"?r*.25:r*.35;
-    g.lineWidth=1.2+Math.random()*(kind==="crater"?2:3);g.beginPath();g.moveTo(x+Math.cos(a)*i0,y+Math.sin(a)*i0);
-    if(kind==="crater"){g.lineTo(x+Math.cos(a+.15)*l*.6,y+Math.sin(a+.15)*l*.6);g.lineTo(x+Math.cos(a)*l,y+Math.sin(a)*l)}else g.lineTo(x+Math.cos(a)*l,y+Math.sin(a)*l);g.stroke();
-    if(kind!=="crater"&&Math.random()<.5){g.beginPath();g.arc(x+Math.cos(a)*(l+6),y+Math.sin(a)*(l+6),1.5+Math.random()*3,0,6.283);g.fill()}}
-  g.restore();
+  if(!dcx)return;
+  var n=kind==="crater"?14:kind==="dust"?6:10,rays=[];
+  for(var i=0;i<n;i++)rays.push([Math.random()*6.283,r*(.55+Math.random()*.6),1.2+Math.random()*(kind==="crater"?2:3),Math.random()<.5,1.5+Math.random()*3]);
+  [dcx,gcx].forEach(function(g){if(!g)return;g.save();
+    if(kind==="step"){g.fillStyle="rgba(92,64,44,"+(.12*r)+")";g.beginPath();g.ellipse(x,y,9,4,0,0,6.283);g.fill();g.restore();return}
+    var dark=kind==="scorch"?"43,30,24":"110,84,60",gr=g.createRadialGradient(x,y,0,x,y,r);
+    gr.addColorStop(0,"rgba("+dark+","+(kind==="scorch"?.5:.28)+")");gr.addColorStop(.65,"rgba("+dark+",.18)");gr.addColorStop(1,"rgba("+dark+",0)");
+    g.translate(x,y);g.scale(1,.55);g.fillStyle=gr;g.translate(-x,-y);g.beginPath();g.arc(x,y,r,0,6.283);g.fill();
+    g.strokeStyle="rgba(43,36,32,"+(kind==="dust"?.25:.5)+")";g.fillStyle=g.strokeStyle;g.lineCap="round";
+    rays.forEach(function(q){var a=q[0],l=q[1],i0=kind==="crater"?r*.25:r*.35;
+      g.lineWidth=q[2];g.beginPath();g.moveTo(x+Math.cos(a)*i0,y+Math.sin(a)*i0);
+      if(kind==="crater"){g.lineTo(x+Math.cos(a+.15)*l*.6,y+Math.sin(a+.15)*l*.6);g.lineTo(x+Math.cos(a)*l,y+Math.sin(a)*l)}else g.lineTo(x+Math.cos(a)*l,y+Math.sin(a)*l);g.stroke();
+      if(kind!=="crater"&&q[3]){g.beginPath();g.arc(x+Math.cos(a)*(l+6),y+Math.sin(a)*(l+6),q[4],0,6.283);g.fill()}});
+    g.restore()});
 }
 /* comic burst behind the big words (CRASH!, KA-BOOM!): a spiky star that pops in */
 function drawBurst(f){
@@ -737,12 +751,22 @@ function drawBurst(f){
   for(var i=0;i<26;i++){var a=i/26*6.283,o=i%2?.72:1.08+R()*.25;ctx[i?"lineTo":"moveTo"](Math.cos(a)*w*o,Math.sin(a)*h*o)}
   ctx.closePath();ctx.fillStyle="#e07a5f";ctx.lineWidth=3.5;ctx.strokeStyle=INK;ctx.fill();ctx.stroke();ctx.restore();
 }
-function drawGround(){
-  ctx.save();ctx.fillStyle=groundPat;ctx.translate(0,0);var s=1.5;ctx.scale(s,s);ctx.fillRect(0,0,WW/s,WH/s);ctx.restore();
-  ctx.fillStyle="rgba(239,229,208,.28)";ctx.fillRect(0,0,WW,WH);   /* sun-bleach wash keeps sprites readable */
+function drawGround(g,pat){
+  g.save();g.fillStyle=pat;var s=1.5;g.scale(s,s);g.fillRect(0,0,WW/s,WH/s);g.restore();
+  g.fillStyle="rgba(239,229,208,.28)";g.fillRect(0,0,WW,WH);   /* sun-bleach wash keeps sprites readable */
   /* the overpass deck's shadow band and lane paint, drawn in code */
-  ctx.fillStyle="rgba(120,90,70,.10)";ctx.fillRect(0,640,WW,330);
-  ctx.strokeStyle="rgba(250,244,230,.7)";ctx.lineWidth=6;ctx.setLineDash([46,40]);ctx.beginPath();ctx.moveTo(0,1040);ctx.lineTo(WW,1040);ctx.moveTo(0,560);ctx.lineTo(WW,560);ctx.stroke();ctx.setLineDash([]);
+  g.fillStyle="rgba(120,90,70,.10)";g.fillRect(0,640,WW,330);
+  g.strokeStyle="rgba(250,244,230,.7)";g.lineWidth=6;g.setLineDash([46,40]);g.beginPath();g.moveTo(0,1040);g.lineTo(WW,1040);g.moveTo(0,560);g.lineTo(WW,560);g.stroke();g.setLineDash([]);
+}
+/* The ground, the prop shadows and the decals are baked into one map-sized canvas and blitted once a frame: in the perf pass
+   on 28 Oct each full-screen layer (ground, wash, decals, shadows) cost a few ms of raster time on its own. The bake is
+   redone only when a prop is cut or destroyed; new decals paint straight into it. */
+var groundCv=null,gcx=null,groundPat2=null;
+function bakeGround(){
+  if(!groundCv){groundCv=document.createElement("canvas");groundCv.width=WW;groundCv.height=WH;gcx=groundCv.getContext("2d");groundPat2=gcx.createPattern(groundImg,"repeat")}
+  gcx.setTransform(1,0,0,1,0,0);drawGround(gcx,groundPat2);
+  bakeShadows();gcx.save();gcx.globalAlpha=SHADOW_A;gcx.drawImage(shCv,0,0,WW,WH);gcx.restore();
+  if(decCv)gcx.drawImage(decCv,0,0,WW,WH);
 }
 function drawShots(){
   ctx.lineCap="round";
@@ -799,7 +823,7 @@ function frame(t){
   else{
     var sx=shake*shake*14*(Math.random()-.5),sy=shake*shake*14*(Math.random()-.5);
     ctx.save();ctx.translate(cw/2+sx,ch/2+sy);ctx.scale(zoom,zoom);ctx.translate(-cam.x,-cam.y);
-    drawGround();if(decCv)ctx.drawImage(decCv,0,0,WW,WH);drawCastShadows();
+    drawWorldGround();
     debris.filter(function(o){return o.rest}).forEach(function(o){drawFlying(o,true)});
     scraps.forEach(drawScrap);
     /* depth sort everything that stands on the ground */

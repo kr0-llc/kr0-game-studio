@@ -48,6 +48,8 @@ kr0 decided the ink renderer stays in this prototype and is built out here, not 
 | Line boil | Ink cracks redraw slightly six times a second, like hand-drawn animation |
 | Arm aim limits | The drawn arm angle is clamped so cut-out arms stay attached to the shoulder |
 
+**Performance (28 October 2026).** Measured in headless Chromium with software rendering (no GPU, so absolute numbers are pessimistic) at 1600 × 900, in a heavy battle with nine enemies, wrecked buildings, blasts and the minigun firing. The first renderer round had dropped the prototype from about 41 to 19 frames a second, because the cast shadows were redrawn at full-screen size every frame (about 18 ms of script a frame). Now the ground, the prop shadows and the decals are baked into one map-sized layer that is rebuilt only when a prop is cut or destroyed, and only the mech shadows are drawn each frame. The result is about 45 frames a second, faster than before the renderer round, with about 1.4 ms of script a frame (mech drawing 0.27 ms, flying debris 0.24 ms, game update 0.20 ms). At 4K with a 2× pixel ratio the software renderer is pixel-bound at about 8 frames a second, against 7 before the renderer round; a real GPU should handle that easily, but it is worth a check on kr0's PC.
+
 Still open in the renderer: a back view for walking up the screen, bending legs for the crab and spider enemies, and art for the other 18 parts. Tim-O's animation sets are a separate piece of work, after Asset Desk ships.
 
 ## Audio
