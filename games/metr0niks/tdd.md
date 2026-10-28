@@ -105,12 +105,12 @@ A match is one excursion at one campaign level.
 
 A mech is a frame with six slots (Core, Arm-R, Arm-L, Shoulder, Legs, Reactor); its stats are derived from its parts whenever one changes.
 
-- **Part data:** `PARTS` entries hold id, slot, rarity (common, rare or epic), price, stat changes (power, armor, speed, weight, heat) and a hook naming what the part grants (a weapon, a Q active, a passive, a dash type). 21 parts today; the six blueprint parts add a `zone` field (to build).
+- **Part data:** `PARTS` entries hold id, slot, rarity (common, rare or epic), price, stat changes (power, armor, speed, weight, heat) and a hook naming what the part grants (a weapon, a Q active, a passive, a dash type). 27 parts: 21 garage parts and the six blueprint parts, which add a `zone` field (the index of the zone that brings them; built Oct 28).
 - **Base and derived stats:** power 100, armor 100, speed 100, weight 60, heat 100; starter parts bring weight to 100. Speed, acceleration and turning scale by `1 / (1 + 0.004 × (weight − 100))`; heat gain and drain come from the heat stat (GDD Combat).
 - **Health:** one armor pool. At 0 the mech is destroyed. Every level starts at full armor (built Oct 28; carried armor is gone).
 - **Durability (GDD-D18, built Oct 28):** each owned part carries wear 0 to 1. On extract, each fitted non-starter part gains `0.10 × damage taken ÷ max armor`; damage counts when taken, even if healed. `deriveStats` scales every helpful stat change of a worn part by `1 − wear`. Repair restores it for `ceil(price × wear × rate)` (0.25, 0.5, 0.75 by rarity); the Repair button repairs fitted parts in slot order and skips one the scrap can't cover (GDD-D28).
 - **Weapon upgrades (GDD-D23, built Oct 28):** each owned weapon carries a level 0 to 2 (`T.upgrade`); damage to enemies × `1 + 0.10 × level` after power, through `player.upMul(weapon)` in `hitEnemy`. Nine weapons today, twelve with the blueprints.
-- **Blueprint unlock (GDD-D42, to build):** the garage lists a blueprint part once the save's highest extracted level reaches its zone's level (2 to 5). A death or restart never removes one.
+- **Blueprint unlock (GDD-D42, built Oct 28):** the garage lists a blueprint part once the save's highest extracted level reaches its zone's level (`MetroSim.unlockLevel(id)`: Arc caster 2; Redline vent and Seismic hammer 3; Breach charges 4; Overdrive core and Grav-skids 5, that is on victory), or once it is owned; until then it is hidden. A death or restart never removes one, because the highest level only rises. `Campaign.unlocked`, `garageParts` and `newParts` hold the rule; the garage only draws it. **New marks:** a listed blueprint that isn't owned and isn't in the save's `seen` list is marked "New" on its tile and on its slot tab. The mark stays until the player selects the part, or drops in after its tile was shown (both add it to `seen` through `Campaign.see`); buying it also ends the mark.
 
 | Blueprint part (built Oct 28) | Hook | Notes for the build |
 | --- | --- | --- |
@@ -141,7 +141,7 @@ Each heavy weapon owns a small state machine; light weapons, shoulder actives an
 - **Taking a pod:** a living mech within 0.7 m takes it, the nearest first, and a mech wins a same-tick tie. Patrol bots seek pods (closer than the nearest mech, or below 50% health); loaders take one only by walking over it; bosses, Scuttlers and the Warden never do.
 - **Scrap cache (built Oct 28):** 8 cubes × the level scale burst out around the taker. An enemy that takes it is marked and drops the cubes with its own.
 - **Strike beacon (built Oct 28):** 1.5 s after a mech takes it, four shells land at 3, 6, 9 and 12 m toward its aim point: 40 damage within 2 m (scaled like collapse damage), a 3×3×3 hole, no damage to mechs, credited to that mech. An enemy that takes it aims the line from itself at the nearest mech, with a 2 s ground warning: 20 to mechs, 40 to enemies, credited to nobody.
-- **Call-ins (GDD-D54, sim built Oct 28; garage shop to build):** two slots per player in the save, bought in the garage at Field repair 40, Overclock 30, Strike beacon 50, × the next level's scrap scale, rounded. Keys 1 and 2 spawn that pod at the aim point (up to 14 m) with the usual marker and countdown; enemies can still take it. Unused call-ins stay in their slot after extract; carried ones are lost on a death. In co-op each player has their own.
+- **Call-ins (GDD-D54, sim and garage shop built Oct 28):** two slots per player in the save, bought in the garage at Field repair 40, Overclock 30, Strike beacon 50, × the next level's scrap scale, rounded. Keys 1 and 2 spawn that pod at the aim point (up to 14 m) with the usual marker and countdown; enemies can still take it. Unused call-ins stay in their slot after extract; carried ones are lost on a death. In co-op each player has their own. The shop is `Campaign.callinPrice` and `buyCallin` (first empty slot, from banked scrap); the slots go into `MetroSim.create({callins})` per mech (the local co-op guest sends its own in its ready message); after the match `advance` and `bank` write back the run-over detail's `callins[k].left`, `carry` empties them on a guest's death or when the host leaves, and `lose` (a death, or a load still marked live) empties them while it restarts the climb. The room server (TDD-D21) doesn't carry them yet.
 
 ## Economy and garage
 
@@ -207,11 +207,11 @@ Enemies are state machines with their own data blocks in `T`. All take level sca
 The save is one campaign code, base64url JSON, kept in `localStorage` (`metr0niks.campaign`) and copyable from the garage. In co-op the guest's save receives only the guest's banked scrap, wear and records; its level and seed stay as they were (GDD-D31).
 
 - **v1 today:** banked scrap, owned parts, the equipped build, armor, level and seed.
-- **v2 (TDD-D12, built Oct 28; the call-in shop comes with phase 6):** adds per-part wear, per-weapon upgrade levels (0 to 2), the highest level ever extracted, lifetime records, whether the climb seed was typed, two call-in slots and the in-match mark (TDD-D8); drops carried armor.
+- **v2 (TDD-D12, built Oct 28):** adds per-part wear, per-weapon upgrade levels (0 to 2), the highest level ever extracted, lifetime records, whether the climb seed was typed, two call-in slots, the blueprints already seen (`seen`, for the New marks; optional, so a v2 code written before it still loads) and the in-match mark (TDD-D8); drops carried armor.
 - **Not saved:** match scrap, pod effects, match damage, the match stats and the climb plan.
-- **Validation:** decoding rejects unknown part ids, negative or oversized scrap, wear outside 0 to 1, upgrade levels outside 0 to 2 or on non-weapons or unowned parts, a level or highest level outside 1 to 5, unknown call-in types, a seed outside 1 to 2,147,483,000 and more than two players.
-- **Migration:** v1 loads as v2 with no wear, no upgrades, the highest level set to its level (capped at 5), empty records and empty call-in slots.
-- **Write points:** extract, death, match start (the in-match mark), every purchase, repair and upgrade.
+- **Validation:** decoding rejects unknown part ids, negative or oversized scrap, wear outside 0 to 1, upgrade levels outside 0 to 2 or on non-weapons or unowned parts, a level or highest level outside 1 to 5, unknown call-in types, a `seen` entry that isn't a blueprint id, a seed outside 1 to 2,147,483,000 and more than two players.
+- **Migration:** v1 loads as v2 with no wear, no upgrades, the highest level set to its level (capped at 5), empty records, empty call-in slots and an empty `seen` list.
+- **Write points:** extract, death, match start (the in-match mark), every purchase (parts and call-ins), repair and upgrade, and a blueprint's New mark ending.
 
 ## Camera, HUD and screens
 

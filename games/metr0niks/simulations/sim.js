@@ -2219,14 +2219,18 @@ function create(opts){
 
 /* ===== Campaign: the save (TDD-D12) and the climb plan (TDD-D10).
    v2: {v:2, seed, typed, level, live, players:[{build, owned:[ids], scrap, wear:{id:0..1}, upg:{weaponId:0..2}, best,
-        records:{level,combo,spans,contracts,overtimes}, callins:[type|null, type|null]}]}
+        records:{level,combo,spans,contracts,overtimes}, callins:[type|null, type|null], seen:[blueprintId]}]}
    players[0] is the host / single player. seed: the climb's seed (1..2,147,483,000, GDD-D49); typed: the player typed it
    at level 1, so a restart keeps it. live: written when a match starts (TDD-D8); a save still marked live when it is
    loaded counts as a death. best: highest level ever extracted (0..max, blueprints). records: lifetime (GDD-D45).
-   callins: the two call-in slots (repair, overclock, strike). A v1 code ({v:1, seed, level, players:[{build, owned,
-   scrap, armor}]}) migrates: no wear, no upgrades, best = its level capped at max, empty records and slots, carried
+   callins: the two call-in slots (repair, overclock, strike). seen (phase 6, optional in a code: absent = none): the
+   blueprints this player has looked at in the garage, so the others that are unlocked and not owned are marked "New". A v1 code ({v:1, seed, level, players:[{build, owned,
+   scrap, armor}]}) migrates: no wear, no upgrades, best = its level capped at max, empty records, slots and seen, carried
    armor dropped. encode() is JSON as base64url (the "campaign code"); decode() returns a clean campaign or null when
-   anything is off. advance/bank/restart/begin return a new campaign; repairAll and upgrade change c in place. ===== */
+   anything is off. advance/bank/restart/begin return a new campaign; repairAll and upgrade change c in place.
+   Phase 6 (garage): unlocked(c,i,id), garageParts(c,i), newParts(c,i), see(c,i,ids) (in place), callinPrice(c,type),
+   buyCallin(c,i,type) (in place), carry(c,i,d,k) and lose(c,seed) return a new campaign; advance and bank also write back
+   detail.callins[k].left when the detail has it. ===== */
 var Campaign=(function(){
   var SCRAP_MAX=10000000,SEED_MAX=2147483000,V1_MAX=50,REC=["level","combo","spans","contracts","overtimes"],CALLINS=["repair","overclock","strike"];
   function clone(o){return JSON.parse(JSON.stringify(o))}
@@ -2235,11 +2239,11 @@ var Campaign=(function(){
   function starterOwned(){var a=[];SLOTS.forEach(function(sl){if(STARTER[sl[0]])a.push(STARTER[sl[0]])});return a}
   function records(){var r={};REC.forEach(function(k){r[k]=0});return r}
   function upMax(id){return T.upgrade.price[PART[id].rarity].length}
-  /* o: optional {wear, upg, best, records, callins} (copied) */
+  /* o: optional {wear, upg, best, records, callins, seen} (copied) */
   function player(build,owned,scrap,o){
     var b=cleanBuild(build),ow=starterOwned();o=plain(o)?clone(o):{};
     (owned||[]).concat(SLOTS.map(function(sl){return b[sl[0]]})).forEach(function(id){if(id&&PART[id]&&ow.indexOf(id)<0)ow.push(id)});
-    return {build:b,owned:ow,scrap:scrap|0,wear:o.wear||{},upg:o.upg||{},best:o.best|0,records:o.records||records(),callins:o.callins||[null,null]};
+    return {build:b,owned:ow,scrap:scrap|0,wear:o.wear||{},upg:o.upg||{},best:o.best|0,records:o.records||records(),callins:o.callins||[null,null],seen:o.seen||[]};
   }
   function make(builds,_mode,seed,typed){return {v:2,seed:seed||7,typed:!!typed,level:1,live:false,players:(builds||[STARTER]).map(function(b){return player(b)})}}
   function cleanPlayer(p,v,level){
@@ -2254,7 +2258,7 @@ var Campaign=(function(){
     starterOwned().forEach(function(x){if(owned.indexOf(x)<0)owned.push(x)});
     for(i=0;i<SLOTS.length;i++){id=b[SLOTS[i][0]];if(id&&owned.indexOf(id)<0)return null}   /* fitted parts must be owned */
     if(typeof p.scrap!=="number"||!(p.scrap>=0)||p.scrap>SCRAP_MAX)return null;
-    var out={build:b,owned:owned,scrap:Math.floor(p.scrap),wear:{},upg:{},best:Math.min(T.level.max,level),records:records(),callins:[null,null]};
+    var out={build:b,owned:owned,scrap:Math.floor(p.scrap),wear:{},upg:{},best:Math.min(T.level.max,level),records:records(),callins:[null,null],seen:[]};
     if(v===1){var ar=p.armor;return ar!==null&&ar!==undefined&&(typeof ar!=="number"||!(ar>=0)||ar>100000)?null:out}
     /* v2: strict */
     if(!plain(p.wear)||!plain(p.upg)||!plain(p.records)||!Array.isArray(p.callins)||p.callins.length!==2)return null;
@@ -2263,6 +2267,7 @@ var Campaign=(function(){
     if(!isInt(p.best)||p.best<0||p.best>T.level.max)return null;out.best=p.best;
     for(i=0;i<REC.length;i++){x=p.records[REC[i]];if(!isInt(x)||x<0||x>SCRAP_MAX||(REC[i]==="level"&&x>T.level.max))return null;out.records[REC[i]]=x}
     for(i=0;i<2;i++){x=p.callins[i];if(x!==null&&CALLINS.indexOf(x)<0)return null;out.callins[i]=x}
+    x=cleanSeen(p.seen);if(!x)return null;out.seen=x;   /* phase 6 */
     return out;
   }
   function validate(c){
@@ -2298,6 +2303,7 @@ var Campaign=(function(){
     p.scrap=Math.min(SCRAP_MAX,p.scrap+((d.scrap&&d.scrap[k])|0));
     wearOn(p,d.damage&&d.damage[k]);
     addRecords(p,{level:d.level});addRecords(p,d.records&&d.records[k]);
+    if(Array.isArray(d.callins))carryInto(p,d,k);   /* phase 6: what is left in the call-in slots */
   }
   /* The campaign after a level was extracted (d = the "o" event's detail, extract or victory): next level, each mech's
      scrap banked, wear applied, highest level extracted raised, the in-match mark cleared. A victory stays on the last
@@ -2366,9 +2372,46 @@ var Campaign=(function(){
     }
     return out;
   }
+  /* ===== phase 6: the garage's blueprint unlock, "New" marks and call-in shop (GDD-D42, GDD-D54) =====
+     A blueprint (a part with a zone) is listed once the player's best (highest level extracted) reaches unlockLevel(id),
+     or once owned; the garage's other parts are always listed. Never removed again: best only rises. */
+  function cleanSeen(a){   /* a code's seen list: absent = none; only blueprint ids, duplicates dropped; null when bad */
+    if(a===undefined)return [];if(!Array.isArray(a)||a.length>PARTS.length)return null;
+    var out=[];for(var i=0;i<a.length;i++){var id=a[i];if(typeof id!=="string"||!PART[id]||!PART[id].zone)return null;if(out.indexOf(id)<0)out.push(id)}
+    return out;
+  }
+  function unlockedFor(p,id){return !!PART[id]&&(!PART[id].zone||p.owned.indexOf(id)>=0||(p.best|0)>=unlockLevel(id))}
+  /* is part id listed in player i's garage */
+  function unlocked(c,i,id){return unlockedFor(c.players[i||0],id)}
+  /* the part ids player i's garage lists, in PARTS order */
+  function garageParts(c,i){var p=c.players[i||0];return PARTS.filter(function(x){return unlockedFor(p,x.id)}).map(function(x){return x.id})}
+  /* the blueprints marked "New": unlocked, not owned, not yet looked at */
+  function newParts(c,i){var p=c.players[i||0],sn=p.seen||[];
+    return PARTS.filter(function(x){return x.zone&&p.owned.indexOf(x.id)<0&&sn.indexOf(x.id)<0&&unlockedFor(p,x.id)}).map(function(x){return x.id})}
+  /* the player looked at these blueprints (selected one, or left the garage with it listed): clears their "New". Changes c;
+     returns how many were added. Locked or non-blueprint ids are ignored. */
+  function see(c,i,ids){var p=c.players[i||0],n=0;if(!Array.isArray(p.seen))p.seen=[];
+    (ids||[]).forEach(function(id){if(PART[id]&&PART[id].zone&&unlockedFor(p,id)&&p.seen.indexOf(id)<0){p.seen.push(id);n++}});return n}
+  /* Call-in shop (GDD-D54): price for the level about to be played (c.level); buying fills the first empty slot from banked
+     scrap. Changes c; returns {price, slot} or false (not sold, both slots full, or not enough scrap). */
+  function shopPrice(c,type){return CALLINS.indexOf(type)<0?null:callinPrice(type,c.level)}
+  function buyCallin(c,i,type){
+    var p=c.players[i||0],pr=shopPrice(c,type),k=p.callins.indexOf(null);
+    if(pr===null||k<0||p.scrap<pr)return false;
+    p.scrap-=pr;p.callins[k]=type;return {price:pr,slot:k};
+  }
+  /* After a match: the slots become what the run-over detail says is left for mech k (detail.callins[k].left; a death leaves
+     [null,null]). No report for k (a match that ended without one, as when the host leaves the room) empties them. */
+  function carryInto(p,d,k){var r=d&&Array.isArray(d.callins)&&d.callins[k],l=r&&r.left;
+    p.callins=[0,1].map(function(j){var t=l&&l[j];return CALLINS.indexOf(t)>=0?t:null})}
+  function carry(c,i,d,k){var n=clone(c);carryInto(n.players[i||0],d,k===undefined?i||0:k);return n}
+  /* A death (or a load still marked live): restart(), and every call-in carried into the match is lost. */
+  function lose(c,seed){var n=restart(c,seed);n.players.forEach(function(p){p.callins=[null,null]});return n}
+
   return {make:make,player:player,validate:validate,encode:encode,decode:decode,advance:advance,bank:bank,restart:restart,begin:begin,
     repairPrice:repairPrice,repairAll:repairAll,upgradePrice:upgradePrice,upgrade:upgrade,plan:plan,openSpans:openSpans,levelSeed:levelSeed,
-    starterOwned:starterOwned,isStarter:isStarter,SEED_MAX:SEED_MAX,CALLINS:CALLINS};
+    starterOwned:starterOwned,isStarter:isStarter,SEED_MAX:SEED_MAX,CALLINS:CALLINS,
+    unlocked:unlocked,garageParts:garageParts,newParts:newParts,see:see,callinPrice:shopPrice,buyCallin:buyCallin,carry:carry,lose:lose};
 })();
 
 /* ===== phase 6 statics: pod types, blueprint unlock level, call-in price (GDD-D42, D43, D54) ===== */
