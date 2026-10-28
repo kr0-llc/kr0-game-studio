@@ -25,3 +25,18 @@ From a local web server in `games/metr0niks/` (for example `python3 -m http.serv
 ## Found while building it
 
 Guns fire slower than `T` says. The sim resets a gun's cooldown to `1/rate` after each shot and only fires on a 60 Hz tick, so the minigun fires 10 times a second, not 11 (40 DPS, not 44), and the plasma cutter 12, not 14. The lab shows both numbers. Whether to carry the leftover time into the next shot (so the rates match `T`) is kr0's call; it is not changed here.
+
+## Garage lab
+
+`prototypes/garage-lab.html` (Oct 28, 2026, kr0 asked to see how parts look on the mech, with every icon) loads the same prototype into its own garage. Every part is unlocked, and the frame's writes to the campaign save are blocked. The side panel has a sheet of all 21 part icons by slot, drawn by the prototype's `drawIcon`. Click a part to preview it on the turntable mech, press Fit (or double-click) to equip it, and use Starter build, Random build or Test drive. The art style switch redraws the icons and the mech. It adds two garage test hooks to `prototype.html`, `__m.garage.icon()` and `__m.garage.ownAll()`. Below 1320 px wide the garage frame is drawn at 1320 px and scaled to fit.
+
+## Units lab
+
+`prototypes/unit-lab.html` (Oct 28, 2026, kr0 asked to see every enemy, its behaviours and animations) drives the same prototype with waves off. You pick the patrol bot, heavy loader or Bounty sniper, then trigger one behaviour at a time by setting the sim's own state. The bot can drop in, patrol, engage and fire, go for a pod, freeze, take a hit and be destroyed. The loader can drop in, haul its route, tell and charge, engage and freeze. The sniper can perch, aim and fire, jump, be knocked off its roof, and freeze.
+
+- Enemy AI is off by default, so units stand idle until you trigger something. Turn it on to let the game's AI run.
+- Time runs at pause, 0.1×, 0.25×, 0.5× or 1×, with single-frame and ten-frame stepping, for watching animations.
+- A live table shows each unit's state, armor, distance and timers.
+- Each unit's numbers come from `T` and scale with the chosen level.
+- Wave 1 to 5 buttons drop that wave's real mix with live AI.
+- The units lab needs no change to `prototype.html` beyond the hooks above.
