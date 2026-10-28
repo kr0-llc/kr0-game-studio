@@ -46,6 +46,8 @@ Done when: 100 level-1 runs on paired seeds finish headless, the replay check pa
 
 ## Phase 1: hit pipeline and combat
 
+**Done Oct 28:** `hitEnemy` and `hitMech` in `sim.js` carry every hit; kill credit, combo, stagger, the scrap combine rule, multi-kills and the `stats[mech][wave]` record are in, with the `cb`, `sg`, `mk`, `x` and `w` events. The rules check has 33 more cases (56 in all). The prototype HUD doesn't show the combo or stagger yet; that comes with phase 8 (feel). Level-1 solo extracts rose from 21% to 26% with the same pilot, mostly from stagger.
+
 Today 13 call sites call `damage(e, dmg, …)` directly, each applying power its own way. The fun pass needs one order for every hit and someone to credit each kill.
 
 - **One hit path (TDD-D9):** `hitEnemy(src, target, base, info)` applies the GDD-D48 order (shield check, power, upgrade, grade, stagger, armor resistance, one rounding) and `hitMech(target, base, info)` applies level scaling and the Elite bonus. Every weapon, blast, collapse, pod strike and enemy attack goes through one of them. `info` carries the source kind (light, heavy, shoulder, collapse, hazard, pod, enemy) for stats and credit.

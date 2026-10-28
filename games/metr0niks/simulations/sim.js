@@ -26,7 +26,10 @@
                         ["f",x,y,z,text,css]      floating number    ["s",x,y,z,n,[r,g,b]] sparks   ["m",x,y,z,n,[r,g,b]] smoke
                         ["k",amount]              screen shake       ["p",x,y] drop pod landed
                         ["c",id,voxelIdx[],packedColours[]]  falling cluster created
-                        ["o","dead"|"extracted",message,scrapBanked,detail]  run over; detail = {result,level,scrap:[per mech],armor:[per mech]}
+                        ["o","dead"|"extracted",message,scrapBanked,detail]  run over; detail = {result,level,scrap:[per mech],armor:[per mech],stats}
+                        ["cb",mech,combo,broken]  combo changed (GDD-D35)   ["sg",x,y,z] an enemy was staggered
+                        ["mk",mech,count]         multi-kill (GDD-D53)      ["x",type,mech|-1,sourceKind,cubes] an enemy died (kill credit, GDD-D48)
+                        ["w",wave,[stats per mech]]  wave cleared, with that wave's GDD-D50 stats
                         (extracted: scrap and armor to carry on; dead: nothing carries on)
                         ["z",zoneIndex,name]      a sealed zone's gate fell: the map grew (also sent to guests)
    sim.snapshot(full)   co-op host snapshot {t:"snap",tk,ack,sc,k,sh,w,p,b,s,sr,pd,cl,vx,ev}; full=true also carries copies of
@@ -34,6 +37,9 @@
    sim.voxelDiffSince(tick)   flat [index,material,owner,...] for voxels changed after `tick`
    sim.applyBuild(i, build)   re-derive mech i from a build (adds the mech when i === players.length)
    sim.dropPlayer(i)    mech i leaves (hp 0); the run is lost if nobody else is alive
+   sim.hitEnemy(e,base,src,x,y,z) / sim.hitMech(q,base,src,x,y,z)  the hit path (GDD-D48 damage order, kill credit); see hitEnemy
+   sim.stats            [mech][wave] match stats (GDD-D50): kills by type and source, damage dealt and taken, voxels, grades,
+                        best combo, spans, most kills from one collapse, multi-kills, pods, scrap by source, overheats, wave time
    sim.level            the level this sim was created for (opts.level, default 1)
    sim.introTicks       set by create(): ticks of drop-in cinematic before anything may spawn, 0 unless a zone opens this level
    sim.zone             {open, opening, target, openAt, intro}: zones MAP.zones[0..open-1] are open; `opening` is the zone
@@ -80,6 +86,9 @@ var T={
         fallDmg:60,fallMin:1.5,stun:2,scrap:12},
   pods:{perWave:1,extra:.4,window:[1.5,6],minDist:4,countdown:3,dropHeight:9,fall:30,touch:.7,heal:.4,
         overclock:{mult:2,time:15},fire:2},       /* window: seconds into the wave; fire: bot fire-rate multiplier while overclocked */
+  combo:{max:4,step:.1,decay:12,atbAt4:.25},   /* GDD-D35: x1..x4; each step above x1 adds 10% scrap to credited kills; drops after 12 s without a heavy shot; ATB fills 25% faster at x4 */
+  stagger:{time:1,taken:.5},                   /* GDD-D35: a Perfect staggers for 1 s; a staggered enemy takes 50% more damage */
+  credit:{window:3},multiKill:{window:1.5},demolition:.15,   /* GDD-D48 kill credit window (s); GDD-D53 multi-kill window (s); GDD-D41/D55 collapse and hazard scrap bonus */
   level:{count:.25,hp:.15,dmg:.15,scrap:.1,max:50,revive:.3},   /* per level above 1: share added to enemy counts, hp, damage, scrap drops; revive: armor share a downed mech returns with */
   repairCost:3,       /* garage repair: armor restored per scrap */
   scrapMagnet:3,
@@ -463,6 +472,7 @@ function create(opts){
   }
   function removeVoxel(i,x,y,z){
     var c=voxColor(i),ci=chunkOf[i];vox[i]=0;owner[i]=0;vdmg[i]=0;chunkOf[i]=-1;touch(i);
+    if(curBy>=0){var vs=st(curBy);if(vs)vs.voxels++}
     if(z<=1)markWalk(x,y);
     for(var k=0;k<3;k++)debrisPiece(x+.5,y+.5,z+.5,c);
     smoke(x+.5,y+.5,z+.5,1,[140,136,128]);
@@ -512,7 +522,7 @@ function create(opts){
       vox[i]=0;owner[i]=0;vdmg[i]=0;chunkOf[i]=-1;touch(i);if(z<=1)markWalk(x,y);
       n++;fx+=x;fy+=y;fz+=z;
     }
-    c.count=0;supportDirty=true;
+    c.count=0;supportDirty=true;lastBreakBy=curBy;
     if(n){sparks(fx/n+.5,fy/n+.5,fz/n+.5,10,[255,200,120]);smoke(fx/n+.5,fy/n+.5,fz/n+.5,3,[140,136,128]);addShake(.08)}
   }
 
@@ -544,10 +554,11 @@ function create(opts){
     chk.last=clock()-t0;chk.n++;if(chk.last>chk.max)chk.max=chk.last;
   }
   function makeCluster(idx){
-    var cols=idx.map(function(i){return voxColor(i)}),g=clusterGeom(idx,cols);
+    var cols=idx.map(function(i){return voxColor(i)}),g=clusterGeom(idx,cols),span=idx.some(function(i){var o=structures[owner[i]];return o&&o.span});
     idx.forEach(function(i){var z=(i/(W*D))|0;if(z<=1)markWalk(i%W,((i/W)|0)%D)});
     idx.forEach(function(i){vox[i]=0;owner[i]=0;vdmg[i]=0;chunkOf[i]=-1;touch(i)});
-    var c={id:++cid,vs:g.vs,foot:g.foot,off:0,vz:0,creak:T.collapse.warn,t:0};clusters.push(c);
+    var c={id:++cid,vs:g.vs,foot:g.foot,off:0,vz:0,creak:T.collapse.warn,t:0,by:lastBreakBy};clusters.push(c);
+    var cs=c.by>=0&&st(c.by);if(cs&&span)cs.spans++;
     emitNet(["c",c.id,idx,cols.map(packCol)]);
     if(c.vs.length>30){bigFall=true;toast("Collapse! Get out of the red","var(--bad)")}
   }
@@ -566,8 +577,11 @@ function create(opts){
   function land(c,L){
     var C=T.collapse,footSet={};c.foot.forEach(function(f){footSet[f]=1});
     addShake(.25+c.vs.length/150);
-    var hitE=function(e){if(e.hp>0&&!e.dropping&&!aloft(e)&&footSet[Math.floor(e.x)+Math.floor(e.y)*W])damage(e,e.team?C.botDmg:C.playerDmg,e.x,e.y,1)};
+    var crushed=0,src={by:c.by,kind:"collapse"};
+    var hitE=function(e){if(e.hp>0&&!e.dropping&&!aloft(e)&&footSet[Math.floor(e.x)+Math.floor(e.y)*W]){
+      if(e.team){hitEnemy(e,C.botDmg*lvm("hp"),src,e.x,e.y,1);if(e.hp<=0)crushed++}else hitMech(e,C.playerDmg,{kind:"collapse"},e.x,e.y,1)}};
     bots.forEach(hitE);players.forEach(hitE);
+    var cs=c.by>=0&&st(c.by);if(cs&&crushed>cs.bestCrush)cs.bestCrush=crushed;
     var occupied={};players.concat(bots).forEach(function(e){if(e.hp>0)for(var dy=-1;dy<=1;dy++)for(var dx=-1;dx<=1;dx++)occupied[Math.floor(e.x+dx*e.r)+Math.floor(e.y+dy*e.r)*W]=1});
     var rubble=structure("rubble",null);
     c.vs.sort(function(a,b){return a.z-b.z});
@@ -579,7 +593,7 @@ function create(opts){
       if(rnd()<.25)smoke(v.x+.5,v.y+.5,z+.3,1,[150,140,125]);
     });
     var mid=c.vs[(c.vs.length/2)|0],n=C.scrap[0]+((rnd()*(C.scrap[1]-C.scrap[0]+1))|0);
-    for(var k=0;k<n&&c.vs.length>6;k++)scraps.push({x:mid.x+.5,y:mid.y+.5,z:.6,vx:(rnd()-.5)*5,vy:(rnd()-.5)*5,vz:3+rnd()*2,t:0,spin:rnd()*6});
+    for(var k=0;k<n&&c.vs.length>6;k++)scraps.push({x:mid.x+.5,y:mid.y+.5,z:.6,vx:(rnd()-.5)*5,vy:(rnd()-.5)*5,vz:3+rnd()*2,t:0,spin:rnd()*6,src:"collapse"});
     world.rev++;c.foot.forEach(function(f){markWalk(f%W,(f/W)|0)});
   }
 
@@ -590,7 +604,7 @@ function create(opts){
       v:cloneBuild(build),spd:d.spd,acc:d.acc,legT:d.legT,torT:d.torT,dmgMul:d.dmgMul,atbRate:d.atbRate,drain:d.drain,heatMul:d.heatMul,gun:d.gun,pileKind:d.pile,noDash:d.noDash,immune:d.immune,
       q:d.q,sq:0,qPrev:false,magnet:d.magnet,dashMul:d.dashMul,dashHeat:d.dashHeat,regen:d.regen,calm:0,
       leg:Math.PI*.75,aim:Math.PI*.75,step:0,heat:0,over:0,cool:0,dash:0,dashCd:0,flash:0,muzzle:0,ax:16,ay:16,az:.6,
-      atb:0,ring:-1,retract:0,pileT:0,cue:0,pileRes:"",oc:0,field:null,rPrev:false};
+      atb:0,ring:-1,retract:0,pileT:0,cue:0,pileRes:"",oc:0,field:null,rPrev:false,combo:1,comboT:0,mkN:0,mkT:-1e9,mkRec:null};
   }
   function mkInput(){return {k:0,ax:16,ay:16,az:.6,l:false,r:false,rp:false,seq:-1,at:0}}
   function newBot(){
@@ -640,6 +654,8 @@ function create(opts){
       if((R.spawnT-=dt)<=0){R.spawnT=T.wave.stagger;var kind=R.queue.shift();bots.push(kind==="boss"?newBoss():kind==="loader"?newLoader():newBot())}
     } else if(!bots.length){
       toast("Wave "+R.wave+" cleared","var(--good)");
+      players.forEach(function(q){var s=st(q.idx);if(s)s.time=Math.round(R.waveT*10)/10});
+      emitNet(["w",R.wave,players.map(function(q){return st(q.idx)})]);
       if(R.wave>=T.waves.length){R.done=true;R.exitT=T.wave.exit}else R.breather=T.wave.breather;
     }
   }
@@ -648,7 +664,7 @@ function create(opts){
     scrap+=scraps.length;scraps.length=0;
     var got=scrap,per=players.map(function(q){return q.scrap}),arm=players.map(function(q){return Math.max(Math.ceil(q.hp),Math.ceil(q.maxHp*T.level.revive))});
     scrap=0;state="extracted";
-    emit(["o","extracted","Level "+level+" cleared. You banked "+got+" scrap"+(players.length>1?" ("+per.join(" + ")+")":"")+". Repair and shop in the garage, then drop into level "+Math.min(T.level.max,level+1)+".",got,{result:"extracted",level:level,scrap:per,armor:arm}]);
+    emit(["o","extracted","Level "+level+" cleared. You banked "+got+" scrap"+(players.length>1?" ("+per.join(" + ")+")":"")+". Repair and shop in the garage, then drop into level "+Math.min(T.level.max,level+1)+".",got,{result:"extracted",level:level,scrap:per,armor:arm,stats:stats}]);
   }
   /* Drop pods: a marker and countdown, then the crate falls like a bot does and waits to be touched. */
   var POD_TYPES=["repair","overclock"];
@@ -666,6 +682,7 @@ function create(opts){
     if(o.type==="repair"){e.hp=Math.min(e.maxHp,e.hp+amt);floatText(e.x,e.y,2,"+"+amt,"#7fdc6a")}
     else{e.oc=P.overclock.time;floatText(e.x,e.y,2,"OVERCLOCK","#3fd6e8")}
     sparks(o.x,o.y,.5,12,[63,214,232]);
+    if(e.team===0){var ps=st(e.idx);if(ps)ps.pods.taken++}else{e.podCarrier=true;var ns=st(nearestPlayer(e.x,e.y).idx);if(ns)ns.pods.stolen++}
     if(e.team===0)toast(o.type==="repair"?"Field repair: +"+amt+" armor":"Overclock: ATB x"+P.overclock.mult+" for "+P.overclock.time+" s","var(--cyan)",e.idx);
     else toast((e.loader?"Loader":"Patrol bot")+" took a pod","var(--hazard)");
   }
@@ -743,7 +760,7 @@ function create(opts){
       b.vz-=T.collapse.gravity*dt;b.z+=b.vz*dt;var g=groundZ(b.x,b.y,b.z);
       if(b.z<=g){
         b.z=g;b.mode="perch";smoke(b.x,b.y,g+.1,10,[150,140,120]);sparks(b.x,b.y,g+.2,8,[255,200,120]);
-        if(b.fallZ-g>=B.fallMin){b.stun=B.stun;b.tell=0;damage(b,B.fallDmg,b.x,b.y,g+1);if(b.hp>0)toast("Sniper brought down","var(--hazard)")}
+        if(b.fallZ-g>=B.fallMin){b.stun=B.stun;b.tell=0;hitEnemy(b,B.fallDmg,{kind:"hazard"},b.x,b.y,g+1);if(b.hp>0)toast("Sniper brought down","var(--hazard)")}
       }
       return;
     }
@@ -799,32 +816,93 @@ function create(opts){
     var g=T[p.gun],ca=Math.cos(p.aim),sa=Math.sin(p.aim),n=g.pellets||1,kind=p.gun==="plasma"||p.gun==="rail"?p.gun:"bullet";
     var tx=p.x+ca*.62+sa*.36,ty=p.y+sa*.62-ca*.36,tz=1.1;   /* right-arm barrel tip */
     var dx=p.ax-tx,dy=p.ay-ty,dz=p.az-tz,d=Math.hypot(dx,dy,dz)||1;
+    var src={by:p.idx,kind:"light",pow:p.dmgMul,w:p.gun,resist:kind==="bullet"?T.loader.minigunMult:1};
     for(var k=0;k<n;k++){
       var sp=g.spread,ux=dx/d+(rnd()-.5)*sp,uy=dy/d+(rnd()-.5)*sp,uz=dz/d+(rnd()-.5)*sp*.5,ul=Math.hypot(ux,uy,uz);
-      var o={x:tx,y:ty,z:tz,vx:ux/ul*g.speed,vy:uy/ul*g.speed,vz:uz/ul*g.speed,dmg:g.dmg*p.dmgMul,team:0,t:g.life,kind:kind};
+      var o={x:tx,y:ty,z:tz,vx:ux/ul*g.speed,vy:uy/ul*g.speed,vz:uz/ul*g.speed,dmg:g.dmg*p.dmgMul,team:0,t:g.life,kind:kind,base:g.dmg,src:src};
       if(kind==="rail"){o.pen=g.pen;o.hit=[]}
       shots.push(o);
     }
     if(kind==="rail"){sparks(tx,ty,tz,8,[160,230,255]);addShake(.06)}
     p.muzzle=n>1||kind==="rail"?.08:.05;addHeat(p,g.heat);
   }
-  function addHeat(p,h){p.heat=Math.min(100,p.heat+h*(p.heatMul||1));if(p.heat>=100&&!p.over){p.over=T.heat.lockout;toast("Overheated: guns locked","var(--bad)",p.idx);smoke(p.x,p.y,1.3,10,[220,220,220])}}
+  function addHeat(p,h){p.heat=Math.min(100,p.heat+h*(p.heatMul||1));if(p.heat>=100&&!p.over){p.over=T.heat.lockout;var hs=st(p.idx);if(hs)hs.overheats++;toast("Overheated: guns locked","var(--bad)",p.idx);smoke(p.x,p.y,1.3,10,[220,220,220])}}
   function damage(e,dmg,x,y,z){
     if(e.hp<=0)return;e.hp-=dmg;e.flash=.08;if(e.team===0)e.calm=0;
     if(e.team===1){floatText(x,y,z+.3,Math.round(dmg),"#f2c230");if(e.state==="patrol"){e.state="engage";e.lost=0}}
     else floatText(x,y,z+.3,Math.round(dmg),"#ff5a4a");
     if(e.hp<=0)(e.team===1?killBot:killPlayer)(e);
   }
+  /* ----- hit path (GDD-D48). Every hit on an enemy goes through hitEnemy and every hit on a mech through hitMech.
+     src = {by: mech index, -1 for nobody, or undefined for "the last mech that hit it within the credit window";
+            kind: light | heavy | shoulder | collapse | hazard | pod | enemy; grade: the ring grade of a heavy hit;
+            pow: power / 100 at the moment of firing; w: weapon id; resist: armor multiplier against armored enemies}
+     Damage order: blocked? -> base -> x power (player weapons only) -> x upgrade (player.upMul, when the garage adds it)
+     -> x grade (heavy) -> x 1.5 if staggered -> x armor resist, rounded once. A Perfect then staggers what it hit. */
+  function hitEnemy(e,base,src,x,y,z){
+    if(e.hp<=0)return 0;
+    if(e.blocks&&e.blocks(src,x,y))return 0;
+    var K=src.kind,pl=src.by>=0?players[src.by]:null,d=base;
+    if(K==="light"||K==="heavy"||K==="shoulder"){d*=src.pow===undefined?(pl?pl.dmgMul:1):src.pow;if(pl&&pl.upMul)d*=pl.upMul(src.w)}
+    if(K==="heavy"&&src.grade)d*=T.pile.mult[src.grade];
+    if(e.stag>0)d*=1+T.stagger.taken;
+    if(e.armored&&src.resist)d*=src.resist;
+    d=Math.round(d);
+    if(src.by>=0){e.cr=src.by;e.crT=tick}
+    e.lastSrc=src;
+    var s=src.by>=0&&st(src.by);if(s)s.dealt[K]=(s.dealt[K]||0)+Math.max(0,Math.min(d,e.hp));
+    damage(e,d,x,y,z);
+    if(src.grade==="Perfect"&&e.hp>0&&!e.noStagger){e.stag=T.stagger.time;emitNet(["sg",r2(e.x),r2(e.y),r2(e.z||0)])}
+    return d;
+  }
+  /* Enemy, collapse and hazard damage to a mech: base x mul (an Elite's, when phase 4 adds them), rounded; power, upgrades and grades don't apply. */
+  function hitMech(q,base,src,x,y,z){
+    if(q.hp<=0)return 0;
+    var d=Math.round(base*(src.mul||1)),s=st(q.idx);
+    if(s)s.taken[src.kind]=(s.taken[src.kind]||0)+Math.max(0,Math.min(d,q.hp));
+    damage(q,d,x===undefined?q.x:x,y===undefined?q.y:y,z===undefined?1:z);
+    return d;
+  }
+  /* Kill credit (GDD-D48): the killing hit's mech; for a hit with no mech of its own (a fall), the last mech that hit it within the window. */
+  function creditOf(b){
+    var src=b.lastSrc||{};if(src.by!==undefined)return src.by;
+    return b.cr!==undefined&&tick-b.crT<=T.credit.window*60?b.cr:-1;
+  }
+  /* Match stats (GDD-D50): one record per mech per wave. */
+  var stats=[],curBy=-1,lastBreakBy=-1;
+  function newStats(){return {kills:{},killsBy:{},dealt:{},voxels:0,taken:{},perfect:0,good:0,miss:0,bestCombo:1,spans:0,bestCrush:0,
+    multi:{2:0,3:0,4:0,5:0},pods:{taken:0,stolen:0,stolenBack:0},scrap:{},overheats:0,time:0}}
+  function st(i){if(!(i>=0)||!players[i])return null;var w=stats[i]||(stats[i]=[]);return w[run.wave-1]||(w[run.wave-1]=newStats())}
+  function setCombo(p,n){
+    var was=p.combo;p.combo=n;if(n===was)return;
+    emitNet(["cb",p.idx,n,n<was?1:0]);
+    var s=st(p.idx);if(s&&n>s.bestCombo)s.bestCombo=n;
+  }
   function killBot(b){
-    kills++;var c=b.boss?[63,214,232]:b.loader?[176,150,52]:[140,70,56],z0=b.boss?b.z:0;
+    kills++;
+    var src=b.lastSrc||{},by=creditOf(b),pl=by>=0?players[by]:null,type=b.boss?"sniper":b.loader?"loader":(b.type||"bot");var c=b.boss?[63,214,232]:b.loader?[176,150,52]:[140,70,56],z0=b.boss?b.z:0;
     for(var k=0;k<14;k++)debrisPiece(b.x,b.y,z0+.5,k%2?c:[60,62,66]);
     sparks(b.x,b.y,z0+.6,18,[255,170,60]);smoke(b.x,b.y,z0+.5,8,[90,90,90]);
     var sc=b.loader?T.loader.scrap:T.bot.scrap,n=b.boss?T.boss.scrap:sc[0]+((rnd()*(sc[1]-sc[0]+1))|0),sx=b.x,sy=b.y,sz=.4;
-    if(b.dbl)n*=2;   /* killed by a Perfect pile-bunker hit */
-    n=Math.round(n*lvm("scrap"));
+    /* how kill bonuses combine (GDD Economy): the multipliers multiply, the percentages add, rounded once */
+    var mul=lvm("scrap"),pct=0;
+    if(src.kind==="heavy"&&src.grade==="Perfect"&&src.w==="pile")mul*=2;   /* killed by a Perfect pile-bunker hit */
+    if(run.overtime&&T.overtime)mul*=T.overtime.scrap;
+    if(b.elite&&T.elite)mul*=T.elite.scrap;
+    if(pl&&pl.combo>1)pct+=T.combo.step*(pl.combo-1);
+    if(src.kind==="collapse"||src.kind==="hazard")pct+=T.demolition;
+    n=Math.round(n*mul*(1+pct));
+    var tag=src.kind||"other";
+    if(pl){var s=st(by);
+      s.kills[type]=(s.kills[type]||0)+1;s.killsBy[tag]=(s.killsBy[tag]||0)+1;if(b.podCarrier)s.pods.stolenBack++;
+      if(tick-pl.mkT<=T.multiKill.window*60)pl.mkN++;else{pl.mkN=1;pl.mkRec=s}
+      pl.mkT=tick;
+      if(pl.mkN>=2){var r=pl.mkRec||s;if(pl.mkN<=5){if(pl.mkN>2)r.multi[pl.mkN-1]--;r.multi[pl.mkN]++}emitNet(["mk",by,pl.mkN])}
+    }
+    emitNet(["x",type,by,tag,n]);
     if(aloft(b)){var g=groundNear(b.x,b.y);sx=g[0];sy=g[1];sz=1.5}   /* roof loot drops to street level */
     if(b.boss)toast("Bounty sniper down","var(--hazard)");
-    for(k=0;k<n;k++)scraps.push({x:sx,y:sy,z:sz,vx:(rnd()-.5)*4,vy:(rnd()-.5)*4,vz:3+rnd()*2,t:0,spin:rnd()*6});
+    for(k=0;k<n;k++)scraps.push({x:sx,y:sy,z:sz,vx:(rnd()-.5)*4,vy:(rnd()-.5)*4,vz:3+rnd()*2,t:0,spin:rnd()*6,src:tag});
   }
   /* Pile-bunker: the timing ring decides the grade, the spike is a short cone in front of the left arm. */
   function ringR(t){return T.ring.start+(T.ring.target-T.ring.start)*t/T.ring.duration}
@@ -842,19 +920,21 @@ function create(opts){
   }
   function firePile(p,grade){
     var K=T.pile,m=K.mult[grade],ca=Math.cos(p.aim),sa=Math.sin(p.aim),perfect=grade==="Perfect";
-    p.atb=0;p.ring=-1;p.pileT=K.ext;p.pileRes=grade;
+    p.atb=0;p.ring=-1;p.pileT=K.ext;p.pileRes=grade;p.comboT=0;
+    var gs=st(p.idx);if(gs)gs[grade.toLowerCase()]++;
+    if(perfect)setCombo(p,Math.min(T.combo.max,p.combo+1));else if(grade==="Miss")setCombo(p,1);
+    var src={by:p.idx,kind:"heavy",grade:grade,pow:p.dmgMul,w:p.pileKind};
     if(grade==="Miss"&&p.pileKind!=="buster")p.retract=K.retract;
     floatText(p.x,p.y,2.1,grade==="Perfect"?"PERFECT":grade,perfect?"#f2c230":grade==="Good"?"#7fdc6a":"#ff5a4a");
     addHeat(p,K.heat);
-    if(p.pileKind==="buster"){fireBuster(p,m);return}
-    if(p.pileKind==="winch"){fireWinch(p,grade,m);return}
+    if(p.pileKind==="buster"){fireBuster(p,src);return}
+    if(p.pileKind==="winch"){fireWinch(p,grade,m,src);return}
     bots.forEach(function(b){
       if(b.hp<=0||b.dropping||b.z>.5)return;   /* a roof sniper is out of reach */
       var dx=b.x-p.x,dy=b.y-p.y,d=Math.hypot(dx,dy);if(d>K.reach+b.r)return;
       var ang=Math.abs(Math.atan2(ca*dy-sa*dx,ca*dx+sa*dy));
       if(d>b.r&&ang>K.cone+Math.atan2(b.r,d))return;
-      var dm=Math.round(K.dmg*m*p.dmgMul);if(perfect&&b.hp<=dm)b.dbl=true;
-      damage(b,dm,b.x,b.y,.8);sparks(b.x,b.y,.8,perfect?16:8,[255,255,255]);
+      hitEnemy(b,K.dmg,src,b.x,b.y,.8);sparks(b.x,b.y,.8,perfect?16:8,[255,255,255]);
       if(b.hp>0&&K.knock[grade])knockBot(b,ca,sa,K.knock[grade],perfect);
     });
     /* voxels: rays at two heights; Perfect is wider and cores two cells deep */
@@ -868,16 +948,16 @@ function create(opts){
       }})});
   }
   /* Bunker-buster: the ATB shot is a slow shell (it blasts a hole where it lands); the recoil shoves the mech back. */
-  function fireBuster(p,m){
+  function fireBuster(p,src){
     var B=T.buster,ca=Math.cos(p.aim),sa=Math.sin(p.aim),tx=p.x-sa*.42+ca*.8,ty=p.y+ca*.42+sa*.8,tz=1.05;
     var dx=p.ax-tx,dy=p.ay-ty,dz=p.az-tz,d=Math.hypot(dx,dy,dz)||1;
-    shots.push({x:tx,y:ty,z:tz,vx:dx/d*B.speed,vy:dy/d*B.speed,vz:dz/d*B.speed,dmg:Math.round(B.dmg*m*p.dmgMul),team:0,t:B.life,kind:"shell"});
+    shots.push({x:tx,y:ty,z:tz,vx:dx/d*B.speed,vy:dy/d*B.speed,vz:dz/d*B.speed,dmg:B.dmg,base:B.dmg,src:src,team:0,t:B.life,kind:"shell"});
     sparks(tx,ty,tz,10,[255,200,120]);smoke(tx,ty,tz,3,[200,200,200]);p.muzzle=.1;addShake(.2);
     if(!p.immune)knockBot(p,-ca,-sa,B.recoil,false);
   }
   /* Mag-winch: a cable along the aim. Light bots are reeled in; a wall or a heavy loader reels you in instead;
      a roof sniper is yanked off its perch; a Perfect hit on a pillar tears out its base. */
-  function fireWinch(p,grade,m){
+  function fireWinch(p,grade,m,src){
     var Wn=T.winch,reach=grade==="Perfect"?Wn.perfect:Wn.reach,ca=Math.cos(p.aim),sa=Math.sin(p.aim);
     var ox=p.x-sa*.42+ca*.5,oy=p.y+ca*.42+sa*.5,oz=1,dx=p.ax-ox,dy=p.ay-oy,dz=p.az-oz,dl=Math.hypot(dx,dy,dz)||1;
     dx/=dl;dy/=dl;dz/=dl;
@@ -892,7 +972,7 @@ function create(opts){
     sparks(hx,hy,hz,hitB||hitV?10:3,[200,220,230]);
     var px=hx-p.x,py=hy-p.y,pl=Math.hypot(px,py)||1;px/=pl;py/=pl;
     if(hitB){
-      var b=hitB;damage(b,Math.round(Wn.dmg*m*p.dmgMul),b.x,b.y,b.z+.8);if(b.hp<=0)return;
+      var b=hitB;hitEnemy(b,Wn.dmg,src,b.x,b.y,b.z+.8);if(b.hp<=0)return;
       if(aloft(b)){   /* yanked off the roof: it falls, and a long fall stuns and hurts it */
         b.mode="fall";b.vz=0;b.fallZ=b.z;b.tell=0;b.x-=px*1.2;b.y-=py*1.2;toast("Sniper yanked off the roof","var(--hazard)");
       } else if(b.loader){winchPull(p,px,py,pl-b.r-p.r-.15)}
@@ -918,11 +998,11 @@ function create(opts){
     var M=T.mortar,dx=p.ax-p.x,dy=p.ay-p.y,dl=Math.hypot(dx,dy);
     if(dl<M.minR){floatText(p.x,p.y,1.9,"too close","#a39d93");return false}
     if(dl>M.maxR){dx*=M.maxR/dl;dy*=M.maxR/dl;dl=M.maxR}
-    var ca=Math.cos(p.aim),sa=Math.sin(p.aim),g=T.collapse.gravity,ft=M.flight*(.8+.4*dl/M.maxR);
+    var ca=Math.cos(p.aim),sa=Math.sin(p.aim),g=T.collapse.gravity,ft=M.flight*(.8+.4*dl/M.maxR),src={by:p.idx,kind:"shoulder",pow:p.dmgMul,w:"mortar"};
     for(var k=0;k<M.shells;k++){
       var side=k?1:-1,ox=p.x-ca*.15+sa*side*.18,oy=p.y-sa*.15-ca*side*.18,oz=1.7;
       var tx=p.x+dx+(rnd()-.5)*M.spread,ty=p.y+dy+(rnd()-.5)*M.spread,tz=p.az>.7?p.az:0;
-      shots.push({x:ox,y:oy,z:oz,vx:(tx-ox)/ft,vy:(ty-oy)/ft,vz:(tz-oz+.5*g*ft*ft)/ft,dmg:M.dmg*p.dmgMul,team:0,t:ft*2+1,kind:"mortar",big:k});
+      shots.push({x:ox,y:oy,z:oz,vx:(tx-ox)/ft,vy:(ty-oy)/ft,vz:(tz-oz+.5*g*ft*ft)/ft,dmg:M.dmg*p.dmgMul,base:M.dmg,src:src,team:0,t:ft*2+1,kind:"mortar",big:k});
       smoke(ox,oy,oz,3,[200,200,200]);
     }
     sparks(p.x,p.y,1.8,8,[255,200,120]);addShake(.12);addHeat(p,M.heat);return true;
@@ -932,7 +1012,7 @@ function create(opts){
     p.heat=0;if(p.over){p.over=0;toast("Vented: guns unlocked","var(--good)",p.idx)}
     bots.forEach(function(b){if(b.hp<=0||b.dropping)return;
       if(Math.hypot(b.x-p.x,b.y-p.y,(b.z||0)-p.z)>V.radius)return;
-      b.slow=V.slow;n++;damage(b,Math.round(V.dmg*p.dmgMul),b.x,b.y,b.z+.8);sparks(b.x,b.y,b.z+.6,6,[150,232,240])});
+      b.slow=V.slow;n++;hitEnemy(b,V.dmg,{by:p.idx,kind:"shoulder",pow:p.dmgMul,w:"vent"},b.x,b.y,b.z+.8);sparks(b.x,b.y,b.z+.6,6,[150,232,240])});
     for(var k=0;k<14;k++){var a=k/14*6.283;smoke(p.x+Math.cos(a)*1.2,p.y+Math.sin(a)*1.2,.4,1,[200,240,250])}
     sparks(p.x,p.y,1.2,20,[150,232,240]);floatText(p.x,p.y,2.1,n?"FROZEN x"+n:"VENT","#3fd6e8");
     return true;
@@ -949,7 +1029,7 @@ function create(opts){
     var R=T.ring;
     p.pileT-=dt;p.retract=Math.max(0,p.retract-dt);p.cue-=dt;
     if(p.ring<0){
-      p.atb=Math.min(T.atb.fill,p.atb+dt*p.atbRate*(p.oc>0?T.pods.overclock.mult:1));
+      p.atb=Math.min(T.atb.fill,p.atb+dt*p.atbRate*(p.oc>0?T.pods.overclock.mult:1)*(p.combo>=T.combo.max?1+T.combo.atbAt4:1));
       if(press){
         if(p.over||p.retract>0||p.atb<T.atb.fill){if(p.cue<=0){p.cue=.6;floatText(p.x,p.y,1.9,p.retract>0?"retracting":"charging","#a39d93")}}
         else p.ring=0;
@@ -957,7 +1037,7 @@ function create(opts){
       return;
     }
     p.ring+=dt;
-    if(p.over){p.ring=-1;p.atb=0;p.retract=T.pile.retract;p.pileRes="Miss";floatText(p.x,p.y,2.1,"Miss","#ff5a4a")}
+    if(p.over){p.ring=-1;p.atb=0;p.retract=T.pile.retract;p.pileRes="Miss";p.comboT=0;setCombo(p,1);var ms=st(p.idx);if(ms)ms.miss++;floatText(p.x,p.y,2.1,"Miss","#ff5a4a")}
     else if(!p.rDown)firePile(p,gradeRing(p.ring));
     else if(ringR(p.ring)<R.target-R.good*R.start)firePile(p,"Miss");   /* ring closed on the target without a release */
   }
@@ -974,13 +1054,15 @@ function create(opts){
   function lossCheck(){
     if(players.some(function(q){return q.hp>0}))return;
     var lost=scrap,w="wave "+run.wave+" of "+T.waves.length,msg;scrap=0;state="dead";
-    var det={result:"dead",level:level};
+    var det={result:"dead",level:level,stats:stats};
     msg="Mech destroyed on "+w+". You lost "+lost+" scrap from this match. Parts you own are never lost; scrap only counts once you extract.";
     emit(["o","dead",msg,0,det]);
   }
 
   /* ----- update ----- */
   function updatePlayer(p,dt,inp){
+    curBy=p.idx;
+    if(p.combo>1&&(p.comboT+=dt)>=T.combo.decay)setCombo(p,1);
     if(moveMech(p,inp,T,dt)){addHeat(p,T.player.dashHeat*(p.dashHeat||1));smoke(p.x,p.y,.2,6,[120,200,220])}
     p.calm+=dt;
     if(p.regen&&p.calm>=T.nanite.delay&&p.hp<p.maxHp){p.hp=Math.min(p.maxHp,p.hp+T.nanite.regen*dt);if(rnd()<.05)sparks(p.x,p.y,1,1,[127,220,106])}
@@ -999,12 +1081,18 @@ function create(opts){
   function updateBot(b,dt){
     var B=T.bot,p=nearestPlayer(b.x,b.y);
     b.flash-=dt;if(b.slow>0)b.slow-=dt;
+    /* staggered (GDD-D35): no moving, firing, charging or jumping, and any tell is lost; a falling sniper still falls */
+    if(b.stag>0){b.stag=Math.max(0,b.stag-dt);
+      if(!b.dropping&&b.mode!=="fall"&&b.mode!=="jump"){b.vx=b.vy=0;b.tell=0;
+        if(b.state==="tell"||b.state==="charge"){b.state="recover";b.t=T.loader.recover;b.cd=T.loader.cooldown}
+        if(b.boss&&b.stun>0)b.stun=Math.max(0,b.stun-dt);
+        return}}
     if(b.boss){updateBoss(b,dt);return}
     if(b.oc>0)b.oc-=dt;
     if(b.dropping){
       b.vz-=30*dt;b.z+=b.vz*dt;
       if(b.z<=0){b.z=0;b.dropping=false;smoke(b.x,b.y,.1,10,[150,140,120]);sparks(b.x,b.y,.2,8,[255,200,120]);
-        players.forEach(function(q){if(q.hp>0&&Math.hypot(q.x-b.x,q.y-b.y)<1.2)damage(q,10*lvm("dmg"),q.x,q.y,1)})}
+        players.forEach(function(q){if(q.hp>0&&Math.hypot(q.x-b.x,q.y-b.y)<1.2)hitMech(q,10*lvm("dmg"),{kind:"enemy"},q.x,q.y,1)})}
       return;
     }
     var alive=p.hp>0,dist=alive?Math.hypot(p.x-b.x,p.y-b.y):99,sees=alive&&dist<B.sight&&los(b.x,b.y,p.x,p.y,.8);
@@ -1064,7 +1152,7 @@ function create(opts){
     if(b.state==="charge"){
       b.vx=b.cx*L.chargeSpeed;b.vy=b.cy*L.chargeSpeed;b.head=Math.atan2(b.cy,b.cx);ram(b);
       if(!b.hit&&alive&&Math.hypot(p.x-b.x,p.y-b.y)<b.r+p.r+.05){
-        b.hit=true;damage(p,L.dmg*lvm("dmg"),p.x,p.y,1);if(!p.immune)knockBot(p,b.cx,b.cy,L.shove,false);
+        b.hit=true;hitMech(p,L.dmg*lvm("dmg"),{kind:"enemy"},p.x,p.y,1);if(!p.immune)knockBot(p,b.cx,b.cy,L.shove,false);
         sparks(p.x,p.y,.9,14,[255,200,90]);addShake(.4);
       }
       if(b.hit||(b.t-=dt)<=0){b.state="recover";b.t=L.recover;b.cd=L.cooldown}
@@ -1093,7 +1181,7 @@ function create(opts){
   }
   function updateShots(dt){
     for(var i=shots.length-1;i>=0;i--){
-      var s=shots[i],n,dead=false;
+      var s=shots[i],n,dead=false;curBy=s.src?s.src.by:-1;
       if(s.kind==='mortar')s.vz-=T.collapse.gravity*dt;
       n=Math.ceil(Math.hypot(s.vx,s.vy,s.vz)*dt/.2);
       for(var k=0;k<n&&!dead;k++){
@@ -1110,8 +1198,8 @@ function create(opts){
           if(e.hp<=0||e.dropping)continue;
           if(Math.hypot(e.x-s.x,e.y-s.y)<e.r+.08&&s.z>=e.z-.1&&s.z<=e.z+e.h+.2){
             if(s.kind==='mortar'){mortarBlast(s);dead=true;break}
-            if(s.kind==='rail'){if(s.hit.indexOf(e)>=0)continue;s.hit.push(e);damage(e,s.dmg,s.x,s.y,s.z);sparks(s.x,s.y,s.z,10,[160,230,255]);continue}
-            damage(e,s.dmg*(e.armored&&s.kind==='bullet'?T.loader.minigunMult:1),s.x,s.y,s.z);sparks(s.x,s.y,s.z,s.kind==='shell'?14:4,s.team?[255,90,74]:s.kind==='plasma'?[200,170,255]:[255,220,140]);dead=true;break}
+            if(s.kind==='rail'){if(s.hit.indexOf(e)>=0)continue;s.hit.push(e);hitEnemy(e,s.base,s.src,s.x,s.y,s.z);sparks(s.x,s.y,s.z,10,[160,230,255]);continue}
+            if(s.team===0)hitEnemy(e,s.base,s.src,s.x,s.y,s.z);else hitMech(e,s.dmg,{kind:"enemy"},s.x,s.y,s.z);sparks(s.x,s.y,s.z,s.kind==='shell'?14:4,s.team?[255,90,74]:s.kind==='plasma'?[200,170,255]:[255,220,140]);dead=true;break}
         }
       }
       if(dead||(s.t-=dt)<=0)shots.splice(i,1);
@@ -1126,7 +1214,7 @@ function create(opts){
     var M=T.mortar,x=Math.floor(s.x),y=Math.floor(s.y),z=Math.floor(Math.max(0,s.z));
     for(var dz=-1;dz<=1;dz++)for(var dy=-1;dy<=1;dy++)for(var dx=-1;dx<=1;dx++)hitVoxel(x+dx,y+dy,z+dz,M.voxDmg,x+dx+.5,y+dy+.5,z+dz+.5);
     bots.forEach(function(b){if(b.hp<=0||b.dropping)return;var d=Math.hypot(b.x-s.x,b.y-s.y,b.z+.5-s.z);
-      if(d<M.radius)damage(b,Math.round(s.dmg*(1-.5*d/M.radius)),b.x,b.y,b.z+.8)});
+      if(d<M.radius)hitEnemy(b,s.base*(1-.5*d/M.radius),s.src,b.x,b.y,b.z+.8)});
     sparks(s.x,s.y,s.z+.2,18,[255,190,90]);smoke(s.x,s.y,s.z+.2,6,[170,160,140]);addShake(.12);
   }
   function updateScraps(dt){
@@ -1137,7 +1225,7 @@ function create(opts){
       s.vz-=18*dt;s.x+=s.vx*dt;s.y+=s.vy*dt;s.z+=s.vz*dt;
       if(s.z<.08){s.z=.08;s.vz*=-.4;s.vx*=.82;s.vy*=.82}
       if(blockedCell(Math.floor(s.x),Math.floor(s.y))){s.x-=s.vx*dt;s.y-=s.vy*dt;s.vx*=-.5;s.vy*=-.5}
-      if(s.t>.5&&p.hp>0&&dl<.55){scrap++;p.scrap++;floatText(p.x,p.y,1.8,"+1 scrap","#f2c230");scraps.splice(i,1)}
+      if(s.t>.5&&p.hp>0&&dl<.55){scrap++;p.scrap++;var ss=st(p.idx);if(ss){var sk=s.src||"other";ss.scrap[sk]=(ss.scrap[sk]||0)+1}floatText(p.x,p.y,1.8,"+1 scrap","#f2c230");scraps.splice(i,1)}
     }
   }
   function stepDebris(dt){
@@ -1152,12 +1240,14 @@ function create(opts){
     if(fieldsDirty||fieldT<=0){pl.forEach(function(q){if(q.hp>0)q.field=flowField(q.x,q.y,q.field)});fieldT=.3;fieldsDirty=false}
     fieldT-=dt;
     var stale=T.net.inputStale*60;
+    curBy=-1;
     pl.forEach(function(q,qi){
       if(q.hp<=0)return;
       var inp=inputs[qi];
       if(inp.seq>=0&&tick-inp.at>stale){inp.k=0;inp.l=false;inp.r=false;inp.rp=false}
       updatePlayer(q,dt,inp);
     });
+    curBy=-1;
     for(i=0;i<bots.length;i++)updateBot(bots[i],dt);
     for(i=0;i<bots.length;i++){if(bots[i].dropping||aloft(bots[i]))continue;for(j=0;j<pl.length;j++)if(pl[j].hp>0)separate(pl[j],bots[i]);for(j=i+1;j<bots.length;j++)if(!bots[j].dropping&&!aloft(bots[j]))separate(bots[i],bots[j])}
     if(pl.length>1&&pl[0].hp>0&&pl[1].hp>0)separate(pl[0],pl[1]);
@@ -1165,7 +1255,7 @@ function create(opts){
     for(i=0;i<pl.length;i++)if(pl[i].hp>0)collide(pl[i]);
     for(i=bots.length-1;i>=0;i--)if(bots[i].hp<=0)bots.splice(i,1);
     if(state==="play")updateWave(dt);
-    if(state!=="drop")updatePods(dt);updateShots(dt);updateScraps(dt);stepDebris(dt);
+    if(state!=="drop")updatePods(dt);updateShots(dt);curBy=-1;updateScraps(dt);stepDebris(dt);
     if(supportDirty)checkSupports();
     updateClusters(dt);flushWalk();
     tick++;
@@ -1180,10 +1270,10 @@ function create(opts){
   function snapshot(full){
     var s={t:"snap",tk:tick,ack:inputs[1]?inputs[1].seq:0,sc:scrap,k:kills,sh:r2(shake),w:[run.wave,r2(run.breather),bots.length+run.queue.length],p:[],b:[],s:[],sr:[],pd:[],cl:[]},i;
     players.forEach(function(q){s.p.push([q.idx,r2(q.x),r2(q.y),r2(q.z),r2(q.leg),r2(q.aim),Math.max(0,r2(q.hp)),q.maxHp,r2(q.heat),r2(q.over),r2(q.dashCd),q.dash>0?1:0,
-      r2(q.atb),r2(q.ring),r2(q.retract),r2(q.pileT),r2(q.oc),q.muzzle>0?1:0,q.flash>0?1:0,r2(q.ax),r2(q.ay),r2(q.az),r2(q.step)])});
+      r2(q.atb),r2(q.ring),r2(q.retract),r2(q.pileT),r2(q.oc),q.muzzle>0?1:0,q.flash>0?1:0,r2(q.ax),r2(q.ay),r2(q.az),r2(q.step),q.combo])});
     bots.forEach(function(b){
       if(!b.id)b.id=++eid;
-      var k=b.boss?2:b.loader?1:0,f=(b.dropping?1:0)|(b.flash>0?2:0)|(b.state==="tell"?4:0)|(b.state==="charge"?8:0)|(b.slow>0?32:0);
+      var k=b.boss?2:b.loader?1:0,f=(b.dropping?1:0)|(b.flash>0?2:0)|(b.state==="tell"?4:0)|(b.state==="charge"?8:0)|(b.slow>0?32:0)|(b.stag>0?64:0);
       var row=[b.id,k,r2(b.x),r2(b.y),r2(b.z),r2(b.head),r2(b.aim),Math.max(0,Math.ceil(b.hp)),0];
       if(k===2){row.push(r2(b.tell>0?b.tell:0),r2(b.base||0));if(b.mode==="jump"&&b.j1){f|=16;row.push(r2(b.j1[0]),r2(b.j1[1]),r2(b.j1[2]))}}
       row[8]=f;s.b.push(row);
@@ -1229,8 +1319,8 @@ function create(opts){
   /* One hash of the rules state, for the runner's replay check: same seed, tuning and inputs give the same hash. */
   sim.stateHash=function(){
     var a=[tick,seed,state,run.wave,run.queue.length,scrap,kills,zone.open,bots.length,shots.length,pods.length,scraps.length,clusters.length];
-    players.forEach(function(q){a.push(q.x,q.y,q.hp,q.heat,q.atb,q.ring,q.scrap,q.over,q.oc)});
-    bots.forEach(function(b){a.push(b.x,b.y,b.z,b.hp,b.state||"")});
+    players.forEach(function(q){a.push(q.x,q.y,q.hp,q.heat,q.atb,q.ring,q.scrap,q.over,q.oc,q.combo)});
+    bots.forEach(function(b){a.push(b.x,b.y,b.z,b.hp,b.state||"",b.stag||0)});
     pods.forEach(function(o){a.push(o.type,o.x,o.y,o.z)});
     var v=0;for(var i=0;i<N;i++)if(vox[i])v=(Math.imul(v,31)+i*16+vox[i])|0;a.push(v);
     return fnv(a);
@@ -1240,12 +1330,12 @@ function create(opts){
     tick:{get:function(){return tick}},state:{get:function(){return state}},wave:{get:function(){return run.wave}},
     scrap:{get:function(){return scrap},set:function(v){scrap=v}},kills:{get:function(){return kills}},
     level:{get:function(){return level}},shake:{get:function(){return shake}},
-    zone:{get:function(){return zone}}
+    zone:{get:function(){return zone}},stats:{get:function(){return stats}}
   });
   sim.markOpen=function(k){if(zone.open<k+1)zone.open=k+1;if(zone.opening===k)zone.opening=-1;spawnCells=openCells()};
   /* debug hooks */
   sim.killAll=function(){bots.slice().forEach(function(b){damage(b,1e9,b.x,b.y,b.z)})};
-  sim.damage=damage;sim.hitVoxel=hitVoxel;sim.spawnPod=spawnPod;sim.perches=perches;sim.los3=los3;sim.collide=collide;sim.flowField=flowField;
+  sim.damage=damage;sim.hitEnemy=hitEnemy;sim.hitMech=hitMech;sim.hitVoxel=hitVoxel;sim.spawnPod=spawnPod;sim.perches=perches;sim.los3=los3;sim.collide=collide;sim.flowField=flowField;
   sim.stepDebris=stepDebris;sim.debrisPiece=debrisPiece;
   sim.spawnLoader=function(x,y){var l=newLoader();l.x=x;l.y=y;l.z=0;l.dropping=false;bots.push(l);return l};
   sim.setVox=function(x,y,z,m){var i=vi(x,y,z);if(!m&&vox[i])removeVoxel(i,x,y,z);else{vox[i]=m;touch(i)}};

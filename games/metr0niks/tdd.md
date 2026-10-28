@@ -95,7 +95,7 @@ A match is one excursion at one campaign level.
 
 ## Kill credit and damage
 
-- **Hit path (TDD-D9, to build):** every hit on an enemy goes through `hitEnemy(source, target, base, info)` and every hit on a mech through `hitMech(target, base, info)`. Today 13 call sites call `damage()` directly.
+- **Hit path (TDD-D9, built Oct 28):** every hit on an enemy goes through `hitEnemy(enemy, base, src, x, y, z)` and every hit on a mech through `hitMech(mech, base, src, x, y, z)`; nothing else calls `damage()` except the debug hooks. `src` is `{by, kind, grade, pow, w, resist}`: the mech index (or −1 for nobody, or none to mean the last mech that hit within the credit window), the source kind (light, heavy, shoulder, collapse, hazard, pod, enemy), the ring grade, power at the moment of firing, the weapon id and the armor resistance. Shots carry their `src` and unscaled `base`. A Bulwark's shield plugs in as `enemy.blocks(src, x, y)`, and upgrades as `player.upMul(weapon)`.
 - **Damage to an enemy:** worked out in the GDD-D48 order, rounded once: a Bulwark's front shield blocks the whole hit (checked by the angle between the hit's direction and the shield's facing, 60°); base damage; × power ÷ 100 for player weapons and shoulder actives only; × the upgrade level (1.0, 1.1, 1.2); × the timing grade (2, 1, 0.5) for heavy weapons; × 1.5 if staggered; × armor resistance (0.5 for the minigun and shotgun on loaders and a Bulwark's body, and the Arc caster on loaders). Collapse, hazard and pod-strike damage scales with the level instead.
 - **Damage to a mech:** the enemy's base × (1 + 0.15 × (level − 1)) × 1.25 for an Elite, rounded. Power, upgrades and grades don't apply. Collapses deal 40 at any level.
 - **Kill credit:** every enemy keeps `{by, at}`: the last mech that damaged it and the tick. A kill belongs to that mech if `at` is within `T.credit.window` (3 s). Clusters, slag pools and pod strikes carry the mech that caused them; those an enemy caused (a Wrecker charge, a Scuttler blast, the Juggernaut's charge, an enemy-taken Strike beacon) carry nobody. Credited-to-nobody kills still get the demolition bonus but count for no combo, contract or stat.
@@ -129,9 +129,9 @@ Each heavy weapon owns a small state machine; light weapons, shoulder actives an
 - **Timing ring:** press starts it; it reaches its target at 1.0 s. Release grades the distance from the target: Perfect within ± 0.086 s, Good within ± 0.31 s, else Miss; still held at 1.31 s fires a Miss. `T.ring` stores the windows as shares of the 72 px ring shrinking to 30 px; the pixels are presentation only.
 - **Heat:** one value per mech, 0 to 100. Shots, heavy hits, the mortar and dashes add heat; it drains each tick. At 100 the mech locks out for 3 s (light guns, dashes and the mortar; a running ring is cancelled with no damage and no heat). The Cryo flash-vent sets heat to 0 and ends a lockout.
 - **Redline (GDD-D36, to build):** a mech state started by the Redline vent's Q, also during a lockout (ending it). For 5 s nothing locks and heat can reach 130; every point of net heat gain above 100 costs 0.5 armor through `hitMech` (it counts for wear and Untouchable, not for the Nanite core). If it ends above 100, the mech locks out for 3 s plus 1 s per 10 heat above 100. 14 s recharge.
-- **Combo (GDD-D35, to build):** per mech, ×1 to ×4 (`T.combo`). A Perfect raises it, a Good holds it, a Miss, a closed or cancelled ring, or 12 s without a heavy shot drops it to ×1. Credited kills at ×2, ×3, ×4 add 10%, 20%, 30% scrap; ×4 speeds ATB by 25%.
-- **Stagger (GDD-D35, to build):** a Perfect sets a 1.0 s timer on every enemy it hits; a new Perfect restarts it. A staggered enemy can't move, fire, charge or jump, loses any tell, and takes ×1.5 damage. Scuttlers die to any Perfect; the Warden is staggered only by leg breaks.
-- **Multi-kills (GDD-D53, to build):** per mech, credited kills within 1.5 s of the last (or in one event) raise a count; events at 2, 3, 4 and 5 or more.
+- **Combo (GDD-D35, built Oct 28):** per mech, ×1 to ×4 (`T.combo`). A Perfect raises it, a Good holds it, a Miss, a closed or cancelled ring, or 12 s without a heavy shot drops it to ×1. Credited kills at ×2, ×3, ×4 add 10%, 20%, 30% scrap; ×4 speeds ATB by 25%.
+- **Stagger (GDD-D35, built Oct 28):** a Perfect sets a 1.0 s timer on every enemy it hits; a new Perfect restarts it. A staggered enemy can't move, fire, charge or jump, loses any tell, and takes ×1.5 damage. Scuttlers die to any Perfect; the Warden is staggered only by leg breaks.
+- **Multi-kills (GDD-D53, built Oct 28):** per mech, credited kills within 1.5 s of the last (or in one event) raise a count; events at 2, 3, 4 and 5 or more.
 - **Projectiles:** every light shot, shell and mortar round is an object stepped each tick; shells and mortar rounds arc and blast a 3×3×3 voxel volume.
 - **Overclock:** doubles every ATB fill for 15 s; a running ring is unaffected.
 
@@ -158,8 +158,8 @@ The map is a voxel grid grouped into 4×4×4 chunks linked by a support graph. W
 2. **Structures:** each building, pillar, container stack, crane, vat, billboard and the water tower is a structure; load-carrying ones are supports.
 3. **Damage:** hits remove voxels (half the hit's damage goes into the voxel). A chunk breaks into debris once it has lost more than its break share (20%, changed by conditions).
 4. **Collapse check:** after a break, flood-fill from the anchors; anything not reached becomes a cluster that creaks for 0.9 s, shows its footprint, then falls.
-5. **Impact:** a landing cluster damages everything under its footprint: enemies take `T.collapse.botDmg` (80) × the level's health scale (to build: today flat 80), mechs 40. Street-level voxels may stay as rubble; a piece of more than 6 voxels scatters 2 to 4 cubes.
-6. **Credit (to build):** the cluster records the source of the hit that broke its support (a mech, or nobody), and landing damage goes through `hitEnemy` as a hazard, so kills get credit, the demolition bonus (+15%) and one CRUSHED event per cluster.
+5. **Impact:** a landing cluster damages everything under its footprint: enemies take `T.collapse.botDmg` (80) × the level's health scale, mechs 40. Street-level voxels may stay as rubble; a piece of more than 6 voxels scatters 2 to 4 cubes.
+6. **Credit (built Oct 28, CRUSHED event to build):** the cluster records the mech whose hit broke the chunk that started it (or nobody), and landing damage goes through `hitEnemy` as a collapse, so kills get credit and the demolition bonus (+15%); the most kills from one cluster is in the stats. The CRUSHED event per cluster comes with the hazards (phase 5).
 
 - **Slag spill (to build):** a slag vat that lands becomes a 4 × 4 m pool entity for 8 s: 25 damage a second to enemies, 10 to mechs and 15 heat a second to mechs standing in it, halved for Grav-skids. Credit goes to the mech that broke the vat's support.
 - **Navigation:** a walk grid rebuilt when voxels change; enemies and pods follow flow fields over it (TDD-D6). The Warden ignores the grid and walks its arena.
@@ -198,7 +198,7 @@ Enemies are state machines with their own data blocks in `T`. All take level sca
 
 ## Match stats and reports
 
-- **Record (TDD-D13, to build):** the sim keeps `stats[mech][wave]` with every GDD-D50 counter: kills by enemy type and source; damage dealt to enemies and voxels destroyed; damage taken by source; Perfects, Goods, Misses, best combo; spans dropped, props brought down, most kills from one collapse; multi-kills by size; pods taken, stolen and stolen back; scrap picked up by source and spent on call-ins; overheats and Redline seconds; seconds to clear the wave.
+- **Record (TDD-D13, built Oct 28; props and call-in and Redline counters fill in with their phases):** the sim keeps `stats[mech][wave]` with every GDD-D50 counter: kills by enemy type and source; damage dealt to enemies and voxels destroyed; damage taken by source; Perfects, Goods, Misses, best combo; spans dropped, props brought down, most kills from one collapse; multi-kills by size; pods taken, stolen and stolen back; scrap picked up by source and spent on call-ins; overheats and Redline seconds; seconds to clear the wave.
 - **Delivery:** a wave-clear event carries that wave's record; the run-over event carries the whole record. The runner writes the same record as its metrics record.
 - **Reports:** the view builds the wave report strip (in the breather) and the excursion report (scrap count-up, contract, condition, per-wave chart, highlights) from the record. Lifetime records (highest level, best combo, spans dropped, contracts completed, Overtimes cleared) are updated by the campaign layer and saved.
 
@@ -232,7 +232,7 @@ One camera at a fixed 2:1 dimetric angle (20 px by 10 px per cell, 22 px per hei
 
 ## Events
 
-The sim's events are arrays (`drainEvents()`). Built today: toast `t`, floating number `f`, sparks `s`, smoke `m`, shake `k`, pod landed `p`, cluster created `c`, run over `o`, zone opened `z`. To build (one code each, listed in the `sim.js` header when added):
+The sim's events are arrays (`drainEvents()`). Built today: toast `t`, floating number `f`, sparks `s`, smoke `m`, shake `k`, pod landed `p`, cluster created `c`, run over `o` (its detail carries `stats`), zone opened `z`, and since phase 1 combo `cb` (mech, value, broken), stagger `sg` (position), multi-kill `mk` (mech, count), kill `x` (enemy type, credited mech or −1, source kind, cubes) and wave clear `w` (wave, each mech's stats). To build (one code each, listed in the `sim.js` header when added):
 
 | Event | Carries |
 | --- | --- |
