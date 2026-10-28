@@ -31,7 +31,7 @@ h1{font:700 20px/1.1 var(--display);text-transform:uppercase;margin:0 0 4px;lett
 .sub{color:var(--muted);margin:0 0 10px}
 h2{font:700 12px var(--display);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:16px 0 6px;display:flex;justify-content:space-between;align-items:baseline}
 h2 small{font:500 10px var(--mono);letter-spacing:.04em;text-transform:none}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
 .tab{all:unset;cursor:pointer;padding:7px 8px;border:1px solid var(--line);border-radius:3px;background:var(--panel2);display:flex;flex-direction:column;gap:2px}
 .tab b{font:700 13px var(--display);text-transform:uppercase}
 .tab span{font-size:10px;color:var(--muted)}
@@ -141,7 +141,41 @@ var U={
       ["fall","Knock off the roof","falls to the street, stunned for 2 s, takes 60"],
       ["freeze","Freeze","fire and jump timers run at 40% for 3 s"],
       ["hit","Hit flash","takes 20 damage"],
-      ["kill","Destroy","debris and 12 scrap at street level"]]}
+      ["kill","Destroy","debris and 12 scrap at street level"]]},
+  /* phase 4 zone enemies (GDD-D40) */
+  scuttler:{name:"Scuttler",tag:"18 hp · packs of 4",
+    about:"Freight Yard. Packs of four land together and run straight at the nearest mech. Within 1.2 m one flashes for 0.4 s and blows up: 10 damage within 1.5 m to mechs and enemies alike, and a one-voxel chip. Shot down, it blows where it is; knocked into another enemy, it blows on contact. Its blast credits nobody. Dies to any Perfect; can't take pods.",
+    acts:[["drop","Drop a pack","four land together from 9 m"],
+      ["engage","Run at you","runs at 5 m/s, flashes within 1.2 m, blows up"],
+      ["flash","Flash now","0.4 s flash, then the blast"],
+      ["chain","Blast in a crowd","a loader beside it: shoot the Scuttler and the blast hits the loader"],
+      ["hit","Hit flash","takes 5 damage"],
+      ["kill","Shoot down","1 cube, and it blows where it is"]]},
+  bulwark:{name:"Bulwark",tag:"220 hp · shield",
+    about:"Smelter Row. A loader with a riot shield facing its walk, turning at 1.2 rad/s. The shield blocks every hit within 60° of its front except the rail slug, collapses and slag. A Perfect into the shield breaks it for 5 s and its damage goes through; a Perfect from behind staggers it as usual. At 3 m it bashes: 15 and a 2 m shove, then 2 s.",
+    acts:[["drop","Drop in","falls from 9 m with a wide red ring"],
+      ["patrol","Patrol","walks its route at 70% speed"],
+      ["engage","Engage and bash","walks at you, turns slowly, bashes within 3 m"],
+      ["block","Shoot the shield","a minigun hit on its front: blocked"],
+      ["front","Perfect from the front","breaks the shield for 5 s, staggers, 90 damage goes through"],
+      ["back","Perfect from behind","turns it away first: staggers, shield stays"],
+      ["freeze","Freeze","moves and bashes at 40% for 3 s"],
+      ["kill","Destroy","debris and 10 to 12 scrap"]]},
+  wrecker:{name:"Wrecker",tag:"90 hp · charges",
+    about:"Glass Quarter. Keeps more than 8 m from every mech. Walks to the pillar or building chunk nearest a mech that is at least 8 m from every mech and plants a charge over 2.5 s; any damage restarts the plant. The charge (20 health) goes off 4 s later and breaks its chunk; its collapse credits nobody. Shoot the charge to set it off early. Killed mid-plant, it drops the charge with a 2 s fuse.",
+    acts:[["drop","Drop in","falls from 9 m"],
+      ["plant","Go plant","picks a support at least 8 m from you, walks there, plants"],
+      ["flee","Crowd it","put it 4 m from you: it backs off past 8 m"],
+      ["hit","Hit","takes 5 damage; mid-plant, the plant restarts"],
+      ["shoot","Shoot the charge","the newest charge goes off early"],
+      ["kill","Destroy","debris and 6 to 8 scrap; mid-plant it drops its charge"]]},
+  elite:{name:"Elite",tag:"x2 hp · gold",
+    about:"Terminus Yard. One bot or loader in every wave, picked by the seed: double health, +25% damage, gold trim, 1.5 times the scrap, and a Field repair or Overclock pod where it dies.",
+    acts:[["drop","Drop an Elite bot","falls from 9 m in gold"],
+      ["loader","Elite loader","an Elite heavy loader beside you"],
+      ["engage","Engage and fire","+25% orb damage"],
+      ["hit","Hit flash","takes 20 damage"],
+      ["kill","Destroy","1.5 times the scrap and a pod"]]}
 };
 
 function showErr(msg){var e=$("err");e.style.display="flex";e.textContent=msg}
@@ -168,7 +202,7 @@ function patch(s){
   s.drainEvents=function(){
     return drain().filter(function(e){
       if(e[0]==="o")return false;   /* the lab never ends the run: nothing banks, nothing saves */
-      if(e[0]==="t"&&/took a pod|Sniper|sniper|Pillar|Collapse/.test(e[1]))note(e[1],"haz");
+      if(e[0]==="t"&&/took a pod|Sniper|sniper|Pillar|Collapse|Wrecker|Elite/.test(e[1]))note(e[1],"haz");
       return true;
     });
   };
@@ -181,7 +215,7 @@ function pre(s){
   if(opt.ghost){p.x=HOME[0];p.y=HOME[1];p.vx=p.vy=0}
   s.bots.forEach(function(b){
     if(b.until&&s.tick>=b.until)b.until=0;
-    if(opt.ai||b.until||b.dropping)return;   /* AI off: hold each unit idle unless a behaviour is playing */
+    if(opt.ai||b.until||b.dropping||b.kind==="charge")return;   /* AI off: hold each unit idle unless a behaviour is playing (a charge's fuse always runs) */
     if(b.boss){if(b.mode==="perch"){b.cd=Math.max(b.cd,.5);b.jumpCd=Math.max(b.jumpCd,.5);b.blind=0;b.tell=0}}
     else if(b.loader){b.state="recover";b.t=1;b.vx=b.vy=0}
     else{b.state="idle";b.vx=b.vy=0}
@@ -231,16 +265,26 @@ function mkSniper(s,near){
     jumpCd:B.jump[0]+Math.random()*(B.jump[1]-B.jump[0]),lid:++nid};
   s.bots.push(b);return b;
 }
+function mkZone(s,kind,x,y,drop){   /* phase 4 units through the sim's own spawnUnit */
+  var c=free(s,x,y),u=s.spawnUnit(kind,c[0],c[1],{drop:!!drop});
+  (Array.isArray(u)?u:[u]).forEach(function(b){b.lid=++nid;if(!drop)b.head=b.aim=face(s,b.x,b.y)});
+  return Array.isArray(u)?u[u.length-1]:u;
+}
 function spawn(kind,drop){
   var s=G.__m.sim,x=13+Math.random()*6,y=HOME[1]+(Math.random()-.5);
+  if(kind==="scuttler")return mkZone(s,drop?"pack":"scuttler",x,y,drop);
+  if(kind==="bulwark"||kind==="wrecker")return mkZone(s,kind,x,y,drop);
+  if(kind==="elite")return mkZone(s,"elite-bot",x,y,drop);
   return kind==="sniper"?mkSniper(s):kind==="loader"?mkLoader(s,x,y,drop):mkBot(s,x,y,drop);
 }
-function units(kind){return G.__m.sim.bots.filter(function(b){return b.hp>0&&(kind==="sniper"?b.boss:kind==="loader"?b.loader:!b.boss&&!b.loader)})}
+function units(kind){return G.__m.sim.bots.filter(function(b){return b.hp>0&&(kind==="sniper"?b.boss:kind==="elite"?b.elite:kind==="loader"?b.loader&&!b.elite:
+  kind==="scuttler"||kind==="bulwark"||kind==="wrecker"?b.kind===kind:!b.boss&&!b.loader&&!b.kind&&!b.elite)})}
 function target(kind){var u=units(kind);return u.length?u[u.length-1]:spawn(kind)}
-function name(b){return (b.boss?"Sniper":b.loader?"Loader":"Bot")+" "+b.lid}
+function name(b){return (b.label||(b.boss?"Sniper":b.loader?"Loader":"Bot"))+" "+(b.lid||"")}
 function label(b,k){
   var L={idle:"idle",patrol:b.loader?"hauling":"patrolling",engage:"engaging",seekpod:"going for a pod",tell:"tell (about to ram)",charge:"charging",recover:"recovering",drop:"dropping in",
-    perch:b.z>.05?"perched":"on the street","perch-tell":"aiming","perch-stun":"stunned",jump:"jumping",fall:"falling"};
+    perch:b.z>.05?"perched":"on the street","perch-tell":"aiming","perch-stun":"stunned",jump:"jumping",fall:"falling",
+    flash:"flashing: about to blow",blown:"blown",move:"walking to a support",plant:"planting a charge",flee:"backing off",hold:"holding back",armed:"armed"};
   return L[k]||k;
 }
 
@@ -248,6 +292,8 @@ function label(b,k){
 function act(a){
   var s=G.__m.sim,p=s.players[0],b,B=T.bot,L=T.loader,S=T.boss,hold=function(b,sec){b.until=s.tick+Math.round(sec*60)};
   if(a==="drop"){b=spawn(unit==="sniper"?"bot":unit,true);hold(b,2);note(name(b)+": dropping in","cy");return resume()}
+  if(a==="loader"&&unit==="elite"){b=mkZone(s,"elite-loader",p.x+4,p.y);note(name(b)+": double health, gold trim","cy");return resume()}
+  if(zoneAct(s,p,a,hold))return resume();
   b=target(unit);if(!b){note("No roof in range for a sniper here","bad");return resume()}
   switch(a){
     case "patrol":if(b.loader){b.state="patrol";b.wp=null}else{b.state="patrol";b.wp=null}hold(b,6);break;
@@ -269,6 +315,37 @@ function act(a){
   }
   resume();
 }
+/* phase 4 behaviours; true when the action was one of these units' own */
+function zoneAct(s,p,a,hold){
+  if(unit!=="scuttler"&&unit!=="bulwark"&&unit!=="wrecker")return false;
+  var b=target(unit),ux,uy;if(!b)return true;
+  if(unit==="scuttler")switch(a){
+    case "engage":placeInSight(s,b,5);b.state="engage";hold(b,3);return true;
+    case "flash":b.state="flash";b.t=T.scuttler.flash;hold(b,1);return true;
+    case "chain":var l=mkLoader(s,b.x+1,b.y,false);l.state="recover";l.t=2;s.hitEnemy(b,1e3,{by:0,kind:"light",pow:1},b.x,b.y,.4);note("Loader "+l.lid+" took the blast: "+(l.maxHp-l.hp),"haz");return true;
+    case "hit":s.hitEnemy(b,5,{by:0,kind:"light",pow:1},b.x,b.y,.4);return true;
+    case "kill":s.hitEnemy(b,1e3,{by:0,kind:"light",pow:1},b.x,b.y,.4);return true;
+  }
+  if(unit==="bulwark")switch(a){
+    case "patrol":b.state="patrol";b.wp=null;hold(b,6);return true;
+    case "engage":placeInSight(s,b,4);b.state="engage";b.lost=0;b.cd=0;hold(b,8);return true;
+    case "block":b.head=face(s,b.x,b.y);ux=Math.cos(b.head);uy=Math.sin(b.head);
+      note(s.hitEnemy(b,10,{by:0,kind:"light",pow:1,resist:T.loader.minigunMult},b.x+ux*.6,b.y+uy*.6,.8)?"The hit went through (shield broken)":"Blocked by the shield","cy");return true;
+    case "front":b.head=face(s,b.x,b.y);note("Front Perfect: "+s.hitEnemy(b,T.pile.dmg,{by:0,kind:"heavy",grade:"Perfect",pow:1,w:"pile"},b.x,b.y,.8)+" damage","haz");return true;
+    case "back":b.head=face(s,b.x,b.y)+Math.PI;note("Back Perfect: "+s.hitEnemy(b,T.pile.dmg,{by:0,kind:"heavy",grade:"Perfect",pow:1,w:"pile"},b.x,b.y,.8)+" damage","haz");return true;
+    case "freeze":b.slow=T.vent.slow;placeInSight(s,b,4);b.state="engage";b.cd=0;hold(b,T.vent.slow);return true;
+    case "kill":s.damage(b,1e6,b.x,b.y,.8);return true;
+  }
+  if(unit==="wrecker")switch(a){
+    case "plant":b.state="move";b.cd=0;b.target=-1;hold(b,14);return true;
+    case "flee":var c=free(s,p.x+4,p.y);b.x=c[0];b.y=c[1];b.state="move";hold(b,5);return true;
+    case "hit":s.hitEnemy(b,5,{by:0,kind:"light",pow:1},b.x,b.y,.8);return true;
+    case "shoot":var cs=s.bots.filter(function(o){return o.kind==="charge"&&o.hp>0});if(!cs.length){note("No charge on the field","bad");return true}
+      s.hitEnemy(cs[cs.length-1],100,{by:0,kind:"light",pow:1});note("Charge shot: it went off early","haz");return true;
+    case "kill":note(b.state==="plant"?"Killed mid-plant: it drops its charge":"Wrecker destroyed","haz");s.damage(b,1e6,b.x,b.y,.8);return true;
+  }
+  return false;
+}
 function act2tell(s,b){var p=s.players[0],L=T.loader;placeInSight(s,b,2);var d=Math.hypot(p.x-b.x,p.y-b.y)||1;b.state="tell";b.t=L.tell;b.cx=(p.x-b.x)/d;b.cy=(p.y-b.y)/d;b.until=s.tick+Math.round((L.tell+L.charge+L.recover)/T.vent.slowMul*60)}
 /* a unit that is too far or behind a wall is moved into the open street, the given distance east of you */
 function placeInSight(s,b,dist){
@@ -279,15 +356,18 @@ function placeInSight(s,b,dist){
 function lineup(){
   var s=G.__m.sim;s.bots.length=0;s.pods.length=0;
   mkBot(s,11,HOME[1]-.5);mkLoader(s,14.5,HOME[1]);mkSniper(s);
-  note("Line-up: a patrol bot, a heavy loader and a sniper","cy");
+  mkZone(s,"scuttler",17.5,HOME[1]-.5);mkZone(s,"bulwark",20.5,HOME[1]);mkZone(s,"wrecker",24.5,HOME[1]);mkZone(s,"elite-bot",27.5,HOME[1]);
+  note("Line-up: a patrol bot, a heavy loader, a sniper, a Scuttler, a Bulwark, a Wrecker and an Elite","cy");
 }
+/* the wave's real mix at this level, zone threats included (sim.zoneSlots), dropped around the Underpass street */
 function wave(n){
-  var s=G.__m.sim,w=T.waves[n-1],k,nl=Math.round((w.loaders||0)*lvm("count")),nb=Math.round(w.bots*lvm("count"));
-  for(k=0;k<(w.boss||0);k++)mkSniper(s);
-  for(k=0;k<nl;k++)mkLoader(s,9+Math.random()*20,4+Math.random()*24,true);
-  for(k=0;k<nb;k++)mkBot(s,2+Math.random()*27,2+Math.random()*28,true);
+  var s=G.__m.sim,w=T.waves[n-1],k,q=[],nl=Math.round((w.loaders||0)*lvm("count")),nb=Math.round(w.bots*lvm("count")),tally={};
+  for(k=0;k<(w.boss||0);k++)q.push("boss");for(k=0;k<nl;k++)q.push("loader");for(k=0;k<nb;k++)q.push("bot");
+  s.zoneSlots(q,n);
+  q.forEach(function(e){var x=2+Math.random()*27,y=2+Math.random()*28;tally[e]=(tally[e]||0)+1;
+    if(e==="boss")mkSniper(s);else if(e==="loader")mkLoader(s,x,y,true);else if(e==="bot")mkBot(s,x,y,true);else mkZone(s,e,x,y,true)});
   if(!opt.ai){opt.ai=true;$("oAi").checked=true}
-  note("Wave "+n+" at level "+level+": "+nb+" bots, "+nl+" loaders"+(w.boss?", a sniper":"")+" (AI on)","cy");
+  note("Wave "+n+" at level "+level+": "+Object.keys(tally).map(function(e){return tally[e]+" "+e}).join(", ")+" (AI on)","cy");
 }
 function fresh(){
   G.__m.level(level);var s=G.__m.sim;patch(s);
@@ -309,6 +389,10 @@ function stats(k){
   var B=T.bot,L=T.loader,S=T.boss,hp=lvm("hp"),dm=lvm("dmg"),r;
   if(k==="bot")r=[["Armor",Math.round(B.hp*hp)],["Speed",B.speed+" m/s (patrol "+f(B.speed*.55,2)+")"],["Sight / range",B.sight+" m / "+B.range+" m"],["Shot",f(B.shotDmg*dm)+" damage, every "+B.fireEvery+" s, "+B.shotSpeed+" m/s"],["Turret turn",B.turretTurn+" rad/s"],["Drop",B.dropHeight+" m, 10 damage on landing"],["Scrap",B.scrap.join(" to ")]];
   else if(k==="loader")r=[["Armor",Math.round(L.hp*hp)+" (bullets × "+L.minigunMult+")"],["Speed",L.speed+" m/s (hauling "+f(L.speed*L.patrol,2)+")"],["Charge","within "+L.engage+" m: tell "+L.tell+" s, ram "+L.chargeSpeed+" m/s for "+L.charge+" s"],["Ram",f(L.dmg*dm)+" damage, "+L.shove+" m shove"],["After",L.recover+" s recover, "+L.cooldown+" s cooldown"],["Plows","barriers, containers, windows ("+L.voxDmg+" voxel damage)"],["Scrap",L.scrap.join(" to ")]];
+  else if(k==="scuttler"){var C=T.scuttler;r=[["Armor",Math.round(C.hp*hp)+" (dies to any Perfect)"],["Speed",C.speed+" m/s"],["Sight",C.sight+" m"],["Pack",C.pack+", landing together"],["Blast","flash "+C.flash+" s within "+C.trigger+" m, then "+f(C.dmg*dm)+" within "+C.blast+" m to everyone, one voxel"],["Credit","its blast: nobody"],["Scrap",C.scrap.join(" to ")]]}
+  else if(k==="bulwark"){var K=T.bulwark;r=[["Armor",Math.round(K.hp*hp)+" (bullets × "+T.loader.minigunMult+")"],["Speed",K.speed+" m/s, turns "+K.turn+" rad/s"],["Shield",K.arc+"° either side of its front; a Perfect breaks it for "+K.broken+" s"],["Ignores the shield","rail slug, collapses, slag"],["Bash",f(K.bashDmg*dm)+" within "+K.bash+" m, "+K.shove+" m shove, every "+K.bashEvery+" s"],["Scrap",K.scrap.join(" to ")]]}
+  else if(k==="wrecker"){var R=T.wrecker,Q=T.charge;r=[["Armor",Math.round(R.hp*hp)],["Speed",R.speed+" m/s"],["Keeps",R.keep+" m from every mech"],["Plant",R.plant+" s; any damage restarts it"],["Charge",Q.hp+" health, "+Q.fuse+" s fuse ("+Q.dropFuse+" s when dropped)"],["Breaks","its chunk (a pillar's whole base); credits nobody"],["Scrap",R.scrap.join(" to ")]]}
+  else if(k==="elite"){var E=T.elite;r=[["Armor","× "+E.hp+" ("+Math.round(B.hp*hp*E.hp)+" bot, "+Math.round(L.hp*hp*E.hp)+" loader)"],["Damage","× "+E.dmg+" (orb "+f(B.shotDmg*dm*E.dmg)+", ram "+f(L.dmg*dm*E.dmg)+")"],["Scrap","× "+E.scrap],["On death","a "+E.pods.join(" or ")+" pod"],["Per wave","one bot or loader, from level 5"]]}
   else r=[["Armor",Math.round(S.hp*hp)],["Shot",f(S.dmg*dm)+" damage after a "+S.tell+" s tell, every "+S.fireEvery+" s"],["Sight",S.sight+" m"],["Jumps","every "+S.jump.join(" to ")+" s, up to "+S.jumpRange+" m, "+S.jumpTime+" s in the air"],["Fall",S.fallMin+" m or more: "+S.fallDmg+" damage, "+S.stun+" s stun"],["Scrap",S.scrap]];
   return r.map(function(x){return "<tr><td>"+x[0]+"</td><td>"+x[1]+"</td></tr>"}).join("");
 }
@@ -336,6 +420,10 @@ function renderLive(){
     var k=b.boss?b.mode+(b.tell>0?"-tell":"")+(b.stun>0?"-stun":""):b.dropping?"drop":b.state,t="";
     if(b.boss)t=b.tell>0?"shot in "+f(b.tell,2)+" s":b.stun>0?"stun "+f(b.stun,1)+" s":b.mode==="perch"?"fire "+f(Math.max(0,b.cd),1)+" · jump "+f(Math.max(0,b.jumpCd),1):"";
     else if(b.loader)t=b.state==="tell"||b.state==="charge"||b.state==="recover"?f(Math.max(0,b.t),2)+" s left":"cooldown "+f(Math.max(0,b.cd),1);
+    else if(b.kind==="charge")t="fuse "+f(Math.max(0,b.t),1)+" s";
+    else if(b.kind==="scuttler")t=b.state==="flash"?"blast in "+f(Math.max(0,b.t),2)+" s":"";
+    else if(b.kind==="wrecker")t=b.state==="plant"?"planted in "+f(Math.max(0,b.t),1)+" s":"";
+    else if(b.kind==="bulwark")t=(b.shieldEnd>s.tick?"shield back in "+f((b.shieldEnd-s.tick)/60,1)+" s":"shield up")+" · bash "+f(Math.max(0,b.cd),1);
     else t=b.state==="engage"?"next shot "+f(Math.max(0,b.cd),2)+" s":"";
     if(b.slow>0)t+=(t?" · ":"")+'<span class="cy">frozen '+f(b.slow,1)+"</span>";
     return "<tr><td>"+name(b)+'</td><td><span class="st '+(b.slow>0?"cool":cls(k))+'">'+label(b,k)+"</span></td><td>"+Math.ceil(b.hp)+"/"+b.maxHp+"</td><td>"+f(Math.hypot(b.x-p.x,b.y-p.y))+" m</td><td>"+t+"</td></tr>"});

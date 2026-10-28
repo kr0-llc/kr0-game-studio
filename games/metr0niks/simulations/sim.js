@@ -37,8 +37,13 @@
                         ["cr",id,kills,x,y,mech|-1,"collapse"|"slag"]  CRUSHED: the kills of one landed piece or one slag pool (phase 5)
                         ["sd",clusterId,x,y,mech|-1]  a deck span landed (SPAN DOWN)   ["sp",poolId,x,y,mech|-1]  a slag vat spilled
                         ["z",zoneIndex,name]      a sealed zone's gate fell: the map grew (also sent to guests)
-   sim.snapshot(full)   co-op host snapshot {t:"snap",tk,ack,sc,k,sh,w,p,b,s,sr,pd,cl,sl,vx,ev}; sl = slag pools [id,x0,y0,x1,y1,z,secondsLeft]; full=true also carries copies of
-                        vox and owner (for a joining guest), clears queued events and resets the diff baseline
+                        ["sb",x,y]                a Perfect broke a Bulwark's shield (phase 4)
+   sim.snapshot(full)   co-op host snapshot {t:"snap",tk,ack,sc,k,sh,w,p,b,s,sr,pd,cl,sl,vx,ev}; sl = slag pools [id,x0,y0,x1,y1,z,secondsLeft].
+                        Bot rows [id,kind,x,y,z,head,aim,hp,flags,...]: kind 0 bot, 1 loader, 2 boss,
+                        3 Scuttler, 4 Bulwark, 5 Wrecker, 6 Wrecker charge (kinds 3+ add one timer: flash, plant, fuse, broken shield);
+                        flags 1 dropping, 2 hit flash, 4 tell, 8 charge, 16 jump, 32 slowed, 64 staggered, 128 Elite,
+                        256 Scuttler flash / Wrecker plant / Bulwark bash, 512 Bulwark shield broken. full=true also
+                        clears queued events and resets the diff baseline
    sim.voxelDiffSince(tick)   flat [index,material,owner,...] for voxels changed after `tick`
    sim.applyBuild(i, build, wear?, upg?)   re-derive mech i from a build (adds the mech when i === players.length)
    sim.dropPlayer(i)    mech i leaves (hp 0); the run is lost if nobody else is alive
@@ -52,6 +57,7 @@
                         whose gate falls at tick openAt (-1 once it has), `target` that same zone for the whole intro
    sim.markOpen(k)      bookkeeping only (a guest applying the ["z",k,name] event): zone k counts as open
    Debug hooks (tests): killAll(), damage(e,dmg,x,y,z), hitVoxel(x,y,z,dmg), setVox(x,y,z,m), spawnPod(type,x,y,counting),
+                        spawnUnit(kind,x,y,{drop,chunk,fuse}), zoneSlots(queue,wave), pickWreck(wrecker) (phase 4),
                         spawnLoader(x,y), perches(), los3(...), collide(e), flowField(), chk, dbg(), stepDebris(dt), debrisPiece(...)
    sim.stateHash()      hash of the rules state (players, enemies, pods, voxels, rng) for replay checks
    sim.tuneHash()       hash of this run's tuning; MetroSim.tuneHash(T) for any table
@@ -102,6 +108,21 @@ var T={
   level:{count:.25,hp:.15,dmg:.15,scrap:.1,max:5},   /* per level above 1: share added to enemy counts, hp, damage, scrap drops; extracting level max wins (GDD-D47) */
   durability:{share:.1,repair:{common:.25,rare:.5,epic:.75}},   /* GDD-D18: wear per extract = share x damage taken / max armor; repair = ceil(price x wear x rate) */
   upgrade:{dmg:.1,price:{common:[20,40],rare:[35,70],epic:[60,120]}},   /* GDD-D23: damage to enemies x (1 + dmg x level); price[rarity][level] buys the next Mk */
+  /* ===== phase 4: zone enemies (GDD-D40) ===== */
+  zoneThreats:[   /* once MAP.zones[zone] is open, its enemy takes wave slots: `n` slots of kind `take` per listed wave at level 1
+                     (scaled and rounded like the count they replace) become `give` entries of `enemy` (also scaled, at least 1).
+                     A "pack" entry lands T.scuttler.pack Scuttlers together. elite: one bot or loader slot in each wave becomes
+                     an Elite instead. waves: wave numbers, null = every wave (Overtime included) */
+    {zone:1,enemy:"pack",take:"bot",n:2,give:1,waves:[2,4,5]},
+    {zone:2,enemy:"bulwark",take:"loader",n:1,give:1,waves:[4,5]},
+    {zone:3,enemy:"wrecker",take:"bot",n:1,give:1,waves:[2,4]},
+    {zone:4,elite:true,waves:null}],
+  dropOrder:{boss:0,loader:1,"elite-loader":1,bulwark:1,wrecker:2,bot:3,"elite-bot":3,pack:4},   /* GDD Wave pacing: lower drops first */
+  scuttler:{hp:18,speed:5,radius:.3,height:.55,sight:12,pack:4,spread:1.2,trigger:1.2,flash:.4,blast:1.5,dmg:10,hole:1e3,scrap:[1,1]},   /* hole: voxel damage of the blast's one-voxel chip */
+  bulwark:{hp:220,speed:1.6,radius:.6,height:1.4,sight:10,turn:1.2,arc:60,bash:3,bashDmg:15,shove:2,bashEvery:2,broken:5,patrol:.7,scrap:[10,12]},   /* arc: degrees either side of its facing the shield covers; broken: s */
+  wrecker:{hp:90,speed:2.8,radius:.4,height:1.1,sight:8,keep:8,plant:2.5,retarget:1,scrap:[6,8]},   /* keep: m from every mech, for itself and its target chunk */
+  charge:{hp:20,fuse:4,dropFuse:2,radius:.25,height:.35,reach:3.5},   /* a Wrecker charge; reach: how far from its chunk's centre it still breaks it */
+  elite:{hp:2,dmg:1.25,scrap:1.5,pods:["repair","overclock"]},   /* health and damage multipliers, kill scrap multiplier, the pod it drops */
   scrapMagnet:3,
   debrisCap:300,
   structural:.5,      /* share of bullet damage that goes into voxels (minigun: low structural damage) */
@@ -772,6 +793,7 @@ function create(opts){
     var nl=Math.round((w.loaders||0)*lvm("count")),nb=Math.round(w.bots*lvm("count"));
     for(k=0;k<nl;k++)q.push("loader");
     for(k=0;k<nb;k++)q.push("bot");
+    zoneSlots(q,n);   /* phase 4: zone threats swap slots and set the drop order */
     run.queue=q;run.waveT=0;run.podAt=[];
     for(k=0,np=T.pods.perWave+(rnd()<T.pods.extra?1:0);k<np;k++)run.podAt.push(T.pods.window[0]+rnd()*(T.pods.window[1]-T.pods.window[0]));
     run.podAt.sort(function(a,b){return a-b});
@@ -784,7 +806,7 @@ function create(opts){
     R.waveT+=dt;
     while(R.podAt.length&&R.waveT>=R.podAt[0]){R.podAt.shift();randomPod()}
     if(R.queue.length){
-      if((R.spawnT-=dt)<=0){R.spawnT=T.wave.stagger;var kind=R.queue.shift();bots.push(kind==="boss"?newBoss():kind==="loader"?newLoader():newBot())}
+      if((R.spawnT-=dt)<=0){R.spawnT=T.wave.stagger;var kind=R.queue.shift();if(!spawnZone(kind))bots.push(kind==="boss"?newBoss():kind==="loader"?newLoader():newBot())}
     } else if(!bots.length){
       toast("Wave "+R.wave+" cleared","var(--good)");
       players.forEach(function(q){var s=st(q.idx);if(s)s.time=Math.round(R.waveT*10)/10});
@@ -818,7 +840,7 @@ function create(opts){
     sparks(o.x,o.y,.5,12,[63,214,232]);
     if(e.team===0){var ps=st(e.idx);if(ps)ps.pods.taken++}else{e.podCarrier=true;var ns=st(nearestPlayer(e.x,e.y).idx);if(ns)ns.pods.stolen++}
     if(e.team===0)toast(o.type==="repair"?"Field repair: +"+amt+" armor":"Overclock: ATB x"+P.overclock.mult+" for "+P.overclock.time+" s","var(--cyan)",e.idx);
-    else toast((e.loader?"Loader":"Patrol bot")+" took a pod","var(--hazard)");
+    else toast((e.label||(e.loader?"Loader":"Patrol bot"))+" took a pod","var(--hazard)");
   }
   function updatePods(dt){
     var P=T.pods;
@@ -833,7 +855,7 @@ function create(opts){
       if(!o.field||(o.ft-=dt)<=0){o.field=flowField(o.x,o.y,o.field);o.ft=.5}
       var taker=null,td=P.touch;   /* players are checked first and the nearest one wins a same-frame tie */
       for(var pi=0;pi<players.length;pi++){var q=players[pi];if(q.hp<=0)continue;var d=Math.hypot(q.x-o.x,q.y-o.y);if(d<td){td=d;taker=q}}
-      if(!taker)for(var j=0;j<bots.length&&!taker;j++){var b=bots[j];if(b.hp>0&&!b.boss&&!b.dropping&&Math.hypot(b.x-o.x,b.y-o.y)<P.touch)taker=b}
+      if(!taker)for(var j=0;j<bots.length&&!taker;j++){var b=bots[j];if(b.hp>0&&!b.boss&&!b.noPods&&!b.dropping&&Math.hypot(b.x-o.x,b.y-o.y)<P.touch)taker=b}
       if(taker){pods.splice(i,1);applyPod(o,taker)}
     }
   }
@@ -982,6 +1004,7 @@ function create(opts){
     if(e.stag>0)d*=1+T.stagger.taken;
     if(e.armored&&src.resist)d*=src.resist;
     d=Math.round(d);
+    if(src.grade==="Perfect"&&e.frail)d=Math.max(d,Math.ceil(e.hp));   /* phase 4: a Scuttler dies to any Perfect */
     if(src.by>=0){e.cr=src.by;e.crT=tick}
     e.lastSrc=src;
     var s=src.by>=0&&st(src.by);if(s)s.dealt[K]=(s.dealt[K]||0)+Math.max(0,Math.min(d,e.hp));
@@ -1015,11 +1038,12 @@ function create(opts){
     var s=st(p.idx);if(s&&n>s.bestCombo)s.bestCombo=n;
   }
   function killBot(b){
+    if(b.kind==="charge"){detonate(b);return}   /* phase 4: a shot charge goes off early; it is no kill */
     kills++;
-    var src=b.lastSrc||{},by=creditOf(b),pl=by>=0?players[by]:null,type=b.boss?"sniper":b.loader?"loader":(b.type||"bot");var c=b.boss?[63,214,232]:b.loader?[176,150,52]:[140,70,56],z0=b.boss?b.z:0;
+    var src=b.lastSrc||{},by=creditOf(b),pl=by>=0?players[by]:null,type=b.boss?"sniper":b.loader?"loader":(b.type||"bot");var c=b.boss?[63,214,232]:b.loader?[176,150,52]:b.col||[140,70,56],z0=b.boss?b.z:0;
     for(var k=0;k<14;k++)debrisPiece(b.x,b.y,z0+.5,k%2?c:[60,62,66]);
     sparks(b.x,b.y,z0+.6,18,[255,170,60]);smoke(b.x,b.y,z0+.5,8,[90,90,90]);
-    var sc=b.loader?T.loader.scrap:T.bot.scrap,n=b.boss?T.boss.scrap:sc[0]+((rnd()*(sc[1]-sc[0]+1))|0),sx=b.x,sy=b.y,sz=.4;
+    var sc=b.scrapR||(b.loader?T.loader.scrap:T.bot.scrap),n=b.boss?T.boss.scrap:sc[0]+((rnd()*(sc[1]-sc[0]+1))|0),sx=b.x,sy=b.y,sz=.4;
     /* how kill bonuses combine (GDD Economy): the multipliers multiply, the percentages add, rounded once */
     var mul=lvm("scrap"),pct=0;
     if(src.kind==="heavy"&&src.grade==="Perfect"&&src.w==="pile")mul*=2;   /* killed by a Perfect pile-bunker hit */
@@ -1039,6 +1063,7 @@ function create(opts){
     if(aloft(b)){var g=groundNear(b.x,b.y);sx=g[0];sy=g[1];sz=1.5}   /* roof loot drops to street level */
     if(b.boss)toast("Bounty sniper down","var(--hazard)");
     for(k=0;k<n;k++)scraps.push({x:sx,y:sy,z:sz,vx:(rnd()-.5)*4,vy:(rnd()-.5)*4,vz:3+rnd()*2,t:0,spin:rnd()*6,src:tag});
+    zoneDeath(b);   /* phase 4: a Scuttler's blast, a Wrecker's dropped charge, an Elite's pod */
   }
   /* Pile-bunker: the timing ring decides the grade, the spike is a short cone in front of the left arm. */
   function ringR(t){return T.ring.start+(T.ring.target-T.ring.start)*t/T.ring.duration}
@@ -1051,6 +1076,7 @@ function create(opts){
         zs.forEach(function(z){if(solidAt(ax,ay,z)){if(breach)hitVoxel(ax,ay,z,K.launchDmg,ax,ay,z);if(solidAt(ax,ay,z))stop=true}})});
       if(stop)break;
       b.x=nx;b.y=ny;
+      if(b.kind==="scuttler"&&b.hp>0&&scuttlerBump(b))return;
     }
     smoke(b.x,b.y,.5,3,[200,200,200]);
   }
@@ -1111,7 +1137,7 @@ function create(opts){
       var b=hitB;hitEnemy(b,Wn.dmg,src,b.x,b.y,b.z+.8);if(b.hp<=0)return;
       if(aloft(b)){   /* yanked off the roof: it falls, and a long fall stuns and hurts it */
         b.mode="fall";b.vz=0;b.fallZ=b.z;b.tell=0;b.x-=px*1.2;b.y-=py*1.2;toast("Sniper yanked off the roof","var(--hazard)");
-      } else if(b.loader){winchPull(p,px,py,pl-b.r-p.r-.15)}
+      } else if(b.loader||b.heavy){winchPull(p,px,py,pl-b.r-p.r-.15)}
       else {knockBot(b,-px,-py,Math.max(0,pl-b.r-p.r-.2),false);if(b.state==="patrol")b.state="engage"}
       return;
     }
@@ -1228,9 +1254,10 @@ function create(opts){
     if(b.dropping){
       b.vz-=30*dt;b.z+=b.vz*dt;
       if(b.z<=0){b.z=0;b.dropping=false;smoke(b.x,b.y,.1,10,[150,140,120]);sparks(b.x,b.y,.2,8,[255,200,120]);
-        players.forEach(function(q){if(q.hp>0&&Math.hypot(q.x-b.x,q.y-b.y)<1.2)hitMech(q,10*lvm("dmg"),{kind:"enemy"},q.x,q.y,1)})}
+        players.forEach(function(q){if(q.hp>0&&Math.hypot(q.x-b.x,q.y-b.y)<1.2)hitMech(q,10*lvm("dmg"),{kind:"enemy",mul:emul(b)},q.x,q.y,1)})}
       return;
     }
+    if(b.kind&&ZONE_AI[b.kind]){ZONE_AI[b.kind](b,dt);return}   /* phase 4: Scuttler, Bulwark, Wrecker, charge */
     var alive=p.hp>0,dist=alive?Math.hypot(p.x-b.x,p.y-b.y):99,sees=alive&&dist<B.sight&&los(b.x,b.y,p.x,p.y,.8);
     var goal=null,want=0;
     if(b.loader){var lg=loaderAI(b,dt,alive,dist,sees);goal=lg[0];want=lg[1]}
@@ -1260,7 +1287,7 @@ function create(opts){
         if(sees&&b.cd<=0&&Math.abs(Math.atan2(Math.sin(ta-b.aim),Math.cos(ta-b.aim)))<.15){
           b.cd=B.fireEvery*(.85+rnd()*.3);
           var ox=b.x+Math.cos(b.aim)*.55,oy=b.y+Math.sin(b.aim)*.55,oz=.72,dx=p.x-ox,dy=p.y-oy,dz=.9-oz,d=Math.hypot(dx,dy,dz);
-          shots.push({x:ox,y:oy,z:oz,vx:dx/d*B.shotSpeed,vy:dy/d*B.shotSpeed,vz:dz/d*B.shotSpeed,dmg:B.shotDmg*lvm("dmg"),team:1,t:2,kind:"orb"});
+          shots.push({x:ox,y:oy,z:oz,vx:dx/d*B.shotSpeed,vy:dy/d*B.shotSpeed,vz:dz/d*B.shotSpeed,dmg:B.shotDmg*lvm("dmg")*emul(b),team:1,t:2,kind:"orb"});
           sparks(ox,oy,oz,3,[255,90,74]);
         }
       }
@@ -1288,7 +1315,7 @@ function create(opts){
     if(b.state==="charge"){
       b.vx=b.cx*L.chargeSpeed;b.vy=b.cy*L.chargeSpeed;b.head=Math.atan2(b.cy,b.cx);ram(b);
       if(!b.hit&&alive&&Math.hypot(p.x-b.x,p.y-b.y)<b.r+p.r+.05){
-        b.hit=true;hitMech(p,L.dmg*lvm("dmg"),{kind:"enemy"},p.x,p.y,1);if(!p.immune)knockBot(p,b.cx,b.cy,L.shove,false);
+        b.hit=true;hitMech(p,L.dmg*lvm("dmg"),{kind:"enemy",mul:emul(b)},p.x,p.y,1);if(!p.immune)knockBot(p,b.cx,b.cy,L.shove,false);
         sparks(p.x,p.y,.9,14,[255,200,90]);addShake(.4);
       }
       if(b.hit||(b.t-=dt)<=0){b.state="recover";b.t=L.recover;b.cd=L.cooldown}
@@ -1315,6 +1342,247 @@ function create(opts){
       [.3,1.0].forEach(function(z){var m=solidAt(ax,ay,z);if(m===5||WINDOW[m]||m===8||m===14)hitVoxel(ax,ay,z,L.voxDmg,ax,ay,z)});
     });
   }
+  /* ===== phase 4: zone enemies (GDD-D40, TDD AI). Scuttler packs, the Bulwark, the Wrecker and its charge, Elites, and
+     the zone threats that put them into the waves. They live in `bots` with a `kind`; updateBot runs the shared stagger
+     and drop-in code, then hands them to ZONE_AI. Blasts and charges an enemy starts credit nobody (GDD-D48).
+     Entity fields: kind, type (stats name), label (toasts), col (debris), scrapR (cube range), frail (dies to any Perfect),
+     noPods, heavy (the winch pulls the mech), blocks (Bulwark shield), elite. ===== */
+  var ZONE_KIND={scuttler:3,bulwark:4,wrecker:5,charge:6};   /* snapshot bot kind codes after bot 0, loader 1, boss 2 */
+  var ZONE_AI={scuttler:scuttlerAI,bulwark:bulwarkAI,wrecker:wreckerAI,charge:chargeAI};
+  var charged={};   /* chunk id -> 1 while a Wrecker charge sits on it */
+  function emul(b){return b&&b.elite&&T.elite?T.elite.dmg:1}   /* an Elite's damage multiplier, for hitMech's src.mul */
+  function shieldDown(b){return b.shieldEnd>tick}   /* a Bulwark's shield is broken until tick shieldEnd */
+  function zoneFlags(b){return (b.elite?128:0)|(b.state==="flash"||b.state==="plant"||b.bashT>0?256:0)|(shieldDown(b)?512:0)}
+  function zoneTimer(b){return Math.max(0,b.kind==="bulwark"?(b.shieldEnd-tick)/60||0:b.t||0)}
+  function threatOf(kind){var Z=T.zoneThreats||[];for(var i=0;i<Z.length;i++)if(Z[i].elite?kind.indexOf("elite-")===0:Z[i].enemy===kind)return Z[i];return null}
+  /* zones open for this level's waves: the zone a drop-in opens counts from the start, so wave 1 already has its threat */
+  function openZones(){return Math.max(zone.open,zone.target+1)}
+  /* Zone threats (GDD-D40): swap wave n's slots for each open zone's enemy, mark one Elite, then sort the queue into the
+     GDD's drop order (T.dropOrder; kinds it doesn't list drop first, like the boss). Returns q, changed in place. */
+  function zoneSlots(q,n){
+    var c=lvm("count"),open=openZones(),O=T.dropOrder||{};
+    (T.zoneThreats||[]).forEach(function(Z){
+      if(Z.zone>=open||(Z.waves&&Z.waves.indexOf(n)<0))return;
+      var i;
+      if(Z.elite){var at=[];q.forEach(function(k,j){if(k==="bot"||k==="loader")at.push(j)});
+        if(at.length){i=at[(rnd()*at.length)|0];q[i]="elite-"+q[i]}return}
+      var take=Math.round(Z.n*c),took=0;
+      for(i=q.length-1;i>=0&&took<take;i--)if(q[i]===Z.take){q.splice(i,1);took++}
+      if(!took)return;
+      for(var k=0,g=Math.max(1,Math.round(Z.give*c));k<g;k++)q.push(Z.enemy);
+    });
+    function rank(k){return O[k]===undefined?0:O[k]}
+    var tagged=q.map(function(k,j){return [k,j]});
+    tagged.sort(function(a,b){return rank(a[0])-rank(b[0])||a[1]-b[1]});
+    tagged.forEach(function(e,j){q[j]=e[0]});
+    return q;
+  }
+  /* A zone enemy prefers a street cell inside its home zone, more than 10 m from every mech; else the usual pick. */
+  function pickZoneSpawn(zk){
+    var Z=zk>=0?ZS[zk]:null;
+    if(Z){var cs=spawnCells.filter(function(c){return c[0]>Z.x0&&c[0]<Z.x1+1});
+      for(var t=0;t<40&&cs.length;t++){var c=cs[(rnd()*cs.length)|0];
+        if(players.every(function(q){return q.hp<=0||Math.hypot(c[0]-q.x,c[1]-q.y)>10}))return c}}
+    return pickSpawn();
+  }
+  /* Queue entries this phase adds; false hands the entry back to the usual bot / loader / boss drop. */
+  function spawnZone(kind){
+    var Z=threatOf(kind),zk=Z?Z.zone:-1,c,k;
+    if(kind==="pack"){var S=T.scuttler;c=pickZoneSpawn(zk);   /* a pack lands together */
+      for(k=0;k<S.pack;k++){var a=k/S.pack*6.283+rnd()*.5,g=groundNear(c[0]+Math.cos(a)*S.spread,c[1]+Math.sin(a)*S.spread);bots.push(newUnit("scuttler",g[0],g[1],true))}
+      return true}
+    if(kind==="bulwark"||kind==="wrecker"){c=pickZoneSpawn(zk);bots.push(newUnit(kind,c[0],c[1],true));return true}
+    if(kind==="elite-bot"||kind==="elite-loader"){var e=kind==="elite-bot"?newBot():newLoader();c=pickZoneSpawn(zk);e.x=c[0];e.y=c[1];bots.push(makeElite(e));return true}
+    return false;
+  }
+  function makeElite(e){e.elite=true;e.hp=e.maxHp=Math.round(e.maxHp*T.elite.hp);e.label="Elite "+(e.loader?"loader":"patrol bot");return e}
+  function newUnit(kind,x,y,drop){
+    var S=T[kind],hp=Math.round(S.hp*lvm("hp")),a=rnd()*6.283;
+    var b={team:1,kind:kind,type:kind,x:x,y:y,z:drop?T.bot.dropHeight:0,vz:0,dropping:!!drop,vx:0,vy:0,r:S.radius,h:S.height,hp:hp,maxHp:hp,
+      head:a,aim:a,state:"patrol",wp:null,wpField:null,lost:0,flash:0,step:0,t:0,cd:0,scrapR:S.scrap};
+    if(kind==="scuttler"){b.frail=true;b.noPods=true;b.label="Scuttler";b.col=[214,160,40]}
+    else if(kind==="bulwark"){b.armored=true;b.heavy=true;b.blocks=bulwarkBlocks;b.shieldEnd=0;b.bashT=0;b.label="Bulwark";b.col=[110,120,134];
+      b.route=[spawnCells[(rnd()*spawnCells.length)|0],spawnCells[(rnd()*spawnCells.length)|0]];b.ri=0}
+    else if(kind==="wrecker"){b.state="move";b.target=-1;b.spot=null;b.label="Wrecker";b.col=[150,64,170]}
+    return b;
+  }
+  function newCharge(x,y,chunk,fuse){
+    var C=T.charge;if(chunk>=0)charged[chunk]=1;
+    return {team:1,kind:"charge",type:"charge",x:x,y:y,z:0,vz:0,dropping:false,vx:0,vy:0,r:C.radius,h:C.height,hp:C.hp,maxHp:C.hp,
+      head:0,aim:0,state:"armed",flash:0,step:0,t:fuse,chunk:chunk,noPods:true,noStagger:true,label:"Charge"};
+  }
+  /* Debug and lab hook: put one unit down at (x,y). kind: scuttler | bulwark | wrecker | elite-bot | elite-loader | charge
+     (o.chunk: the chunk id it breaks, o.fuse: seconds) | pack (returns the 4 Scuttlers). o.drop: falls in from 9 m. */
+  function spawnUnit(kind,x,y,o){
+    o=o||{};var b;
+    if(kind==="pack"){var out=[];for(var k=0;k<T.scuttler.pack;k++){var a=k/T.scuttler.pack*6.283,g=groundNear(x+Math.cos(a)*T.scuttler.spread,y+Math.sin(a)*T.scuttler.spread);
+      b=newUnit("scuttler",g[0],g[1],o.drop);bots.push(b);out.push(b)}return out}
+    if(kind==="charge")b=newCharge(x,y,o.chunk===undefined?-1:o.chunk,o.fuse===undefined?T.charge.fuse:o.fuse);
+    else if(kind==="elite-bot"||kind==="elite-loader"){b=makeElite(kind==="elite-bot"?newBot():newLoader());b.x=x;b.y=y;b.z=o.drop?T.bot.dropHeight:0;b.dropping=!!o.drop}
+    else b=newUnit(kind,x,y,o.drop);
+    bots.push(b);return b;
+  }
+  /* Shared movement: turn toward the goal at `turn` rad/s, drive forward as far as the heading allows. */
+  function zoneMove(b,goal,want,turn,dt){
+    var gl=goal?Math.hypot(goal[0]-b.x,goal[1]-b.y):0;
+    if(gl>.05){var th=Math.atan2(goal[1]-b.y,goal[0]-b.x);b.head=angTo(b.head,th,turn,dt);
+      var fw=Math.max(0,Math.cos(Math.atan2(Math.sin(th-b.head),Math.cos(th-b.head))));b.vx=Math.cos(b.head)*want*fw;b.vy=Math.sin(b.head)*want*fw}
+    else{b.vx*=.8;b.vy*=.8}
+    var sm=b.slow>0?T.vent.slowMul:1;b.x+=b.vx*dt*sm;b.y+=b.vy*dt*sm;b.step+=Math.hypot(b.vx,b.vy)*dt*3*sm;
+  }
+  function wander(b){
+    if(!b.wp||Math.hypot(b.wp[0]-b.x,b.wp[1]-b.y)<.6){b.wp=spawnCells[(rnd()*spawnCells.length)|0];b.wpField=flowField(b.wp[0],b.wp[1],b.wpField)}
+    return stepToward(b.wpField,b.x,b.y);
+  }
+  function stepAway(field,x,y){   /* uphill on a mech's flow field: away from it, around walls */
+    var cx=Math.floor(x),cy=Math.floor(y),best=field[cx+cy*W],bx=cx,by=cy;
+    for(var k=0;k<8;k++){var nx=cx+N8[k][0],ny=cy+N8[k][1];if(blockedCell(nx,ny))continue;
+      if(k>3&&(blockedCell(cx+N8[k][0],cy)||blockedCell(cx,cy+N8[k][1])))continue;
+      var v=field[nx+ny*W];if(v<1e9&&v>best){best=v;bx=nx;by=ny}}
+    return [bx+.5,by+.5];
+  }
+  function mechDist(x,y){var m=1e9;players.forEach(function(q){if(q.hp>0)m=Math.min(m,Math.hypot(q.x-x,q.y-y))});return m}
+
+  /* Scuttler: runs straight at the nearest mech, flashes 0.4 s within 1.2 m, then blows up. Shot down, it blows up where it
+     is; knocked into another enemy, it blows up on contact. The blast (10 within 1.5 m to mechs and enemies alike, a
+     one-voxel chip) credits nobody. */
+  function scuttlerAI(b,dt){
+    var S=T.scuttler,p=nearestPlayer(b.x,b.y),alive=p.hp>0,dist=alive?Math.hypot(p.x-b.x,p.y-b.y):99,goal=null,want=0;
+    if(b.state==="idle"){b.vx=b.vy=0;return}
+    if(b.state==="flash"){if((b.t-=dt)<=0){scuttlerBlast(b);return}zoneMove(b,null,0,10,dt);return}
+    if(b.state==="patrol"){if(alive&&dist<S.sight&&los(b.x,b.y,p.x,p.y,.4))b.state="engage";else{goal=wander(b);want=S.speed*.5}}
+    if(b.state==="engage"){
+      if(!alive){b.state="patrol";b.wp=null}
+      else if(dist<S.trigger){b.state="flash";b.t=S.flash;sparks(b.x,b.y,.5,6,[255,230,120]);floatText(b.x,b.y,1.1,"!","#ffb84a")}
+      else{goal=dist<3&&los(b.x,b.y,p.x,p.y,.4)?[p.x,p.y]:stepToward(p.field,b.x,b.y);want=S.speed}
+    }
+    zoneMove(b,goal,want,10,dt);b.aim=b.head;
+  }
+  function scuttlerBlast(b){if(b.blown)return;b.blown=true;b.hp=0;b.state="blown";enemyBlast(b.x,b.y,T.scuttler,b)}   /* self-destruct: no kill, no scrap */
+  function scuttlerBump(b){
+    for(var i=0;i<bots.length;i++){var e=bots[i];if(e===b||e.hp<=0||e.dropping||aloft(e))continue;
+      if(Math.hypot(e.x-b.x,e.y-b.y)<b.r+e.r+.05){scuttlerBlast(b);return true}}
+    return false;
+  }
+  function enemyBlast(x,y,S,from){
+    var src={by:-1,kind:"hazard",blast:true,w:"scuttler"};
+    sparks(x,y,.4,22,[255,190,60]);smoke(x,y,.4,6,[150,140,120]);addShake(.12);
+    players.forEach(function(q){if(q.hp>0&&Math.hypot(q.x-x,q.y-y)<=S.blast)hitMech(q,S.dmg*lvm("dmg"),{kind:"enemy"},q.x,q.y,1)});
+    bots.forEach(function(e){if(e!==from&&e.hp>0&&!e.dropping&&!aloft(e)&&Math.hypot(e.x-x,e.y-y)<=S.blast)hitEnemy(e,S.dmg*lvm("hp"),src,x,y,.5)});
+    var best=null,bd=1e9,cx=Math.floor(x),cy=Math.floor(y);   /* the one-voxel chip: the nearest voxel the blast reaches */
+    for(var z=0;z<2;z++)for(var dy=-2;dy<=2;dy++)for(var dx=-2;dx<=2;dx++){var vx=cx+dx,vy=cy+dy;if(!get(vx,vy,z))continue;
+      var d=Math.hypot(vx+.5-x,vy+.5-y,z+.5-.3);if(d<=S.blast&&d<bd){bd=d;best=[vx,vy,z]}}
+    if(best){var sv=curBy;curBy=-1;hitVoxel(best[0],best[1],best[2],S.hole);curBy=sv}
+  }
+
+  /* Bulwark: a loader with a riot shield facing its walk, turning at 1.2 rad/s. The shield blocks every hit within 60 degrees
+     of its front (GDD-D48 step 1) except the rail slug, collapses, slag and other non-blast hazards. A Perfect into the shield
+     breaks it for 5 s, and its damage and stagger go through. At 3 m it bashes: 15 and a 2 m shove, then 2 s. */
+  function bulwarkBlocks(src,x,y){
+    var b=this,K=T.bulwark;
+    if(shieldDown(b)||b.dropping)return false;
+    if(src.kind==="collapse"||src.w==="rail"||(src.kind==="hazard"&&!src.blast))return false;
+    var dx=x-b.x,dy=y-b.y;
+    if(x===undefined||Math.hypot(dx,dy)<.15){var q=src.by>=0?players[src.by]:null;if(!q)return false;dx=q.x-b.x;dy=q.y-b.y}   /* a hit on its centre: from the attacker's side */
+    var a=Math.atan2(dy,dx),off=Math.abs(Math.atan2(Math.sin(a-b.head),Math.cos(a-b.head)));
+    if(off>K.arc*Math.PI/180)return false;
+    if(src.grade==="Perfect"){b.shieldEnd=tick+Math.round(K.broken*60);floatText(b.x,b.y,1.9,"SHIELD BROKEN","#f2c230");sparks(b.x+Math.cos(b.head)*.7,b.y+Math.sin(b.head)*.7,.9,16,[200,220,255]);emitNet(["sb",r2(b.x),r2(b.y)]);return false}
+    sparks(b.x+Math.cos(b.head)*.7,b.y+Math.sin(b.head)*.7,.9,5,[200,220,255]);if(b.cue===undefined||tick-b.cue>20){b.cue=tick;floatText(b.x,b.y,1.7,"BLOCKED","#a39d93")}
+    return true;
+  }
+  function bulwarkAI(b,dt){
+    var K=T.bulwark,p=nearestPlayer(b.x,b.y),alive=p.hp>0,dist=alive?Math.hypot(p.x-b.x,p.y-b.y):99,goal=null,want=0;
+    if(b.bashT>0)b.bashT-=dt;b.cd-=dt*(b.slow>0?T.vent.slowMul:1);
+    if(b.state==="idle"){b.vx=b.vy=0;return}
+    var sees=alive&&dist<K.sight&&los(b.x,b.y,p.x,p.y,.8);
+    if(b.state==="patrol"){
+      if(sees){b.state="engage";b.lost=0}
+      else{if(!b.wp||Math.hypot(b.wp[0]-b.x,b.wp[1]-b.y)<.8){b.ri=1-b.ri;b.wp=b.route[b.ri];b.wpField=flowField(b.wp[0],b.wp[1],b.wpField)}
+        goal=stepToward(b.wpField,b.x,b.y);want=K.speed*K.patrol}
+    }
+    if(b.state==="engage"){
+      b.lost=sees?0:b.lost+dt;
+      if(!alive||b.lost>3){b.state="patrol";b.wp=null}
+      else{
+        var ta=Math.atan2(p.y-b.y,p.x-b.x),off=Math.abs(Math.atan2(Math.sin(ta-b.head),Math.cos(ta-b.head)));
+        if(sees&&dist<=K.bash&&b.cd<=0&&off<=K.arc*Math.PI/180){
+          var ux=(p.x-b.x)/dist,uy=(p.y-b.y)/dist;
+          hitMech(p,K.bashDmg*lvm("dmg"),{kind:"enemy",mul:emul(b)},p.x,p.y,1);if(!p.immune)knockBot(p,ux,uy,K.shove,false);
+          b.cd=K.bashEvery;b.bashT=.3;sparks(p.x,p.y,1,12,[200,220,255]);addShake(.3);
+        }
+        if(dist>b.r+p.r+.5){goal=sees&&dist<3?[p.x,p.y]:stepToward(p.field,b.x,b.y);want=K.speed}
+        else b.head=angTo(b.head,ta,K.turn,dt);   /* up close it only turns, slowly: the flanker's window */
+      }
+    }
+    zoneMove(b,goal,want,K.turn,dt);b.aim=b.head;
+  }
+
+  /* Wrecker: keeps more than 8 m from every mech; walks to the pillar or building chunk nearest a mech that is still at least
+     8 m from every mech, and plants a charge over 2.5 s (any damage restarts it). With no such chunk it holds back. */
+  function chunkCenter(c){if(c.mx===undefined){var sx=0,sy=0;c.v.forEach(function(i){sx+=i%W;sy+=((i/W)|0)%D});c.mx=sx/c.v.length+.5;c.my=sy/c.v.length+.5}return [c.mx,c.my]}
+  function plantSpot(c,b){   /* the street cell beside the chunk's lowest voxels, outside the keep ring, nearest the Wrecker: [x,y, voxel x,y] */
+    var best=null,bd=1e9;
+    c.v.forEach(function(i){if(!vox[i]||chunkOf[i]!==c.id)return;var z=(i/(W*D))|0;if(z>1)return;var x=i%W,y=((i/W)|0)%D;
+      for(var k=0;k<4;k++){var nx=x+N8[k][0],ny=y+N8[k][1];if(blockedCell(nx,ny)||mechDist(nx+.5,ny+.5)<T.wrecker.keep)continue;
+        var d=Math.hypot(nx+.5-b.x,ny+.5-b.y);if(d<bd){bd=d;best=[nx+.5,ny+.5,x+.5,y+.5]}}});
+    return best;
+  }
+  function wreckOk(c){if(!c||!c.alive)return false;var m=chunkCenter(c);return mechDist(m[0],m[1])>=T.wrecker.keep}
+  function pickWreck(b){
+    var R=T.wrecker,ox=openX(),cand=[];b.target=-1;b.spot=null;
+    for(var i=0;i<chunks.length;i++){var c=chunks[i];if(!c.alive||c.cz!==0||charged[c.id]||(b.avoid&&b.avoid[c.id]>tick))continue;
+      var s=structures[c.s];if(!s||(s.kind!=="pillar"&&s.kind!=="building"))continue;
+      var m=chunkCenter(c);if(m[0]>=ox)continue;var md=mechDist(m[0],m[1]);if(md>=R.keep)cand.push([md,c])}
+    cand.sort(function(a,b){return a[0]-b[0]||a[1].id-b[1].id});
+    for(var k=0;k<cand.length&&k<4;k++){var ch=cand[k][1],sp=plantSpot(ch,b);if(!sp)continue;
+      b.wpField=flowField(sp[0],sp[1],b.wpField);if(b.wpField[Math.floor(b.x)+Math.floor(b.y)*W]>=1e9)continue;
+      b.target=ch.id;b.spot=sp;return ch}
+    return null;
+  }
+  function wreckerAI(b,dt){
+    var R=T.wrecker,near=null,nd=1e9,goal=null,want=0,hurt=b.lastHp!==undefined&&b.hp<b.lastHp;b.lastHp=b.hp;
+    if(b.state==="idle"){b.vx=b.vy=0;return}
+    players.forEach(function(q){if(q.hp<=0)return;var d=Math.hypot(q.x-b.x,q.y-b.y);if(d<nd){nd=d;near=q}});
+    b.cd-=dt;
+    if(near&&(nd<R.keep||b.state==="flee"&&nd<R.keep+1)){b.state="flee";b.t=0;goal=stepAway(near.field,b.x,b.y);want=R.speed}   /* backs off to a metre past the ring */
+    else if(b.state==="plant"){
+      b.vx=b.vy=0;if(hurt)b.t=R.plant;   /* any damage restarts the plant */
+      if(!wreckOk(chunks[b.target])){b.state="move";b.t=0;b.target=-1;b.cd=0}
+      else if((b.t-=dt*(b.slow>0?T.vent.slowMul:1))<=0){var sp=b.spot;
+        bots.push(newCharge(sp[0]+(sp[2]-sp[0])*.4,sp[1]+(sp[3]-sp[1])*.4,b.target,T.charge.fuse));toast("Wrecker charge planted: shoot it or clear out","var(--hazard)");
+        b.state="move";b.t=0;b.target=-1;b.cd=0}
+      return;
+    }
+    else{
+      if(b.state!=="hold")b.state="move";
+      if(b.cd<=0||b.target<0||!wreckOk(chunks[b.target])){b.cd=R.retarget;pickWreck(b)}
+      if(b.target>=0){b.state="move";
+        if(Math.hypot(b.spot[0]-b.x,b.spot[1]-b.y)<.5){b.state="plant";b.t=R.plant;b.vx=b.vy=0;return}
+        goal=stepToward(b.wpField,b.x,b.y);if(Math.hypot(goal[0]-b.x,goal[1]-b.y)<.3)goal=[b.spot[0],b.spot[1]];want=R.speed;
+        if(mechDist(goal[0],goal[1])<R.keep){(b.avoid=b.avoid||{})[b.target]=tick+600;b.target=-1;b.cd=0;goal=null}}   /* its path runs into the ring: try another chunk for 10 s */
+      else{b.state="hold";goal=wander(b);want=R.speed*.6}   /* nothing safe to break: hold back and reposition */
+    }
+    zoneMove(b,goal,want,6,dt);b.aim=b.head;
+  }
+  /* The charge: 20 health and a 4 s fuse (2 s when dropped by a dying Wrecker). Shot, it goes off early. It breaks its chunk
+     (a pillar's whole base) through the normal break path with nobody as the breaker, so its collapse credits nobody. */
+  function chargeAI(b,dt){b.vx=b.vy=0;if((b.t-=dt)<=0)detonate(b)}
+  function detonate(b){
+    if(b.gone)return;b.gone=true;b.hp=0;if(b.chunk>=0)delete charged[b.chunk];
+    sparks(b.x,b.y,.5,26,[255,160,60]);smoke(b.x,b.y,.5,10,[120,110,100]);addShake(.3);
+    var c=b.chunk>=0?chunks[b.chunk]:null;if(!c||!c.alive)return;
+    var m=chunkCenter(c);if(Math.hypot(m[0]-b.x,m[1]-b.y)>T.charge.reach)return;
+    var sv=curBy;curBy=-1;
+    breakChunk(c);var s=structures[c.s];if(s&&s.kind==="pillar")s.gc.forEach(function(g){if(chunks[g].alive)breakChunk(chunks[g])});
+    curBy=sv;
+  }
+  /* After killBot's kill: a Scuttler blows up, a Wrecker killed mid-plant drops its charge, an Elite leaves a pod. */
+  function zoneDeath(b){
+    if(b.kind==="scuttler"&&!b.blown){b.blown=true;enemyBlast(b.x,b.y,T.scuttler,b)}
+    if(b.kind==="wrecker"&&b.state==="plant"&&b.target>=0&&chunks[b.target]&&chunks[b.target].alive)bots.push(newCharge(b.x,b.y,b.target,T.charge.dropFuse));
+    if(b.elite&&T.elite){var g=groundNear(b.x,b.y),P=T.elite.pods;spawnPod(P[(rnd()*P.length)|0],g[0],g[1],false);toast("Elite down: it dropped a pod","var(--cyan)")}
+  }
+
   function updateShots(dt){
     for(var i=shots.length-1;i>=0;i--){
       var s=shots[i],n,dead=false;curBy=s.src?s.src.by:-1;
@@ -1409,8 +1677,9 @@ function create(opts){
       r2(q.atb),r2(q.ring),r2(q.retract),r2(q.pileT),r2(q.oc),q.muzzle>0?1:0,q.flash>0?1:0,r2(q.ax),r2(q.ay),r2(q.az),r2(q.step),q.combo])});
     bots.forEach(function(b){
       if(!b.id)b.id=++eid;
-      var k=b.boss?2:b.loader?1:0,f=(b.dropping?1:0)|(b.flash>0?2:0)|(b.state==="tell"?4:0)|(b.state==="charge"?8:0)|(b.slow>0?32:0)|(b.stag>0?64:0);
+      var k=b.boss?2:b.loader?1:ZONE_KIND[b.kind]||0,f=(b.dropping?1:0)|(b.flash>0?2:0)|(b.state==="tell"?4:0)|(b.state==="charge"?8:0)|(b.slow>0?32:0)|(b.stag>0?64:0)|zoneFlags(b);
       var row=[b.id,k,r2(b.x),r2(b.y),r2(b.z),r2(b.head),r2(b.aim),Math.max(0,Math.ceil(b.hp)),0];
+      if(k>=3)row.push(r2(zoneTimer(b)));   /* phase 4 kinds: the timer of the flash, the plant, the fuse or the broken shield */
       if(k===2){row.push(r2(b.tell>0?b.tell:0),r2(b.base||0));if(b.mode==="jump"&&b.j1){f|=16;row.push(r2(b.j1[0]),r2(b.j1[1]),r2(b.j1[2]))}}
       row[8]=f;s.b.push(row);
     });
@@ -1473,6 +1742,7 @@ function create(opts){
   sim.killAll=function(){bots.slice().forEach(function(b){damage(b,1e9,b.x,b.y,b.z)})};
   sim.damage=damage;sim.hitEnemy=hitEnemy;sim.hitMech=hitMech;sim.hitVoxel=hitVoxel;sim.spawnPod=spawnPod;sim.perches=perches;sim.los3=los3;sim.collide=collide;sim.flowField=flowField;
   sim.stepDebris=stepDebris;sim.debrisPiece=debrisPiece;
+  sim.spawnUnit=spawnUnit;sim.zoneSlots=zoneSlots;sim.pickWreck=pickWreck;   /* phase 4 (labs and rules check) */
   sim.spawnLoader=function(x,y){var l=newLoader();l.x=x;l.y=y;l.z=0;l.dropping=false;bots.push(l);return l};
   sim.setVox=function(x,y,z,m){var i=vi(x,y,z);if(!m&&vox[i])removeVoxel(i,x,y,z);else{vox[i]=m;touch(i)}};
   sim.dbg=function(){var w=[];structures.forEach(function(st){if(st&&st.kind==='pillar'&&pillarIsDown(st))w.push(st.x+.2,st.x+1)});var pv=0,pd=0;
