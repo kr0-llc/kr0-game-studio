@@ -11,12 +11,12 @@ Play it: open `games/metr0niks/prototypes/prototype-ink.html` from a local web s
 One playable excursion in a 2D, three-quarter top-down view:
 
 - **Garage:** the Scenario garage background with the mech idling on the lift and aiming at the mouse; the six slots with the starter build; banked scrap; Drop in. A music toggle cycles through the music directions below.
-- **Battle:** five waves on one desert-slum map under the overpass (3 bots; 4 bots and a loader; 4 bots and the boss; 6 bots and 2 loaders; 5 bots, a loader and the boss). The boss is the jumper/sniper role, drawn as the spider scuttler.
+- **Battle:** five waves in Overpass Sector 4, five zones opened one per level, from the Underpass's shanty market to the Terminus Yard arena (see [the ink level design](../level-design-ink.md)). Before 28 October it was one desert-slum map (3 bots; 4 bots and a loader; 4 bots and the boss; 6 bots and 2 loaders; 5 bots, a loader and the boss). The boss is the jumper/sniper role, drawn as the spider scuttler.
 - **Player:** WASD drive, mouse aim, left click minigun with heat and overheat lockout, right click hold and release on the timing ring for the pile bunker (Perfect, Good, Miss), Space dash. Keyboard and mouse only (GDD-D29).
 - **Destruction:** every building and prop takes damage, shakes, shows ink cracks, then collapses into flying debris, dust and a rubble pile and drops scrap. Big buildings crush enemies beside them; barrels, canisters and cars explode.
 - **Extract or wreck:** clear wave 5 and the mech jets out with its scrap, which is banked (browser storage). Get wrecked and the scrap is lost.
 
-The numbers (speeds, weapon damage, heat, ring timings, enemy stats, waves) are read from `sim.js` at load, so they match the main prototype. The world is a simple 2D stand-in: there are no voxels, zones, pods, parts shop, levels or co-op. Those are gaps against the shared rules, not different rules: when one is added, it follows the GDD and `sim.js`.
+The numbers (speeds, weapon damage, heat, ring timings, enemy stats, waves) are read from `sim.js` at load, so they match the main prototype. The world is 2D, with no voxels. Zones and levels follow the GDD and `sim.js` since 28 October; there are still no pods, parts shop or co-op. Those are gaps against the shared rules, not different rules: when one is added, it follows the GDD and `sim.js`.
 
 ## How the art is made
 
