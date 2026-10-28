@@ -205,6 +205,8 @@ Interpretations for kr0: the Overtime layer runs the loop at 1.25× rather than 
 
 Run the fun pass sweep questions in the [tuning history](../tuning-history.md) on paired seeds with the runner: combo rates, Redline cost, extract rate and scrap per run with and without Overtime, call-in spending, collapse lethality at level 5, Warden fight length, multi-kill frequency, the stacked scrap curve against prices, the death-rate step per zone enemy, climb length, and wave density on the 216 × 48 m map in solo and co-op. kr0 sets the targets first; each change kr0 picks gets a decision row.
 
+**Sweep run Oct 28:** about 9,000 matches on spread seeds (1 + 7919 k; `run.js` gained `--stride`), scripted Warden fights and labs. Findings, a proposed target per question and a candidate changes table are in the [tuning history's Fun pass sweep section](../tuning-history.md#fun-pass-sweep-oct-28-2026); records in `tuning-runs/2026-10-28-phase9-*.jsonl`. No `T` value, rule or GDD number changed. Headlines: level 1 extracts 13% solo and 96% co-op, and nobody extracts level 3 or higher (the Bulwark in wave 4 is a wall for a pilot that can't flank); idle time grows from 16 to 22% of a wave at level 1 to 43 to 48% at level 5; a full Redline costs 32 to 52 armor; the Warden takes 136 to 160 s for a pair with armor refilled. The targets and the changes wait for kr0.
+
 ## Risks
 
 | Risk | Why | What we do |
