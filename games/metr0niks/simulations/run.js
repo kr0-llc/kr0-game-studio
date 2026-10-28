@@ -17,7 +17,7 @@
    Each record: {seed, level, players, accuracy, tuneHash, result, wave, ticks, seconds, kills, scrap:[per mech],
    armor:[per mech at the end], hash}. A climb adds {climb:true, reached, levels:[records]}. The replay check
    re-runs the batch's first match from its recorded inputs and compares the state hash every 10 s and at the end;
-   any mismatch exits with code 1. The GDD-D50 match stats join the record when phase 1 adds them. */
+   any mismatch exits with code 1. stats: the GDD-D50 match stats, [mech][wave] (sim.stats). */
 "use strict";
 var fs=require("fs"),path=require("path");
 require("./sim.js");require("./pilot.js");
@@ -54,7 +54,7 @@ function match(o,seed,level,log,replay,checks){
   return {seed:seed,level:level,players:o.players,accuracy:o.accuracy,tuneHash:sim.tuneHash(),
     result:over?over[1]:"timeout",wave:sim.wave,ticks:sim.tick,seconds:Math.round(sim.tick/6)/10,kills:sim.kills,
     scrap:over&&over[4]&&over[4].scrap?over[4].scrap:sim.players.map(function(q){return over&&over[1]==="dead"?0:q.scrap}),
-    armor:sim.players.map(function(q){return Math.max(0,Math.round(q.hp))}),hash:sim.stateHash()};
+    armor:sim.players.map(function(q){return Math.max(0,Math.round(q.hp))}),hash:sim.stateHash(),stats:sim.stats};
 }
 
 function climb(o,seed){
@@ -63,7 +63,7 @@ function climb(o,seed){
   var last=levels[levels.length-1];
   return {seed:seed,climb:true,players:o.players,accuracy:o.accuracy,tuneHash:last.tuneHash,
     result:last.result==="extracted"?"victory":last.result,reached:last.level,
-    scrap:levels.reduce(function(a,x){return x.result==="extracted"?a.map(function(v,i){return v+(x.scrap[i]|0)}):a},levels[0].scrap.map(function(){return 0})),
+    scrap:levels.reduce(function(a,x){return x.result==="extracted"||x.result==="victory"?a.map(function(v,i){return v+(x.scrap[i]|0)}):a},levels[0].scrap.map(function(){return 0})),
     levels:levels};
 }
 
@@ -79,8 +79,11 @@ function main(){
     console.log("victories "+cnt(function(r){return r.result==="victory"})+" · mean level reached "+mean(function(r){return r.reached})+" · mean banked scrap "+mean(function(r){return r.scrap.reduce(function(a,b){return a+b},0)}));
     var by={};recs.forEach(function(r){by[r.reached]=(by[r.reached]||0)+1});console.log("level reached: "+JSON.stringify(by));
   } else {
-    console.log("extracted "+cnt(function(r){return r.result==="extracted"})+" · dead "+cnt(function(r){return r.result==="dead"})+" · timeout "+cnt(function(r){return r.result==="timeout"}));
+    console.log("extracted "+cnt(function(r){return r.result==="extracted"||r.result==="victory"})+" · dead "+cnt(function(r){return r.result==="dead"})+" · timeout "+cnt(function(r){return r.result==="timeout"}));
     console.log("mean seconds "+mean(function(r){return r.seconds})+" · mean kills "+mean(function(r){return r.kills})+" · mean scrap "+mean(function(r){return r.scrap.reduce(function(a,b){return a+b},0)}));
+    var best=function(r){return Math.max.apply(null,[1].concat(r.stats.map(function(w){return Math.max.apply(null,[1].concat(w.filter(Boolean).map(function(x){return x.bestCombo})))})))};
+    var multi=function(r){var n=0;r.stats.forEach(function(w){w.forEach(function(x){if(x)n+=x.multi[2]+x.multi[3]+x.multi[4]+x.multi[5]})});return n};
+    console.log("reached x4 combo "+cnt(function(r){return best(r)>=4})+" · mean multi-kills "+mean(multi));
     var dw={};recs.forEach(function(r){if(r.result==="dead")dw[r.wave]=(dw[r.wave]||0)+1});console.log("deaths by wave: "+JSON.stringify(dw));
   }
   if(o.replay&&n){

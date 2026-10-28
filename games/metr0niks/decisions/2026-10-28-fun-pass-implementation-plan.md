@@ -46,6 +46,8 @@ Done when: 100 level-1 runs on paired seeds finish headless, the replay check pa
 
 ## Phase 1: hit pipeline and combat
 
+**Done Oct 28:** `hitEnemy` and `hitMech` in `sim.js` carry every hit; kill credit, combo, stagger, the scrap combine rule, multi-kills and the `stats[mech][wave]` record are in, with the `cb`, `sg`, `mk`, `x` and `w` events. The rules check has 33 more cases (56 in all). The prototype HUD doesn't show the combo or stagger yet; that comes with phase 8 (feel). Level-1 solo extracts rose from 21% to 26% with the same pilot, mostly from stagger.
+
 Today 13 call sites call `damage(e, dmg, …)` directly, each applying power its own way. The fun pass needs one order for every hit and someone to credit each kill.
 
 - **One hit path (TDD-D9):** `hitEnemy(src, target, base, info)` applies the GDD-D48 order (shield check, power, upgrade, grade, stagger, armor resistance, one rounding) and `hitMech(target, base, info)` applies level scaling and the Elite bonus. Every weapon, blast, collapse, pod strike and enemy attack goes through one of them. `info` carries the source kind (light, heavy, shoulder, collapse, hazard, pod, enemy) for stats and credit.
@@ -59,6 +61,8 @@ Today 13 call sites call `damage(e, dmg, …)` directly, each applying power its
 Done when: the rules check covers each step of the damage order, credit after 2.9 s and after 3.1 s, combo rise, hold and drop, stagger restart, and the scrap formula with every bonus stacked; the lab shows combo and stagger on dummies.
 
 ## Phase 2: campaign and save
+
+**Done Oct 28:** `T.level.max` 5 with a `victory` end state; save v2 with v1 migration; wear, repair and Mk upgrades (applied through phase 1's hit path); `Campaign.plan` with the condition, contract and bosses per level; the in-match mark; the garage's repair, upgrade, next-level panel and seed box; a victory screen and the records line. 66 rules-check cases. Not yet: the call-in shop and "New" marks (phase 6), showing the plan to a co-op guest, and the room server's v2 fields (TDD-D21).
 
 - **Five levels and victory:** `T.level.max = 5`; extracting level 5 ends the campaign with a victory event, and the victory button starts a new climb (prototype changes section 11, changed from level 50).
 - **A seed per climb (GDD-D49):** a new campaign, a death and a victory restart draw a new random seed from the browser (outside the sim, which stays seeded). A typed seed at level 1 is kept for that climb only.
@@ -90,6 +94,8 @@ Done when: each contract has a rules check case that completes it and one that f
 Done when: each enemy has a unit lab entry and rules check cases (Bulwark front and back Perfects, Wrecker charge credit, Scuttler blast hitting another enemy), and a level 5 match shows all four.
 
 ## Phase 5: city hazards
+
+**Done Oct 28:** collapse scaling, cluster credit and the demolition bonus came with phase 1; phase 5 added CRUSHED and SPAN DOWN events and callouts, whole-box containers so stacks topple, slag pools from every vat and the gallery, the `props` stat, and 30 rules-check cases (span drop on level-5 bots credited to the last pillar's breaker, a bot burned in slag, each prop falling).
 
 - **Collapse damage** to enemies scales with level (`T.collapse.botDmg` × the hp scale); 40 to mechs at any level.
 - **Credit on clusters:** when a chunk breaks, the cluster records the mech whose hit broke it (from `hitVoxel`'s source), or nobody for an enemy's charge, blast or Juggernaut. `land()` passes it to `hitEnemy` as the hazard source.

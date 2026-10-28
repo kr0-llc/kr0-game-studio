@@ -153,6 +153,14 @@ body.ing canvas{cursor:default}
 #gCopy{padding:3px 8px;border:1px solid rgba(63,214,232,.5);background:transparent;border-radius:3px;font-size:10px}
 .gact #gRepair{border-color:var(--hazard);background:rgba(242,194,48,.14);color:var(--hazard)}
 .gact #gRepair:disabled{border-color:var(--line);color:var(--muted);background:transparent}
+.gact #gUpg{border-color:var(--cyan);background:rgba(63,214,232,.14);color:var(--cyan)}
+.gact #gUpg:disabled{border-color:var(--line);color:var(--muted);background:transparent}
+.gact #gUpg[hidden]{display:none}
+.gplan{margin-bottom:8px;padding:6px 8px;border:1px solid rgba(242,194,48,.5);border-radius:4px;background:rgba(0,0,0,.3);color:var(--muted);font-size:10px;line-height:1.5;text-transform:none;letter-spacing:.02em;white-space:pre-line}
+.gplan b{color:var(--hazard);letter-spacing:.1em;text-transform:uppercase}
+.gbar[hidden]{display:none}
+#gSeed{flex:0 1 130px}
+#gSeedNew{padding:3px 8px;border:1px solid rgba(63,214,232,.5);background:transparent;border-radius:3px;font-size:10px}
 
 /* ===== Settings ===== */
 #settings{position:fixed;inset:0;display:flex;background:rgba(10,11,13,.6);padding:16px;z-index:5;overflow:auto}
@@ -259,6 +267,7 @@ body[data-theme="ink"] #gDrop{border:2px solid var(--line);color:#fffaf0;box-sha
   <div><span id="enLbl">Enemies</span><b id="enTxt">0</b></div>
   <div class="scrap"><span>Scrap</span><b id="scrapTxt">0</b></div>
   <div><span>Bots down</span><b id="killTxt">0</b></div>
+  <div><span>Sector</span><b id="planTxt">-</b></div>
 </div>
 <div class="hud" id="bossBar" hidden><div class="bl"><span>Bounty sniper</span><b id="bossTxt">180</b></div><div class="bar"><i></i></div></div>
 <div class="hud" id="keys"><b>WASD</b> drive · <b>Mouse</b> aim torso · <b>Left click</b> minigun · <b>Right mouse</b> pile-bunker: hold when the bar is full, release on the green ring · <b>Space</b> dash · <b>Esc</b> pause · Touch cyan drop pods before the bots do · Break two pillars in a row to drop the road</div>
@@ -285,11 +294,13 @@ body[data-theme="ink"] #gDrop{border:2px solid var(--line);color:#fffaf0;box-sha
   <div class="gr">
     <div class="gstatus" id="gStatus"></div>
     <div class="gp">
+      <div class="gplan" id="gPlan"></div>
       <div class="gbh"><span>Blueprint</span><span id="gbName"></span></div>
       <div class="gthumbs" id="gThumbs"></div>
       <div class="gdesc" id="gDesc"></div>
-      <div class="gact"><button id="gEquip" type="button">Equip</button><button id="gRepair" type="button">Repair</button></div>
+      <div class="gact"><button id="gEquip" type="button">Equip</button><button id="gUpg" type="button" hidden>Upgrade</button><button id="gRepair" type="button">Repair</button></div>
       <div class="gbar"><span>Scrap <b id="gScrap">0</b> &nbsp;Armor <b id="gArmor">100</b></span><a id="gSet" role="button" tabindex="0">Settings</a><a id="gReset" role="button" tabindex="0">Reset save</a></div>
+      <div class="gbar" id="gSeedRow"><span>Climb seed</span><input id="gSeed" class="codeIn" type="text" inputmode="numeric" maxlength="10" aria-label="Climb seed" spellcheck="false" autocomplete="off"><button id="gSeedNew" type="button">Random</button></div>
       <div class="gbar"><span>Campaign code</span><input id="gCode" class="codeIn" type="text" readonly aria-label="Campaign code" spellcheck="false"><button id="gCopy" type="button">Copy</button></div>
       <button id="gDrop" type="button">Drop in</button>
       <div id="gPartner"></div>
@@ -303,6 +314,7 @@ body[data-theme="ink"] #gDrop{border:2px solid var(--line);color:#fffaf0;box-sha
     <h1>Metr<span>0</span>niks</h1>
     <p id="ovText">Prototype: Overpass Sector 4, a few blocks under the highway. Patrol bots drop in and hunt you. Drive with your legs, aim with your torso, and keep the minigun from overheating. The city is a weapon: break two pillars in a row and the road between them falls on whoever is underneath. A run is five waves with a Bounty sniper on waves 3 and 5: clear wave 5 to extract and bank your scrap, die and the match's scrap is gone. Drop pods land with a cyan marker: touch one for armor or a faster pile-bunker, but the bots want them too. Heavy loaders do not shoot: they telegraph, then ram in a straight line, plowing through barriers and containers. The minigun barely scratches their armor; the pile-bunker does not.</p>
     <span class="note" id="bankTxt">Banked: 0</span>
+    <span class="note" id="recTxt" hidden></span>
     <table>
       <tr><td>WASD</td><td>Legs: drive with momentum</td></tr>
       <tr><td>Mouse</td><td>Torso: aim independently of the legs</td></tr>
@@ -423,11 +435,17 @@ function tcol(c){
 
 /* ===== World as the renderer sees it: the typed arrays and arrays of the current sim (see bind) ===== */
 var sim=null,vox,owner,vdmg,structures,meshRev=-1;
-var player,players=[],bots=[],pods=[],shots=[],scraps=[],debris=[],clusters=[],parts=[],floats=[],run={wave:1,queue:[],breather:0};
+var player,players=[],bots=[],pods=[],shots=[],scraps=[],debris=[],clusters=[],pools=[],parts=[],floats=[],run={wave:1,queue:[],breather:0};
 var state="menu",time=0,scrap=0,kills=0,toastT=0,shake=0;
 var mouse={x:0,y:0,down:false,rdown:false,rpress:false},keys={};
 var banked=0;   /* banked = this player's wallet */
-var Camp=MetroSim.Campaign,CAMP={level:1,seed:7},ARMOR=null,LASTCODE="",OVER={newCamp:false};   /* ARMOR: null = full, else absolute armor carried into the next level */
+var Camp=MetroSim.Campaign,CAMP={level:1,seed:7,typed:false},LASTCODE="";
+/* this player's save fields (TDD-D12): part wear, weapon Mk levels, highest level extracted, lifetime records, call-in slots */
+var WEAR={},UPG={},BEST=0,RECORDS=noRecords(),CALLINS=[null,null],MK=["I","II","III"];
+var COND={},CONT={},BOSS=MetroSim.BOSSES;MetroSim.CONDITIONS.forEach(function(x){COND[x.id]=x});MetroSim.CONTRACTS.forEach(function(x){CONT[x.id]=x});
+function noRecords(){return {level:0,combo:0,spans:0,contracts:0,overtimes:0}}
+function newSeed(){return 1+Math.floor(Math.random()*Camp.SEED_MAX)}   /* a climb's seed (GDD-D49): drawn here, never in the sim */
+function curPlan(){return Camp.plan(CAMP)[CAMP.level-1]}
 function saveBank(){saveCampaign()}
 function vi(x,y,z){return x+y*W+z*W*D}
 function inB(x,y,z){return x>=0&&y>=0&&z>=0&&x<W&&y<D&&z<H}
@@ -441,14 +459,15 @@ function colorOf(id,s){
   var c=s.hue!==undefined&&TH.hues?TH.hues[s.hue]:s.ci!==undefined&&TH.cont?TH.cont[s.ci%TH.cont.length]:s.col;
   return id===7?[c[0]*.72,c[1]*.72,c[2]*.72]:c;
 }
-function newSim(builds,armor){
-  return MetroSim.create({seed:Camp.levelSeed({seed:CAMP.seed,level:CAMP.level}),level:CAMP.level,armor:armor,builds:builds,colorOf:colorOf,clock:function(){return performance.now()}});
+function newSim(builds,ext){
+  ext=ext||{};
+  return MetroSim.create({seed:Camp.levelSeed({seed:CAMP.seed,level:CAMP.level}),level:CAMP.level,builds:builds,wear:ext.wear,upgrades:ext.upg,plan:ext.plan,colorOf:colorOf,clock:function(){return performance.now()}});
 }
 function lvHp(base){return Math.round(base*(1+T.level.hp*(CAMP.level-1)))}   /* enemy hp scales with the level (the guest only gets hp numbers) */
 /* Point the renderer at a sim; its arrays are mutated in place, so they are bound once. */
 function bind(s){
   sim=s;var w=s.world;vox=w.vox;owner=w.owner;vdmg=w.vdmg;structures=w.structures;
-  players=s.players;player=players[0];bots=s.bots;pods=s.pods;shots=s.shots;scraps=s.scraps;debris=s.debris;clusters=s.clusters;run=s.run;
+  players=s.players;player=players[0];bots=s.bots;pods=s.pods;shots=s.shots;scraps=s.scraps;debris=s.debris;clusters=s.clusters;pools=s.pools||[];run=s.run;
   meshDirty=true;meshRev=w.rev;
 }
 bind(newSim([MetroSim.STARTER]));
@@ -608,9 +627,9 @@ buildGround();
 
 /* ===== Run control, effects and input. The sim emits events; here they become particles, floats, toasts and the end screens. ===== */
 function reset(){
-  var builds=[BUILD],armor=[ARMOR];if(Net.hosting&&Net.peer){builds.push(Net.peerBuild);armor.push(null)}
+  var builds=[BUILD],wear=[WEAR],upg=[UPG];if(Net.hosting&&Net.peer){builds.push(Net.peerBuild);wear.push(Net.peerWear||{});upg.push(Net.peerUpg||{})}
   LASTCODE=Camp.encode(curCampaign());   /* what a retry after dying starts from */
-  bind(newSim(builds,armor));
+  bind(newSim(builds,{wear:wear,upg:upg,plan:guestSeat()?null:curPlan()}));
   parts.length=0;floats.length=0;shake=0;scrap=0;kills=0;buildHud();
   camX=px(player.x,player.y,0);camY=py(player.x,player.y,0);
 }
@@ -635,22 +654,28 @@ function handleEvent(e){
     case "o":runOver(e);break;
     case "l":cables.push({a:[e[1],e[2],e[3]],b:[e[4],e[5],e[6]],t:.3});break;
     case "z":sim.markOpen(e[1]);zoneFx={k:e[1],t:0};meshDirty=true;break;   /* the gate fell: the sealed zone lights up over the next second */
+    /* phase 5 callouts (GDD Feel): the kills of one collapse or slag pool, and a deck span coming down */
+    case "cr":floats.push({x:e[3],y:e[4],z:2.4,txt:"CRUSHED \u00d7"+e[2],col:"#ff8a3a",t:1.6,big:1.6});break;
+    case "sd":floats.push({x:e[2],y:e[3],z:3.6,txt:"SPAN DOWN",col:"#f2c230",t:1.8,big:1.9});break;
   }
 }
 /* The run ended: bank what counts, tell the partner, show the end screen. */
 function runOver(e){
   var d=e[4]||{};
-  if(Net.hosting&&Net.live){Net.send({t:"over",kind:e[1],msg:e[2],got:d.scrap?d.scrap[1]|0:0});Net.live=false}   /* local test co-op: the guest banks its own share */
-  state=e[1];var msg=e[2];
-  if(d.result==="extracted"){   /* next level, wallet and armor carry over */
-    adoptCampaign(Camp.advance(curCampaign(),d),0);saveCampaign();
-    showOverlay("Extracted",msg,"Garage");return;
+  if(Net.hosting&&Net.live){Net.send({t:"over",kind:e[1],msg:e[2],got:d.scrap?d.scrap[1]|0:0,d:d});Net.live=false}   /* local test co-op: the guest banks its own share */
+  state=e[1]==="victory"?"extracted":e[1];var msg=e[2];
+  if(d.result==="extracted"||d.result==="victory"){   /* scrap banks, wear goes on, the next level opens; a victory starts the next climb */
+    var c=Camp.advance(ownCampaign(),d);if(d.result==="victory")c=Camp.restart(c,newSeed());
+    adoptCampaign(c,0);saveCampaign();
+    if(d.result==="victory")showOverlay("Victory",msg,"New climb");else showOverlay("Extracted",msg,"Garage");
+    return;
   }
-  deathScreen(msg,d.level||CAMP.level);
+  var lv=campaignOver();deathScreen(msg,d.level||lv);
 }
-/* A death ends the campaign run: the code is the garage it began from. */
+/* A death ends the climb at once (saved): level 1 on a new seed (a typed seed is for one climb only). A co-op guest's own campaign stays. */
+function campaignOver(){var lv=CAMP.level;if(!guestSeat()){adoptCampaign(Camp.restart(ownCampaign(),newSeed()),0);saveCampaign()}return lv}
+/* The code shown is the garage the run began from. */
 function deathScreen(msg,lv){
-  OVER.newCamp=true;
   setTimeout(function(){showOverlay("Campaign over at level "+lv,msg,"New campaign",LASTCODE)},900);
 }
 function drainEvents(){
@@ -996,6 +1021,7 @@ function render(){
   var shx=shake?(rnd()-.5)*shake*10:0,shy=shake?(rnd()-.5)*shake*10:0;camX+=shx;camY+=shy;
   ctx.drawImage(ground,(GX0-camX)*zoom+cw/2,(GY0-camY)*zoom+ch/2,ground.width/GS*zoom,ground.height/GS*zoom);
   drawZones();
+  drawPools();
   /* Collapse warning: the shadow of each loose piece on the ground before it lands. */
   clusters.forEach(function(c){
     var a=c.creak>0?.34+.2*Math.sin(c.t*14):.6;ctx.fillStyle=TH.ink?"rgba(43,36,32,"+(a*1.1)+")":"rgba(255,60,40,"+a+")";
@@ -1086,11 +1112,23 @@ function drawParticles(){
       ctx.fillStyle="rgba("+(q.col[0]*.5|0)+","+(q.col[1]*.5|0)+","+(q.col[2]*.5|0)+","+(a*.45)+")";ctx.beginPath();ctx.arc(x,y,(1-a)*18*zoom+5*zoom,0,6.283);ctx.fill()});
   }
 }
+/* Slag pools (phase 5): a molten square on the ground that flickers and dims over its last second. */
+function drawPools(){
+  pools.forEach(function(o){
+    var a=Math.min(1,Math.max(0,o.t))*(.55+.12*Math.sin(time*9+o.x)),z=o.z+.02;
+    ctx.fillStyle=TH.ink?"rgba(196,72,28,"+(a*.8)+")":"rgba(255,110,30,"+a+")";
+    ctx.beginPath();ctx.moveTo(SX(o.x0,o.y0,z),SY(o.x0,o.y0,z));ctx.lineTo(SX(o.x1,o.y0,z),SY(o.x1,o.y0,z));ctx.lineTo(SX(o.x1,o.y1,z),SY(o.x1,o.y1,z));ctx.lineTo(SX(o.x0,o.y1,z),SY(o.x0,o.y1,z));ctx.closePath();ctx.fill();
+    var m=.8;ctx.fillStyle=TH.ink?"rgba(240,150,60,"+(a*.7)+")":"rgba(255,210,90,"+(a*.8)+")";
+    ctx.beginPath();ctx.moveTo(SX(o.x0+m,o.y0+m,z),SY(o.x0+m,o.y0+m,z));ctx.lineTo(SX(o.x1-m,o.y0+m,z),SY(o.x1-m,o.y0+m,z));ctx.lineTo(SX(o.x1-m,o.y1-m,z),SY(o.x1-m,o.y1-m,z));ctx.lineTo(SX(o.x0+m,o.y1-m,z),SY(o.x0+m,o.y1-m,z));ctx.closePath();ctx.fill();
+  });
+}
 function drawFloats(){
   ctx.textAlign="center";ctx.font="700 "+Math.round(12*zoom)+"px 'JetBrains Mono',monospace";
   if(TH.ink)ctx.font="700 "+Math.round(15*zoom)+"px Kalam,'Patrick Hand',cursive";
   ctx.lineWidth=3;ctx.lineJoin="round";ctx.strokeStyle=TH.ink||TH.fx.text;
+  var font=ctx.font;
   floats.forEach(function(f){ctx.globalAlpha=Math.min(1,f.t*2);var X=SX(f.x,f.y,f.z),Y=SY(f.x,f.y,f.z);
+    ctx.font=f.big?font.replace(/\d+px/,function(m){return Math.round(parseInt(m,10)*f.big)+"px"}):font;   /* callouts draw bigger */
     if(TH.ink){ctx.lineWidth=3.5;ctx.strokeText(f.txt,X,Y);ctx.fillStyle=f.col;ctx.fillText(f.txt,X,Y)}
     else{if(TH.grit)ctx.strokeText(f.txt,X,Y);ctx.fillStyle=f.col;ctx.fillText(f.txt,X,Y)}});
   ctx.globalAlpha=1;
@@ -1195,31 +1233,45 @@ var STATS=[["power","Power",0],["armor","Armor",0],["speed","Speed",0],["weight"
 var RARITY={common:{n:"Common",c:"#3fd6e8"},rare:{n:"Rare",c:"#e0702b"},epic:{n:"Epic",c:"#ff5a4a"}};
 var BUILD={},OWNED={};
 var cloneBuild=MetroSim.cloneBuild,statsOf=MetroSim.statsOf,cleanBuild=MetroSim.cleanBuild;
-function derive(b){return MetroSim.deriveStats(b)}
-/* The save is one campaign code in localStorage ("metr0niks.campaign"). The old banked/garage keys migrate into it on first load. */
-function myPlayer(){return Camp.player(BUILD,Object.keys(OWNED),banked,ARMOR)}
+function derive(b){return MetroSim.deriveStats(b,T,WEAR)}   /* worn parts give less (GDD-D18) */
+function isWeapon(id){return MetroSim.isWeapon(id)}
+/* The save is one campaign code in localStorage ("metr0niks.campaign"), v2 (TDD-D12). The old banked/garage keys migrate into it on first load. */
+function myPlayer(){return Camp.player(BUILD,Object.keys(OWNED),banked,{wear:WEAR,upg:UPG,best:BEST,records:RECORDS,callins:CALLINS})}
+function takeOwn(p){   /* this player's save fields; an older room server may leave some out */
+  banked=p.scrap;if(p.wear)WEAR=JSON.parse(JSON.stringify(p.wear));if(p.upg)UPG=JSON.parse(JSON.stringify(p.upg));
+  if(typeof p.best==="number")BEST=p.best;if(p.records)RECORDS=JSON.parse(JSON.stringify(p.records));if(p.callins)CALLINS=p.callins.slice();
+}
 function adoptCampaign(c,seat){
   var p=c.players[seat]||c.players[0];
-  BUILD=cloneBuild(p.build);OWNED={};p.owned.forEach(function(id){OWNED[id]=1});banked=p.scrap;ARMOR=p.armor;
-  CAMP.level=c.level;CAMP.seed=c.seed;
+  BUILD=cloneBuild(p.build);OWNED={};p.owned.forEach(function(id){OWNED[id]=1});takeOwn(p);
+  CAMP.level=c.level;CAMP.seed=c.seed;if(typeof c.typed==="boolean")CAMP.typed=c.typed;
 }
 /* the whole campaign as this client knows it: in a room both seats, otherwise just this player */
 function curCampaign(){
   var ps=[myPlayer()];
   if(Net.online&&Net.camp){ps=Net.camp.players.map(function(p){return JSON.parse(JSON.stringify(p))});ps[Net.idx]=myPlayer()}
-  return {v:1,seed:CAMP.seed,level:CAMP.level,players:ps};
+  return {v:2,seed:CAMP.seed,typed:CAMP.typed,level:CAMP.level,live:false,players:ps};
 }
-function saveCampaign(){
-  try{localStorage.setItem("metr0niks.campaign",Camp.encode({v:1,seed:CAMP.seed,level:CAMP.level,players:[myPlayer()]}))}catch(e){}
+function ownCampaign(live){return {v:2,seed:CAMP.seed,typed:CAMP.typed,level:CAMP.level,live:!!live,players:[myPlayer()]}}
+/* the guest seat of a room plays the host's campaign (GDD-D31): its own level and seed stay as saved */
+function guestSeat(){return Net.on&&(Net.online?Net.idx===1:Net.guest)}
+function storedCampaign(){var raw=null;try{raw=localStorage.getItem("metr0niks.campaign")}catch(e){}return raw?Camp.decode(raw):null}
+/* Write points: extract, death, match start (live = the in-match mark, TDD-D8), every purchase, repair and upgrade. */
+function saveCampaign(live){
+  var c=ownCampaign(live),o=guestSeat()?storedCampaign():null;
+  if(o){c.seed=o.seed;c.typed=o.typed;c.level=o.level;c.live=o.live}
+  try{localStorage.setItem("metr0niks.campaign",Camp.encode(c))}catch(e){}
 }
-function newCampaign(){CAMP.level=1;ARMOR=null;saveCampaign()}   /* parts and scrap stay: only the level starts over */
+/* Match start: the in-match mark and the level reached. A co-op guest leaving loses only its match scrap, so it never marks. */
+function markLive(){if(guestSeat())return;RECORDS=Camp.begin(ownCampaign()).players[0].records;saveCampaign(true)}
+function newCampaign(){adoptCampaign(Camp.restart(ownCampaign(),newSeed()),0);saveCampaign()}   /* parts, upgrades and scrap stay: the climb starts over */
 function hasProgress(){return CAMP.level>1}
 function loadGarage(){
-  var k,saved=null,raw=null,c=null;BUILD={};OWNED={};banked=0;ARMOR=null;CAMP.level=1;
+  var k,saved=null,c=null;BUILD={};OWNED={};banked=0;WEAR={};UPG={};BEST=0;RECORDS=noRecords();CALLINS=[null,null];CAMP.level=1;CAMP.seed=newSeed();CAMP.typed=false;
   for(k in STARTER){BUILD[k]=STARTER[k];if(STARTER[k])OWNED[STARTER[k]]=1}
-  try{raw=localStorage.getItem("metr0niks.campaign")}catch(e){}
-  c=raw?Camp.decode(raw):null;
-  if(c){adoptCampaign(c,0);return}
+  c=storedCampaign();
+  if(c){if(c.live)c=Camp.restart(c,newSeed());   /* still marked in a match: the game was left mid-match, which is a death */
+    adoptCampaign(c,0);saveCampaign();return}
   try{banked=parseInt(localStorage.getItem("metr0niks.banked"),10)||0}catch(e){}
   try{saved=JSON.parse(localStorage.getItem("metr0niks.garage"))}catch(e){}
   if(!saved)return;
@@ -1274,7 +1326,7 @@ function drawIcon(c,id,col,lw){
 
 var G={slot:"armR",sel:"minigun",pb:null,msg:"",msgT:0,confirm:false},gEl={},gRows=[],gMods=[],gTabs=[],gTime=0,gSp=[];
 function garageInit(){
-  var ids=["garage","gStage","gTabs","gRows","gMods","gThumbs","gStatus","gbName","gDesc","gEquip","gScrap","gReset","gDrop","gArc","gNum","gRead","gMode","gCoop","gRepair","gArmor","gCode","gCopy","gPartner"];
+  var ids=["garage","gStage","gTabs","gRows","gMods","gThumbs","gStatus","gbName","gDesc","gEquip","gScrap","gReset","gDrop","gArc","gNum","gRead","gMode","gCoop","gRepair","gArmor","gCode","gCopy","gPartner","gUpg","gPlan","gSeedRow","gSeed","gSeedNew"];
   ids.forEach(function(i){gEl[i]=$(i)});
   STATS.forEach(function(st){
     var r=document.createElement("div");r.className="sr";
@@ -1291,6 +1343,10 @@ function garageInit(){
   nx.addEventListener("click",function(){pickSlot(SLOTS[(slotIndex(G.slot)+1)%SLOTS.length][0])});gEl.gTabs.appendChild(nx);
   gEl.gEquip.addEventListener("click",function(){garageEquip()});
   gEl.gRepair.addEventListener("click",function(){garageRepair()});
+  gEl.gUpg.addEventListener("click",function(){garageUpgrade()});
+  gEl.gSeed.addEventListener("change",function(){setSeed(gEl.gSeed.value)});
+  gEl.gSeed.addEventListener("keydown",function(e){if(e.code==="Enter"){e.preventDefault();setSeed(gEl.gSeed.value);gEl.gSeed.blur()}});
+  gEl.gSeedNew.addEventListener("click",function(){CAMP.seed=newSeed();CAMP.typed=false;saveCampaign();refreshGarage()});
   gEl.gCopy.addEventListener("click",function(){copyCode(gEl.gCode,gEl.gCopy)});
   gEl.gDrop.addEventListener("click",coopDrop);
   gEl.gReset.addEventListener("click",resetSave);
@@ -1307,14 +1363,32 @@ function garageEquip(){
     BUILD[G.slot]=id}
   saveGarage();G.msg="Upgrade complete\n"+(id==="none"?"Slot cleared":PART[id].name+" fitted");G.msgT=3;refreshGarage();return true;
 }
-function maxArmor(){return derive(BUILD).maxHp}
-function curArmor(){var m=maxArmor();return ARMOR===null?m:Math.min(ARMOR,m)}
-/* Repair: T.repairCost armor per scrap; with too little scrap it repairs what the wallet allows. */
-function repairNeed(){return Math.max(0,Math.min(banked,Math.ceil((maxArmor()-curArmor())/T.repairCost-1e-9)))}
+function maxArmor(){return derive(BUILD).maxHp}   /* every level starts at full armor */
+/* Repair (GDD-D28): worn fitted parts in slot order, skipping what the banked scrap can't cover */
 function garageRepair(){
-  var n=repairNeed();if(n<=0)return false;
-  var m=maxArmor(),c=curArmor()+n*T.repairCost;banked-=n;ARMOR=c>=m?null:c;
-  saveCampaign();G.msg="Repaired for "+n+" scrap";G.msgT=3;refreshGarage();return true;
+  var c=ownCampaign(),r=Camp.repairAll(c,0);if(!r.fixed.length)return false;
+  takeOwn(c.players[0]);saveCampaign();
+  G.msg="Repaired "+r.fixed.length+" part"+(r.fixed.length>1?"s":"")+" for "+r.spent+" scrap"+(r.skipped.length?"\n"+r.skipped.length+" skipped: not enough scrap":"");G.msgT=3;refreshGarage();return r;
+}
+/* Weapon upgrade (GDD-D23): the selected owned weapon, one Mk at a time */
+function garageUpgrade(){
+  var id=G.sel,c=ownCampaign(),pr=Camp.upgrade(c,0,id);if(pr===false)return false;
+  takeOwn(c.players[0]);saveCampaign();G.msg="Upgrade complete\n"+PART[id].name+" Mk "+MK[UPG[id]];G.msgT=3;refreshGarage();return pr;
+}
+/* The seed box at level 1 (GDD-D49): a typed seed is used for this climb only */
+function setSeed(v){
+  var n=Number(String(v).trim());
+  if(CAMP.level===1&&n===Math.floor(n)&&n>=1&&n<=Camp.SEED_MAX&&n!==CAMP.seed){CAMP.seed=n;CAMP.typed=true;saveCampaign()}
+  refreshGarage();
+}
+function wearTxt(id){var w=WEAR[id];return w>0?"wear "+Math.round(w*100)+"%":""}
+function mkTxt(id){return isWeapon(id)?"Mk "+MK[UPG[id]|0]:""}
+/* the next level from the climb plan (TDD-D10): zone, condition, contract, bosses */
+function planTxt(){
+  if(guestSeat())return "Level "+CAMP.level+": the host's climb";
+  var e=curPlan(),cd=COND[e.condition],ct=CONT[e.contract];
+  return "Level "+CAMP.level+" of "+T.level.max+" · "+e.zone+"\nCondition: "+cd.name+": "+cd.desc+"\nContract: "+ct.name+": "+ct.desc+
+    "\nBosses: wave 3 "+BOSS[e.bosses[0]].name+", wave 5 "+BOSS[e.bosses[1]].name;
 }
 function copyCode(inp,btn){
   var done=function(){var t=btn.textContent;btn.textContent="Copied";setTimeout(function(){btn.textContent=t==="Copied"?"Copy":t},1200)};
@@ -1344,7 +1418,7 @@ function refreshGarage(){
   SLOTS.forEach(function(sl,i){
     var p=PART[BUILD[sl[0]]],M=gMods[i],r=p?RARITY[p.rarity]:null;
     M.el.classList.toggle("on",sl[0]===G.slot);M.b.textContent=sl[1]+(r?" · "+r.n:"");M.b.style.color=r?(TH.ui.rar&&TH.ui.rar[p.rarity]||r.c):"var(--muted)";
-    M.s.textContent=p?p.name:"Empty";drawIcon(M.c,p&&p.id,r?(TH.ui.rar&&TH.ui.rar[p.rarity]||r.c):TH.ui.empty,1.6);
+    M.s.textContent=p?[p.name,mkTxt(p.id),wearTxt(p.id)].filter(Boolean).join(" · "):"Empty";drawIcon(M.c,p&&p.id,r?(TH.ui.rar&&TH.ui.rar[p.rarity]||r.c):TH.ui.empty,1.6);
     gTabs[i].el.classList.toggle("on",sl[0]===G.slot);drawIcon(gTabs[i].c,p&&p.id,sl[0]===G.slot?TH.ui.on:TH.ui.idle,1.8);
   });
   var list=PARTS.filter(function(p){return p.slot===G.slot}).map(function(p){return p.id});
@@ -1353,7 +1427,7 @@ function refreshGarage(){
   list.forEach(function(id){
     var p=PART[id],on=id===G.sel,b=document.createElement("button"),c=document.createElement("canvas"),s=document.createElement("span");
     b.type="button";b.className="gth"+(on?" on":"");c.width=240;c.height=160;
-    s.textContent=(p?p.name:"Empty")+"\n"+(id===cur?"equipped":!p||OWNED[id]?"owned":p.cost+" scrap");s.style.whiteSpace="pre-line";
+    s.textContent=(p?p.name:"Empty")+"\n"+(id===cur?"equipped":!p||OWNED[id]?"owned":p.cost+" scrap")+(p&&OWNED[id]&&isWeapon(id)?" · "+mkTxt(id):"");s.style.whiteSpace="pre-line";
     b.appendChild(c);b.appendChild(s);b.addEventListener("click",function(){G.sel=id;G.msg="";refreshGarage()});gEl.gThumbs.appendChild(b);
     drawIcon(c,id,on?TH.ui.sel:TH.ui.idle,3);
   });
@@ -1366,9 +1440,14 @@ function refreshGarage(){
   var pending=G.sel!==cur;
   gEl.gStatus.textContent=pending?"Upgrade in progress\nEquipping "+(sel?sel.name:"empty slot"):G.msgT>0?G.msg:"Build ready";gEl.gStatus.style.whiteSpace="pre-line";
   gEl.gMode.textContent="Level "+CAMP.level+" · Excursion";
-  var ma=maxArmor(),rn=repairNeed();
-  gEl.gArmor.textContent=Math.ceil(curArmor())+"/"+ma;
-  gEl.gRepair.textContent="Repair ("+rn+" scrap)";gEl.gRepair.disabled=rn<=0;
+  var rp=Camp.repairAll(ownCampaign(),0),ug=gEl.gUpg,lv=UPG[G.sel]|0,up=sel&&isWeapon(G.sel)?Camp.upgradePrice(G.sel,lv):null;
+  gEl.gArmor.textContent=maxArmor();
+  gEl.gRepair.textContent=rp.fixed.length?"Repair · "+rp.spent+" scrap":rp.skipped.length?"Repair: need scrap":"No wear";gEl.gRepair.disabled=!rp.fixed.length;
+  ug.hidden=!(sel&&isWeapon(G.sel));
+  ug.textContent=up===null?"Mk "+MK[lv]+" (max)":"Mk "+MK[lv+1]+" · "+up+" scrap";ug.disabled=up===null||!OWNED[G.sel]||banked<up;
+  gEl.gPlan.textContent="";var pt=planTxt().split("\n"),hb=document.createElement("b");hb.textContent=pt[0];gEl.gPlan.appendChild(hb);gEl.gPlan.appendChild(document.createTextNode("\n"+pt.slice(1).join("\n")));
+  gEl.gSeedRow.hidden=CAMP.level!==1||guestSeat();if(document.activeElement!==gEl.gSeed)gEl.gSeed.value=CAMP.seed;
+  gEl.gSeed.title=CAMP.typed?"Typed seed: kept for this climb":"Random seed";
   gEl.gCode.value=Camp.encode(curCampaign());
   refreshCoop();
 }
@@ -1436,6 +1515,7 @@ function buildHud(){
   var p=player,gun=GUN_NAME[p.gun]||"minigun",arm=ARM_NAME[p.pileKind]||"pile-bunker",ring="hold when the bar is full, release on the green ring",qn=p.q?SH_NAME[p.q]:"";
   hudEls.pl.textContent=arm.charAt(0).toUpperCase()+arm.slice(1);
   hudEls.keys.innerHTML="<b>WASD</b> drive · <b>Mouse</b> aim torso · <b>Left click</b> "+gun+" · <b>Right mouse</b> "+arm+": "+ring+" · "+(p.noDash?"<b>Treads</b>: no dash":"<b>Space</b> dash")+(p.q?" · <b>Q</b> "+qn:"")+" · <b>Esc</b> pause · Touch cyan drop pods before the bots do · Break two pillars in a row to drop the road";
+  var pn=sim&&sim.plan;$("planTxt").textContent=pn?COND[pn.condition].name+" · "+CONT[pn.contract].name:"-";
   hudEls.tdL.textContent=GUN_TIP[p.gun]||GUN_TIP.minigun;
   hudEls.tdR.textContent=ARM_TIP[p.pileKind]||ARM_TIP.pile;
   hudEls.shRow.hidden=!p.q;hudEls.tdQRow.hidden=!p.q;
@@ -1498,12 +1578,14 @@ Net.open=function(role,code,kind){
   if(Net.guest)Net.hello();
   refreshCoop();
 };
-Net.close=function(){Net.camp=null;Net.inGarage=false;if(Net.tr){Net.send({t:"bye"});Net.tr.close()}Net.tr=null;Net.on=false;Net.online=false;Net.waiting=false;Net.hosting=Net.guest=false;Net.live=false;clearInterval(Net.timer)};
+Net.close=function(){
+  if(guestSeat()){var o=storedCampaign();if(o){CAMP.level=o.level;CAMP.seed=o.seed;CAMP.typed=o.typed}}   /* back to this player's own campaign */
+  Net.camp=null;Net.inGarage=false;if(Net.tr){Net.send({t:"bye"});Net.tr.close()}Net.tr=null;Net.on=false;Net.online=false;Net.waiting=false;Net.hosting=Net.guest=false;Net.live=false;clearInterval(Net.timer)};
 Net.send=function(o){if(!Net.tr)return;o.from=Net.id;try{Net.tr.send(o)}catch(e){}};
-Net.hello=function(){Net.send({t:"hello",build:cloneBuild(BUILD)})};
+Net.hello=function(){Net.send({t:"hello",build:cloneBuild(BUILD),wear:WEAR,upg:UPG})};
 Net.beat=function(){   /* the guest keeps knocking until the host answers, and repeats a lost Ready */
   if(!Net.guest||Net.live||Net.online)return;
-  if(!Net.lobby)Net.hello();else if(Net.readySent)Net.send({t:"ready",build:cloneBuild(BUILD)});
+  if(!Net.lobby)Net.hello();else if(Net.readySent)Net.send({t:"ready",build:cloneBuild(BUILD),wear:WEAR,upg:UPG});
 };
 Net.recv=function(m){
   if(!m||typeof m!=="object"||m.from===Net.id)return;
@@ -1515,11 +1597,11 @@ Net.hostRecv=function(m){
   if(m.t==="hello"){
     if(m.from===Net.peer&&Net.live)return;               /* already in the run */
     if(Net.peer&&m.from!==Net.peer&&Net.live)return;     /* room is full */
-    Net.peer=m.from;Net.peerBuild=cleanBuild(m.build);Net.peerReady=false;
+    Net.peer=m.from;Net.peerBuild=cleanBuild(m.build);Net.peerReady=false;peerKit(m);
     Net.sendWelcome();refreshCoop();return;
   }
   if(m.from!==Net.peer)return;
-  if(m.t==="ready"){Net.peerBuild=cleanBuild(m.build);Net.peerReady=true;refreshCoop()}
+  if(m.t==="ready"){Net.peerBuild=cleanBuild(m.build);peerKit(m);Net.peerReady=true;refreshCoop()}
   else if(m.t==="in")Net.hostInput(m);
   else if(m.t==="bye"){
     Net.peer=null;Net.peerReady=false;Net.live=false;
@@ -1527,6 +1609,11 @@ Net.hostRecv=function(m){
     refreshCoop();
   }
 };
+/* the partner's wear and weapon levels go into its mech (sanitized: the sim clamps too) */
+function peerKit(m){
+  function pick(o,f){var r={};if(o&&typeof o==="object")for(var k in o)if(PART[k]&&typeof o[k]==="number"&&f(k,o[k]))r[k]=o[k];return r}
+  Net.peerWear=pick(m.wear,function(k,v){return v>=0&&v<=1});Net.peerUpg=pick(m.upg,function(k,v){return isWeapon(k)&&v===Math.floor(v)&&v>=0&&v<=2});
+}
 Net.hostInput=function(m){
   if(!players[1])return;
   var r=!!m.r;
@@ -1536,7 +1623,7 @@ Net.hostInput=function(m){
 Net.sendWelcome=function(){
   var inRun=state==="play",m={t:"welcome",to:Net.peer,idx:1,st:inRun?"play":"lobby",builds:[inRun?players[0].v:cloneBuild(BUILD),Net.peerBuild]};
   if(inRun){
-    if(!players[1])sim.applyBuild(1,Net.peerBuild);
+    if(!players[1])sim.applyBuild(1,Net.peerBuild,Net.peerWear||{},Net.peerUpg||{});
     m.builds=[players[0].v,players[1].v];m.wave=run.wave;
     var f=sim.snapshot(true);m.tick=f.tk;m.vox=b64(f.vox);m.owner=b64(new Uint8Array(f.owner.buffer));
     Net.acc=0;Net.peerReady=false;Net.live=true;
@@ -1561,8 +1648,11 @@ Net.guestRecv=function(m){
   if(m.t==="snap"){if(Net.live)Net.snap(m)}
   else if(m.t==="over"){
     if(!Net.live)return;
-    Net.live=false;if(m.got){banked+=m.got;saveBank()}
+    Net.live=false;
+    if(m.kind!=="dead"){   /* the guest banks only its own scrap, wear and records (GDD-D31) */
+      if(m.d&&typeof m.d==="object"){takeOwn(Camp.bank(ownCampaign(),0,m.d,Net.idx||1).players[0]);saveCampaign()}else if(m.got){banked+=m.got;saveBank()}}
     if(m.kind==="dead"){state="dead";setTimeout(function(){showOverlay("Mech destroyed",m.msg,"Garage")},900)}
+    else if(m.kind==="victory"){state="extracted";showOverlay("Victory",m.msg+" The host's campaign starts a new climb; yours stays where it was.","Garage")}
     else{state="extracted";showOverlay("Extracted",m.msg,"Garage")}
   }
   else if(m.t==="bye"){
@@ -1647,6 +1737,7 @@ function guestView(){
   clusters.forEach(function(c){var rb=m.cl.filter(function(r){return r[0]===c.id})[0],ra=ma.cl[c.id],r=rb||ra;
     if(!r)return;c.off=ra&&rb?lerp(ra[1],rb[1],u):r[1];c.creak=r[2];c.t=r[3];keep.push(c)});
   clusters=keep;
+  pools=(m.sl||[]).map(function(r){return {id:r[0],x0:r[1],y0:r[2],x1:r[3],y1:r[4],z:r[5],t:r[6],x:(r[1]+r[3])/2}});
   m.p.forEach(function(r){
     var q=players[r[0]];if(!q||q===player)return;var pr=ma.p[r[0]];
     q.x=pr?lerp(pr[1],r[1],u):r[1];q.y=pr?lerp(pr[2],r[2],u):r[2];q.z=0;q.leg=pr?lerpAng(pr[4],r[4],u):r[4];q.aim=pr?lerpAng(pr[5],r[5],u):r[5];q.step=pr?lerp(pr[22],r[22],u):r[22];
@@ -1702,14 +1793,14 @@ Net.onlineRecv=function(m){
       openGarage();refreshGarage();friendRender();break;
     case "level":CAMP.level=m.level;break;
     case "welcome":
-      Net.lobby=true;Net.peer=true;Net.idx=m.seat;CAMP.level=m.level||1;Net.enter(m);break;
+      Net.lobby=true;Net.peer=true;Net.idx=m.seat;CAMP.level=m.level||1;Net.enter(m);markLive();break;
     case "snap":if(Net.live)Net.snap(m);break;
     case "over":
       if(!Net.live)return;
       Net.live=false;
-      if(m.result==="extracted"){state="extracted";showToast("Level "+m.level+" cleared: to the garage","var(--good)");break}   /* the garage message follows */
+      if(m.result==="extracted"||m.result==="victory"){state="extracted";showToast(m.result==="victory"?"Victory: the sector is yours":"Level "+m.level+" cleared: to the garage","var(--good)");break}   /* the garage message follows */
       if(m.code)LASTCODE=m.code;
-      state="dead";deathScreen(m.msg,m.level||CAMP.level);
+      state="dead";var dl=campaignOver();deathScreen(m.msg,m.level||dl);
       Net.close();break;   /* the room is finished: the garage after this is single-player until a new room */
     case "error":leaveOnline(m.msg||"The server refused that");break;
   }
@@ -1755,7 +1846,7 @@ function friendInit(){
 
 /* ---- lobby UI ---- */
 function coopDrop(){
-  if(Net.guest){if(Net.readySent||!Net.lobby)return;Net.readySent=true;Net.send({t:"ready",build:cloneBuild(BUILD),owned:Object.keys(OWNED),scrap:banked,armor:ARMOR});refreshCoop();return}
+  if(Net.guest){if(Net.readySent||!Net.lobby)return;Net.readySent=true;Net.send({t:"ready",build:cloneBuild(BUILD),owned:Object.keys(OWNED),scrap:banked,wear:WEAR,upg:UPG});refreshCoop();return}
   if(Net.hosting&&Net.peer&&!Net.peerReady)return;   /* waiting for the partner */
   start();
 }
@@ -1828,18 +1919,23 @@ function menuButtons(menu,btn){
 function showOverlay(title,text,btn,code){
   overlay.querySelector("h1").innerHTML=title==="Metr0niks"?"Metr<span>0</span>niks":title;
   $("ovCodeRow").hidden=!code;$("ovCode").value=code||"";
-  $("ovText").textContent=text;menuButtons(title==="Metr0niks",btn);hudEls.bank.textContent="Banked: "+banked;coopRow.hidden=!LOCAL||title!=="Metr0niks"||Net.on;overlay.hidden=false;for(var k in keys)keys[k]=false;mouse.down=false;mouse.rdown=false;mouse.rpress=false;if(player)player.ring=-1;
+  $("ovText").textContent=text;menuButtons(title==="Metr0niks",btn);hudEls.bank.textContent="Banked: "+banked;showRecords(title==="Metr0niks");coopRow.hidden=!LOCAL||title!=="Metr0niks"||Net.on;overlay.hidden=false;for(var k in keys)keys[k]=false;mouse.down=false;mouse.rdown=false;mouse.rpress=false;if(player)player.ring=-1;
   if(state==="play")state="paused";goBtn.focus();friendRender();
 }
+/* Title records (GDD-D45) */
+function showRecords(on){var R=RECORDS,el=$("recTxt");el.hidden=!on;
+  el.textContent="Records: highest level "+R.level+" · best combo x"+Math.max(1,R.combo)+" · spans dropped "+R.spans+" · contracts "+R.contracts+" · Overtimes cleared "+R.overtimes}
 function start(){
-  if(state==="menu"||state==="garage"||state==="dead"||state==="extracted")reset();
+  var fresh=state==="menu"||state==="garage"||state==="dead"||state==="extracted";
+  if(fresh)reset();
   state="play";overlay.hidden=true;gEl.garage.hidden=true;document.body.classList.remove("ing");acc=0;cv.focus();
+  if(fresh)markLive();
   if(Net.hosting&&Net.peer)Net.sendWelcome();
 }
 /* Menu, death and extraction lead to the garage; only the garage (or Resume) starts a run. */
 goBtn.addEventListener("click",function(){
   if(state==="menu"){if(hasProgress())newCampaign();openGarage()}
-  else if(state==="dead"||state==="extracted"){if(OVER.newCamp){OVER.newCamp=false;newCampaign()}openGarage()}
+  else if(state==="dead"||state==="extracted")openGarage();   /* a death or victory already started the next climb */
   else start();
 });
 contBtn.addEventListener("click",function(){openGarage()});
@@ -1900,7 +1996,7 @@ function perfTick(dt){
   if(avg>.024){if(dpr>1.01){dprCap=Math.max(1,dpr-.25);resize()}else lowFx=true}
 }
 
-garageInit();coopInit();friendInit();hudEls.bank.textContent="Banked: "+banked;menuButtons(true,"Drop in");
+garageInit();coopInit();friendInit();hudEls.bank.textContent="Banked: "+banked;showRecords(true);menuButtons(true,"Drop in");
 buildThemes();
 (function(){var q=/[?&]theme=([a-z]+)/.exec(location.search),t=null;try{t=localStorage.getItem("metr0niks.theme")}catch(e){}
   setTheme(q&&THEMES[q[1]]?q[1]:t,!!(q&&THEMES[q[1]]))})();
@@ -1909,12 +2005,13 @@ reset();
 requestAnimationFrame(frame);
 /* test hook: state is proxied to the current sim */
 window.__m={T:T,net:Net,get sim(){return sim},get players(){return players},voxSum:voxSum,setTheme:function(id){setTheme(id,false)},theme:function(){return themeId},
-  get level(){return CAMP.level},get armor(){return ARMOR},get lastCode(){return LASTCODE},campaign:function(){return curCampaign()},
-  garage:{repair:garageRepair,armor:curArmor,maxArmor:maxArmor,setArmor:function(a){ARMOR=a;saveCampaign();refreshGarage()},select:garageSelect,equip:garageEquip,open:openGarage,preview:function(){var q=pvStats();return {cur:q.cur,pv:q.pv,d:q.d,sel:G.sel,slot:G.slot}},build:function(){return cloneBuild(BUILD)},owned:function(){return Object.keys(OWNED)},derive:derive,setBanked:function(n){banked=n;saveBank();refreshGarage()},
+  get level(){return CAMP.level},get seed(){return CAMP.seed},get wear(){return WEAR},get upg(){return UPG},get records(){return RECORDS},plan:function(){return curPlan()},
+  get lastCode(){return LASTCODE},campaign:function(){return curCampaign()},
+  garage:{repair:garageRepair,upgrade:garageUpgrade,setSeed:setSeed,maxArmor:maxArmor,setWear:function(w){WEAR=w;saveCampaign();refreshGarage()},select:garageSelect,equip:garageEquip,open:openGarage,preview:function(){var q=pvStats();return {cur:q.cur,pv:q.pv,d:q.d,sel:G.sel,slot:G.slot}},build:function(){return cloneBuild(BUILD)},owned:function(){return Object.keys(OWNED)},derive:derive,setBanked:function(n){banked=n;saveBank();refreshGarage()},
     icon:function(c,id,col,lw){drawIcon(c,id,col||TH.ui.idle,lw||2)},ownAll:function(){PARTS.forEach(function(p){OWNED[p.id]=1});refreshGarage()},   /* the garage lab (garage-lab.html): icon sheet, every part unlocked */
     reset:function(){G.confirm=true;resetSave()}},
   get shots(){return shots},get pods(){return pods},get run(){return run},get banked(){return banked},get scraps(){return scraps},get chunks(){return sim.world.chunks},get chk(){return sim.chk},
-  get player(){return player},get bots(){return bots},get state(){return state},get floats(){return floats},get pickups(){return scraps.length},
+  get player(){return player},get bots(){return bots},get state(){return state},get floats(){return floats},get pools(){return pools},get pickups(){return scraps.length},
   get kills(){return Net.guest&&Net.live?kills:sim.kills},get scrap(){return Net.guest&&Net.live?scrap:sim.scrap},keys:keys,mouse:mouse,start:start,mesh:function(){return mesh.length},
   spawnPod:function(){return sim.spawnPod.apply(sim,arguments)},spawnLoader:function(x,y){return sim.spawnLoader(x,y)},perches:function(){return sim.perches()},los3:function(){return sim.los3.apply(sim,arguments)},
   blocked:blockedCell,damage:function(e,d,x,y,z){sim.damage(e,d,x,y,z)},setVox:function(x,y,z,m){sim.setVox(x,y,z,m)},hit:function(x,y,z,d){sim.hitVoxel(x,y,z,d)},killAll:function(){sim.killAll()},dbg:function(){return sim.dbg()},
