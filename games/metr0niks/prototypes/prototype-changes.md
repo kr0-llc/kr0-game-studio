@@ -117,7 +117,7 @@ GDD-D28 changed GDD text to match the prototype (collapse scrap, timing grades, 
 
 These GDD statements already match the prototype: the controls table, the dimetric camera and cutaway fade, the 35% vignette, the ATB and ring values, heat rules (every grade costs the same heat, an overheat during a ring adds none, the flash-vent ends a lockout, Overclock doubles every fill), the 21 parts and prices, two pod types and the pod rules, the wave table, level scaling, zones and drop-in timing for levels 2 and 3, death resetting the campaign to level 1, and co-op partner-down behaviour.
 
-## 18. Level design: three districts with landmarks (done Oct 28, 2026)
+## 18. Level design: five sectors with landmarks (done Oct 28, 2026)
 
-kr0 picked concept A + B landmarks ([level design](../level-design.md)). Done in `simulations/sim.js` and the voxel prototype: the new `MAP`, materials, landmark builders and district hues in all three art styles. `node simulations/map-check.js` passes. Still to do if kr0 accepts GDD-D41: the slag spill pool where a vat lands. Today vats fall like any other collapse.
+kr0 picked concept A + B landmarks ([level design](../level-design.md)). Done in `simulations/sim.js` and the voxel prototype: the new `MAP` (144 m long, five zones, the deck ending over the Terminus Yard arena), materials, landmark builders and district hues in all three art styles. `node simulations/map-check.js` passes. Still to do if kr0 accepts GDD-D41: the slag spill pool where a vat lands. Today vats fall like any other collapse.
 

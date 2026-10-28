@@ -106,11 +106,12 @@ var MAT={
   14:{name:"canvas",col:null,hp:3},                   /* market awnings, coloured by their structure */
   15:{name:"tank",col:[92,104,120],hp:12},            /* the Underpass water tower */
   16:{name:"iron",col:[78,70,66],hp:14},              /* slag vats and chimneys */
-  17:{name:"slag",col:[255,120,40],hp:6,glow:1}       /* molten top of a slag vat */
+  17:{name:"slag",col:[255,120,40],hp:6,glow:1},      /* molten top of a slag vat */
+  18:{name:"neon",col:[255,79,163],hp:4,glow:1}       /* Glass Quarter windows: pink neon */
 };
-var WINDOW={6:1,12:1,13:1};   /* window materials: the loader plows them, the renderer lights them */
+var WINDOW={6:1,12:1,13:1,18:1};   /* window materials: the loader plows them, the renderer lights them */
 
-var W=80,D=32,H=8,N=W*D*H;   /* three zones of streets along one overpass; MAP.zones says where each begins */
+var W=144,D=32,H=8,N=W*D*H;   /* five zones of streets along one overpass; MAP.zones says where each begins */
 var SHOT_KIND={bullet:0,shell:1,orb:2,plasma:3,rail:4,mortar:5};   /* snapshot codes */
 var NB6=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
 var N8=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
@@ -128,8 +129,10 @@ var MAP={
   /* Sector 4 is one long overpass. The streets under it come in zones: level 1 plays in the first, each level after
      opens the next (its gate wall falls during the drop-in), until the whole sector is one battlefield.
      win: the window material of the zone's buildings; ground: a tint for the street under it. */
-  zones:[{name:"Underpass",x0:0,x1:31,win:6,ground:[1,1,1]},{name:"Freight Yard",x0:32,x1:55,win:12,ground:[1.22,1.2,1.12]},{name:"Smelter Row",x0:56,x1:79,win:13,ground:[1.12,.9,.84]}],
-  overpass:{y0:13,y1:18,z:5,pillarsX:[3,11,19,27,35,43,51,59,67,75]},
+  zones:[{name:"Underpass",x0:0,x1:31,win:6,ground:[1,1,1]},{name:"Freight Yard",x0:32,x1:55,win:12,ground:[1.22,1.2,1.12]},{name:"Smelter Row",x0:56,x1:79,win:13,ground:[1.12,.9,.84]},
+    {name:"Glass Quarter",x0:80,x1:111,win:18,ground:[.94,.98,1.12]},{name:"Terminus Yard",x0:112,x1:143,win:12,ground:[1.16,1.08,.96],arena:{x:128,y:15.5,r:8}}],
+  /* the deck ends at x1, over the Terminus Yard's entrance: the last zone is open sky, room for a big fight */
+  overpass:{y0:13,y1:18,z:5,x1:111,pillarsX:[3,11,19,27,35,43,51,59,67,75,83,91,99,107]},
   blocks:[ /* x,y,w,d,h,hue (MAP.hues) */
     /* Underpass, shanty market: shacks of 2 to 4 m on 2 m alleys; the plaza in the middle is the water tower's */
     [2,1,3,3,2,0],[7,1,2,3,3,1],[2,6,2,2,3,3],[6,6,3,2,2,2],
@@ -141,17 +144,30 @@ var MAP={
     /* Smelter Row, furnace canyons: one long smelter hall north, tall halls on 3 m canyons south */
     [57,1,21,4,6,10],[61,10,3,2,2,11],[71,10,3,2,2,9],
     [57,20,5,4,5,11],[64,20,6,4,7,10],[72,20,6,3,4,9],
-    [57,26,4,4,3,9],[63,27,5,3,4,11],[70,26,3,4,6,10],[75,26,3,4,3,11]
+    [57,26,4,4,3,9],[63,27,5,3,4,11],[70,26,3,4,6,10],[75,26,3,4,3,11],
+    /* Glass Quarter, financial district: glass towers of 4 to 7 m in a grid of 2 to 3 m streets, with a plaza in
+       the north half under the billboard */
+    [82,1,5,5,7,14],[90,1,4,4,6,15],[97,1,6,4,7,16],[105,1,5,5,6,14],[82,8,3,3,4,17],[103,8,4,3,4,15],
+    [82,20,4,4,6,16],[88,21,3,3,5,17],[93,20,5,4,7,14],[100,20,3,3,4,15],[105,20,5,5,6,16],
+    [82,26,6,4,4,15],[91,26,4,4,6,14],[97,26,3,4,3,17],[102,27,8,3,5,16],
+    /* Terminus Yard, the arena: four pylons in the corners and two bunkers mid-wall around an open floor */
+    [114,2,3,3,6,18],[139,2,3,3,6,18],[114,27,3,3,6,18],[139,27,3,3,6,18],[126,1,4,2,3,19],[126,29,4,2,3,19]
   ],
   barriers:[ /* x,y,w,d: 1 m high; the Underpass ones are market stalls */
     [6,14,1,1],[8,17,1,1],[14,14,2,1],[16,17,1,1],[22,14,1,1],[24,17,2,1],[29,14,1,1],[10,3,1,1],[18,3,1,1],[10,9,1,1],
     [38,14,1,2],[47,17,2,1],[54,14,1,2],
-    [62,14,1,2],[71,17,2,1],[78,13,1,1]],
+    [62,14,1,2],[71,17,2,1],[78,13,1,1],
+    [89,7,2,1],[99,11,1,1],[94,12,2,1],[86,14,1,2],[95,17,2,1],[103,14,1,2],[110,16,1,1],
+    [118,6,2,1],[136,6,2,1],[118,25,2,1],[136,25,2,1]],
   containers:[ /* x,y,w,d,colour,stack: a stack of 2 or 3 falls when its bottom box is shot out or plowed */
     [4,29,2,1,[176,74,44],1],
     [35,8,4,1,[176,74,44],2],[41,8,4,1,[52,108,132],3],[47,8,4,1,[106,128,64],2],[52,9,2,1,[150,62,40],1],[35,10,2,1,[52,108,132],1],[45,10,2,1,[150,62,40],2],
     [39,21,3,1,[106,128,64],2],[48,21,3,1,[176,74,44],3],[39,26,3,1,[150,62,40],3],[48,26,3,1,[52,108,132],2],
-    [34,21,2,1,[176,74,44],1],[53,22,1,2,[106,128,64],2],[34,29,3,1,[52,108,132],1]],
+    [34,21,2,1,[176,74,44],1],[53,22,1,2,[106,128,64],2],[34,29,3,1,[52,108,132],1],
+    [117,9,2,1,[176,74,44],2],[137,9,2,1,[52,108,132],1],[117,22,2,1,[106,128,64],1],[137,22,2,1,[150,62,40],2]],
+  rubble:[ /* x,y,w,d,h: scrap heaps, block walking and can be shot away */
+    [116,14,2,3,1],[140,14,2,3,2],[128,5,2,1,1],[128,26,2,1,1]],
+  billboard:{legs:[[92,9],[97,9]],legH:4,sign:[91,9,8,2,3]},   /* Glass Quarter: a neon sign on two legs over the plaza */
   awnings:[ /* x,y,w,d,z,colour: canvas strung between shack walls; you walk under it */
     [5,2,2,2,2,[196,84,60]],[23,2,2,2,2,[214,170,70]],[27,6,2,2,2,[52,140,136]],
     [9,21,2,2,2,[214,170,70]],[19,21,2,2,2,[52,140,136]],[4,26,2,2,2,[196,84,60]],[23,24,2,2,2,[214,170,70]]],
@@ -161,10 +177,12 @@ var MAP={
   gallery:{x:59,y:6,w:16,d:3,z:3,legs:[[60,7],[66,7],[72,7]],vats:[[61,6],[67,7],[71,6]]},   /* Smelter Row: slag vats on a gallery */
   vats:[[68,11],[62,24],[73,24]],   /* standalone slag vats on a leg frame */
   chimneys:[[58,10,8],[77,10,8],[70,22,8]],
-  hues:[ /* 0-5 Underpass brick and ochre, 6-8 Freight Yard sheds, 9-13 Smelter Row iron and soot */
+  hues:[ /* 0-5 Underpass brick and ochre, 6-8 Freight Yard sheds, 9-13 Smelter Row iron and soot, 14-17 Glass Quarter glass and stone, 18-19 Terminus Yard */
     [150,92,64],[172,150,116],[96,108,124],[140,70,56],[120,104,88],[112,122,112],
     [128,126,120],[104,116,108],[136,112,92],
-    [70,66,64],[88,76,68],[118,66,50],[104,100,96],[96,60,48]]
+    [70,66,64],[88,76,68],[118,66,50],[104,100,96],[96,60,48],
+    [70,96,120],[52,60,72],[140,146,152],[196,192,182],
+    [150,110,50],[96,92,88]]
 };
 
 /* ===== Garage data: build model and derived stats ===== */
@@ -319,7 +337,7 @@ function create(opts){
     /* The deck is cast in spans with expansion joints over the pillars: each pillar holds the two spans that
        meet on it, so losing one pillar leaves both spans cantilevered and losing two neighbours drops the span. */
     var o=MAP.overpass,cuts=[0];
-    o.pillarsX.forEach(function(x){cuts.push(x+1)});cuts.push(W);
+    o.pillarsX.forEach(function(x){cuts.push(x+1)});cuts.push(o.x1!==undefined?o.x1+1:W);
     for(var k=0;k<cuts.length-1;k++){
       var sp=structure("deck",null);sp.span=true;var w=cuts[k+1]-cuts[k];
       fill(cuts[k],o.y0,o.z,w,o.y1-o.y0+1,1,3,sp);
@@ -359,6 +377,9 @@ function create(opts){
     G.vats.forEach(function(v){var s=structure("vat",null);fill(v[0],v[1],G.z+1,2,2,1,16,s);fill(v[0],v[1],G.z+2,2,2,1,17,s)});
     /* standalone vats: a 2x2 leg frame at street level, the vat on top; shoot the frame and the vat drops */
     MAP.vats.forEach(function(v){fill(v[0],v[1],0,2,2,1,11,structure("leg",null));var s=structure("vat",null);fill(v[0],v[1],1,2,2,1,16,s);fill(v[0],v[1],2,2,2,1,17,s)});
+    (MAP.rubble||[]).forEach(function(r){fill(r[0],r[1],0,r[2],r[3],r[4],10,structure("rubble",null))});
+    var BB=MAP.billboard;if(BB){BB.legs.forEach(function(l){fill(l[0],l[1],0,1,1,BB.legH,11,structure("leg",null))});
+      var sg=structure("sign",[255,79,163]),S=BB.sign;fill(S[0],S[1],BB.legH,S[2],S[3],S[4],18,sg);fill(S[0],S[1],BB.legH,S[2],S[3],1,16,sg)}
     MAP.chimneys.forEach(function(c){var s=structure("chimney",null);fill(c[0],c[1],0,1,1,c[2],16,s)});
     /* Gate walls seal every zone that is not open yet: a blast shutter across the street, under the deck. */
     for(var k=zone.open;k<ZS.length;k++){var g=structure("gate",null);g.zone=k;gates[k]=g;fill(ZS[k].x0,1,0,1,D-2,T.zone.gateH,9,g)}

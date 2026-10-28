@@ -35,7 +35,7 @@ p{margin:0;max-width:68ch}
 .seg button[aria-pressed="true"]{background:var(--panel2);color:var(--fg)}
 .canvasbox{background:#0a0d12;border:1px solid var(--line);border-radius:4px;overflow-x:auto}
 canvas{display:block;width:100%;min-width:640px;height:auto}
-.zones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.zones{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
 .zone{background:var(--panel);border:1px solid var(--line2);border-radius:4px;padding:16px;display:grid;gap:10px;align-content:start;min-width:0}
 .zone .zn{font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
 .zone .lv{color:var(--hazard)}
@@ -74,14 +74,14 @@ code{font:13px var(--mono);color:var(--fg)}
 <div class="wrap">
   <header>
     <div class="eyebrow">Metr<span class="r0">0</span>niks · voxel prototype · Overpass Sector 4</div>
-    <h1>Three districts, one landmark each</h1>
+    <h1>Five sectors, one landmark each</h1>
     <p class="lede">Today the Underpass, Freight Yard and Smelter Row are the same recipe: rows of 2 to 5 m blocks north and south of the deck, six brick hues cycled in order, a barrier and a container every few metres. There were three concepts; kr0 picked A with one landmark from B in each zone. The first tab shows that map as built in <code>sim.js</code>; the others are the concepts as proposed.</p>
   </header>
 
   <section class="fixed" aria-label="Kept in every concept">
-    <div><b>Grid</b>80 × 32 × 8 m, the same as <code>sim.js</code>. No new map size.</div>
-    <div><b>Overpass</b>Deck at 5 m on the ten pillars at x = 3 to 75. Break two in a row and the road falls.</div>
-    <div><b>Zones</b>Underpass x 0–31 (level 1), Freight Yard x 32–55 (level 2), Smelter Row x 56–79 (level 3+).</div>
+    <div><b>Grid</b>The concepts use the old 80 × 32 × 8 m grid. The built map is 144 m long, with five sectors.</div>
+    <div><b>Overpass</b>Deck at 5 m on fourteen pillars, ending where the arena begins. Break two in a row and the road falls.</div>
+    <div><b>Sectors</b>Underpass (level 1), Freight Yard (2), Smelter Row (3), Glass Quarter (4), Terminus Yard arena (5 and up).</div>
     <div><b>Props</b>Placed to match the GDD round in progress: deck spans, container stacks and a gantry crane, slag vats.</div>
   </section>
 
@@ -138,9 +138,11 @@ code{font:13px var(--mono);color:var(--fg)}
     M:{zones:[
       {lv:"Level 1",look:"Shacks of 2 to 4 m on 2 m alleys with awnings, and an open plaza at the drop-in point with a water tower on four legs.",play:"The first fight in the plaza, then alleys. Pillars 11 and 19 frame the plaza, so the first span drop covers it.",enemy:"Patrol bots in the alleys; loaders bog down in the stalls.",props:"Water tower (break all four legs), deck spans."},
       {lv:"Level 2",look:"A 12 m warehouse and sheds on the north wall, 13 container stacks of 1 to 3, and a gantry crane over the south yard with a box on its hook.",play:"Long lanes and open ground. Shoot out a stack's bottom box and the boxes above fall; drop all four crane legs and the frame falls across the yard.",enemy:"Loaders get their longest charges; few roofs, so the sniper is easy to spot.",props:"Container stacks, gantry crane."},
-      {lv:"Level 3+",look:"A 21 m smelter hall, an iron gallery at 3 m carrying three slag vats, tall halls of up to 7 m on 3 m canyons, 8 m chimneys.",play:"Vertical, with the sniper above you. Walk under the gallery and drop it on whatever follows you; vats at the canyon crossings drop when their frames go.",enemy:"The sniper and the wave-5 boss own the roofs.",props:"Slag gallery, street vats, chimneys."}],
+      {lv:"Level 3",look:"A 21 m smelter hall, an iron gallery at 3 m carrying three slag vats, tall halls of up to 7 m on 3 m canyons, 8 m chimneys.",play:"Vertical, with the sniper above you. Walk under the gallery and drop it on whatever follows you; vats at the canyon crossings drop when their frames go.",enemy:"The sniper and the wave-5 boss own the roofs.",props:"Slag gallery, street vats, chimneys."},
+      {lv:"Level 4",look:"Glass towers of 4 to 7 m with pink neon windows, on a grid of 2 to 3 m streets, and a plaza under a neon billboard on two legs.",play:"Tall, glassy and fast: windows shatter, and the towers give the sniper roofs on every corner. Drop the billboard on the plaza.",enemy:"The sniper has the most perches here; bots work the street grid.",props:"Billboard (break both legs), deck spans."},
+      {lv:"Level 5+",look:"Where the deck ends: open sky over a 30 × 30 m yard with four 6 m pylons in the corners, two bunkers, scrap heaps and short container stacks on the edge of a painted ring.",play:"The finale. The middle is an 18 m clear floor with room to circle a big boss; cover sits only at the rim.",enemy:"Built for a big boss (not in the GDD yet). Today the wave-5 sniper perches on the pylons.",props:"Container stacks, scrap heaps."}],
       cost:"Built: <code>sim.js</code> MAP, new materials and builders; the three art styles have district hues. <code>node simulations/map-check.js</code> passes.",
-      risk:"The crane hook and the slag spill from the GDD fun pass are not in yet; today those props fall like any other collapse."},
+      risk:"The slag spill from the GDD fun pass is not in yet, and the big boss itself is not designed: the arena is the space for it."},
     A:{zones:[
       {lv:"Level 1",look:"Low shacks of 2 to 4 m on 2 m alleys, canvas awnings strung over the alleys, market stalls between the pillars.",play:"Close range with a corner every few metres; bots come out of alleys. The space under the deck is the only open ground, so you learn the pillars here.",enemy:"Patrol bots. Loaders bog down plowing stalls.",props:"Deck spans (as today)."},
       {lv:"Level 2",look:"One long warehouse, a wide apron, container rows 1 to 2 high with 3 m lanes, a rail line and a gantry crane over the south rows.",play:"Long sightlines and open ground; the dash matters. Containers are cover the loader smashes through.",enemy:"Heavy loaders get long charge lanes. Few roofs, so the sniper is easy to find.",props:"Container stacks, gantry crane."},
@@ -150,7 +152,7 @@ code{font:13px var(--mono);color:var(--fg)}
     B:{zones:[
       {lv:"Level 1",look:"An open plaza north of the deck with a water tower on four legs; plain tenements around it.",play:"Shoot two legs and the tank drops on the plaza. A small, safe version of the overpass hook that teaches it before you need it.",enemy:"Bots drift into the plaza and under the tank.",props:"Deck spans, water tower."},
       {lv:"Level 2",look:"One huge gantry crane straddles the yard wall to wall, beams at 6 to 7 m above the deck, a container hanging from the trolley, stacks of 1 to 3 below.",play:"Drop a leg pair and a beam falls across the yard; shoot the trolley and its container falls. Loaders charging the stacks shake them loose.",enemy:"Loaders among the stacks; the sniper uses the sheds on both walls.",props:"Gantry crane, stacked containers."},
-      {lv:"Level 3+",look:"A 21 m smelter hall along the north wall and a gallery on four columns over the street carrying four slag vats; tall tenements to the south.",play:"Break the columns and the vats fall and spill across the street. The south half is the sniper's.",enemy:"Bots funnel along the gallery street; the boss on the south roofs.",props:"Slag vats on the gallery."}],
+      {lv:"Level 3",look:"A 21 m smelter hall along the north wall and a gallery on four columns over the street carrying four slag vats; tall tenements to the south.",play:"Break the columns and the vats fall and spill across the street. The south half is the sniper's.",enemy:"Bots funnel along the gallery street; the boss on the south roofs.",props:"Slag vats on the gallery."}],
       cost:"A general \"span on legs\" support rule in <code>sim.js</code> (today only deck spans on pillars fall), plus the spill and topple rules from the GDD round.",
       risk:"The streets around each landmark still use today's recipe, and each landmark is spent early in a match."},
     C:{zones:[
@@ -161,7 +163,7 @@ code{font:13px var(--mono);color:var(--fg)}
       risk:"Smelter Row loses a pillar pair, and the GDD says the deck runs the full length, so it needs your decision."}
   };
 
-  var L=window.LEVELS,W=L.W,D=L.D,H=L.H,cv=document.getElementById("cv"),g=cv.getContext("2d"),view="iso",cur=0,list=[];
+  var L=window.LEVELS,W=L.W,D=L.D,H=L.H,ZN=L.ZONES,ZC=["#3fd6e8","#f2b632","#f08a4b","#ff4fa3","#9ad96b"],cv=document.getElementById("cv"),g=cv.getContext("2d"),view="iso",cur=0,list=[];
   var SWATCH={bld:null,con:null,bar:[168,160,146],awn:null,leg:[214,170,52],spn:null,vat:[255,120,40],rub:[104,100,94],chm:[70,66,64]};
 
   function today(){
@@ -174,22 +176,23 @@ code{font:13px var(--mono);color:var(--fg)}
     return {id:"T",name:"Today",pitch:"The current map in sim.js: the same block rows, hues cycled in order, in all three zones.",zones:zs,today:true};
   }
 
+  function zix(x){for(var k=0;k<ZN.length;k++)if(x<=ZN[k].x1)return k;return ZN.length-1}
   /* ---------- voxelize ---------- */
   function hash(x,y,z){var h=x*374761393+y*668265263+z*2147483647;h=(h^(h>>>13))*1274126177;return ((h^(h>>>16))>>>0)/4294967295}
   function fromSim(c){
     var S=MetroSim.create({seed:7,level:4,builds:[MetroSim.STARTER]}),w=S.world,M=MetroSim.MAT,MP=MetroSim.MAP,col=new Array(W*D*H),ground=new Array(W*D);
     for(var i=0;i<w.vox.length;i++){var m=w.vox[i];if(!m)continue;var st=w.structures[w.owner[i]],v=M[m].col;
       if(!v){v=st&&st.hue!==undefined?MP.hues[st.hue]:(st&&st.col)||[128,128,128];if(m===7)v=[v[0]*.72,v[1]*.72,v[2]*.72]}col[i]=v}
-    var GR=[[40,43,50],[52,54,56],[44,38,36]];
-    for(var y=0;y<D;y++)for(var x=0;x<W;x++){var zk=x>=56?2:x>=32?1:0,t=GR[zk],k=((x+y)&1)?1:.93;ground[x+y*W]=[t[0]*k,t[1]*k,t[2]*k]}
+    var GR=[[40,43,50],[52,54,56],[44,38,36],[38,42,52],[54,50,44]];
+    for(var y=0;y<D;y++)for(var x=0;x<W;x++){var zk=zix(x),t=GR[zk%GR.length],k=((x+y)&1)?1:.93;ground[x+y*W]=[t[0]*k,t[1]*k,t[2]*k]}
     return {col:col,ground:ground};
   }
   function build(c){
     if(c.fromSim)return c.cache||(c.cache=fromSim(c));
     var col=new Array(W*D*H),ground=new Array(W*D);
     function set(x,y,z,v){if(x>=0&&y>=0&&z>=0&&x<W&&y<D&&z<H)col[x+y*W+z*W*D]=v}
-    var GR=[[40,43,50],[52,54,56],[44,38,36]];
-    for(var y=0;y<D;y++)for(var x=0;x<W;x++){var zk=x>=56?2:x>=32?1:0,t=GR[zk],k=((x+y)&1)?1:.93;ground[x+y*W]=[t[0]*k,t[1]*k,t[2]*k]}
+    var GR=[[40,43,50],[52,54,56],[44,38,36],[38,42,52],[54,50,44]];
+    for(var y=0;y<D;y++)for(var x=0;x<W;x++){var zk=zix(x),t=GR[zk%GR.length],k=((x+y)&1)?1:.93;ground[x+y*W]=[t[0]*k,t[1]*k,t[2]*k]}
     for(var x=0;x<W;x++){set(x,0,0,[118,116,110]);set(x,0,1,[118,116,110]);set(x,D-1,0,[118,116,110]);set(x,D-1,1,[118,116,110])}
     for(var y=0;y<D;y++){set(0,y,0,[118,116,110]);set(0,y,1,[118,116,110]);set(W-1,y,0,[118,116,110]);set(W-1,y,1,[118,116,110])}
     var O=L.OVER,cuts=[0];O.pillarsX.forEach(function(px){cuts.push(px+1)});cuts.push(W);
@@ -232,7 +235,7 @@ code{font:13px var(--mono);color:var(--fg)}
       if(!at(x,y+1,z))quad(P(x,y+1,z+1),P(x+1,y+1,z+1),P(x+1,y+1,z),P(x,y+1,z),rgb(v,glow?.92:.64));
     }
     g.font="600 "+Math.round(tw*.95)+"px 'Chakra Petch',sans-serif";g.textAlign="center";
-    L.ZONES.forEach(function(z,k){var p=P((z.x0+z.x1+1)/2,D+2.2,0);g.fillStyle="rgba(10,13,18,.75)";var t=z.name.toUpperCase()+"  ·  "+(c.zones[k].sub||"");var w=g.measureText(t).width;p[0]=Math.max(p[0],w/2+16);g.fillRect(p[0]-w/2-10,p[1]-tw*1.1,w+20,tw*1.5);g.fillStyle=["#3fd6e8","#f2b632","#f08a4b"][k];g.fillText(t,p[0],p[1])});
+    ZN.forEach(function(z,k){var p=P((z.x0+z.x1+1)/2,D+2.2,0);g.fillStyle="rgba(10,13,18,.75)";var t=z.name.toUpperCase()+"  ·  "+(c.zones[k].sub||"");var w=g.measureText(t).width;p[0]=Math.max(p[0],w/2+16);g.fillRect(p[0]-w/2-10,p[1]-tw*1.1,w+20,tw*1.5);g.fillStyle=ZC[k];g.fillText(t,p[0],p[1])});
   }
 
   /* ---------- plan draw ---------- */
@@ -241,15 +244,15 @@ code{font:13px var(--mono);color:var(--fg)}
     var s=Math.min((cw-80)/W,(ch-140)/D),ox=(cw-W*s)/2,oy=90;
     if(c.fromSim){var m=build(c);for(var y=0;y<D;y++)for(var x=0;x<W;x++){var top=-1,v=m.ground[x+y*W];for(var z=H-1;z>=0;z--){var q=m.col[x+y*W+z*W*D];if(q&&!(z===5&&y>=13&&y<=18)&&!(z===6&&(y===13||y===18))){top=z;v=q;break}}
         var k=top<0?1:.75+top*.06;g.fillStyle="rgb("+Math.min(255,v[0]*k|0)+","+Math.min(255,v[1]*k|0)+","+Math.min(255,v[2]*k|0)+")";g.fillRect(ox+x*s,oy+y*s,s+.5,s+.5)}
-      g.fillStyle="rgba(63,214,232,.10)";g.fillRect(ox,oy+13*s,W*s,6*s);
-      [32,56].forEach(function(x){g.strokeStyle="#f2b632";g.setLineDash([10,8]);g.lineWidth=3;g.beginPath();g.moveTo(ox+(x+.5)*s,oy+s);g.lineTo(ox+(x+.5)*s,oy+(D-1)*s);g.stroke();g.setLineDash([])});
+      g.fillStyle="rgba(63,214,232,.10)";g.fillRect(ox,oy+13*s,((MetroSim.MAP.overpass.x1||W-1)+1)*s,6*s);
+      ZN.slice(1).map(function(z){return z.x0}).forEach(function(x){g.strokeStyle="#f2b632";g.setLineDash([10,8]);g.lineWidth=3;g.beginPath();g.moveTo(ox+(x+.5)*s,oy+s);g.lineTo(ox+(x+.5)*s,oy+(D-1)*s);g.stroke();g.setLineDash([])});
       g.fillStyle="#ff4fa3";g.beginPath();g.arc(ox+15.5*s,oy+11*s,s*.45,0,7);g.fill();
       g.font="600 "+Math.round(s*1.05)+"px 'Chakra Petch',sans-serif";g.textAlign="center";
-      L.ZONES.forEach(function(z,k){g.fillStyle=["#3fd6e8","#f2b632","#f08a4b"][k];g.fillText(z.name.toUpperCase()+"  ·  "+(c.zones[k].sub||""),ox+(z.x0+z.x1+1)/2*s,oy-s*1.2)});
+      ZN.forEach(function(z,k){g.fillStyle=ZC[k];g.fillText(z.name.toUpperCase()+"  ·  "+(c.zones[k].sub||""),ox+(z.x0+z.x1+1)/2*s,oy-s*1.2)});
       g.font="500 "+Math.round(s*.62)+"px 'JetBrains Mono',monospace";g.fillStyle="#93a1b0";g.textAlign="right";g.fillText("top-down, the deck lifted off · brighter = taller · 1 cell = 1 m",ox+W*s,oy+D*s+s*1.2);
       return}
     function R(x,y,w,d,fill,stroke){g.fillStyle=fill;g.fillRect(ox+x*s,oy+y*s,w*s,d*s);if(stroke){g.strokeStyle=stroke;g.lineWidth=2;g.strokeRect(ox+x*s+1,oy+y*s+1,w*s-2,d*s-2)}}
-    var GR=["#262a31","#2f3134","#2a2422"];L.ZONES.forEach(function(z,k){R(z.x0,0,z.x1-z.x0+1,D,GR[k])});
+    var GR=["#262a31","#2f3134","#2a2422"];ZN.forEach(function(z,k){R(z.x0,0,z.x1-z.x0+1,D,GR[k%3])});
     g.strokeStyle="rgba(150,170,190,.08)";g.lineWidth=1;for(var x=0;x<=W;x++){g.beginPath();g.moveTo(ox+x*s,oy);g.lineTo(ox+x*s,oy+D*s);g.stroke()}for(var y=0;y<=D;y++){g.beginPath();g.moveTo(ox,oy+y*s);g.lineTo(ox+W*s,oy+y*s);g.stroke()}
     R(0,0,W,1,"#76746e");R(0,D-1,W,1,"#76746e");R(0,0,1,D,"#76746e");R(W-1,0,1,D,"#76746e");
     function rgb(c,a){return "rgba("+(c[0]|0)+","+(c[1]|0)+","+(c[2]|0)+","+(a||1)+")"}
@@ -274,7 +277,7 @@ code{font:13px var(--mono);color:var(--fg)}
     [32,56].forEach(function(x){g.strokeStyle="#f2b632";g.setLineDash([10,8]);g.lineWidth=3;g.beginPath();g.moveTo(ox+(x+.5)*s,oy+s);g.lineTo(ox+(x+.5)*s,oy+(D-1)*s);g.stroke();g.setLineDash([])});
     g.fillStyle="#ff4fa3";g.beginPath();g.arc(ox+15.5*s,oy+11*s,s*.45,0,7);g.fill();
     g.font="600 "+Math.round(s*1.05)+"px 'Chakra Petch',sans-serif";g.textAlign="center";
-    L.ZONES.forEach(function(z,k){g.fillStyle=["#3fd6e8","#f2b632","#f08a4b"][k];g.fillText(z.name.toUpperCase()+"  ·  "+(c.zones[k].sub||""),ox+(z.x0+z.x1+1)/2*s,oy-s*1.2)});
+    ZN.forEach(function(z,k){g.fillStyle=ZC[k];g.fillText(z.name.toUpperCase()+"  ·  "+(c.zones[k].sub||""),ox+(z.x0+z.x1+1)/2*s,oy-s*1.2)});
     g.font="500 "+Math.round(s*.62)+"px 'JetBrains Mono',monospace";g.fillStyle="#93a1b0";g.textAlign="left";
     g.fillText("x 0",ox,oy+D*s+s*1.2);g.textAlign="right";g.fillText("x 79  ·  1 cell = 1 m  ·  numbers = building height (m)",ox+W*s,oy+D*s+s*1.2);
   }
@@ -282,23 +285,23 @@ code{font:13px var(--mono);color:var(--fg)}
   /* ---------- stats (same walk rule as sim.js: a cell is street when z 0 and z 1 are empty) ---------- */
   function stats(c){
     var m=build(c),out=[];
-    L.ZONES.forEach(function(z,k){var st=0,all=0;for(var y=1;y<D-1;y++)for(var x=Math.max(1,z.x0);x<=Math.min(W-2,z.x1);x++){all++;if(!m.col[x+y*W]&&!m.col[x+y*W+W*D])st++}
-      var roofs=0,tall=0;if(c.fromSim)MetroSim.MAP.blocks.forEach(function(b){var zz=b[0]>=56?2:b[0]>=32?1:0;if(zz===k){roofs++;if(b[4]>=5)tall++}});c.zones[k].items.forEach(function(it){if(it[0]==="bld"){roofs++;if(it[5]>=5)tall++}});
-      out.push({street:Math.round(100*st/all),roofs:roofs,tall:tall,hmax:Math.max.apply(null,(c.fromSim?MetroSim.MAP.blocks.filter(function(b){return (b[0]>=56?2:b[0]>=32?1:0)===k}).map(function(b){return ["bld",0,0,0,0,b[4]]}):c.zones[k].items).filter(function(i){return i[0]==="bld"}).map(function(i){return i[5]}).concat([0]))})});
+    ZN.forEach(function(z,k){var st=0,all=0;for(var y=1;y<D-1;y++)for(var x=Math.max(1,z.x0);x<=Math.min(W-2,z.x1);x++){all++;if(!m.col[x+y*W]&&!m.col[x+y*W+W*D])st++}
+      var roofs=0,tall=0;if(c.fromSim)MetroSim.MAP.blocks.forEach(function(b){var zz=zix(b[0]);if(zz===k){roofs++;if(b[4]>=5)tall++}});c.zones[k].items.forEach(function(it){if(it[0]==="bld"){roofs++;if(it[5]>=5)tall++}});
+      out.push({street:Math.round(100*st/all),roofs:roofs,tall:tall,hmax:Math.max.apply(null,(c.fromSim?MetroSim.MAP.blocks.filter(function(b){return zix(b[0])===k}).map(function(b){return ["bld",0,0,0,0,b[4]]}):c.zones[k].items).filter(function(i){return i[0]==="bld"}).map(function(i){return i[5]}).concat([0]))})});
     return out;
   }
 
-  function swatches(z,k){if(z.fromSim!==undefined||!z.items.length){var MP=window.MetroSim&&MetroSim.MAP;if(!MP||!MP.tower)return [];var o=[],sn={};MP.blocks.forEach(function(b){if((b[0]>=56?2:b[0]>=32?1:0)===k&&!sn[b[5]]){sn[b[5]]=1;o.push(MP.hues[b[5]])}});return o.slice(0,5)}
+  function swatches(z,k){if(z.fromSim!==undefined||!z.items.length){var MP=window.MetroSim&&MetroSim.MAP;if(!MP||!MP.tower)return [];var o=[],sn={};MP.blocks.forEach(function(b){if(zix(b[0])===k&&!sn[b[5]]){sn[b[5]]=1;o.push(MP.hues[b[5]])}});return o.slice(0,5)}
     var seen={},a=[];z.items.forEach(function(it){if(it[0]==="bld"&&it[7]){var k=it[7].join();if(!seen[k]){seen[k]=1;a.push(it[7])}}});return a.slice(0,5)}
 
   function render(){
-    var c=list[cur];document.getElementById("cname").textContent=(c.today?"":c.id+" · ")+c.name;document.getElementById("cpitch").textContent=c.pitch;
+    var c=list[cur];if(c.fromSim){W=MetroSim.W;ZN=MetroSim.MAP.zones}else{W=L.W;ZN=L.ZONES}document.getElementById("cname").textContent=(c.today?"":c.id+" · ")+c.name;document.getElementById("cpitch").textContent=c.pitch;
     [].forEach.call(document.querySelectorAll(".tab"),function(t,i){t.setAttribute("aria-selected",i===cur?"true":"false")});
     (view==="iso"?drawIso:drawPlan)(c);
     var st=stats(c),cp=COPY[c.id],html="";
     c.zones.forEach(function(z,k){
       var sw=swatches(z,k).map(function(v){return '<i style="background:rgb('+v.join()+')"></i>'}).join("")+'<i style="background:rgb('+(z.win||[63,214,232]).join()+')" title="window light"></i><span>walls · windows</span>';
-      html+='<article class="zone"><div class="zn"><span>'+L.ZONES[k].name+'</span><span class="lv">'+(cp?cp.zones[k].lv:["Level 1","Level 2","Level 3+"][k])+'</span></div><h3>'+(z.sub||"")+'</h3>';
+      html+='<article class="zone"><div class="zn"><span>'+ZN[k].name+'</span><span class="lv">'+(cp?cp.zones[k].lv:["Level 1","Level 2","Level 3+"][k])+'</span></div><h3>'+(z.sub||"")+'</h3>';
       if(cp){var q=cp.zones[k];html+='<dl><div><dt>Looks like</dt><dd>'+q.look+'</dd></div><div><dt>Plays like</dt><dd>'+q.play+'</dd></div><div><dt>Enemy fit</dt><dd>'+q.enemy+'</dd></div><div><dt>Props</dt><dd>'+q.props+'</dd></div></dl>'}
       else html+='<p style="color:var(--muted);font-size:14px">Same recipe as the other two zones.</p>';
       html+='<div class="sw">'+sw+'</div><div class="stats"><span>street <b>'+st[k].street+'%</b></span><span>buildings <b>'+st[k].roofs+'</b></span><span>5 m+ <b>'+st[k].tall+'</b></span><span>tallest <b>'+st[k].hmax+' m</b></span></div></article>';
@@ -310,8 +313,8 @@ code{font:13px var(--mono);color:var(--fg)}
 
   function start(){
     var built=window.MetroSim&&MetroSim.MAP.tower,t=built?null:today();list=L.concepts.slice();if(t)list.unshift(t);cur=t?1:0;
-    if(built){list.unshift({id:"M",name:"Built map",fromSim:true,pitch:"Concept A with one landmark from B in each zone, as built in sim.js and played by the voxel prototype. Kept by kr0 on Oct 28.",
-      zones:[{sub:"Shanty market",items:[],win:[63,214,232]},{sub:"Container yard",items:[],win:[240,190,90]},{sub:"Furnace canyons",items:[],win:[255,140,60]}]});cur=0}
+    if(built){list.unshift({id:"M",name:"Built map",fromSim:true,pitch:"Concept A with one landmark from B in each zone, grown to five sectors on Oct 28: the Glass Quarter and the Terminus Yard arena, where the deck ends, join the first three. Built in sim.js and played by the voxel prototype.",
+      zones:[{sub:"Shanty market",items:[],win:[63,214,232]},{sub:"Container yard",items:[],win:[240,190,90]},{sub:"Furnace canyons",items:[],win:[255,140,60]},{sub:"Financial district",items:[],win:[255,79,163]},{sub:"The arena",items:[],win:[240,190,90]}]});cur=0}
     var tabs=document.getElementById("tabs");
     list.forEach(function(c,i){var b=document.createElement("button");b.className="tab";b.setAttribute("role","tab");b.id="tab-"+c.id;b.innerHTML='<span class="k">'+(c.today?"·":c.id)+'</span>'+c.name;b.onclick=function(){cur=i;render()};tabs.appendChild(b)});
     function setView(v){view=v;document.getElementById("v-iso").setAttribute("aria-pressed",v==="iso");document.getElementById("v-plan").setAttribute("aria-pressed",v==="plan");render()}

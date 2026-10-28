@@ -1,33 +1,33 @@
-# Metr0niks level design: Overpass Sector 4
+# Metr0niks level design: Overpass Sector 4 (five sectors)
 
 Updated Oct 28, 2026 · @kr0 · Concepts: [research/level-concepts/](research/level-concepts/README.md) · Concept page: https://claude.ai/artifact/X8y8t7nd96zwL1BeCetdzC
 
-On Oct 28 kr0 said the voxel prototype's zones all look very similar and asked for a full map with a breakdown by section. kr0 picked concept **A + B landmarks**: each zone is its own district, with one landmark that falls under the same support rule as the deck. The map is built in `simulations/sim.js` (`MAP`), so the voxel prototype plays it. `node simulations/map-check.js` checks it. kr0 also said to focus on voxel and keep it as it is (GDD-D46), so the map stays voxel data in `sim.js`.
+On Oct 28 kr0 said the voxel prototype's zones all look very similar and asked for a full map with a breakdown by section. kr0 picked concept **A + B landmarks**: each zone is its own district, with one landmark that falls under the same support rule as the deck. The map is built in `simulations/sim.js` (`MAP`), so the voxel prototype plays it. `node simulations/map-check.js` checks it. Later on Oct 28 kr0 asked to grow the map to five sectors and give the last one room for a big boss fight. That adds the Glass Quarter and the Terminus Yard arena, where the deck ends. kr0 also said to focus on voxel and keep it as it is (GDD-D46), so the map stays voxel data in `sim.js`.
 
 ## What stays the same
 
-The grid is 80 × 32 × 8 m with an indestructible perimeter. The deck is at 5 m on the ten pillars at x = 3 to 75. The three zones, their shutters and their unlock order (level 1, 2, 3+) are unchanged, and so is the drop-in point (15.5, 11). Waves, enemies and every number in `T` are untouched.
+The map is 32 m wide and 8 m high with an indestructible perimeter, as before. It is now 144 m long (was 80). The deck is at 5 m on fourteen pillars every 8 m from x = 3 to 107, and ends at x = 111 over the arena's entrance. The first three zones keep their place, their shutters and their unlock levels. Zone 4 opens at level 4 and zone 5 at level 5, so levels 2 to 5 each open on a drop-in shot. The drop-in point (15.5, 11), waves, enemies and every number in `T` are unchanged.
 
 ## The map at a glance
 
-| | Underpass (x 0–31) | Freight Yard (x 32–55) | Smelter Row (x 56–79) |
-| --- | --- | --- | --- |
-| District | Shanty market | Container yard | Furnace canyons |
-| Opens at | Level 1 | Level 2 | Level 3 |
-| Landmark | Water tower over the plaza | Gantry crane over the south yard | Slag gallery over the north street |
-| Hazard prop (GDD-D41) | Deck spans | Container stacks, gantry crane | Slag vats |
-| Buildings | 24 shacks, 2 to 5 m (one 5 m tenement) | 4 (a 12 m warehouse, three sheds) | 10 halls, 2 to 7 m (four of 5 m or more), 3 chimneys |
-| Cover | 10 stalls and barriers, 7 awnings, 1 container | 13 container stacks (25 boxes, 2 or 3 high), 3 barriers | 3 barriers, 6 slag vats |
-| Street cells | 743 cells | 591 cells | 442 cells |
-| Sniper roof cells | 142 | 46 | 145 |
-| Colour | Brick, ochre, slate; cyan windows | Concrete and tin, bright containers; sodium-yellow windows; pale concrete pad | Iron and soot; orange furnace windows; scorched ground |
-| Plays like | Close range, a corner every few metres | Long sightlines, open ground, charge lanes | Vertical, with the sniper above you in narrow canyons |
+| | Underpass (x 0–31) | Freight Yard (x 32–55) | Smelter Row (x 56–79) | Glass Quarter (x 80–111) | Terminus Yard (x 112–143) |
+| --- | --- | --- | --- | --- | --- |
+| District | Shanty market | Container yard | Furnace canyons | Financial district | The arena |
+| Opens at | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 |
+| Landmark | Water tower over the plaza | Gantry crane over the south yard | Slag gallery over the north street | Neon billboard over the plaza | Open sky: no deck, an 18 m clear floor |
+| Hazard prop (GDD-D41) | Deck spans | Container stacks, gantry crane | Slag vats | Deck spans, billboard | Container stacks |
+| Buildings | 24 shacks, 2 to 5 m (one 5 m tenement) | 4 (a 12 m warehouse, three sheds) | 10 halls, 2 to 7 m (four of 5 m or more), 3 chimneys | 15 glass towers, 3 to 7 m (ten of 5 m or more) | 4 pylons of 6 m, 2 bunkers of 3 m |
+| Cover | 10 stalls and barriers, 7 awnings, 1 container | 13 container stacks (25 boxes, 2 or 3 high), 3 barriers | 3 barriers, 6 slag vats | 7 planters and barriers | 4 barriers, 4 short container stacks, 4 scrap heaps, all at the rim |
+| Street cells | 743 | 591 | 472 | 664 | 846 |
+| Sniper roof cells | 142 | 46 | 145 | 192 | 48 |
+| Colour | Brick, ochre, slate; cyan windows | Concrete and tin, bright containers; sodium-yellow windows; pale concrete pad | Iron and soot; orange furnace windows; scorched ground | Blue glass, steel and white stone; pink neon windows; cool ground | Hazard ochre and scrap grey; a painted ring on the floor |
+| Plays like | Close range, a corner every few metres | Long sightlines, open ground, charge lanes | Vertical, with the sniper above you in narrow canyons | A tall grid, with perches on every corner | An open finale, circling in the middle and taking cover at the edge |
 
-Screenshots (Blockout unless named): [Underpass, water tower](../../art/metr0niks/screenshots/level-01-underpass-water-tower.jpg), [Underpass, tenements](../../art/metr0niks/screenshots/level-02-underpass-tenements.jpg), [Freight Yard, stacks](../../art/metr0niks/screenshots/level-03-freight-yard-stacks.jpg), [Freight Yard, crane](../../art/metr0niks/screenshots/level-04-freight-yard-crane.jpg), [Smelter Row, gallery](../../art/metr0niks/screenshots/level-05-smelter-row-gallery.jpg), [Smelter Row, canyons (Cinematic)](../../art/metr0niks/screenshots/level-06-smelter-row-canyons-cinematic.jpg).
+Screenshots (Blockout unless named): [Underpass, water tower](../../art/metr0niks/screenshots/level-01-underpass-water-tower.jpg), [Underpass, tenements](../../art/metr0niks/screenshots/level-02-underpass-tenements.jpg), [Freight Yard, stacks](../../art/metr0niks/screenshots/level-03-freight-yard-stacks.jpg), [Freight Yard, crane](../../art/metr0niks/screenshots/level-04-freight-yard-crane.jpg), [Smelter Row, gallery](../../art/metr0niks/screenshots/level-05-smelter-row-gallery.jpg), [Smelter Row, canyons (Cinematic)](../../art/metr0niks/screenshots/level-06-smelter-row-canyons-cinematic.jpg), [Glass Quarter, billboard](../../art/metr0niks/screenshots/level-07-glass-quarter-billboard.jpg), [Glass Quarter, towers](../../art/metr0niks/screenshots/level-08-glass-quarter-towers.jpg), [Terminus Yard, arena](../../art/metr0niks/screenshots/level-09-terminus-yard-arena.jpg), [Terminus Yard, rim](../../art/metr0niks/screenshots/level-10-terminus-yard-rim.jpg).
 
 ## Sections
 
-Each zone has three sections: the north street (y 1–12), under the deck (y 13–18) and the south street (y 19–30). Coordinates are in metres: x along the map, y across it.
+Zones 1 to 4 each have three sections: the north street (y 1–12), under the deck (y 13–18) and the south street (y 19–30). Coordinates are in metres: x along the map, y across it.
 
 ### Underpass (level 1): shanty market
 
@@ -58,7 +58,7 @@ Each zone has three sections: the north street (y 1–12), under the deck (y 13�
 - *Purpose:* the zone's set piece. Loaders charge down the lanes under the crane.
 - *Collapse hook:* shoot out all four legs and the frame falls across the yard with its hanging container. Stacks under the frame fall when their bottom boxes go.
 
-### Smelter Row (level 3+): furnace canyons
+### Smelter Row (level 3): furnace canyons
 
 **S1. Smelter hall and slag gallery (north).** A 21 m smelter hall (6 m, furnace-lit) fills the north wall. In front of it, an iron gallery (x 59–74, y 6–8, at 3 m) on three steel legs at x 60, 66 and 72 carries three slag vats. You walk under it. Two sheds and two 8 m chimneys sit at the street's south edge, and a street vat stands at the junction at (68, 11).
 - *Purpose:* the zone's set piece, a roof over the street that can come down on bots following you under it.
@@ -72,11 +72,39 @@ Each zone has three sections: the north street (y 1–12), under the deck (y 13�
 - *Purpose:* vertical fights against the sniper and the wave-5 boss. These halls make the biggest collapses on the map.
 - *Collapse hook:* shoot out a vat's leg frame and the vat drops onto the street. A chimney falls when its base breaks.
 
+### Glass Quarter (level 4): financial district
+
+**G1. Billboard plaza (north).** Four glass towers of 6 to 7 m line the north wall, with two 4 m blocks in front. Between them, a plaza (x 88–101, y 6–12) sits under a neon billboard: an 8 × 2 m sign at 4 to 7 m on two steel legs at (92, 9) and (97, 9). Planters at (89, 7), (99, 11) and (94, 12).
+- *Purpose:* a second, harder plaza that mirrors the Underpass's. It has more roofs around it and a smaller footprint above it.
+- *Collapse hook:* shoot out both legs and the sign falls on the plaza.
+- *Sniper:* every tower corner. This zone has the most perches on the map.
+
+**G2. Boulevard (under the deck).** Four barriers. Pillars 83, 91, 99 and 107 hold the zone's spans. The span on pillar 107 is the last one, and its end hangs over the arena shutter.
+- *Purpose:* the fastest way through the zone. Dropping the span between 99 and 107 blocks the road to the arena.
+
+**G3. Tower grid (south).** Two rows of towers of 3 to 7 m on a grid of 2 to 3 m streets, with five north-south cross streets.
+- *Purpose:* corner fighting with glass that shatters. The tallest towers, (93, 20) at 7 m and (102, 27) at 5 m, give the sniper a view down every cross street.
+
+### Terminus Yard (level 5 and up): the arena
+
+The deck ends at x = 111, so the last zone has open sky. It is 30 × 30 m of open yard, built for a big boss fight.
+
+**T1. The floor (middle).** The clear floor is at least 18 × 18 m (`map-check.js` measures it), with a dashed ring of radius 8 m painted around (128, 15.5). Nothing stands inside the ring.
+- *Purpose:* room to circle, dash and kite something large without a wall in the way.
+
+**T2. The rim (edges).** Four 6 m pylons stand in the corners and two 3 m bunkers sit mid-wall north and south. Four short container stacks sit at (117, 9), (137, 9), (117, 22) and (137, 22), with barriers outside them and scrap heaps at the east and west edges.
+- *Purpose:* cover to break line of sight and catch your breath, always at the edge so the middle stays open. The stacks fall when their bottom box goes.
+- *Sniper:* the pylons and bunkers. Until a big boss exists, the wave-5 sniper fights from these.
+
+**The big boss is not designed yet.** No big boss exists in the GDD or `sim.js`; the arena gives one somewhere to fight. It should be a GDD decision: what it is, how it uses the floor and the rim, and whether level 5+ wave-5 bosses land in the Terminus Yard.
+
 ## Pacing by level band
 
 - **Level 1 (Underpass only):** the plaza, the tower and the first two pillars. The first collapse a new player sees should be the tower, which is small, close and safe.
 - **Level 2 (Freight Yard opens):** the shutter falls onto open ground and long lanes, the opposite of the market. The first loader waves meet charge lanes and container stacks.
-- **Level 3 and up (Smelter Row opens):** tall roofs and narrow canyons, where the boss gets its best perches. The whole sector is open from here, so later levels are about which district a wave spreads into.
+- **Level 3 (Smelter Row opens):** tall roofs and narrow canyons, where the boss gets its best perches.
+- **Level 4 (Glass Quarter opens):** the tallest skyline and the most perches. The sniper is at its strongest here.
+- **Level 5 and up (Terminus Yard opens):** the open arena past the end of the deck. The whole sector is open from here, so later levels are about which district a wave spreads into.
 
 ## What the prototype does and what the GDD still needs
 
@@ -85,6 +113,6 @@ The map uses the existing support rule: anything no longer connected to the grou
 1. **Slag spill:** vats fall as collapses today. The proposed spill, a 4 × 4 m pool for 8 s where a vat lands (25 damage a second to enemies, 10 to mechs, 15 heat a second), is not built. The crane hook rule was dropped from GDD-D41: the frame and its container fall together, as built.
 2. **Tuning:** steel legs have 20 health per voxel and break on their first lost voxel, so the tower takes four quick hits. A tuning pass should decide whether that is too easy.
 
-New materials in `sim.js`: steel, lamp and furnace windows, canvas, tank, iron and slag. The loader plows the new windows and the awnings as it does the old windows. The three art styles have hues for every district, and each zone tints its street.
+New materials in `sim.js`: steel, lamp, furnace and neon windows, canvas, tank, iron and slag. `MAP.overpass.x1` sets where the deck ends, `MAP.rubble` places scrap heaps, and `zones[k].arena` paints the arena ring. The loader plows the new windows and the awnings as it does the old windows. The three art styles have hues for every district, and each zone tints its street.
 
-**GDD Map section:** the "47 buildings, 16 barriers and 14 containers" line and the Zone identity paragraph are out of date. Once the fun-pass PR (#13) merges, the Map section gets the district table and landmark list from this document.
+**GDD Map section:** the "47 buildings, 16 barriers and 14 containers" line and the Zone identity paragraph are out of date. Once the fun-pass PR (#13) merges, the Map section gets the district table and landmark list from this document. The Excursion rules line about zones ("level 2 also opens the Freight Yard, level 3 and up open the whole sector") and the drop-in note ("levels 1 and 4 and up have no drop-in shot") change too: one zone opens per level up to 5, so levels 1 and 6 and up have no drop-in shot.
