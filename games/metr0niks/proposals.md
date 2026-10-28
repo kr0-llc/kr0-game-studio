@@ -2,11 +2,11 @@
 
 Oct 28, 2026 · @kr0 · Kept out of the [GDD](gdd.md) on kr0's instruction (GDD-D55)
 
-The GDD holds only rules. This file holds everything else: rules the GDD needs but kr0 hasn't signed off, and ideas and options that aren't adopted. When kr0 adopts one, it moves into the GDD with a row in the [decision history](gdd-decisions.md) and comes off this list. Numbers aren't listed here: every number in the GDD is a starting value for the sweep ([tuning history](tuning-history.md)).
+The GDD holds only rules. This file holds everything else: ideas and options that aren't adopted, and open calls. When kr0 adopts one, it moves into the GDD with a row in the [decision history](gdd-decisions.md) and comes off this list. Numbers aren't listed here: every number in the GDD is a starting value for the sweep ([tuning history](tuning-history.md)).
 
-## 1. Written into the GDD, waiting for kr0's sign-off
+## 1. Signed off
 
-The game can't run without these, so the GDD states them as the working rule. Accept, change or reject each one.
+kr0 approved these on Oct 28 with the GDD-D55 round, so they are GDD rules now and off this list. Kept here for one round so the change is easy to see.
 
 | Rule | What the GDD says | GDD section | Decision |
 | --- | --- | --- | --- |

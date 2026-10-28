@@ -2,7 +2,7 @@
 
 Updated Oct 28, 2026 · @kr0 · Earlier versions: [Oct 20](superseded/gdd-2026-10-20.md), [Oct 25 draft](superseded/gdd-2026-10-25-draft.md), [Oct 26 draft](superseded/gdd-2026-10-26-draft.md), [Oct 26](superseded/gdd-2026-10-26.md), [Oct 27](superseded/gdd-2026-10-27.md)
 
-This GDD holds the rules of Excursion, the game's one mode, as kr0 has decided them up to Oct 28, 2026. Each rule's GDD-Dxx tag points to the [decision history](gdd-decisions.md), which says why. Every number is a starting value for the tuning sweep ([tuning history](tuning-history.md)), not a final one. Ideas kr0 hasn't adopted, and the few rules written here that still wait for kr0's sign-off, are in [proposals](proposals.md) (GDD-D55). What the prototypes must change to match is in [prototype changes](prototypes/prototype-changes.md); they don't play the Oct 28 additions yet. Dimensions are in metres; one map cell is one metre. Three items are TBD on kr0's instruction (GDD-D27): target audience, player fantasy and what makes it fun.
+This GDD holds the rules of Excursion, the game's one mode, as kr0 has decided them up to Oct 28, 2026. Each rule's GDD-Dxx tag points to the [decision history](gdd-decisions.md), which says why. Every number is a starting value for the tuning sweep ([tuning history](tuning-history.md)), not a final one. Ideas kr0 hasn't adopted are in [proposals](proposals.md) (GDD-D55). What the prototypes must change to match is in [prototype changes](prototypes/prototype-changes.md); they don't play the Oct 28 additions yet. Dimensions are in metres; one map cell is one metre. Three items are TBD on kr0's instruction (GDD-D27): target audience, player fantasy and what makes it fun.
 
 ## Overview
 
@@ -660,7 +660,8 @@ Direction: synthwave and retrowave (GDD-D26). Music uses analog-style synth bass
 - Pitch and firing range: [pitch-and-firing-range/index.html](prototypes/pitch-and-firing-range/index.html)
 - [TDD](tdd.md) and [TDD decision history](tdd-decisions.md)
 - [GDD decision history](gdd-decisions.md)
-- [Proposals](proposals.md): ideas not adopted and rules waiting for kr0's sign-off
+- [Proposals](proposals.md): ideas not adopted and open calls
+- [Fun pass implementation plan](decisions/2026-10-28-fun-pass-implementation-plan.md)
 - [Fun pass record, Oct 28](decisions/2026-10-28-fun-pass.md) and [economy options](decisions/2026-10-28-economy-options.md)
 - [Open questions](open-questions.md)
 - [Tuning history](tuning-history.md)

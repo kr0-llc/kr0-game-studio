@@ -73,13 +73,13 @@ Most questions are now answered. The GDD reflects every decision below as of 202
 
 Values that need sweeps (the wear share, the repair rates and the weapon upgrade values of GDD-D23) are in the [tuning history](tuning-history.md).
 
-Rules the GDD states but kr0 hasn't signed off (revive price and armor, the victory button, typing a seed only at level 1, repair order, kill credit, damage order, the zone pairing, the boss roster, the report layout) are listed in [proposals](proposals.md), section 1, along with ideas not adopted (GDD-D55).
+kr0 signed off the remaining Proposed rules on Oct 28 (revive, victory button, seed limit, repair order, kill credit, damage order, zone pairing, boss roster, report layout). Ideas not adopted and open calls are in [proposals](proposals.md).
 
 - [ ] Target audience, player fantasy and what makes it fun: TBD in the GDD on kr0's instruction (GDD-D27). The mech-game research of Oct 26 may feed the last one.
 - [ ] Where production milestones live, since they are not part of the GDD (GDD-D27). The producer's documents and the phases in ways of working section 5 are the candidates.
 - [ ] The death screen offers the campaign code from before the run, and pasting it as a co-op host restores that level, which gets around the reset on death. Keep it as a deliberate retry, or remove it? (Prototype changes section 9 currently suggests adding a single-player paste box.)
 - [x] Co-op campaign (GDD-D31): if the host leaves mid-match, the room ends for both (kr0, Oct 28, GDD-D52).
-- [ ] Fun pass of Oct 28 ([record](decisions/2026-10-28-fun-pass.md)): kr0 settled the rules in four rounds on Oct 28 (D35 to D43, D45, D47 to D55; D44 rejected). Every number is a starting value for the sweep; the rules still waiting for sign-off are in [proposals](proposals.md).
+- [ ] Fun pass of Oct 28 ([record](decisions/2026-10-28-fun-pass.md)): kr0 settled the rules in four rounds on Oct 28 (D35 to D43, D45, D47 to D55; D44 rejected). Every number is a starting value for the sweep; all rules signed off. Build order: [implementation plan](decisions/2026-10-28-fun-pass-implementation-plan.md).
 - [ ] Wave density on the 1.5× map (PR #12, 216 × 48 m): options and status in [proposals](proposals.md), section 3.
 - [x] Fun pass economy: kr0 chose call-in supplies and trimmed income on Oct 28 (GDD-D54), then removed rerolls and trimmed income further (GDD-D55); prices go to the sweep.
 - [ ] "What makes it fun" stays TBD (GDD-D27); kr0 said on Oct 28 to leave it for now. The draft line is in [proposals](proposals.md).
