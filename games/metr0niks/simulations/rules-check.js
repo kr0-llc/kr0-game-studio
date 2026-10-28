@@ -945,5 +945,196 @@ function toChoose(s){var ev=[];for(var t=0;t<60*60&&s.state!=="choose";t++){idle
   var rt=C.decode(C.encode(n));ok(rt&&same(rt.players[0].callins,[null,"overclock"]),"the written-back slots round-trip through the campaign code");
 })();
 
+
+/* ----- phase 7: bosses (GDD-D51, TDD-D14) ----- */
+var BW=[{bots:0},{bots:0},{bots:0,boss:1},{bots:0},{bots:0,boss:1}];
+function bossPlan(b3,b5,level,cond){return {level:level||1,zone:"",condition:cond||null,contract:null,bosses:[b3,b5]}}
+function bossSim(o){o=o||{};return M.create({seed:o.seed||8,level:o.level||1,builds:o.builds,plan:o.noPlan?undefined:bossPlan(o.b3||"sniper",o.b5||"sniper",o.level,o.cond),tune:M.mergeTune(FAST,M.mergeTune({waves:BW},o.tune||{}))})}
+/* step to the start of wave n (killing whatever is up) and return its queue as beginWave built it */
+function queueAt(s,n){for(var t=0;t<60*90&&s.wave<n;t++){idle(s);if(s.state==="play")s.killAll();s.step()}return s.run.queue.slice()}
+function firstBoss(s,f){for(var t=0;t<120;t++){idle(s);s.step();var b=s.bots.filter(f||function(x){return x.boss||x.jugg||x.kind==="wbody"});if(b.length)return b}return []}
+function L1(s){return function(e){return s.hitEnemy(e,1e5,{by:0,kind:"light",pow:1},e.x,e.y,(e.z||0)+.5)}}
+/* roster from the climb plan */
+(function(){
+  var s=bossSim({level:3,b3:"sniperPair",b5:"juggernaut"});
+  ok(same(queueAt(s,3),["pair","pair"])&&same(queueAt(s,5),["juggernaut"]),"the plan's bosses fill waves 3 and 5: a Sniper pair is two pair entries, the Juggernaut one");
+  s=bossSim({level:5,b3:"juggernaut",b5:"warden"});
+  ok(same(queueAt(s,3),["juggernaut"])&&same(queueAt(s,5),["warden"]),"level 5: wave 3 the Juggernaut, wave 5 the Warden");
+  s=bossSim({noPlan:true});ok(same(queueAt(s,3),["boss"])&&same(queueAt(s,5),["boss"]),"no plan: the Bounty sniper on both boss waves");
+  s=bossSim({level:3,b3:"sniperPair",b5:"juggernaut",cond:"snipersNest"});
+  ok(same(queueAt(s,3),["pair","pair","boss"])&&same(queueAt(s,5),["juggernaut","boss"]),"Sniper's nest adds a Bounty sniper to each boss wave, the pair's and the Juggernaut's");
+  s=bossSim({level:5,b3:"juggernaut",b5:"warden",cond:"snipersNest"});var q=queueAt(s,5),w=firstBoss(s)[0];
+  ok(same(q,["warden"])&&w&&w.kind==="wbody"&&w.riders.length===4&&s.bots.filter(function(b){return b.rider}).length===4,"Sniper's nest with the Warden: a fourth rider, on its body");
+  var pl=M.Campaign.plan({seed:12345}),good=pl[0].bosses[0]==="sniper"&&pl[4].bosses[1]==="warden";
+  for(var sd=1;sd<=40;sd++)M.Campaign.plan({seed:sd}).forEach(function(e){e.bosses.forEach(function(b,i){var B=M.BOSSES[b];if(!B||e.level<B.lv[0]||e.level>B.lv[1]||b==="warden"&&(i!==1||e.level!==5))good=false})});
+  ok(good,"the plan draws each boss only on its levels; the Warden only on level 5 wave 5");
+  var m=M.create({seed:4,level:5,plan:pl[4],tune:M.mergeTune(FAST,{waves:BW})});
+  ok(queueAt(m,5)[0]==="warden","a match on the plan's level 5 entry queues the Warden on wave 5");
+})();
+/* wave-5 variant (GDD-D51, prototype changes section 3) */
+(function(){
+  var s=bossSim({});queueAt(s,3);var a=firstBoss(s)[0];
+  ok(a&&a.maxHp===180&&!a.hard&&a.scrapN===12&&!a.fireEvery,"wave 3: the Bounty sniper has 180 health, fires every "+T.boss.fireEvery+" s, drops 12 cubes");
+  queueAt(s,5);var b=firstBoss(s)[0];
+  ok(b&&b.hard&&b.maxHp===270&&b.fireEvery===1.5&&b.scrapN===18,"wave 5: the variant has 1.5x health (270), fires every 1.5 s, drops 18 cubes");
+  b.tell=.01;b.cd=0;s.step();ok(Math.abs(b.cd-1.5)<1e-9,"after a wave-5 sniper's shot its next is 1.5 s away");
+  var ev=[];s.drainEvents();L1(s)(b);ev=s.drainEvents().filter(function(e){return e[0]==="x"});
+  ok(ev.length===1&&ev[0][1]==="sniper"&&ev[0][4]===18,"killing it drops 18 cubes");
+  s=bossSim({level:3,b3:"sniperPair",b5:"sniperPair"});queueAt(s,5);var pr=firstBoss(s,function(x){return x.pair});for(var t=0;t<60&&pr.length<2;t++){idle(s);s.step();pr=s.bots.filter(function(x){return x.pair})}
+  ok(pr.length===2&&pr[0].maxHp===Math.round(180*2/3*1.5*1.3)&&pr[0].scrapN===14&&pr[0].fireEvery===1.5,"a wave-5 Sniper pair at level 3: two thirds health x1.5 x the level ("+(pr[0]&&pr[0].maxHp)+"), 14 cubes, 1.5 s");
+  s=bossSim({level:3,b3:"juggernaut",b5:"juggernaut"});queueAt(s,3);var j3=firstBoss(s)[0];queueAt(s,5);var j5=firstBoss(s)[0];
+  ok(j3&&j5&&j3.maxHp===Math.round(450*1.3)&&j5.maxHp===Math.round(450*1.3*1.5)&&j3.L.cooldown===2.5&&Math.abs(j5.L.cooldown-1.75)<1e-9&&j3.scrapN===20&&j5.scrapN===30,
+    "the Juggernaut: 450 health x the level on wave 3; the wave-5 one x1.5, a 30% shorter charge cooldown, 30 cubes");
+})();
+/* Sniper pair: never within 8 m of each other, firing in turn */
+(function(){
+  var s=M.create({seed:8,tune:M.mergeTune(QUIET,{boss:{sight:60,jump:[2,3]},pair:{wait:1e9}})});steps(s,5);
+  var p=s.players[0],pr=s.spawnBoss("pair"),a=pr[0],b=pr[1],near=99,both=0,seq=[],last=[0,0];
+  for(var t=0;t<60*60;t++){p.x=23.5;p.y=17.5;idle(s);s.step();
+    if(a.mode==="perch"&&b.mode==="perch"&&a.z>.05&&b.z>.05){both++;near=Math.min(near,Math.hypot(a.x-b.x,a.y-b.y))}
+    pr.forEach(function(m,i){if(m.tell>0&&last[i]<=0)seq.push(i);last[i]=m.tell})}
+  var alt=seq.every(function(v,i){return i===0||v!==seq[i-1]});
+  ok(a.maxHp===120&&b.maxHp===120&&a.scrapN===9,"a pair sniper has two thirds of the sniper's health (120) and 9 cubes");
+  ok(both>600&&near>=T.pair.apart,"over 60 s of jumping the pair never perches within "+T.pair.apart+" m of each other (closest "+near.toFixed(1)+" m)");
+  ok(seq.length>=6&&alt,"they fire in turn: "+seq.length+" tells, alternating ("+seq.slice(0,10).join("")+")");
+  L1(s)(a);var n0=seq.length;for(t=0;t<60*8;t++){p.x=23.5;p.y=17.5;idle(s);s.step();if(b.tell>0&&last[1]<=0)seq.push(1);last[1]=b.tell}
+  ok(seq.length-n0>=2,"with its partner down, the other fires on its own cadence");
+})();
+/* Juggernaut: plows pillars through the normal break path, credited to nobody; a Perfect stops the charge */
+(function(){
+  var s=M.create({seed:8,tune:QUIET});steps(s,5);var p=s.players[0];p.x=10;p.y=12;
+  dropSpan(s,[29],-1);steps(s,10);s.drainEvents();
+  var j=s.spawnBoss("juggernaut",13.6,23.5);j.state="tell";j.t=.01;j.cx=1;j.cy=0;j.head=0;var ev=[];
+  ok(j.maxHp===450&&j.armored&&j.noPods&&j.r===T.juggernaut.radius,"the Juggernaut: 450 health, armored like a loader, never takes pods");
+  var x0=j.x,t;for(t=0;t<60*2.2;t++){idle(s);s.step();ev=ev.concat(s.drainEvents())}
+  var sd=ev.filter(function(e){return e[0]==="sd"});
+  ok(j.x-x0>8,"its charge runs on through the pillar ("+(j.x-x0).toFixed(1)+" m)");
+  ok(s.world.get(17,23,0)===0&&s.world.get(18,24,1)===0,"it breaks the pillar's base through the normal break path");
+  steps(s,200);ev=ev.concat(s.drainEvents());sd=ev.filter(function(e){return e[0]==="sd"});
+  ok(sd.length>=1&&sd.every(function(e){return e[4]===-1}),"with the next pillar gone, the span comes down, credited to nobody");
+  ok(sumW(s,function(w){return w.spans+w.voxels})===0,"none of it counts for the mech: no spans, no voxels");
+  s=M.create({seed:8,tune:QUIET});steps(s,5);p=s.players[0];
+  j=s.spawnBoss("juggernaut",p.x+6,p.y);j.state="charge";j.t=2;j.cx=-1;j.cy=0;j.hit=false;steps(s,3);
+  s.hitEnemy(j,45,{by:0,kind:"heavy",grade:"Good",pow:1,w:"pile"},j.x,j.y,.8);steps(s,1);var good=j.state==="charge";
+  s.hitEnemy(j,45,{by:0,kind:"heavy",grade:"Perfect",pow:1,w:"pile"},j.x,j.y,.8);steps(s,1);
+  ok(good&&j.state==="recover"&&j.vx===0&&j.stag>0,"a Good doesn't stop its charge; a Perfect staggers it and ends the charge");
+})();
+function sumW(s,f){var n=0;(s.stats[0]||[]).forEach(function(w){if(w)n+=f(w)||0});return n}
+/* the Warden (TDD-D14) */
+function warden(o){o=o||{};var s=M.create({seed:o.seed||8,level:o.level||1,tune:M.mergeTune(QUIET,o.tune||{})});steps(s,5);
+  var p=s.players[0];p.x=o.px||180;p.y=o.py||24;var b=s.spawnBoss("warden",o.x||200,o.y||24,o);return {s:s,b:b,p:p,legs:b.parts.filter(function(e){return e.kind==="wleg"}),plats:b.parts.filter(function(e){return e.kind==="wplat"})}}
+function hit(s,e,n,by){return s.hitEnemy(e,n,{by:by===undefined?0:by,kind:"light",pow:1},e.x,e.y,(e.z||0)+.5)}
+(function(){
+  var W=warden(),s=W.s,b=W.b;
+  ok(b.z===5&&b.maxHp===1500&&b.scrapN===60&&W.legs.length===4&&W.legs.every(function(l){return l.maxHp===300&&l.z===0})&&W.plats.length===3&&W.plats.every(function(q){return q.maxHp===150})&&b.riders.length===3&&b.riders.every(function(r){return r.maxHp===180&&r.mode==="ride"}),
+    "the Warden: a body 5 m up (1,500 health, 60 cubes), four 300-health legs, three 150-health platforms each carrying a Bounty sniper");
+  ok(s.bots.filter(function(e){return e.wid===b.wid}).length===11,"its parts are linked entities in the enemy list sharing one parent id");
+  ok(hit(s,b,100)===50,"while any rider is up, the body takes half damage (100 -> 50)");
+  ok(hit(s,W.legs[0],100)===100,"a leg takes full damage: the riders' cover doesn't reach it");
+  b.riders.forEach(L1(s));steps(s,1);
+  ok(hit(s,b,100)===100,"with every rider down, the body takes full damage");
+  var st=s.hitEnemy(b,1,{by:0,kind:"heavy",grade:"Perfect",pow:1,w:"pile"},b.x,b.y,5.5);ok(!(b.stag>0),"a Perfect doesn't stagger it");
+  ok(b.noPods&&W.legs.every(function(l){return l.noPods}),"it never takes pods");
+  var sn=s.snapshot(false),rows=sn.b.filter(function(r){return r[1]>=8});
+  ok(rows.filter(function(r){return r[1]===8}).length===1&&rows.filter(function(r){return r[1]===10&&r[11]===rows[0][0]}).length===4&&rows.filter(function(r){return r[1]===9}).length===3&&rows[0][11]===15,
+    "the snapshot carries the body (kind 8, legs mask 15), its platforms (9) and legs (10) with the body's id");
+})();
+(function(){
+  var W=warden({tune:{boss:{sight:0}}}),s=W.s,b=W.b,pl=W.plats[0],r=pl.carry,t;
+  hit(s,pl,1e3);
+  ok(pl.hp<=0&&r.mode==="fall"&&ridersUp(b),"breaking a platform drops its rider; the others still cover the body");
+  for(t=0;t<120&&r.mode==="fall";t++){idle(s);s.step()}
+  ok(r.mode==="perch"&&r.z===0&&r.hp===180-T.boss.fallDmg&&r.stun>1,"the rider lands in the street with the usual fall damage and stun ("+r.hp+" left)");
+  ok(sumW(s,function(w){return w.evictions})===1,"the platform's breaker gets the eviction");
+  steps(s,30);ok(Math.hypot(r.x-pl.x,r.y-pl.y)>=0&&s.bots.indexOf(pl)<0,"the broken platform is gone from the enemy list; the rider fights on");
+})();
+function ridersUp(b){return b.riders.some(function(r){return r.hp>0&&r.mode==="ride"})}
+(function(){
+  var W=warden({px:178,py:24,x:200}),s=W.s,b=W.b,t;b.state="fight";b.barT=1e9;
+  steps(s,60);var x0=b.x;steps(s,60);var v0=(x0-b.x);
+  hit(s,W.legs[0],1e3);
+  ok(W.legs[0].hp<=0&&b.legsBroken===1&&Math.abs(b.stag-T.warden.leg.stagger)<.02,"breaking a leg staggers the Warden for 2 s");
+  x0=b.x;steps(s,60);var still=Math.abs(b.x-x0)<1e-6;steps(s,70);x0=b.x;steps(s,60);var v1=(x0-b.x);
+  ok(still&&Math.abs(v0-.8)<.02&&Math.abs(v1-.6)<.02,"it stands still while staggered, then walks 25% slower ("+v0.toFixed(2)+" -> "+v1.toFixed(2)+" m/s)");
+  var ev=s.drainEvents();ok(ev.some(function(e){return e[0]==="wd"&&e[1]==="leg"}),"a leg break sends a leg event");
+})();
+(function(){
+  var W=warden({px:150,py:10,x:200}),s=W.s,b=W.b,t;b.state="fight";
+  var bot=s.spawnBot(b.x+1,b.y+1),q=s.players[0];
+  W.legs.forEach(function(l){hit(s,l,1e3)});
+  ok(b.down&&b.falling&&b.stag===0,"four broken legs bring the body down");
+  var hp0=b.hp;for(t=0;t<120&&b.falling;t++){idle(s);s.step()}
+  ok(!b.falling&&b.z===T.warden.fall.z&&hp0-b.hp===400,"it lands as a collapse and takes 400 itself ("+(hp0-b.hp)+")");
+  ok(bot.hp<=0||bot.maxHp-bot.hp>=T.collapse.botDmg,"what is under it takes collapse damage");
+  b.riders.forEach(L1(s));steps(s,1);ok(hit(s,b,100)===150,"once down, it takes 50% more damage (100 -> 150)");
+  var x0=b.x;q.x=b.x;q.y=b.y;b.hp=b.maxHp*.3;var tell=false;for(t=0;t<180;t++){idle(s);s.step();if(b.tell>0)tell=true}
+  ok(Math.abs(b.x-x0)<1e-6&&!tell,"down, it neither walks nor stomps");
+})();
+(function(){   /* barrage: four shells toward a mech, a 2 s warning, 20 to mechs, 40 to enemies, credited to nobody; a Bulwark's shield blocks it from the front */
+  var W=warden({px:186,py:24,x:200}),s=W.s,b=W.b,q=W.p,t;b.state="idle";
+  var k=s.bossAct(b,"barrage");
+  ok(k&&k.pts.length===4&&Math.abs(k.t-2)<1e-9&&s.snapshot(false).wb.length===1,"a barrage puts four shell warnings on the ground for 2 s (in the snapshot)");
+  var near=k.pts.filter(function(pt){return Math.hypot(pt[0]-q.x,pt[1]-q.y)<.1}).length;
+  var e1=s.spawnBot(k.pts[0][0],k.pts[0][1]);e1.state="idle";e1.hp=e1.maxHp=1000;var bw=s.spawnUnit("bulwark",k.pts[1][0]+.8,k.pts[1][1],{});bw.state="idle";bw.head=Math.PI;
+  var hp0=q.hp;steps(s,118);var early=q.hp===hp0;s.drainEvents();steps(s,4);var ev=s.drainEvents();
+  ok(near===1&&early&&hp0-q.hp===20,"one shell lands on the mech: 20 damage after the warning, none before ("+(hp0-q.hp)+")");
+  ok(e1.maxHp-e1.hp===40,"an enemy under a shell takes 40 ("+(e1.maxHp-e1.hp)+")");
+  ok(bw.hp===bw.maxHp,"a Bulwark facing the shell blocks it with its shield");
+  var bw2=s.spawnUnit("bulwark",190,30,{});bw2.state="idle";bw2.head=Math.PI;k=s.bossAct(b,"barrage");k.pts=[[191.5,30],[1,1],[1,1],[1,1]];steps(s,125);
+  ok(bw2.maxHp-bw2.hp===40,"from behind, the shell hits the Bulwark");
+  ok(ev.filter(function(e){return e[0]==="wd"&&e[1]==="shell"}).length===4&&!ev.some(function(e){return e[0]==="x"&&e[2]!==-1}),"the shells credit nobody");
+  var vs=0,vx=0;for(var y=21;y<26;y++)for(var x=174;x<177;x++)for(var z=0;z<2;z++)if(s.world.get(x,y,z))vs++;
+  k=s.bossAct(b,"barrage");k.pts=[[175.5,23.5],[1,1],[1,1],[1,1]];steps(s,125);
+  for(y=21;y<26;y++)for(x=174;x<177;x++)for(z=0;z<2;z++)if(s.world.get(x,y,z))vx++;
+  ok(vx<vs,"a shell knocks a hole in what it lands on ("+vs+" -> "+vx+" voxels)");
+  var Wb=warden({}),bb=Wb.b;bb.barT=.01;Wb.s.step();ok(Wb.s.wshells.length===1&&Math.abs(bb.barT-8)<.02,"its barrage runs every 8 s on its own timer");
+})();
+(function(){   /* below 50%: a Scuttler pack from its belly every 15 s */
+  var W=warden({px:150,py:10}),s=W.s,b=W.b,t,packs=[];b.state="idle";b.barT=1e9;
+  function run(n){for(var t=0;t<n;t++){idle(s);s.step();s.drainEvents().forEach(function(e){if(e[0]==="wd"&&e[1]==="pack")packs.push(s.tick)})}}
+  b.state="fight";run(60*16);var above=packs.length;
+  b.hp=Math.floor(b.maxHp*.49);packs=[];run(60*15.5);
+  var sc=s.bots.filter(function(e){return e.kind==="scuttler"});
+  ok(above===0&&packs.length===2&&Math.abs(packs[1]-packs[0]-900)<=1,"below 50% it drops a Scuttler pack at once and every 15 s ("+packs.length+" packs)");
+  ok(sc.length>=4,"each pack is four Scuttlers out of its belly ("+sc.length+" up)");
+})();
+(function(){   /* stomp below 50%: a 0.8 s tell, then 25 within 3 m */
+  var W=warden({x:190}),s=W.s,b=W.b,q=W.p,t,ev=[];b.state="fight";b.barT=1e9;
+  q.x=b.x+1;q.y=b.y;steps(s,60);var noTell=!(b.tell>0);
+  b.hp=Math.floor(b.maxHp*.4);b.packT=1e9;var hp0=q.hp,told=-1,hitAt=-1;
+  for(t=0;t<120;t++){q.x=b.x+1;q.y=b.y;q.vx=q.vy=0;idle(s);s.step();if(told<0&&b.tell>0)told=t;if(hitAt<0&&q.hp<hp0)hitAt=t;ev=ev.concat(s.drainEvents())}
+  ok(noTell&&told>=0&&hitAt-told>=47&&hitAt-told<=49&&hp0-q.hp===25,"below 50% it stomps a mech under it: a 0.8 s tell ("+((hitAt-told)/60).toFixed(2)+" s), then 25");
+  ok(ev.some(function(e){return e[0]==="wd"&&e[1]==="tell"})&&ev.some(function(e){return e[0]==="wd"&&e[1]==="stomp"}),"the tell and the stomp send events");
+  q.x=b.x+5;hp0=q.hp;var t2=false;for(t=0;t<120;t++){q.x=b.x+5;q.y=b.y;idle(s);s.step();if(b.tell>0)t2=true}
+  ok(!t2&&q.hp===hp0,"a mech more than 3 m from its centre isn't stomped");
+})();
+(function(){   /* the body's death takes every linked part */
+  var W=warden({tune:{boss:{sight:0}}}),s=W.s,b=W.b,pl=W.plats[1],r=pl.carry,t;
+  hit(s,pl,1e3);for(t=0;t<120&&r.mode==="fall";t++){idle(s);s.step()}
+  s.drainEvents();hit(s,b,1e5);steps(s,1);var ev=s.drainEvents(),x=ev.filter(function(e){return e[0]==="x"});
+  ok(W.legs.concat(W.plats).every(function(e){return e.hp<=0})&&b.riders.every(function(q){return q===r||q.hp<=0})&&s.bots.filter(function(e){return e.wid===b.wid&&e.hp>0}).length===(r.hp>0?1:0),
+    "when the body dies, every leg, platform and riding sniper goes with it");
+  ok(r.hp>0,"a rider already knocked to the street fights on");
+  ok(x.length===1&&x[0][1]==="warden"&&x[0][2]===0&&x[0][4]===60,"one kill: the Warden, credited to the mech, 60 cubes");
+})();
+/* a scripted level 5 wave 5, ending both ways */
+function wave5(how){
+  var s=M.create({seed:21,level:5,plan:bossPlan("juggernaut","warden",5),tune:M.mergeTune(FAST,{waves:[{bots:0},{bots:0},{bots:0},{bots:0},{bots:0,boss:1}]})}),b=null,o=null,t,ev=[];
+  for(t=0;t<60*60&&!b;t++){idle(s);s.step();b=s.bots.filter(function(e){return e.kind==="wbody"})[0]}
+  var walked=0,x0=b?b.x:0;steps(s,120);walked=b?x0-b.x:0;
+  for(t=0;t<60*60&&!o;t++){
+    if(b.hp>0){if(how==="legs"&&b.legsBroken<4){var l=b.parts.filter(function(e){return e.kind==="wleg"&&e.hp>0})[0];if(l)hit(s,l,120)}
+      else if(!b.falling)hit(s,b,150)}
+    else if(s.state==="play")s.killAll();   /* the belly pack it left behind */
+    key(s,s.state==="choose"?128:0);s.step();s.drainEvents().forEach(function(e){ev.push(e);if(e[0]==="o")o=e})}
+  return {s:s,b:b,o:o,ev:ev,walked:walked,x0:x0};
+}
+(function(){
+  var a=wave5("body"),c=wave5("legs");
+  ok(a.b&&a.x0===M.MAP.zones[4].x1-T.warden.walkIn.from&&a.walked>1,"level 5 wave 5: the Warden walks in from the far end of the Terminus Yard (x "+a.x0+", "+a.walked.toFixed(1)+" m in 2 s)");
+  ok(a.o&&a.o[1]==="victory"&&a.ev.some(function(e){return e[0]==="x"&&e[1]==="warden"&&e[2]===0})&&a.ev.some(function(e){return e[0]==="ch"&&e[1]==="prompt"}),"killing the body clears wave 5; extracting wins the climb");
+  ok(c.o&&c.o[1]==="victory"&&c.b.down&&c.b.legsBroken===4&&c.ev.some(function(e){return e[0]==="wd"&&e[1]==="down"})&&c.ev.some(function(e){return e[0]==="x"&&e[1]==="warden"}),"breaking all four legs, then killing it, also clears wave 5 and wins");
+})();
+
 console.log(bad?bad+" rule check(s) failed":"rules pass");
 process.exit(bad?1:0);
