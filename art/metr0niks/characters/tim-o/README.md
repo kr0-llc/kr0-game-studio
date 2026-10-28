@@ -32,4 +32,4 @@ Prompts: `../../prompts/tim-o-parts-v2.txt` and `../../prompts/tim-o-sprites-das
 
 ## Puppet moves (28 October 2026)
 
-`puppet/puppet-moves.js` animates Tim-o in code on parts sheet v2.1 (`puppet/atlas-v2-1.webp`, joints in `puppet/rig-v2-1.js`). It has dash, pile-bunker charge/fire/retract, jump-jets from the legs, overheat vent and destroyed break-apart. It uses the ink prototype's joints and two-bone IK legs and costs no credits. The review page plays every move. It is not wired into `prototype-ink.html` yet.
+`puppet/puppet-moves.js` animates Tim-o in code on parts sheet v2.1 (`puppet/atlas-v2-1.webp`, joints in `puppet/rig-v2-1.js`). It has dash, pile-bunker charge/fire/retract, jump-jets from the legs, overheat vent and destroyed break-apart. It uses the ink prototype's joints and two-bone IK legs and costs no credits. The review page plays every move. The same parts and poses are in `games/metr0niks/prototypes/prototype-ink.html` (copied to `ink-proto/sprites/timo_v21.*`). The route is written up as section 4 of `studio/design-workflows.md`.

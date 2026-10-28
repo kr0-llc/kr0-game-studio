@@ -100,7 +100,7 @@ button.small{font-size:16px;padding:4px 10px;width:auto;box-shadow:2px 2px 0 var
 "use strict";
 /* Assets live with the art. A published copy sets window.INK_ASSETS to "" before this script. */
 var BASE=window.INK_ASSETS!==undefined?window.INK_ASSETS:"../../../art/metr0niks/ink-proto/";
-(function(){var s=document.createElement("script");s.src=BASE+"sprites/atlas.js";s.onload=boot;s.onerror=function(){document.getElementById("loading").textContent="Could not load "+BASE+"sprites/atlas.js"};document.head.appendChild(s)})();
+(function(){var s=document.createElement("script");s.src=BASE+"sprites/atlas.js";s.onload=function(){var t=document.createElement("script");t.src=BASE+"sprites/timo_v21.js";t.onload=t.onerror=boot;document.head.appendChild(t)};s.onerror=function(){document.getElementById("loading").textContent="Could not load "+BASE+"sprites/atlas.js"};document.head.appendChild(s)})();
 
 /* ---------- tunables: read from the sim so the numbers match the main prototype ---------- */
 var ST=(window.MetroSim&&MetroSim.T)||null;
@@ -143,23 +143,26 @@ cv.addEventListener("contextmenu",function(e){e.preventDefault()});
 function $(id){return document.getElementById(id)}
 
 /* ---------- atlas ---------- */
-var A,atlasImg=new Image(),groundImg=new Image(),garageImg=new Image();
+/* TA: Tim-o parts sheet v2.1 (28 Oct 2026, art/metr0niks/characters/tim-o/puppet/); its p_* sprites replace the rejected ones in the main atlas */
+var A,TA=null,atlasImg=new Image(),timoImg=new Image(),groundImg=new Image(),garageImg=new Image();
 function boot(){
   A=window.INK_ATLAS;var n=3,done=function(){if(--n===0)start()};
   atlasImg.onload=groundImg.onload=garageImg.onload=done;
+  if(window.INK_TIMO){n++;timoImg.onload=function(){TA=window.INK_TIMO;done()};timoImg.onerror=done;timoImg.src=BASE+"sprites/timo_v21.webp"}
   atlasImg.src=BASE+"sprites/atlas.webp";groundImg.src=BASE+"sprites/ground.webp";garageImg.src=BASE+"sprites/garage.webp";
 }
-function S(n){return A.sprites[n]}
+function AT(n){return TA&&TA.sprites[n]?TA:A}
+function S(n){return AT(n).sprites[n]}
 /* draw sprite n with its pivot at (x,y): rotation r, scale sx/sy (display scale; the atlas stores STORE x) */
 /* img: an optional sprite-sized canvas drawn in place of the atlas cell (used for damaged buildings) */
 function spr(n,x,y,r,sx,sy,img){
-  var s=A.sprites[n],k=1/A.store,w=s.w*k,h=s.h*k;
-  ctx.save();ctx.translate(x,y);if(r)ctx.rotate(r);ctx.scale(sx||1,sy||sx||1);
-  ctx.drawImage(img||atlasImg,img?0:s.x,img?0:s.y,s.w,s.h,-s.pivot[0]*w,-s.pivot[1]*h,w,h);ctx.restore();
+  var a=AT(n),s=a.sprites[n],k=1/a.store,w=s.w*k,h=s.h*k;
+  ctx.save();ctx.translate(x,y);if(r)ctx.rotate(r);ctx.scale(sx||1,sy||sx||1);if(s.rot)ctx.rotate(s.rot);
+  ctx.drawImage(img||(a===TA?timoImg:atlasImg),img?0:s.x,img?0:s.y,s.w,s.h,-s.pivot[0]*w,-s.pivot[1]*h,w,h);ctx.restore();
 }
 /* offset of joint j from sprite n's pivot, in display px (unrotated, unscaled) */
-function joint(n,j){var s=A.sprites[n],k=1/A.store,p=s.joints[j];return {x:(p[0]-s.pivot[0])*s.w*k,y:(p[1]-s.pivot[1])*s.h*k}}
-function dims(n){var s=A.sprites[n],k=1/A.store;return {w:s.w*k,h:s.h*k}}
+function joint(n,j){var a=AT(n),s=a.sprites[n],k=1/a.store,p=s.joints[j];return {x:(p[0]-s.pivot[0])*s.w*k,y:(p[1]-s.pivot[1])*s.h*k}}
+function dims(n){var a=AT(n),s=a.sprites[n],k=1/a.store;return {w:s.w*k,h:s.h*k}}
 function rot(v,a){var c=Math.cos(a),s=Math.sin(a);return {x:v.x*c-v.y*s,y:v.x*s+v.y*c}}
 
 /* ---------- audio: Web Audio when it can fetch, plain <audio> elements otherwise (file://) ---------- */
@@ -451,6 +454,8 @@ function updatePlayer(dt){
   p.face=aimW.x>=p.x?1:-1;p.aim=Math.atan2(aimW.y-sh.y,(aimW.x-sh.x)*p.face);
   /* heat */
   if(p.over>0){p.over-=dt;if(p.over<=0)p.heat=0}else p.heat=Math.max(0,p.heat-T.heat.drain*dt);
+  /* overheat vent: the reactor pack blows steam for the whole lockout */
+  if(p.over>0&&Math.random()<dt*9)fx("puff",p.x-p.face*rr(20,40),p.y-rr(165,185),rr(18,30),.8,0);
   if(p.heat>=100&&p.over<=0){p.heat=100;p.over=T.heat.lockout;sfx("overheat",{vol:.8});toast("Overheat!",900);for(var i=0;i<4;i++)fx("puff",p.x+rr(-30,30),p.y-90,rr(25,45),1,i*.12)}
   /* minigun */
   p.gunT-=dt;
@@ -463,7 +468,7 @@ function updatePlayer(dt){
     sfx("minigun",{vol:.32,dur:.13,max:3,jit:.12});
   }
   /* pile bunker: charge bar, then hold for the ring and release on the target */
-  if(p.retract>0)p.retract-=dt;else if(p.ring<0)p.atb=Math.min(T.atb.fill,p.atb+dt);
+  if(p.retract>0){p.retract-=dt;if(Math.random()<dt*6){var tp=muzzleWorld(p,"armB","tip");fx("puff",tp.x,tp.y-tp.z,rr(10,16),.5,0)}}else if(p.ring<0)p.atb=Math.min(T.atb.fill,p.atb+dt);
   if(mouse.rp&&p.ring<0&&p.atb>=T.atb.fill&&p.retract<=0&&p.over<=0){p.ring=0;sfx("ring",{vol:.6})}
   if(p.ring>=0){p.ring+=dt;var r=ringR(p.ring);if(mouse.rr||!mouse.r||r<=2)firePile(p,r)}
   mouse.rp=mouse.rr=false;
@@ -483,8 +488,8 @@ function firePile(p,r){
 }
 /* world positions of rig joints (for muzzles, shoulders) */
 /* leg chain lengths for the two-bone IK: hip to knee from the thigh's knee joint, knee to sole from the shin sprite */
-function legLens(R){if(R._L)return R._L;var k=R.legLen,kn=joint(R.thigh,"knee"),sh=A.sprites[R.shin];
-  return R._L={l1:Math.hypot(kn.x,kn.y)*k,l2:sh.h/A.store*(1-sh.pivot[1])*k*.94,base:Math.atan2(-kn.x,kn.y)}}
+function legLens(R){if(R._L)return R._L;var k=R.legLen,kn=joint(R.thigh,"knee"),sh=S(R.shin);
+  return R._L={l1:Math.hypot(kn.x,kn.y)*k,l2:sh.h/AT(R.shin).store*(1-sh.pivot[1])*k*.94,base:Math.atan2(-kn.x,kn.y)}}
 function bodyY(m){var R=m.rig,L=legLens(R),hip=joint(R.torso,"hipF");return -((L.l1+L.l2)*.93+hip.y)}
 /* the arms are flat cut-outs, so past these angles they read as detached: clamp the drawn aim */
 var BIPED_RATE=.034;   /* gait phase per px moved; the IK stride is sized from it so planted feet don't skate */
@@ -492,7 +497,7 @@ function aimD(m){return Math.max(-.8,Math.min(.95,m.aim))}
 function shoulderWorld(m){if(!m.rig.torso)return {x:m.x,y:m.y-60};var j=joint(m.rig.torso,"armF"),k=m.rig.scale||1;return {x:m.x+j.x*m.face*k,y:m.y+(bodyY(m)+j.y)*k}}
 function muzzleWorld(m,arm,jn){
   var R=m.rig,an=R[arm],sh=joint(R.torso,arm),by=bodyY(m),ang=arm==="armB"?aimD(m)*.9:aimD(m),
-      mj=joint(an,jn),v=rot(mj,ang),ext=arm==="armB"&&m.recoilB>.6?16:0;
+      mj=joint(an,jn),v=rot(rot(mj,S(an).rot||0),ang),ext=arm==="armB"&&m.recoilB>.6?16:0;
   var k=R.scale||1;return {x:m.x+(sh.x+v.x+Math.cos(ang)*ext)*m.face*k,y:m.y,z:-(by+sh.y+v.y)*k};
 }
 
@@ -592,13 +597,22 @@ function update(dt){
 function shadow(x,y,w,a){ctx.fillStyle="rgba(92,64,44,"+(a||.2)+")";ctx.beginPath();ctx.ellipse(x,y,w,w*.36,0,0,6.283);ctx.fill()}
 /* draws sprite with a flash-to-white when hit, via a second 'lighter' pass */
 function sprHit(n,x,y,r,sx,sy,hit,img){spr(n,x,y,r,sx,sy,img);if(hit>0){ctx.save();ctx.globalCompositeOperation="lighter";ctx.globalAlpha=Math.min(.45,hit*4);spr(n,x,y,r,sx,sy,img);ctx.restore()}}
+/* jet flame in the rig's mirrored frame: ang 0 points forward, PI back, PI/2 down */
+function flame(x,y,ang,len,w,t){if(len<2)return;var j=1+Math.sin(t*90)*.12;ctx.save();ctx.translate(x,y);ctx.rotate(ang);
+  function P(L,W){ctx.beginPath();ctx.moveTo(0,-W);ctx.quadraticCurveTo(L*.55,-W*1.05,L*j,0);ctx.quadraticCurveTo(L*.55,W*1.05,0,W);ctx.closePath()}
+  P(len,w);ctx.fillStyle="#ef8a4c";ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=INK;ctx.stroke();P(len*.6,w*.5);ctx.fillStyle="#ffd98a";ctx.fill();ctx.restore()}
 function drawBiped(m){
   var R=m.rig,f=m.face,walk=Math.min(1,Math.hypot(m.vx,m.vy)/120),ph=m.phase,
       by=bodyY(m),bob=Math.abs(Math.sin(ph))*-4*walk+Math.sin(gtime*2.2+ph)*1.2*(1-walk),
       sq=m.squash,sy=1-sq*.25,sx=1+sq*.18;
+  /* player poses from the puppet review (28 Oct): dash lean, pile-bunker charge, overheat vent, jump-jets on drop-in and extract */
+  var me=m===player&&!!R.pack,dash=me&&m.dash>0,charge=me&&m.ring>=0,over=me&&m.over>0,
+      jets=me&&((m.dropping&&m.vz<0&&m.z<340)||m.extracting),
+      drp=over?Math.max(0,Math.min(1,(T.heat.lockout-m.over)/.3,m.over/.3)):0;
   ctx.save();ctx.translate(m.x,m.y-m.z);ctx.scale(f*sx*(R.scale||1),sy*(R.scale||1));
-  var ty=by+bob+sq*14,tilt=Math.max(-.12,Math.min(.12,m.vx*f/900))+(m.recoilB>.6?-.08:0);
+  var ty=by+bob+sq*14+(charge?8:0)+drp*10,tilt=Math.max(-.12,Math.min(.12,m.vx*f/900))+(m.recoilB>.6?-.08:0)+(dash?.26:0)+(charge?-.12:0)-drp*.06;
   var dir=m.vx*f<-20?-1:1;   /* walking backwards swings the feet the other way */
+  var feet={};
   /* two-bone IK: the foot slides back along the ground in stance and lifts forward in swing; the knee bends forward */
   function leg(side,ph2){
     var hip=joint(R.torso,side),k=R.legLen,L=legLens(R),air=m.z>2||m.dropping;
@@ -609,14 +623,19 @@ function drawBiped(m){
     var kx=hx-Math.sin(r1)*L.l1,ky=hy+Math.cos(r1)*L.l1,r2=Math.atan2(-(fx-kx),fy-ky);
     sprHit(R.thigh,hx,hy,r1-L.base,k,k,m.hit);
     sprHit(R.shin,kx,ky,r2+lift*.004,k,k,m.hit);
+    feet[side]={x:kx-Math.sin(r2)*L.l2,y:ky+Math.cos(r2)*L.l2};
   }
-  leg("hipB",ph+Math.PI);
-  if(R.armB){var sb=joint(R.torso,"armB"),ext=m.recoilB>.6?16:m.recoilB*-10;ctx.save();ctx.translate(sb.x,ty+sb.y);ctx.rotate(aimD(m)*.9+tilt);sprHit(R.armB,ext,0,0,.92,.92,m.hit);ctx.restore()}
-  if(R.pack){var pk=joint(R.torso,"pack");sprHit(R.pack,pk.x-6,ty+pk.y,tilt,.7,.7,m.hit)}
-  leg("hipF",ph);
+  function legJet(side,w){var q=feet[side];if(dash)flame(q.x-10,q.y-14,Math.PI+.35,34,w,gtime+w);else if(jets)flame(q.x-2,q.y+2,Math.PI-1.45,60,w,gtime+w)}
+  leg("hipB",ph+Math.PI);legJet("hipB",7);
+  if(R.armB){var sb=joint(R.torso,"armB"),ext=m.recoilB>.6?16:m.recoilB*-10+(charge?-8:0),ab=aimD(m)*.9+tilt;ab+=(1.15-ab)*drp;ctx.save();ctx.translate(sb.x,ty+sb.y);ctx.rotate(ab);sprHit(R.armB,ext,0,0,.92,.92,m.hit);ctx.restore()}
+  if(R.pack){var pk=joint(R.torso,"pack");if(dash)flame(pk.x-26,ty+pk.y+8,Math.PI+.25+tilt,70,12,gtime+.3);sprHit(R.pack,pk.x-6,ty+pk.y,tilt,.7,.7,m.hit)}
+  leg("hipF",ph);legJet("hipF",8);
   sprHit(R.torso,0,ty,tilt,1,1,m.hit);
   if(m===player&&m.atb>=T.atb.fill){var e=joint(R.torso,"eye");ctx.fillStyle="rgba(255,236,140,"+(.4+.3*Math.sin(gtime*10))+")";ctx.beginPath();ctx.arc(e.x,ty+e.y,7,0,6.283);ctx.fill()}
-  var sa=joint(R.torso,"armF");ctx.save();ctx.translate(sa.x,ty+sa.y);ctx.rotate(aimD(m)+tilt*.5);sprHit(R.armF,-m.recoil*6,(m.recoil?rr(-1,1):0),0,1,1,m.hit);ctx.restore();
+  var sa=joint(R.torso,"armF"),af=aimD(m)+tilt*.5;af+=(1.05-af)*drp;ctx.save();ctx.translate(sa.x,ty+sa.y);ctx.rotate(af);sprHit(R.armF,-m.recoil*6,(m.recoil?rr(-1,1):0),0,1,1,m.hit);
+  /* a locked minigun glows at the barrel */
+  if(over){var mv=rot(joint(R.armF,"muzzle"),S(R.armF).rot||0);ctx.globalAlpha=.6+.3*Math.sin(gtime*12);ctx.fillStyle="#ef8a4c";ctx.strokeStyle=INK;ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(mv.x,mv.y,6,0,6.283);ctx.fill();ctx.stroke()}
+  ctx.restore();
   ctx.restore();
 }
 function drawCrab(m){

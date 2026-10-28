@@ -82,7 +82,7 @@ Studio site page: https://storage.googleapis.com/kr0-game-studio-site/index.html
 | Simulation and tuning standard | `studio/simulation-and-tuning.md` |
 | Brand rules (r0 styling) | `studio/brand.md` |
 | Art style guides per game | `studio/art-style-guides.md` |
-| Design workflows: Scenario character sheet, turnaround and action-sprite workflows; animation review after every animation run (Oct 28, 2026); Scenario MCP and skills; gemini-creative plugin | `studio/design-workflows.md` |
+| Design workflows: Scenario character sheet, turnaround and action-sprite workflows; cut-out puppet route (section 4); animation review after every animation run (Oct 28, 2026); Scenario MCP and skills; gemini-creative plugin | `studio/design-workflows.md` |
 | Asset management: kr0 Studio Art Drive folder for masters, repo previews and manifest, provenance record | `studio/asset-management.md` |
 | MCP servers and plugins for Claude Code sessions on this repo (Scenario MCP; gemini-creative plugin) | `.mcp.json`, `.claude/settings.json` |
 | GDD designer skill | `studio/skills/gdd-designer/SKILL.md` |

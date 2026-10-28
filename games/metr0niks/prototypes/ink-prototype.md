@@ -32,6 +32,8 @@ Part generated, part drawn in code, as kr0 asked.
 
 Prompts are in `art/metr0niks/prompts/p_inkproto_*.txt`. Enemies use a rival palette (slate blue, coral, mustard, a skull-gear insignia) so they read apart from the peach and sage player at a glance.
 
+**Tim-o parts v2.1 (28 October 2026).** kr0 rejected the original player parts sheet ("parts don't align"). The player now draws from `art/metr0niks/ink-proto/sprites/timo_v21.webp` and `timo_v21.js` (parts sheet v2.1, copied from `art/metr0niks/characters/tim-o/puppet/`). These replace the `p_*` sprites of the main atlas; if they fail to load, the old ones are used. Poses from the puppet review are now in play: a forward lean with pack and leg flames while dashing, a crouch and pulled-back arm while the pile-bunker ring is up, steam from the tip while it retracts, drooped arms, a slump, pack steam and a glowing barrel during an overheat lockout, and leg jump-jets on the drop-in and the extract. Destroyed was already a break-apart.
+
 **Known art gaps.** The mechs are drawn facing one way and mirrored, so there is no back view when walking up the screen. The arms are flat cut-outs, so their drawn aim is limited to about 45° up and 55° down; past that they would read as detached (the shots still go where you aim). Only the starter parts (minigun, pile bunker, jump jets) have art; the other 18 parts need sheets. Buildings have one damaged state (cracks drawn in code) and one rubble sprite.
 
 ## Renderer (27 October 2026)
