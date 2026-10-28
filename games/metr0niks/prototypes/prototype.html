@@ -32,6 +32,8 @@ canvas{display:block;width:100vw;height:100vh;cursor:none}
 #armorBar.low i{background:var(--bad)}
 #heatBar i{background:var(--rust)}
 #heatBar.over i{background:var(--bad)}
+#heatBar.red i{background:#fff4e6;box-shadow:0 0 10px #ffd9a0}   /* Redline: white-hot */
+.ci{color:var(--muted);font-weight:500;letter-spacing:.02em}
 #dashBar i{background:var(--cyan)}
 #pileBar i{background:var(--cyan)}
 #pileBar.ready i{background:var(--hazard)}
@@ -260,6 +262,7 @@ body[data-theme="ink"] #gDrop{border:2px solid var(--line);color:#fffaf0;box-sha
   <div><div class="bl"><span id="pileLbl">Pile-bunker</span><b id="pileTxt">charging</b></div><div class="bar" id="pileBar"><i></i></div></div>
   <div id="shRow" hidden><div class="bl"><span id="shLbl">Mortar (Q)</span><b id="shTxt">ready</b></div><div class="bar" id="shBar"><i></i></div></div>
   <div class="oc" id="ocTxt" hidden>OVERCLOCK</div>
+  <div class="oc ci" id="ciTxt" hidden></div>
 </div>
 <div class="hud" id="score">
   <div><span>Level</span><b id="lvlTxt">1</b></div>
@@ -436,6 +439,7 @@ function tcol(c){
 /* ===== World as the renderer sees it: the typed arrays and arrays of the current sim (see bind) ===== */
 var sim=null,vox,owner,vdmg,structures,meshRev=-1;
 var player,players=[],bots=[],pods=[],shots=[],scraps=[],debris=[],clusters=[],pools=[],parts=[],floats=[],run={wave:1,queue:[],breather:0};
+var breaches=[],strikes=[],bolts=[],rings=[];   /* phase 6: placed Breach charges, Strike beacon lines; Arc bolts and blast rings are effects */
 var state="menu",time=0,scrap=0,kills=0,toastT=0,shake=0;
 var mouse={x:0,y:0,down:false,rdown:false,rpress:false},keys={};
 var banked=0;   /* banked = this player's wallet */
@@ -468,6 +472,7 @@ function lvHp(base){return Math.round(base*(1+T.level.hp*(CAMP.level-1)))}   /* 
 function bind(s){
   sim=s;var w=s.world;vox=w.vox;owner=w.owner;vdmg=w.vdmg;structures=w.structures;
   players=s.players;player=players[0];bots=s.bots;pods=s.pods;shots=s.shots;scraps=s.scraps;debris=s.debris;clusters=s.clusters;pools=s.pools||[];run=s.run;
+  breaches=s.breaches||[];strikes=s.strikes||[];
   meshDirty=true;meshRev=w.rev;
 }
 bind(newSim([MetroSim.STARTER]));
@@ -657,6 +662,11 @@ function handleEvent(e){
     /* phase 5 callouts (GDD Feel): the kills of one collapse or slag pool, and a deck span coming down */
     case "cr":floats.push({x:e[3],y:e[4],z:2.4,txt:"CRUSHED \u00d7"+e[2],col:"#ff8a3a",t:1.6,big:1.6});break;
     case "sd":floats.push({x:e[2],y:e[3],z:3.6,txt:"SPAN DOWN",col:"#f2c230",t:1.8,big:1.9});break;
+    /* phase 6: Arc bolt, Seismic slam, Breach blast, Strike shell */
+    case "ar":bolts.push({p:e[2],t:.14});break;
+    case "sm":rings.push({x:e[2],y:e[3],z:0,r:e[4],t:.4,max:.4,col:e[5]?"242,194,48":"210,190,160"});break;
+    case "bx":rings.push({x:e[2],y:e[3],z:e[4],r:T.breach.radius,t:.3,max:.3,col:"255,140,60"});break;
+    case "sk":rings.push({x:e[2],y:e[3],z:e[4],r:T.strike.radius,t:.35,max:.35,col:"255,190,90"});break;
   }
 }
 /* The run ended: bank what counts, tell the partner, show the end screen. */
@@ -687,6 +697,8 @@ function updateFx(dt){
   for(i=parts.length-1;i>=0;i--){var q=parts[i];q.x+=q.vx*dt;q.y+=q.vy*dt;q.z+=q.vz*dt;if(q.kind==="spark")q.vz-=12*dt;if(q.z<0){q.z=0;q.vz*=-.3}if((q.t-=dt)<=0)parts.splice(i,1)}
   for(i=floats.length-1;i>=0;i--){floats[i].z+=dt*1.2;if((floats[i].t-=dt)<=0)floats.splice(i,1)}
   for(i=cables.length-1;i>=0;i--)if((cables[i].t-=dt)<=0)cables.splice(i,1);
+  for(i=bolts.length-1;i>=0;i--)if((bolts[i].t-=dt)<=0)bolts.splice(i,1);
+  for(i=rings.length-1;i>=0;i--)if((rings[i].t-=dt)<=0)rings.splice(i,1);
   shake=Math.max(0,shake-dt*1.6);zoneFx.t+=dt;
 }
 /* Zones: MAP.zones[sim.zone.open..] are sealed and drawn dark; the one that just opened fades up over ZONE_FADE s. */
@@ -733,7 +745,8 @@ function updateCam(dt){
     tx=hx+(px(zx,zy,0)-hx)*u;ty=hy+(py(zx,zy,0)-hy)*u;zm=1-.5*u}
   var k=1-Math.exp(-dt*6);camX+=(tx-camX)*k;camY+=(ty-camY)*k;zoom=baseZoom*zm;
 }
-function keyBits(){return (keys.KeyW||keys.ArrowUp?1:0)|(keys.KeyA||keys.ArrowLeft?2:0)|(keys.KeyS||keys.ArrowDown?4:0)|(keys.KeyD||keys.ArrowRight?8:0)|(keys.Space?16:0)|(keys.KeyQ?32:0)}
+function keyBits(){return (keys.KeyW||keys.ArrowUp?1:0)|(keys.KeyA||keys.ArrowLeft?2:0)|(keys.KeyS||keys.ArrowDown?4:0)|(keys.KeyD||keys.ArrowRight?8:0)|(keys.Space?16:0)|(keys.KeyQ?32:0)|
+  (keys.Digit1||keys.Numpad1?256:0)|(keys.Digit2||keys.Numpad2?512:0)}   /* 1 and 2: call-in slots (GDD-D54) */
 /* Torso: aim at the geometry under the cursor (walls, pillars, cover), else at bot height,
    snapping to a bot under the cursor. The snap takes the bot's own height. */
 var aim={ax:16,ay:16,az:.6};
@@ -802,6 +815,14 @@ function drawPlayer(p){
     [-1,1].forEach(function(side){var tx=p.x-ls*side*.3,ty=p.y+lc*side*.3;
       L.push({x:tx,y:ty,z:0,hw:.46,hd:.12,h:.3,a:p.leg,col:[40,42,46]});L.push({x:tx,y:ty,z:.3,hw:.4,hd:.1,h:.05,a:p.leg,col:[110,106,96]})});
     L.push({x:p.x,y:p.y,z:.3,hw:.2,hd:.26,h:.48,a:p.leg,col:[70,74,80]});
+  } else if(v.legs==="skids"){   /* Grav-skids: two hover sleds over a cyan glow, no feet */
+    var hov=.1+Math.sin(time*6+p.idx)*.025;
+    ctx.fillStyle=TH.ink?"rgba(43,120,150,.22)":"rgba(63,214,232,.2)";ring(p.x,p.y,0,.6);ctx.fill();
+    [-1,1].forEach(function(side){var tx=p.x-ls*side*.27,ty=p.y+lc*side*.27;
+      L.push({x:tx,y:ty,z:hov,hw:.38,hd:.12,h:.13,a:p.leg,col:[60,64,72]});
+      L.push({x:tx-lc*.3,y:ty-ls*.3,z:hov+.03,hw:.06,hd:.09,h:.08,a:p.leg,col:vis})});
+    L.push({x:p.x,y:p.y,z:hov+.13,hw:.15,hd:.2,h:.38,a:p.leg,col:[86,90,98]});
+    L.push({x:p.x,y:p.y,z:.6,hw:.18,hd:.24,h:.18,a:p.leg,col:[70,74,80]});
   } else {
     [-1,1].forEach(function(side){
       var f=sw*side;
@@ -819,12 +840,22 @@ function drawPlayer(p){
   if(v.core==="composite")U.push({x:p.x+ac*.05,y:p.y+as*.05,z:1.24+bob,hw:.22,hd:.24,h:.04,a:p.aim,col:[176,182,192]});
   if(v.core==="nanite"){U.push({x:p.x-ac*.12,y:p.y-as*.12,z:1.28+bob,hw:.1,hd:.1,h:.06,a:p.aim,col:[127,220,106]});
     if(p.hp<p.maxHp&&(p.calm||0)>=T.nanite.delay&&rnd()<.25)sparks(p.x,p.y,1+rnd()*.5,1,[127,220,106])}
+  if(v.core==="overdrive"){U.push({x:p.x-ac*.12,y:p.y-as*.12,z:1.28+bob,hw:.13,hd:.13,h:.07,a:p.aim,col:p.odOn?[255,90,74]:[140,64,52]});
+    if(p.odOn&&rnd()<.3)sparks(p.x,p.y,1.3+rnd()*.3,1,[255,120,80])}
   if(v.core==="slag")[-1,1].forEach(function(sd){U.push({x:p.x+as*sd*.36,y:p.y-ac*sd*.36,z:.8+bob,hw:.26,hd:.05,h:.44,a:p.aim,col:[150,96,60]})});
   if(v.shoulder==="cryo"){U.push({x:p.x-ac*.2-as*.16,y:p.y-as*.2+ac*.16,z:1.42+bob,hw:.1,hd:.1,h:.22,a:p.aim,col:[150,232,240]});U.push({x:p.x-ac*.2-as*.16,y:p.y-as*.2+ac*.16,z:1.64+bob,hw:.06,hd:.06,h:.05,a:p.aim,col:[63,214,232]})}
   var sox=p.x-ac*.2-as*.16,soy=p.y-as*.2+ac*.16;   /* shoulder mount, left of the cockpit */
   if(v.shoulder==="mortar")[0,1].forEach(function(k){var o=k?.12:-.12;U.push({x:sox-as*o,y:soy+ac*o,z:1.4+bob,hw:.1,hd:.09,h:.32,a:p.aim,col:k?[86,90,98]:[74,78,86]});
     U.push({x:sox-as*o+ac*.03,y:soy+ac*o+as*.03,z:1.72+bob,hw:.07,hd:.07,h:.04,a:p.aim,col:(p.sq||0)>0?[40,42,46]:acc})});
   if(v.shoulder==="vent"){U.push({x:sox,y:soy,z:1.42+bob,hw:.12,hd:.14,h:.18,a:p.aim,col:[150,232,240]});U.push({x:sox-ac*.1,y:soy-as*.1,z:1.6+bob,hw:.04,hd:.12,h:.08,a:p.aim,col:(p.sq||0)>0?[96,100,108]:[63,214,232]})}
+  if(v.shoulder==="redline"){   /* Redline vent: a finned stack that burns white-hot in Redline */
+    var hot=p.red>0;U.push({x:sox,y:soy,z:1.42+bob,hw:.1,hd:.12,h:.34,a:p.aim,col:hot?[230,226,220]:[96,100,108]});
+    [0,1,2].forEach(function(k){U.push({x:sox,y:soy,z:1.48+bob+k*.1,hw:.13,hd:.15,h:.03,a:p.aim,col:hot?[255,244,226]:[74,78,86]})});
+    U.push({x:sox,y:soy,z:1.76+bob,hw:.07,hd:.08,h:.05,a:p.aim,col:hot?[255,255,255]:(p.sq||0)>0?[96,100,108]:[255,120,60]});
+    if(hot&&rnd()<.5)sparks(sox,soy,1.85,1,[255,244,226])}
+  if(v.shoulder==="breach"){   /* Breach charges: a rack with the charges still in hand */
+    U.push({x:sox,y:soy,z:1.42+bob,hw:.13,hd:.17,h:.1,a:p.aim,col:[74,78,86]});
+    for(var bk=0;bk<(p.bHeld||0);bk++){var bo=(bk-.5)*.16;U.push({x:sox-as*bo,y:soy+ac*bo,z:1.52+bob,hw:.06,hd:.06,h:.09,a:p.aim,col:[255,120,60]})}}
   if(v.shoulder==="magnet"){[-1,1].forEach(function(k){U.push({x:sox+as*k*.1,y:soy-ac*k*.1,z:1.42+bob,hw:.05,hd:.04,h:.26,a:p.aim,col:k<0?[224,70,60]:[170,174,184]})});U.push({x:sox,y:soy,z:1.42+bob,hw:.05,hd:.14,h:.06,a:p.aim,col:[74,78,86]})}
   if(v.reactor==="fusion"){U.push({x:p.x-ac*.34,y:p.y-as*.34,z:.86+bob,hw:.12,hd:.16,h:.34,a:p.aim,col:[150,232,240]});U.push({x:p.x-ac*.47,y:p.y-as*.47,z:.98+bob,hw:.04,hd:.1,h:.1,a:p.aim,col:[63,214,232]})}
   var rt=v.reactor==="fusion"?0:v.reactor==="mk3"?3:v.reactor==="mk2"?2:1;   /* reactor on the back; hotter tiers glow */
@@ -834,6 +865,10 @@ function drawPlayer(p){
   var rx=p.x+as*.4,ry=p.y-ac*.4;
   U.push({x:rx,y:ry,z:.92+bob,hw:.16,hd:.12,h:.26,a:p.aim,col:[74,78,86]});
   if(v.armR==="plasma"){U.push({x:rx+ac*.26,y:ry+as*.26,z:.98+bob,hw:.2,hd:.09,h:.14,a:p.aim,col:[86,90,98]});U.push({x:rx+ac*.5,y:ry+as*.5,z:1.0+bob,hw:.06,hd:.06,h:.1,a:p.aim,col:p.muzzle>0?[255,255,255]:[190,150,255]})}
+  else if(v.armR==="arc"){   /* Arc caster: a brass coil with a violet emitter */
+    U.push({x:rx+ac*.24,y:ry+as*.24,z:.98+bob,hw:.18,hd:.07,h:.12,a:p.aim,col:[86,90,98]});
+    [0,1,2].forEach(function(k){U.push({x:rx+ac*(.14+k*.11),y:ry+as*(.14+k*.11),z:.94+bob,hw:.025,hd:.11,h:.2,a:p.aim,col:[176,150,52]})});
+    U.push({x:rx+ac*.48,y:ry+as*.48,z:1.0+bob,hw:.06,hd:.06,h:.1,a:p.aim,col:p.muzzle>0?[255,255,255]:[190,170,255]})}
   else if(v.armR==="rail")[-1,1].forEach(function(k){U.push({x:rx+ac*.42+as*k*.06,y:ry+as*.42-ac*k*.06,z:1.0+bob,hw:.42,hd:.035,h:.1,a:p.aim,col:k<0?[56,60,70]:[110,116,128]})});
   else if(v.armR==="shotgun"){U.push({x:rx+ac*.3,y:ry+as*.3,z:1.0+bob,hw:.26,hd:.1,h:.1,a:p.aim,col:[110,70,48]});U.push({x:rx+ac*.3,y:ry+as*.3,z:1.1+bob,hw:.26,hd:.1,h:.08,a:p.aim,col:[40,42,46]})}
   else U.push({x:rx+ac*.32,y:ry+as*.32,z:1.0+bob,hw:.24,hd:.07,h:.12,a:p.aim,col:[40,42,46]});
@@ -843,6 +878,11 @@ function drawPlayer(p){
     U.push({x:lx,y:ly,z:.95+bob,hw:.2,hd:.15,h:.3,a:p.aim,col:[74,78,86]});
     U.push({x:lx+ac*.24,y:ly+as*.24,z:.98+bob,hw:.06,hd:.17,h:.24,a:p.aim,col:[176,150,52]});
     U.push({x:lx+ac*.38,y:ly+as*.38,z:1.02+bob,hw:.06,hd:.06,h:.14,a:p.aim,col:p.pileT>0?[255,255,255]:acc});
+  } else if(v.armL==="seismic"){   /* Seismic hammer: a block head that drops on the slam */
+    var sl=p.pileT>0?-.32:0;
+    U.push({x:lx,y:ly,z:.95+bob,hw:.2,hd:.14,h:.3,a:p.aim,col:[74,78,86]});
+    U.push({x:lx+ac*.32,y:ly+as*.32,z:.95+bob+sl,hw:.22,hd:.2,h:.3,a:p.aim,col:p.pileT>0?[255,255,255]:[150,96,60]});
+    U.push({x:lx+ac*.32,y:ly+as*.32,z:1.25+bob+sl,hw:.15,hd:.13,h:.05,a:p.aim,col:acc});
   } else if(v.armL==="buster"){
     U.push({x:lx,y:ly,z:.95+bob,hw:.22,hd:.14,h:.34,a:p.aim,col:[74,78,86]});
     U.push({x:lx+ac*.5,y:ly+as*.5,z:1.02+bob,hw:.4,hd:.1,h:.2,a:p.aim,col:[56,60,70]});
@@ -854,7 +894,7 @@ function drawPlayer(p){
   drawParts(U,fl);
   if(p.muzzle>0){
     var mx=p.x+ac*.66+as*.4,my=p.y+as*.66-ac*.4;
-    ctx.fillStyle=v.armR==="plasma"?"rgba(200,170,255,.95)":v.armR==="rail"?"rgba(170,235,255,.95)":"rgba(255,220,140,.95)";ctx.beginPath();ctx.arc(SX(mx,my,1.06),SY(mx,my,1.06),(v.armR==="rail"?8:5)*zoom,0,6.283);ctx.fill();
+    ctx.fillStyle=v.armR==="plasma"||v.armR==="arc"?"rgba(200,170,255,.95)":v.armR==="rail"?"rgba(170,235,255,.95)":"rgba(255,220,140,.95)";ctx.beginPath();ctx.arc(SX(mx,my,1.06),SY(mx,my,1.06),(v.armR==="rail"?8:5)*zoom,0,6.283);ctx.fill();
   }
 }
 function drawBot(b){
@@ -867,6 +907,7 @@ function drawBot(b){
   } else shadow(b.x,b.y,.55);
   if(b.slow>0)frostRing(b);
   if(b.elite&&!b.dropping)eliteRing(b);
+  if(b.cache)goldRing(b);
   var P=[],hc=Math.cos(b.head),hs=Math.sin(b.head),ac=Math.cos(b.aim),as=Math.sin(b.aim);
   [-1,1].forEach(function(s){P.push({x:b.x-hs*s*.3,y:b.y+hc*s*.3,z:z,hw:.42,hd:.1,h:.28,a:b.head,col:[40,40,42]})});
   P.push({x:b.x,y:b.y,z:z+.18,hw:.34,hd:.26,h:.3,a:b.head,col:[140,70,56]});
@@ -889,6 +930,7 @@ function drawLoader(b){
   var base=hot?[255,214,40]:[168,142,48],dark=hot?[230,180,30]:[134,114,38];
   if(b.slow>0&&!b.dropping)frostRing(b);
   if(b.elite&&!b.dropping)eliteRing(b);
+  if(b.cache)goldRing(b);
   if(b.dropping){
     ctx.strokeStyle="rgba(255,90,74,.8)";ctx.lineWidth=2;ring(b.x,b.y,0,.7+Math.min(1,b.z/T.bot.dropHeight)*.6);ctx.stroke();
     shadow(b.x,b.y,.7,.25+.3*(1-b.z/T.bot.dropHeight));
@@ -950,6 +992,41 @@ function drawBossFx(b){
 function frostRing(b){
   ctx.strokeStyle=TH.ink?"rgba(43,120,150,.8)":"rgba(150,232,240,.85)";ctx.lineWidth=2.5*zoom;ctx.setLineDash([3,3]);ctx.beginPath();
   ctx.ellipse(SX(b.x,b.y,b.z||0),SY(b.x,b.y,b.z||0),(b.r+.2)*HW*1.41*zoom,(b.r+.2)*HH*1.41*zoom,0,0,6.283);ctx.stroke();ctx.setLineDash([]);
+}
+/* An enemy that took a Scrap cache glows gold until it drops it (GDD-D43). */
+function goldRing(b){
+  ctx.strokeStyle=TH.ink?"rgba(176,130,20,.9)":"rgba(242,194,48,"+(.6+.35*Math.sin(time*8))+")";ctx.lineWidth=2.5*zoom;
+  ctx.beginPath();ctx.ellipse(SX(b.x,b.y,b.z||0),SY(b.x,b.y,b.z||0),(b.r+.32)*HW*1.41*zoom,(b.r+.32)*HH*1.41*zoom,0,0,6.283);ctx.stroke();
+}
+/* Phase 6 effects: Arc bolts (a jagged line through each hit), blast rings (Seismic slam, Breach charge, Strike shell),
+   placed Breach charges, and Strike beacon lines before they land. */
+function drawBolts(){
+  bolts.forEach(function(b){var a=Math.max(0,b.t/.14),q=b.p;if(q.length<6)return;
+    ctx.beginPath();ctx.moveTo(SX(q[0],q[1],q[2]),SY(q[0],q[1],q[2]));
+    for(var i=3;i<q.length;i+=3){var x0=q[i-3],y0=q[i-2],z0=q[i-1];
+      for(var k=1;k<=4;k++){var u=k/4,j=k<4?.18:0,x=x0+(q[i]-x0)*u+(rnd()-.5)*j,y=y0+(q[i+1]-y0)*u+(rnd()-.5)*j,z=z0+(q[i+2]-z0)*u+(rnd()-.5)*j;ctx.lineTo(SX(x,y,z),SY(x,y,z))}}
+    ctx.lineJoin="round";ctx.strokeStyle=TH.ink?"rgba(90,63,160,"+a*.5+")":"rgba(170,140,255,"+a*.55+")";ctx.lineWidth=6*zoom;ctx.stroke();
+    ctx.strokeStyle=TH.ink?"rgba(43,36,32,"+a+")":"rgba(245,240,255,"+a+")";ctx.lineWidth=1.8*zoom;ctx.stroke()});
+}
+function drawRings(){
+  rings.forEach(function(r){var a=Math.max(0,r.t/r.max),rr=r.r*(.35+.65*(1-a));
+    ctx.strokeStyle=TH.ink?"rgba(43,36,32,"+a+")":"rgba("+r.col+","+a+")";ctx.lineWidth=(2+3*a)*zoom;ring(r.x,r.y,r.z||0,rr);ctx.stroke()});
+}
+function drawCharge(c){
+  var blink=Math.sin(time*14+c.x)>0;
+  box(c.x,c.y,c.z,.12,.12,.14,.3,[70,62,58]);box(c.x,c.y,c.z+.14,.05,.05,.05,.3,blink?[255,90,40]:[110,40,30]);
+}
+function drawStrikeMark(k){
+  var S=T.strike,pts=k.pts,pl=.5+.5*Math.sin(time*12);
+  if(!pts){var q=players[k.by];if(!q||q.hp<=0)return;var ux=q.ax-q.x,uy=q.ay-q.y,ul=Math.hypot(ux,uy)||1;
+    pts=S.at.map(function(d){return [q.x+ux/ul*d,q.y+uy/ul*d]})}
+  var enemy=k.by<0;
+  pts.forEach(function(pt){
+    ctx.fillStyle=enemy?"rgba(255,60,40,"+(.1+.14*pl)+")":"rgba(255,170,60,.08)";ring(pt[0],pt[1],0,S.radius);ctx.fill();
+    ctx.strokeStyle=enemy?"rgba(255,60,40,"+(.5+.4*pl)+")":"rgba(255,170,60,.7)";ctx.lineWidth=2;ctx.setLineDash(enemy?[]:[6,5]);ring(pt[0],pt[1],0,S.radius);ctx.stroke();ctx.setLineDash([]);
+  });
+  var e=pts[pts.length-1],X=SX(e[0],e[1],.4),Y=SY(e[0],e[1],.4),t="STRIKE "+Math.max(0,k.t).toFixed(1)+"s";
+  ctx.textAlign="center";ctx.font="700 "+Math.round(12*zoom)+"px 'JetBrains Mono',monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,.8)";ctx.fillStyle=enemy?"#ff5a4a":"#ffb86a";ctx.strokeText(t,X,Y);ctx.fillText(t,X,Y);
 }
 /* Mag-winch cables: a taut line that fades out. */
 var cables=[];
@@ -1129,6 +1206,7 @@ function render(){
   players.forEach(function(q){if(q.hp>0)ents.push({k:q.x+q.y,f:drawPlayer,o:q})});
   bots.forEach(function(b){ents.push({k:b.x+b.y+(b.z>.05&&b.boss?1.45:0),f:drawerOf(b),o:b})});
   pods.forEach(function(o){if(o.landed||o.t<=0)ents.push({k:o.x+o.y,f:drawPod,o:o})});
+  breaches.forEach(function(c){ents.push({k:c.x+c.y,f:drawCharge,o:c})});
   shots.forEach(function(s){ents.push({k:s.x+s.y,f:drawShot,o:s})});
   scraps.forEach(function(s){ents.push({k:s.x+s.y,f:drawScrap,o:s})});
   debris.forEach(function(d){ents.push({k:d.x+d.y,f:drawDebris,o:d})});
@@ -1152,6 +1230,7 @@ function render(){
   bots.forEach(function(b){if(b.boss)drawBossFx(b);else if(b.kind==="charge")drawChargeMark(b)});
   drawCables();
   pods.forEach(drawPodMark);   /* on top of the voxels so a pod under the overpass stays visible */
+  strikes.forEach(drawStrikeMark);drawRings();drawBolts();
   drawZoneLabels();
   drawParticles();drawFloats();drawPodText();drawTags();drawPost();drawCrosshair();drawVignette();
   camX-=shx;camY-=shy;
@@ -1164,15 +1243,16 @@ function drawPodMark(o){
   ctx.strokeStyle="rgba(63,214,232,"+(.55+.45*pl)+")";ctx.lineWidth=2;ring(o.x,o.y,0,.55+.25*pl);ctx.stroke();
   ctx.lineWidth=1.5;ring(o.x,o.y,0,.2+.5*Math.max(0,o.t)/T.pods.countdown);ctx.stroke();
 }
+var POD_LID={repair:[127,220,106],overclock:[63,214,232],cache:[242,194,48],strike:[255,90,74]},POD_TAG={repair:"REPAIR",overclock:"OVERCLOCK",cache:"CACHE",strike:"STRIKE"};
 function drawPod(o){
-  var pl=.5+.5*Math.sin(time*4);
+  var pl=.5+.5*Math.sin(time*4),c=POD_LID[o.type]||POD_LID.overclock;
   shadow(o.x,o.y,.4,.25+.3*(1-o.z/T.pods.dropHeight));
   box(o.x,o.y,o.z,.28,.28,.3,.4,[78,84,92]);
-  box(o.x,o.y,o.z+.3,.24,.24,.05,.4,[63+60*pl,214,232]);
+  box(o.x,o.y,o.z+.3,.24,.24,.05,.4,[Math.min(255,c[0]+50*pl),Math.min(255,c[1]+30*pl),Math.min(255,c[2]+30*pl)]);
 }
 function drawPodText(){
   ctx.textAlign="center";ctx.font="700 "+Math.round(13*zoom)+"px 'JetBrains Mono',monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,.8)";ctx.fillStyle="#3fd6e8";
-  pods.forEach(function(o){if(o.landed||o.t<=0)return;var x=SX(o.x,o.y,.4),y=SY(o.x,o.y,.4),t="POD "+o.t.toFixed(1)+"s";ctx.strokeText(t,x,y);ctx.fillText(t,x,y)});
+  pods.forEach(function(o){if(o.landed||o.t<=0)return;var x=SX(o.x,o.y,.4),y=SY(o.x,o.y,.4),t=(POD_TAG[o.type]||"POD")+" "+o.t.toFixed(1)+"s";ctx.strokeText(t,x,y);ctx.fillText(t,x,y)});
 }
 function drawTags(){   /* the other mech wears its player number */
   ctx.textAlign="center";ctx.font="700 "+Math.round(12*zoom)+"px 'JetBrains Mono',monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(0,0,0,.8)";
@@ -1298,18 +1378,23 @@ function drawVignette(){
 
 /* ===== HUD ===== */
 var $=function(id){return document.getElementById(id)};
-var hudEls={aT:$("armorTxt"),aB:$("armorBar"),hT:$("heatTxt"),hB:$("heatBar"),dT:$("dashTxt"),dB:$("dashBar"),pT:$("pileTxt"),pB:$("pileBar"),s:$("scrapTxt"),k:$("killTxt"),w:$("waveTxt"),wl:$("waveLbl"),e:$("enTxt"),el:$("enLbl"),lv:$("lvlTxt"),bb:$("bossBar"),bbT:$("bossTxt"),bank:$("bankTxt"),oc:$("ocTxt"),pl:$("pileLbl"),keys:$("keys"),tdL:$("tdL"),tdR:$("tdR"),tdS:$("tdS"),tdQ:$("tdQ"),tdQRow:$("tdQRow"),shRow:$("shRow"),shL:$("shLbl"),shT:$("shTxt"),shB:$("shBar")};
+var hudEls={aT:$("armorTxt"),aB:$("armorBar"),hT:$("heatTxt"),hB:$("heatBar"),dT:$("dashTxt"),dB:$("dashBar"),pT:$("pileTxt"),pB:$("pileBar"),s:$("scrapTxt"),k:$("killTxt"),w:$("waveTxt"),wl:$("waveLbl"),e:$("enTxt"),el:$("enLbl"),lv:$("lvlTxt"),bb:$("bossBar"),bbT:$("bossTxt"),bank:$("bankTxt"),oc:$("ocTxt"),ci:$("ciTxt"),pl:$("pileLbl"),keys:$("keys"),tdL:$("tdL"),tdR:$("tdR"),tdS:$("tdS"),tdQ:$("tdQ"),tdQRow:$("tdQRow"),shRow:$("shRow"),shL:$("shLbl"),shT:$("shTxt"),shB:$("shBar")};
 hudEls.bbI=hudEls.bb.querySelector("i");
 function enemyCount(){return Net.guest&&Net.live?Net.en:bots.length+run.queue.length}
 function hud(){
   var p=player,a=Math.max(0,Math.ceil(p.hp));
   hudEls.aT.textContent=a;hudEls.aB.firstElementChild.style.width=(a/p.maxHp*100)+"%";hudEls.aB.classList.toggle("low",a/p.maxHp<.35);
-  hudEls.hT.textContent=p.over?"locked "+p.over.toFixed(1)+"s":Math.round(p.heat)+"%";
-  hudEls.hB.firstElementChild.style.width=p.heat+"%";hudEls.hB.classList.toggle("over",!!p.over);
-  hudEls.dT.textContent=p.noDash?"none":p.dashCd>0?p.dashCd.toFixed(1)+"s":"ready";
+  hudEls.hT.textContent=p.over?"locked "+p.over.toFixed(1)+"s":p.red>0?"REDLINE "+p.red.toFixed(1)+"s · "+Math.round(p.heat)+"%":Math.round(p.heat)+"%";
+  hudEls.hB.firstElementChild.style.width=Math.min(100,p.heat)+"%";hudEls.hB.classList.toggle("over",!!p.over);hudEls.hB.classList.toggle("red",p.red>0);
+  hudEls.dT.textContent=p.noDash?"none":p.dashN!=null?p.dashN+" of "+T.skids.dashes+(p.dashCd>0?" · "+p.dashCd.toFixed(1)+"s":""):p.dashCd>0?p.dashCd.toFixed(1)+"s":"ready";
   hudEls.dB.firstElementChild.style.width=p.noDash?0:(1-p.dashCd/(T.player.dashCooldown*(p.dashMul||1)))*100+"%";
   if(p.q){var sq=p.sq||0,sf=T[p.q].every;hudEls.shT.textContent=sq>0?sq.toFixed(1)+"s":"ready";
-    hudEls.shB.firstElementChild.style.width=(1-sq/sf)*100+"%";hudEls.shB.classList.toggle("ready",sq<=0)}
+    hudEls.shB.firstElementChild.style.width=Math.max(0,1-sq/sf)*100+"%";hudEls.shB.classList.toggle("ready",sq<=0);
+    if(p.q==="redline"&&p.red>0){hudEls.shT.textContent="REDLINE";hudEls.shB.firstElementChild.style.width="100%"}
+    if(p.q==="breach"){var bn=breaches.filter(function(c){return c.by===p.idx}).length;hudEls.shT.textContent=(p.bHeld||0)+" held"+(bn?" · "+bn+" set":"")+(sq>0?" · "+sq.toFixed(1)+"s":"");
+      hudEls.shB.classList.toggle("ready",(p.bHeld||0)>0)}}
+  var cs=sim.callins&&sim.callins[p.idx];hudEls.ci.hidden=!(cs&&(cs[0]||cs[1]));   /* call-in slots (GDD-D54): keys 1 and 2 */
+  if(!hudEls.ci.hidden)hudEls.ci.textContent="1 "+(cs[0]?MetroSim.POD_NAME[cs[0]]:"–")+" · 2 "+(cs[1]?MetroSim.POD_NAME[cs[1]]:"–");
   var pr=p.ring>=0,pt=pr?"ring":p.retract>0?"retracting":p.atb>=T.atb.fill?"ready":"charging";
   hudEls.pT.textContent=pt;
   hudEls.pB.firstElementChild.style.width=(pr?100:p.retract>0?(1-p.retract/T.pile.retract)*100:p.atb/T.atb.fill*100)+"%";
@@ -1401,7 +1486,14 @@ var SHAPE={
   strider:[[0,0,0,.6,.6,1.4],[.4,0,1.4,.6,.6,1.2],[0,1.8,0,.6,.6,1.4],[.4,1.8,1.4,.6,.6,1.2],[0,-.1,2.6,1.2,2.6,.4]],
   composite:[[0,0,0,2.2,2.2,1.8],[.4,.4,1.8,1.4,1.4,.3],[.6,-.1,.4,1,.1,1]],
   nanite:[[0,0,0,2,2,2],[.6,.6,2,.8,.8,.4],[2,.7,.7,.2,.6,.6],[.7,2,.7,.6,.2,.6]],
-  fusion:[[0,0,0,1.6,1.6,.4],[.3,.3,.4,1,1,1.6],[0,0,2,1.6,1.6,.4],[1.6,.5,.6,.4,.6,.6]]
+  fusion:[[0,0,0,1.6,1.6,.4],[.3,.3,.4,1,1,1.6],[0,0,2,1.6,1.6,.4],[1.6,.5,.6,.4,.6,.6]],
+  /* phase 6 blueprints */
+  arc:[[0,0,0,1.2,1.2,1.2],[1.2,.3,.3,2.4,.6,.6],[1.6,.1,.1,.2,1,1],[2.2,.1,.1,.2,1,1],[2.8,.1,.1,.2,1,1],[3.6,.35,.35,.5,.5,.5]],
+  redline:[[0,0,0,1.2,1.2,1.2],[.2,.2,1.2,.8,.8,1.4],[.05,.05,1.6,1.1,1.1,.15],[.05,.05,2,1.1,1.1,.15],[.3,.3,2.6,.6,.6,.3]],
+  seismic:[[0,0,0,1.4,1.2,1.2],[1.4,.4,.4,1.6,.4,.4],[3,-.3,-.2,1.6,1.8,1.6]],
+  breach:[[0,0,0,2.2,1.2,.5],[.2,.2,.5,.7,.8,.6],[1.3,.2,.5,.7,.8,.6],[.45,.45,1.1,.2,.2,.3],[1.55,.45,1.1,.2,.2,.3]],
+  overdrive:[[0,0,0,2,2,1.8],[.5,.5,1.8,1,1,.4],[2,.6,.4,.3,.8,1],[-.3,.6,.4,.3,.8,1]],
+  skids:[[0,0,.3,3,1,.5],[0,2,.3,3,1,.5],[.8,.8,.8,1.4,1.4,1.6],[.2,-.1,0,2.6,1.2,.2],[.2,1.9,0,2.6,1.2,.2]]
 };
 function drawIcon(c,id,col,lw){
   var g=c.getContext("2d"),w=c.width,h=c.height,sh=SHAPE[id];g.clearRect(0,0,w,h);
@@ -1517,7 +1609,7 @@ function refreshGarage(){
     M.s.textContent=p?[p.name,mkTxt(p.id),wearTxt(p.id)].filter(Boolean).join(" · "):"Empty";drawIcon(M.c,p&&p.id,r?(TH.ui.rar&&TH.ui.rar[p.rarity]||r.c):TH.ui.empty,1.6);
     gTabs[i].el.classList.toggle("on",sl[0]===G.slot);drawIcon(gTabs[i].c,p&&p.id,sl[0]===G.slot?TH.ui.on:TH.ui.idle,1.8);
   });
-  var list=PARTS.filter(function(p){return p.slot===G.slot}).map(function(p){return p.id});
+  var list=PARTS.filter(function(p){return p.slot===G.slot&&(!p.zone||OWNED[p.id])}).map(function(p){return p.id});   /* blueprints (p.zone) appear once owned; the unlock by highest level comes with the save */
   if(!STARTER[G.slot])list.push("none");
   gEl.gThumbs.innerHTML="";
   list.forEach(function(id){
@@ -1599,24 +1691,28 @@ function renderGarage(dt){
 }
 
 /* Controls copy follows the build: gun, left arm, shoulder and legs change what the keys do. */
-var GUN_NAME={minigun:"minigun",shotgun:"shotgun",plasma:"plasma cutter",rail:"rail rifle"};
+var GUN_NAME={minigun:"minigun",shotgun:"shotgun",plasma:"plasma cutter",rail:"rail rifle",arc:"arc caster"};
 var GUN_TIP={minigun:"Minigun. Each shot adds heat; 100% locks guns for 3 s",shotgun:"Shotgun. Six pellets, 0.55 s apart. Each shot adds heat; 100% locks guns for 3 s",
-  plasma:"Plasma cutter. Short torch: ignores loader armor and melts walls and pillars. Heats up fast",rail:"Rail rifle. One slug every 1.1 s through every bot in line and through thin walls. Very hot"};
-var ARM_NAME={pile:"pile-bunker",buster:"bunker-buster",winch:"mag-winch"};
+  plasma:"Plasma cutter. Short torch: ignores loader armor and melts walls and pillars. Heats up fast",rail:"Rail rifle. One slug every 1.1 s through every bot in line and through thin walls. Very hot",
+  arc:"Arc caster. A bolt every 0.4 s that jumps to 2 more enemies within 4 m. Half damage to loaders; no damage to walls"};
+var ARM_NAME={pile:"pile-bunker",buster:"bunker-buster",winch:"mag-winch",seismic:"seismic hammer"};
 var ARM_TIP={pile:"Pile-bunker. Hold when the bar is full, release on the green ring",buster:"Bunker-buster. Hold when the bar is full, release on the green ring: a slow shell, with recoil",
-  winch:"Mag-winch. Hold when the bar is full, release on the green ring: the cable reels bots in, or you to walls and loaders. Perfect on a pillar tears it out"};
-var SH_NAME={mortar:"mortar",vent:"flash-vent"};
-var SH_TIP={mortar:"Siege mortar. Two shells arc onto the cursor, over buildings. Not within 4 m. Recharges in 7 s",vent:"Flash-vent. Dumps all heat, even when locked out, and freezes bots within 4 m. Recharges in 10 s"};
+  winch:"Mag-winch. Hold when the bar is full, release on the green ring: the cable reels bots in, or you to walls and loaders. Perfect on a pillar tears it out",
+  seismic:"Seismic hammer. Hold when the bar is full, release on the green ring: slams everything within 3 m (4 m on a Perfect). A Perfect staggers, topples stacks and shakes snipers off roofs"};
+var SH_NAME={mortar:"mortar",vent:"flash-vent",redline:"Redline vent",breach:"breach charges"};
+var SH_TIP={mortar:"Siege mortar. Two shells arc onto the cursor, over buildings. Not within 4 m. Recharges in 7 s",vent:"Flash-vent. Dumps all heat, even when locked out, and freezes bots within 4 m. Recharges in 10 s",
+  redline:"Redline vent. 5 s where nothing locks and heat climbs to 130; each point above 100 costs half a point of armor. Ends a lockout. 14 s recharge",
+  breach:"Breach charges. Tap Q to stick a charge under the cursor (10 m); tap with none in hand, or hold Q, to set them off. 2 held, 8 s each"};
 function buildHud(){
   var p=player,gun=GUN_NAME[p.gun]||"minigun",arm=ARM_NAME[p.pileKind]||"pile-bunker",ring="hold when the bar is full, release on the green ring",qn=p.q?SH_NAME[p.q]:"";
   hudEls.pl.textContent=arm.charAt(0).toUpperCase()+arm.slice(1);
-  hudEls.keys.innerHTML="<b>WASD</b> drive · <b>Mouse</b> aim torso · <b>Left click</b> "+gun+" · <b>Right mouse</b> "+arm+": "+ring+" · "+(p.noDash?"<b>Treads</b>: no dash":"<b>Space</b> dash")+(p.q?" · <b>Q</b> "+qn:"")+" · <b>Esc</b> pause · Touch cyan drop pods before the bots do · Break two pillars in a row to drop the road";
+  hudEls.keys.innerHTML="<b>WASD</b> drive · <b>Mouse</b> aim torso · <b>Left click</b> "+gun+" · <b>Right mouse</b> "+arm+": "+ring+" · "+(p.noDash?"<b>Treads</b>: no dash":"<b>Space</b> dash")+(p.q?" · <b>Q</b> "+qn:"")+(sim.callins&&sim.callins[p.idx]&&(sim.callins[p.idx][0]||sim.callins[p.idx][1])?" · <b>1</b> <b>2</b> call-ins at the cursor":"")+" · <b>Esc</b> pause · Touch cyan drop pods before the bots do · Break two pillars in a row to drop the road";
   var pn=sim&&sim.plan;$("planTxt").textContent=pn?COND[pn.condition].name+" · "+CONT[pn.contract].name:"-";
   hudEls.tdL.textContent=GUN_TIP[p.gun]||GUN_TIP.minigun;
   hudEls.tdR.textContent=ARM_TIP[p.pileKind]||ARM_TIP.pile;
   hudEls.shRow.hidden=!p.q;hudEls.tdQRow.hidden=!p.q;
   if(p.q){hudEls.shL.textContent=qn.charAt(0).toUpperCase()+qn.slice(1)+" (Q)";hudEls.tdQ.textContent=SH_TIP[p.q]}
-  hudEls.tdS.textContent=p.noDash?"Nothing: siege treads cannot dash":"Dash. Use it to clear a red collapse shadow";
+  hudEls.tdS.textContent=p.noDash?"Nothing: siege treads cannot dash":p.skids?"Hover dash: 2 charges, 1.6 s each. Use it to clear a red collapse shadow":"Dash. Use it to clear a red collapse shadow";
 }
 
 /* ===== Co-op netcode: host-authoritative, pluggable transport =====
@@ -1777,6 +1873,7 @@ Net.snap=function(m){
   if(!row)return;
   var was=p.hp;
   p.hp=row[6];p.maxHp=row[7];p.heat=row[8];p.over=row[9];p.dashCd=row[10];p.atb=row[12];p.ring=row[13];p.retract=row[14];p.pileT=row[15];p.oc=row[16];if(m.q)p.sq=m.q[Net.idx]||0;
+  p.red=row[24]||0;if(row[25]>=0)p.dashN=row[25];
   if(row[17])p.muzzle=.05;if(row[18])p.flash=.08;
   if(was>0&&p.hp<=0){for(i=0;i<20;i++)debrisPiece(p.x,p.y,.8,i%2?[74,78,86]:[63,214,232]);sparks(p.x,p.y,1,26,[255,170,60]);smoke(p.x,p.y,1,12)}
   if(p.hp<=0)return;
@@ -1811,7 +1908,7 @@ Net.apply=function(e){
 var SHOT_NAME=[];for(var sk in MetroSim.SHOT_KIND)SHOT_NAME[MetroSim.SHOT_KIND[sk]]=sk;
 function botView(r,pr,u){
   var k=r[1],f=r[8],zk=ZONE_KINDS[k],ZT=zk?T[zk]:null,o={id:r[0],team:1,boss:k===2,loader:k===1,dropping:!!(f&1),flash:f&2?.08:0,hp:r[7],maxHp:(zk==="charge"?ZT.hp:lvHp(ZT?ZT.hp:k===2?T.boss.hp:k===1?T.loader.hp:T.bot.hp))*(f&128?T.elite.hp:1),
-    state:f&4?"tell":f&8?"charge":"engage",slow:f&32?1:0,mode:"perch",tell:0,step:0,r:ZT?ZT.radius:k===1?T.loader.radius:k===2?T.boss.radius:T.bot.radius,elite:!!(f&128)};
+    state:f&4?"tell":f&8?"charge":"engage",slow:f&32?1:0,cache:f&1024?1:0,mode:"perch",tell:0,step:0,r:ZT?ZT.radius:k===1?T.loader.radius:k===2?T.boss.radius:T.bot.radius,elite:!!(f&128)};
   if(zk){o.kind=zk;o.t=r[9];if(f&256)o.state=zk==="scuttler"?"flash":zk==="wrecker"?"plant":"bash";o.shieldOff=!!(f&512)}   /* phase 4 kinds */
   o.x=pr?lerp(pr[2],r[2],u):r[2];o.y=pr?lerp(pr[3],r[3],u):r[3];o.z=pr?lerp(pr[4],r[4],u):r[4];
   o.head=pr?lerpAng(pr[5],r[5],u):r[5];o.aim=pr?lerpAng(pr[6],r[6],u):r[6];
@@ -1829,7 +1926,9 @@ function guestView(){
   shots=m.s.map(function(r){var pr=ma.s[r[0]],d=(B.ht-tgt)/1000,o={kind:SHOT_NAME[r[7]]||"bullet",big:r[8],vx:r[4],vy:r[5],vz:r[6]};
     if(pr){o.x=lerp(pr[1],r[1],u);o.y=lerp(pr[2],r[2],u);o.z=lerp(pr[3],r[3],u)}else{o.x=r[1]-r[4]*d;o.y=r[2]-r[5]*d;o.z=r[3]-r[6]*d}return o});
   scraps=m.sr.map(function(r){var pr=ma.sr[r[0]];return {x:pr?lerp(pr[1],r[1],u):r[1],y:pr?lerp(pr[2],r[2],u):r[2],z:pr?lerp(pr[3],r[3],u):r[3],spin:r[4]}});
-  pods=m.pd.map(function(r){var pr=ma.pd[r[0]];return {type:r[1]?"overclock":"repair",x:r[2],y:r[3],z:pr?lerp(pr[4],r[4],u):r[4],t:r[5],landed:!!r[6]}});
+  pods=m.pd.map(function(r){var pr=ma.pd[r[0]];return {type:MetroSim.POD_TYPES[r[1]]||"repair",x:r[2],y:r[3],z:pr?lerp(pr[4],r[4],u):r[4],t:r[5],landed:!!r[6]}});
+  breaches=(m.bc||[]).map(function(r){return {id:r[0],by:r[1],x:r[2],y:r[3],z:r[4]}});
+  strikes=(m.sk||[]).map(function(r){var o={id:r[0],by:r[1],t:r[2],x:r[3],y:r[4],pts:null};if(r.length>5){o.pts=[];for(var k=5;k<r.length;k+=2)o.pts.push([r[k],r[k+1]])}return o});
   var keep=[];   /* falling pieces exist while either surrounding snapshot lists them */
   clusters.forEach(function(c){var rb=m.cl.filter(function(r){return r[0]===c.id})[0],ra=ma.cl[c.id],r=rb||ra;
     if(!r)return;c.off=ra&&rb?lerp(ra[1],rb[1],u):r[1];c.creak=r[2];c.t=r[3];keep.push(c)});
@@ -1838,7 +1937,7 @@ function guestView(){
   m.p.forEach(function(r){
     var q=players[r[0]];if(!q||q===player)return;var pr=ma.p[r[0]];
     q.x=pr?lerp(pr[1],r[1],u):r[1];q.y=pr?lerp(pr[2],r[2],u):r[2];q.z=0;q.leg=pr?lerpAng(pr[4],r[4],u):r[4];q.aim=pr?lerpAng(pr[5],r[5],u):r[5];q.step=pr?lerp(pr[22],r[22],u):r[22];
-    q.hp=r[6];q.maxHp=r[7];q.heat=r[8];q.over=r[9];q.pileT=r[15];q.muzzle=r[17]?.05:0;q.flash=r[18]?.08:0;q.ax=r[19];q.ay=r[20];q.az=r[21];
+    q.hp=r[6];q.maxHp=r[7];q.heat=r[8];q.over=r[9];q.pileT=r[15];q.red=r[24]||0;q.muzzle=r[17]?.05:0;q.flash=r[18]?.08:0;q.ax=r[19];q.ay=r[20];q.az=r[21];
   });
 }
 /* The guest tick: predict own movement and aim from local input, send the input, tick local effects. */
@@ -2113,6 +2212,7 @@ window.__m={T:T,net:Net,get sim(){return sim},get players(){return players},voxS
   spawnPod:function(){return sim.spawnPod.apply(sim,arguments)},spawnLoader:function(x,y){return sim.spawnLoader(x,y)},perches:function(){return sim.perches()},los3:function(){return sim.los3.apply(sim,arguments)},
   blocked:blockedCell,damage:function(e,d,x,y,z){sim.damage(e,d,x,y,z)},setVox:function(x,y,z,m){sim.setVox(x,y,z,m)},hit:function(x,y,z,d){sim.hitVoxel(x,y,z,d)},killAll:function(){sim.killAll()},dbg:function(){return sim.dbg()},
   proj:function(x,y,z){return [SX(x,y,z),SY(x,y,z)]},
+  callins:function(i,c){sim.setCallins(i,c);buildHud()},get breaches(){return breaches},get strikes(){return strikes},   /* phase 6: call-in slots for a test */
   hud:function(){buildHud()},   /* the mechanics lab (mechanics-lab.html) swaps parts mid-run, then relabels the HUD */
   /* zones: rebind a single-player sim at level l (its drop-in intro plays if a zone opens), read the camera */
   level:function(l){CAMP.level=Math.max(1,Math.min(T.level.max,l|0));bind(MetroSim.create({seed:7,builds:[BUILD],colorOf:colorOf,level:l}));camX=px(player.x,player.y,0);camY=py(player.x,player.y,0);zoneFx={k:-1,t:9};return sim.zone},

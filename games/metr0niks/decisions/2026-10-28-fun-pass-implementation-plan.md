@@ -115,6 +115,8 @@ Done when: the rules check drops a span on bots at level 5 and kills them, credi
 
 Done when: each part has a mechanics lab test (Redline armor cost, Breach charges on a pillar, Arc caster chain), the garage lab shows the blueprints, and a call-in can be stolen by a bot.
 
+**Done Oct 28 (sim side):** the six blueprint parts with their T tables and hooks, Scrap cache and Strike beacon pods with 50/20/15/15 odds, call-ins on keys 1 and 2 (`opts.callins`, `sim.setCallins`, a stolen call-in counts against the mech that called it), Redline stats, mechanics lab tests for every part, and the rules-check cases. A Scrap-cache carrier is snapshot flag 1024 (128 is the Elite). Kills from an enemy-taken Strike beacon get the demolition bonus. Not yet: the garage's blueprint unlock by highest level, the call-in shop and "New" marks; until then the garage lists blueprints only when owned. Tuning notes for phase 9: one Breach charge drops a whole pillar (the GDD says two or three), and Redline at the cap costs about 32 armor in 2.5 s of minigun fire.
+
 ## Phase 7: bosses
 
 - **Roster (GDD-D51):** `beginWave` reads the climb plan's boss for waves 3 and 5; wave 5 is the harder variant (prototype changes section 3). Sniper's nest adds one sniper to each boss wave.

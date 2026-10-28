@@ -112,7 +112,7 @@ A mech is a frame with six slots (Core, Arm-R, Arm-L, Shoulder, Legs, Reactor); 
 - **Weapon upgrades (GDD-D23, built Oct 28):** each owned weapon carries a level 0 to 2 (`T.upgrade`); damage to enemies × `1 + 0.10 × level` after power, through `player.upMul(weapon)` in `hitEnemy`. Nine weapons today, twelve with the blueprints.
 - **Blueprint unlock (GDD-D42, to build):** the garage lists a blueprint part once the save's highest extracted level reaches its zone's level (2 to 5). A death or restart never removes one.
 
-| Blueprint part (to build) | Hook | Notes for the build |
+| Blueprint part (built Oct 28) | Hook | Notes for the build |
 | --- | --- | --- |
 | Arc caster (Arm-R) | Light gun firing a bolt that chains to 2 more enemies within 4 m | Chain targets picked nearest-first; no voxel damage |
 | Redline vent (Shoulder) | Q active: Redline for 5 s | See Combat systems |
@@ -128,7 +128,7 @@ Each heavy weapon owns a small state machine; light weapons, shoulder actives an
 - **ATB:** Charging → Ready → Ring → Charging. Fill time is 6 s ÷ (power ÷ 100) ÷ 2 under Overclock ÷ 1.25 at a ×4 combo.
 - **Timing ring:** press starts it; it reaches its target at 1.0 s. Release grades the distance from the target: Perfect within ± 0.086 s, Good within ± 0.31 s, else Miss; still held at 1.31 s fires a Miss. `T.ring` stores the windows as shares of the 72 px ring shrinking to 30 px; the pixels are presentation only.
 - **Heat:** one value per mech, 0 to 100. Shots, heavy hits, the mortar and dashes add heat; it drains each tick. At 100 the mech locks out for 3 s (light guns, dashes and the mortar; a running ring is cancelled with no damage and no heat). The Cryo flash-vent sets heat to 0 and ends a lockout.
-- **Redline (GDD-D36, to build):** a mech state started by the Redline vent's Q, also during a lockout (ending it). For 5 s nothing locks and heat can reach 130; every point of net heat gain above 100 costs 0.5 armor through `hitMech` (it counts for wear and Untouchable, not for the Nanite core). If it ends above 100, the mech locks out for 3 s plus 1 s per 10 heat above 100. 14 s recharge.
+- **Redline (GDD-D36, built Oct 28):** a mech state started by the Redline vent's Q, also during a lockout (ending it). For 5 s nothing locks and heat can reach 130; every point of net heat gain above 100 costs 0.5 armor through `hitMech` (it counts for wear and Untouchable, not for the Nanite core). If it ends above 100, the mech locks out for 3 s plus 1 s per 10 heat above 100. 14 s recharge.
 - **Combo (GDD-D35, built Oct 28):** per mech, ×1 to ×4 (`T.combo`). A Perfect raises it, a Good holds it, a Miss, a closed or cancelled ring, or 12 s without a heavy shot drops it to ×1. Credited kills at ×2, ×3, ×4 add 10%, 20%, 30% scrap; ×4 speeds ATB by 25%.
 - **Stagger (GDD-D35, built Oct 28):** a Perfect sets a 1.0 s timer on every enemy it hits; a new Perfect restarts it. A staggered enemy can't move, fire, charge or jump, loses any tell, and takes ×1.5 damage. Scuttlers die to any Perfect; the Warden is staggered only by leg breaks.
 - **Multi-kills (GDD-D53, built Oct 28):** per mech, credited kills within 1.5 s of the last (or in one event) raise a count; events at 2, 3, 4 and 5 or more.
@@ -139,9 +139,9 @@ Each heavy weapon owns a small state machine; light weapons, shoulder actives an
 
 - **Wave pods:** each wave drops one pod, and a second at 40%, at a random time 1.5 to 6 s in, on an open cell at least 4 m from every living mech, after a 3 s marker. Types by `T.pods.odds`: Field repair 50%, Overclock 20%, Scrap cache 15%, Strike beacon 15% (to build; today Field repair and Overclock at 50% each). Sector conditions change the count.
 - **Taking a pod:** a living mech within 0.7 m takes it, the nearest first, and a mech wins a same-tick tie. Patrol bots seek pods (closer than the nearest mech, or below 50% health); loaders take one only by walking over it; bosses, Scuttlers and the Warden never do.
-- **Scrap cache (to build):** 8 cubes × the level scale burst out around the taker. An enemy that takes it is marked and drops the cubes with its own.
-- **Strike beacon (to build):** 1.5 s after a mech takes it, four shells land at 3, 6, 9 and 12 m toward its aim point: 40 damage within 2 m (scaled like collapse damage), a 3×3×3 hole, no damage to mechs, credited to that mech. An enemy that takes it aims the line from itself at the nearest mech, with a 2 s ground warning: 20 to mechs, 40 to enemies, credited to nobody.
-- **Call-ins (GDD-D54, to build):** two slots per player in the save, bought in the garage at Field repair 40, Overclock 30, Strike beacon 50, × the next level's scrap scale, rounded. Keys 1 and 2 spawn that pod at the aim point (up to 14 m) with the usual marker and countdown; enemies can still take it. Unused call-ins stay in their slot after extract; carried ones are lost on a death. In co-op each player has their own.
+- **Scrap cache (built Oct 28):** 8 cubes × the level scale burst out around the taker. An enemy that takes it is marked and drops the cubes with its own.
+- **Strike beacon (built Oct 28):** 1.5 s after a mech takes it, four shells land at 3, 6, 9 and 12 m toward its aim point: 40 damage within 2 m (scaled like collapse damage), a 3×3×3 hole, no damage to mechs, credited to that mech. An enemy that takes it aims the line from itself at the nearest mech, with a 2 s ground warning: 20 to mechs, 40 to enemies, credited to nobody.
+- **Call-ins (GDD-D54, sim built Oct 28; garage shop to build):** two slots per player in the save, bought in the garage at Field repair 40, Overclock 30, Strike beacon 50, × the next level's scrap scale, rounded. Keys 1 and 2 spawn that pod at the aim point (up to 14 m) with the usual marker and countdown; enemies can still take it. Unused call-ins stay in their slot after extract; carried ones are lost on a death. In co-op each player has their own.
 
 ## Economy and garage
 
@@ -252,7 +252,7 @@ The sim's events are arrays (`drainEvents()`). Built today: toast `t`, floating 
 
 ## Tuning data
 
-Every number above is a key in `T`; the GDD's numbers are starting values for the sweep ([tuning history](tuning-history.md)). Still to build: `redline`, `overtime`, `contract`, `callin`, `cache`, `pods.odds`, the `contracts` and `conditions` rules, `juggernaut`, `warden`, and the six blueprint parts in `PARTS`. Built so far: `combo`, `stagger`, `credit`, `demolition`, `multiKill`, `level.max` 5, `collapse` level scaling, `slag`, `zoneThreats`, `scuttler`, `bulwark`, `wrecker`, `charge` and `elite`. Per-run overrides (TDD-D11) let a sweep change any of them without editing the file.
+Every number above is a key in `T`; the GDD's numbers are starting values for the sweep ([tuning history](tuning-history.md)). Still to build: `overtime`, `contract`, the `contracts` and `conditions` rules, `juggernaut` and `warden`. Built so far: `redline`, `arc`, `seismic`, `breach`, `overdrive`, `skids`, `callin`, `cache`, `strike`, `pods.odds`, the six blueprint parts in `PARTS`, `combo`, `stagger`, `credit`, `demolition`, `multiKill`, `level.max` 5, `collapse` level scaling, `slag`, `zoneThreats`, `scuttler`, `bulwark`, `wrecker`, `charge` and `elite`. Per-run overrides (TDD-D11) let a sweep change any of them without editing the file.
 
 ## Testing
 
