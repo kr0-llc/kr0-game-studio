@@ -370,7 +370,8 @@ var THEMES={
   blockout:{name:"Blockout",tag:"Prototype board",desc:"Flat-shaded chunky voxels, slate and rust with cyan glow. Clean and readable.",
     bg:"#0f1218",
     mat:{1:[150,150,146],3:[196,160,58],4:[226,186,66],5:[178,172,160],6:[63,214,232],9:[86,90,96],10:[112,108,100]},
-    hues:[[176,84,58],[214,168,112],[148,70,52],[200,122,82],[124,128,134],[222,188,132]],
+    hues:[[176,84,58],[214,168,112],[148,70,52],[200,122,82],[124,128,134],[222,188,132],   /* MAP.hues: 0-5 Underpass, 6-8 Freight Yard, 9-13 Smelter Row */
+      [150,152,148],[118,134,124],[168,140,110],[92,86,84],[112,96,86],[150,82,60],[128,122,118],[124,74,58]],
     cont:[[232,114,42],[63,170,190],[150,160,80],[176,74,44]],
     shade:{top:1,fx:.78,fy:.6,ao:.82,ent:[.69,.09],flat:.03},
     ground:{road:[38,40,46],walk:[84,86,90],under:[.7,.7,.78],grid:"rgba(0,0,0,.22)",lane:"rgba(226,186,66,.5)",laneW:1.6,dash:[12,10]},
@@ -379,8 +380,9 @@ var THEMES={
     ui:{icon:"rgba(8,16,24,.92)",idle:"#3fd6e8",sel:"#ff6a3a",on:"#7fdc6a",empty:"#5b7480",grid:"63,214,232"}},
   cinematic:{name:"Cinematic",tag:"Original pitch",desc:"Night city, weathered rust and gunmetal, hazard stripes, embers and glowing windows.",
     bg:"#07090c",
-    mat:{1:[104,98,90],3:[58,58,62],4:[96,90,84],5:[40,38,36],6:[90,226,240],9:[60,60,62],10:[78,72,66]},
-    hues:[[96,64,50],[74,76,80],[108,92,74],[60,66,76],[118,58,42],[86,74,64]],
+    mat:{1:[104,98,90],3:[58,58,62],4:[96,90,84],5:[40,38,36],6:[90,226,240],9:[60,60,62],10:[78,72,66],11:[170,130,46],15:[60,66,76],16:[54,50,48]},
+    hues:[[96,64,50],[74,76,80],[108,92,74],[60,66,76],[118,58,42],[86,74,64],
+      [86,88,90],[70,82,76],[100,86,70],[48,44,44],[60,52,48],[84,46,36],[70,68,66],[72,42,34]],
     cont:[[150,62,34],[40,92,112],[86,98,52],[124,52,34]],
     shade:{top:.9,fx:.6,fy:.4,ao:.6,ent:[.55,.12]},
     ground:{road:[28,29,32],walk:[52,50,48],under:[.55,.58,.66],grid:"rgba(0,0,0,.35)",lane:"rgba(214,162,40,.32)",laneW:1.4,dash:[10,9],cracks:1,lights:1},
@@ -392,8 +394,10 @@ var THEMES={
     ui:{icon:"rgba(6,12,16,.94)",idle:"#3fd6e8",sel:"#ff7a3a",on:"#8cf06c",empty:"#4d6670",grid:"63,214,232"}},
   ink:{name:"Ink",tag:"Ligne claire",desc:"Clean black ink over flat watercolour washes. Peach, sand, coral and sage under a midday sun.",
     bg:"#efe5d0",ink:"#2b2420",
-    mat:{1:[228,220,202],3:[214,206,190],4:[196,190,176],5:[236,204,176],6:[150,200,198],9:[206,196,176],10:[204,192,172]},
-    hues:[[240,186,156],[234,208,164],[224,144,124],[176,196,156],[158,204,198],[238,222,190]],
+    mat:{1:[228,220,202],3:[214,206,190],4:[196,190,176],5:[236,204,176],6:[150,200,198],9:[206,196,176],10:[204,192,172],
+      11:[226,196,120],12:[244,214,150],13:[240,170,120],15:[176,196,206],16:[170,150,146],17:[240,150,100]},
+    hues:[[240,186,156],[234,208,164],[224,144,124],[176,196,156],[158,204,198],[238,222,190],
+      [214,212,200],[188,206,190],[226,198,168],[168,150,150],[190,160,150],[214,140,120],[200,190,184],[196,130,118]],
     cont:[[226,134,112],[132,184,180],[170,192,140],[236,170,130]],
     shade:{top:1,fx:.92,fy:.82,ao:1,ent:[.86,.05],flat:.015},
     ground:{road:[236,214,180],walk:[226,206,176],under:[.86,.9,.9],grid:null,lane:"rgba(255,252,244,.95)",laneW:3,dash:[14,12],curb:1,wash:1},
@@ -535,6 +539,7 @@ addEventListener("resize",resize);resize();
 /* Ground: pre-rendered once (asphalt, sidewalks, lane marks, the overpass shadow). */
 var ground=document.createElement("canvas");
 var GS=2,GX0=-D*HW,GY0=0;
+function zoneOf(x){var Z=MAP.zones;for(var k=0;k<Z.length;k++)if(x<=Z[k].x1)return Z[k];return Z[Z.length-1]}
 function buildGround(){
   ground.width=(W+D)*HW*GS;ground.height=(W+D)*HH*GS;
   var g=ground.getContext("2d"),Gd=TH.ground;g.scale(GS,GS);g.translate(-GX0,-GY0);
@@ -546,6 +551,7 @@ function buildGround(){
     side[x+y*W]=near?1:0;
     var n=TH.ink?.98+hash(x,y,99)*.04:.9+hash(x,y,99)*.14,c=near?Gd.walk:Gd.road,u=Gd.under;
     if(under)c=[c[0]*u[0],c[1]*u[1],c[2]*u[2]];
+    var zt=zoneOf(x).ground;if(zt)c=[c[0]*zt[0],c[1]*zt[1],c[2]*zt[2]];   /* each district has its own street colour */
     g.fillStyle=rgb(c,n);cell(x,y);g.fill();
     if(Gd.grid){g.strokeStyle=Gd.grid;g.lineWidth=.6;g.stroke()}else{g.strokeStyle=rgb(c,n);g.lineWidth=.6;g.stroke()}
   }
@@ -583,7 +589,7 @@ function buildGround(){
       if(l[0]+Z.x0>Z.x1)return;var X=px(l[0]+Z.x0,l[1],0),Y=py(l[0]+Z.x0,l[1],0),lg=g.createRadialGradient(X,Y,0,X,Y,70);
       lg.addColorStop(0,"rgba(255,170,80,.30)");lg.addColorStop(1,"rgba(255,140,60,0)");g.fillStyle=lg;g.fillRect(X-70,Y-70,140,140)})});
     for(y=0;y<D;y++)for(x=0;x<W;x++){
-      if(get(x,y,0)||!(get(x-1,y,1)===6||get(x,y-1,1)===6))continue;
+      if(get(x,y,0)||!(MetroSim.WINDOW[get(x-1,y,1)]||MetroSim.WINDOW[get(x,y-1,1)]))continue;
       var X=px(x+.5,y+.5,0),Y=py(x+.5,y+.5,0),wg2=g.createRadialGradient(X,Y,0,X,Y,26);
       wg2.addColorStop(0,"rgba(90,226,240,.16)");wg2.addColorStop(1,"rgba(90,226,240,0)");g.fillStyle=wg2;g.fillRect(X-26,Y-26,52,52)}
     g.globalCompositeOperation="source-over";

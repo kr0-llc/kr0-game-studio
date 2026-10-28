@@ -12,7 +12,7 @@ kr0 (Oct 28): the voxel prototype's stages all look very similar; make a full ma
 | B. Landmark set pieces | One destructible set piece per zone (water tower, wall-to-wall gantry crane, slag gallery) | A "span on legs" support rule in `sim.js` | Yes |
 | C. Three street shapes | Movement: a loop, three lanes, an open pour floor where the last deck span has already fallen | Data plus one span starting fallen | Yes (deck no longer runs the full length) |
 
-**Recommendation:** A as the base with one landmark from B per zone.
+**Picked (kr0, Oct 28):** A as the base with one landmark from B per zone. The built map and its section breakdown are in [level-design.md](../../level-design.md).
 
 **Voxel stays as it is (kr0, Oct 28).** kr0 is focusing on the voxel game and said to keep it as it is; a separate renderer comes later. The full map goes straight into `sim.js` `MAP` data and its voxel collision, the way today's map does.
 
