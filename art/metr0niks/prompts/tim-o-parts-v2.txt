@@ -15,3 +15,8 @@ Draw each part SEPARATELY on a transparent background, with generous empty space
 6) the reactor backpack alone, seen from the same side, with two short downward-angled thruster nozzles at its bottom.
 Joint ends are plain round caps so the parts can rotate around them without showing gaps. No shading that only makes sense in one pose.
 ART STYLE: sun-bleached ligne-claire comic ink like the reference: confident clean black outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0), simple soft cel shading. No text, no labels, no numbers, no ground shadow, no background.
+
+Pass 2, v2.1 (2026-10-28, kr0: "continue" on the review page): an edit that removes the extra round socket sticking out of the torso's left side. Run job_dKAcCJq8CSsMaWdeWNUupBLH, output asset_Rzs92LmBTZFho7qvgetHLigv, 4 credits, same model and settings. References: asset_AMDXu4YY3qLgskrTWtqTKnE6 (the v2 sheet) and asset_aST66TQJhq3jT1eHFbAsnexF (character sheet). Preview: ../characters/tim-o/parts/sheet-v2-1.webp. The other five parts came back unchanged in size.
+
+Edit prompt:
+Edit the first reference image (a parts sheet of the mech Tim-o). Keep every part exactly as it is: same positions, same sizes, same drawing, same colours, same transparent background. Change only the torso (the big round body at top left): remove the round green cannon-like socket that sticks out of its left side, and close that area with the torso's smooth peach shell and sage armour band, matching the character sheet in the second reference image. Do not add anything else. No text, no background.

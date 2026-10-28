@@ -25,6 +25,7 @@ Made after kr0's review comments on the [animation review page](https://claude.a
 | File | What it is | Scenario asset | Model | Credits |
 | --- | --- | --- | --- | --- |
 | `parts/sheet-v2.webp` | Puppet parts sheet v2: torso, thigh, shin, reactor pack, minigun arm, pile-bunker arm, all at one scale with ball joints. It replaces the rejected `ink-proto/sheets/player_parts.webp` once kr0 approves it | `asset_AMDXu4YY3qLgskrTWtqTKnE6` | GPT Image 2.5 Sunburst | 4 |
+| `parts/sheet-v2-1.webp` | Parts sheet v2.1: the v2 sheet with the extra side socket on the torso removed. The review page puppet now uses this one | `asset_Rzs92LmBTZFho7qvgetHLigv` | GPT Image 2.5 Sunburst (edit of v2) | 4 |
 | `sprites/dash-iso/` | Isometric dash, frame-by-frame: `sheet.webp` (the 4 × 3 grid) and `frame-01.webp` to `frame-12.webp` (366 × 323, white keyed out, scaled to fit) | `asset_1c381Us51PCRqc88pdNj9rzh` | GPT Image 2 | 13 |
 
 Prompts: `../../prompts/tim-o-parts-v2.txt` and `../../prompts/tim-o-sprites-dash-iso.txt`. Known issues with the dash are listed on the review page: frames 11 and 12 stand taller than frame 1, the pack is mostly hidden, and he faces the camera while dashing sideways.
