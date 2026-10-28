@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · gdd-designer skill, critique mode · for kr0
 
-kr0 asked for a critique of the proposed mechanics. This covers only the fun pass, GDD-D35 to GDD-D45, as written in [gdd.md](../../gdd.md) on PR #13 (commit f2e9975), read against the rest of the GDD, `sim.js` and GDD-D46. The [fun pass record](../../decisions/2026-10-28-fun-pass.md) was written by the same agent that wrote this critique, so treat this critique as a second look, not an independent review. Numbers worked out below are readings from the GDD's tables, not sim runs. Nothing in the GDD was edited for this critique.
+kr0 asked for a critique of the proposed mechanics. This covers only the fun pass, GDD-D35 to GDD-D45, as written in [gdd.md](../../gdd.md) on PR #13 (commit f2e9975), read against the rest of the GDD, `sim.js` and GDD-D46. The [fun pass record](../../decisions/2026-10-28-fun-pass.md) was written by the same agent that wrote this critique, so treat this critique as a second look, not an independent review. Numbers worked out below are readings from the GDD's tables, not sim runs. Nothing in the GDD was edited for this critique. **Status, Oct 28:** kr0 answered it; the fixes and kr0's changes are applied (GDD-D47 to D50, round 2 of the [fun pass record](../../decisions/2026-10-28-fun-pass.md)).
 
 ## Summary
 

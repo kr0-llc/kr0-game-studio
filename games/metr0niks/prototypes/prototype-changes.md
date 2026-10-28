@@ -117,14 +117,17 @@ GDD-D28 changed GDD text to match the prototype (collapse scrap, timing grades, 
 
 These GDD statements already match the prototype: the controls table, the dimetric camera and cutaway fade, the 35% vignette, the ATB and ring values, heat rules (every grade costs the same heat, an overheat during a ring adds none, the flash-vent ends a lockout, Overclock doubles every fill), the 21 parts and prices, two pod types and the pod rules, the wave table, level scaling, zones and drop-in timing for levels 2 and 3, death resetting the campaign to level 1, and co-op partner-down behaviour.
 
-## 18. Fun pass (waiting on kr0, not started)
+## 18. Fun pass (not started)
 
-Decisions: GDD-D35 to GDD-D45, all Proposed ([record](../decisions/2026-10-28-fun-pass.md)). Nothing here is to be built until kr0 accepts the decision it comes from. When one is accepted, its rules go into `simulations/sim.js` first, so both prototypes get them (GDD-D32); the ink prototype's brief lists any it can't show yet.
+Decisions: GDD-D35 to GDD-D50 ([record](../decisions/2026-10-28-fun-pass.md)). kr0 accepted D35 (combo), D36 (as the Redline vent), D37, D38, D39 (conditions), D40 (by zone), D49 and D50 on Oct 28; D41 to D43, D45, the D47 level count and the D48 rules are Proposed; D44 is rejected. Rules go into `simulations/sim.js` first so both prototypes get them (GDD-D32); the voxel build is the focus (GDD-D46).
 
-- **New `T` keys (proposed):** `chain {max:4, step:0.2, decay:12, atbAt4:0.25}`, `stagger {time:1.0, taken:0.5}`, `redline {cap:130, armorPerHeat:0.5, lockPer10:1}`, `overtime {choose:6, drops:2, bonus:0.25}`, `contract {scrap:20}`, `collapse.scaleHp:true`, `demolition:0.5`, `crossfire {window:2, dmg:0.5, scrap:0.5, after:3}`, `pods.odds [0.35,0.30,0.20,0.15]`, `bands [10,20,30,40]`, enemy blocks for `scuttler`, `bulwark`, `wrecker`, `elite`, and the six blueprint parts in `PARTS` with a band field.
-- **Sim events** for the new sounds, voice lines, stamps and callouts (chain step and break, stagger, Redline start and end, contract progress and completion, Overtime prompt and call, Crossfire, crushed count per collapse).
-- **Garage:** the next level preview (band, condition, contract) and "New" marks on blueprint parts.
-- **Save:** a campaign field for the highest level ever reached, kept on a death and a new campaign, and lifetime records. Old codes load with it set to their current level.
-- **Hazard props:** container stacks, gantry cranes and slag vats in `MAP`, placed by the level design work.
-- **Presentation:** hit-stop on the struck enemy only, never on `sim.step()`.
-
+- **New `T` keys (proposed):** `combo {max:4, step:0.2, decay:12, atbAt4:0.25}`, `stagger {time:1.0, taken:0.5}`, `redline {time:5, cap:130, armorPerHeat:0.5, lockPer10:1, recharge:14}`, `overtime {choose:6, drops:2, bonus:0.25}`, `contract {scrap:20}`, `credit {window:3}`, `collapse.scaleHp:true`, `demolition:0.5`, `pods.odds [0.5,0.2,0.15,0.15]`, `level.max:10`, `conditionsFrom:6`, a `zoneThreats` table (zone, enemy, replaces, waves), enemy blocks for `scuttler`, `bulwark`, `wrecker`, `elite`, and the six blueprint parts in `PARTS` with a zone field (the Redline vent among them).
+- **Damage:** one function applies the GDD-D48 order to every hit on an enemy, and one to every hit on a mech.
+- **Seed:** a new random seed on a new campaign, a death and a victory restart, unless the player typed one at level 1 (GDD-D49). `levelSeed` stays as it is.
+- **Stats:** a per-player, per-wave stats record (GDD-D50) kept by the sim, sent with the wave-clear and run-over events, and written to the tuning runner's metrics record.
+- **Sim events** for the new sounds, voice lines, stamps and callouts (combo step and break, stagger, Redline start and end, contract progress and completion, Overtime prompt and call, crushed count per collapse).
+- **Garage:** the next level preview (zones and their enemies, condition, contract) and "New" marks on blueprint parts.
+- **Screens:** the wave report strip in each breather, and the excursion report (scrap count-up into the banked total, contract, condition, per-wave chart, highlights) on Extracted and Campaign over.
+- **Save:** the highest level ever extracted and lifetime records, kept through deaths and new campaigns. Old codes load with it set to their current level.
+- **Hazard props:** container stacks, the gantry crane, slag vats and the billboard are placed in `MAP` by PR #12; the slag spill pool is the rule left to build.
+- **Presentation:** hit-stop freezes the effect only, never an enemy or `sim.step()`.
