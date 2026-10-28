@@ -463,10 +463,8 @@ var GUN={minigun:"Minigun",shotgun:"Shotgun",plasma:"Plasma cutter",rail:"Rail r
 function f(n,k){return (+n).toFixed(k===undefined?1:k).replace(/\.0+$/,"")}
 function renderExpect(d){
   var g=T[d.gun],n=g.pellets||1,nom=g.rate||1/g.every,per=g.dmg*d.dmgMul;
-  /* the sim resets its cooldown to 1/rate on each shot and steps at 60 Hz, so a shot waits for the next whole tick */
-  var c=1/nom,tk=0;while(c>0){c-=1/60;tk++}
-  var rate=60/tk,dps=per*n*rate,hps=g.heat*d.heatMul*rate,net=hps-d.drain;
-  var rows=[[GUN[d.gun]+" damage",f(per)+(n>1?" × "+n+" pellets":"")+" per shot"],["Rate",f(rate,2)+" /s"+(Math.abs(rate-nom)>.01?" (T says "+f(nom,2)+"; 60 Hz ticks)":"")],["DPS (all hits)",f(dps)],
+  var rate=nom,dps=per*n*rate,hps=g.heat*d.heatMul*rate,net=hps-d.drain;
+  var rows=[[GUN[d.gun]+" damage",f(per)+(n>1?" × "+n+" pellets":"")+" per shot"],["Rate",f(rate,2)+" /s"],["DPS (all hits)",f(dps)],
     ["Range",f(g.speed*g.life)+" m"],["Heat",f(hps)+" /s in, "+f(d.drain)+" /s drain"],["Lockout after",net>0?f(100/net,2)+" s of fire":"never"]];
   if(d.gun==="minigun"||d.gun==="shotgun")rows.push(["vs loader","× "+T.loader.minigunMult+" (armored)"]);
   if(d.gun==="plasma")rows.push(["Walls","× "+T.plasma.struct+" structural; ignores loader armor"]);
