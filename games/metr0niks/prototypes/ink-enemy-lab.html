@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Metr0niks Ink Enemy Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Patrick+Hand&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Metr0niks ink enemy lab: the ink prototype (prototype-ink.html, prototype 2) in the frame on the left, with waves off.
+   Spawn each enemy, let its AI run or hold it idle, trigger one behaviour at a time, and slow the clock down to watch the
+   cut-out animation. Behaviour comes from the prototype's own functions; numbers come from sim.js (MetroSim.T) inside the frame. */
+:root{
+  color-scheme:light;
+  --paper:#efe5d0;--card:#fbf6ea;--cream:#fffaf0;--ink:#2b2420;--muted:#6d5f52;--line:#c9b99c;
+  --peach:#f0a07a;--sage:#9cc3a8;--coral:#e07a5f;--teal:#7fc4c0;--mustard:#d9a441;--slate:#5d6f86;
+  --r0-pink:#ff4f9a; /* placeholder until kr0 sets the brand pink (studio/brand.md) */
+  --hand:"Kalam","Patrick Hand",cursive;--body:"Patrick Hand","Kalam",cursive;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font:16px/1.35 var(--body)}
+body{display:grid;grid-template-columns:minmax(0,1fr) 430px;height:100%;overflow:hidden}
+#stage{position:relative;min-width:0;border-right:2px solid var(--ink)}
+#game{display:block;width:100%;height:100%;border:0;background:var(--paper)}
+#err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--muted);background:var(--paper)}
+#panel{overflow-y:auto;background:var(--card);padding:14px 14px 40px}
+h1{font:700 28px/1 var(--hand);margin:0 0 4px}
+.r0{color:var(--r0-pink)}
+.sub{color:var(--muted);margin:0 0 8px}
+h2{font:700 19px var(--hand);margin:16px 0 4px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+h2 small{font:500 11px var(--mono);color:var(--muted)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tab{all:unset;cursor:pointer;border:2px solid var(--ink);border-radius:6px;background:var(--cream);box-shadow:2px 2px 0 var(--ink);display:flex;flex-direction:column;align-items:center;padding:4px 4px 6px;text-align:center}
+.tab canvas{width:100%;height:84px;display:block}
+.tab b{font:700 16px/1.1 var(--hand)}
+.tab span{font-size:13px;color:var(--muted)}
+.tab[aria-pressed=true]{background:#fde3d3;box-shadow:3px 3px 0 var(--coral)}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--teal);outline-offset:1px}
+.card{border:2px solid var(--ink);border-radius:6px;background:var(--cream);padding:10px 11px;margin-top:8px}
+.card p{margin:0 0 6px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.act{all:unset;cursor:pointer;padding:5px 8px;border:1.5px solid var(--ink);border-radius:4px;background:#fff;display:flex;flex-direction:column;gap:1px}
+.act:hover{background:#fdeee4}
+.act b{font:700 15px var(--hand)}
+.act span{font-size:13px;color:var(--muted);line-height:1.2}
+.row{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:6px}
+button.b{font:700 14px var(--hand);color:var(--ink);background:#fff;border:1.5px solid var(--ink);border-radius:4px;padding:3px 9px;cursor:pointer;box-shadow:1.5px 1.5px 0 var(--ink)}
+button.b:hover{background:#fdeee4}
+button.b[aria-pressed=true]{background:var(--peach)}
+.tog{display:flex;align-items:center;gap:6px;padding:2px 0;cursor:pointer}
+.tog input{accent-color:var(--coral);width:16px;height:16px}
+.tog small{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font:12px/1.4 var(--mono);font-variant-numeric:tabular-nums}
+td,th{padding:3px 4px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+th{color:var(--muted);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+td:first-child,th:first-child{text-align:left}
+.kv{font:14px/1.3 var(--body)}
+.kv td{text-align:left}.kv td:first-child{color:var(--muted);width:36%}
+.st{display:inline-block;padding:0 6px;border-radius:9px;font-size:10px;border:1px solid var(--line)}
+.st.idle{color:var(--muted)}.st.calm{color:#2f6f6a;border-color:var(--teal)}.st.warn{color:#8a5d0c;border-color:var(--mustard)}.st.hot{color:#a8361f;border-color:var(--coral)}
+.parts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.parts figure{margin:0;border:1.5px dashed var(--line);border-radius:4px;padding:3px;text-align:center;background:#fff}
+.parts canvas{display:block;width:72px;height:60px}
+.parts figcaption{font:10px var(--mono);color:var(--muted)}
+.diff{margin:6px 0 0;padding-left:18px;font-size:14px}
+.diff li{margin:2px 0}
+.log{font:11px/1.45 var(--mono);color:var(--muted);max-height:120px;overflow:hidden;margin-top:6px}
+.log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.good{color:#3d7a4f}.bad{color:#b23b22}.haz{color:#8a5d0c}.cy{color:#2f6f6a}
+.note{color:var(--muted);font-size:14px;margin-top:6px}
+.plan{display:grid;gap:6px;margin-top:6px}
+.plan div{border:1.5px dashed var(--ink);border-radius:5px;padding:5px 8px;background:#fff;font-size:14px;line-height:1.25}
+.plan b{font:700 15px var(--hand)}
+.plan i{font-style:normal;color:var(--muted)}
+@media (max-width:900px){body{grid-template-columns:minmax(0,1fr);grid-template-rows:60vh auto;overflow:auto;height:auto}#stage{height:60vh;border-right:0;border-bottom:2px solid var(--ink)}#panel{overflow:visible;padding:14px 16px 40px;min-width:0}}
+.wide{overflow-x:auto}
+</style>
+</head>
+<body>
+<div id="stage">
+  <iframe id="game" title="Metr0niks ink prototype"></iframe>
+  <div id="err"></div>
+</div>
+<div id="panel">
+  <h1>Metr<span class="r0">0</span>niks ink enemy lab</h1>
+  <p class="sub">Every enemy in the ink prototype (prototype 2), with waves off. Spawn one, let its AI run or hold it still, trigger a behaviour, and slow time down to watch the cut-out animation. Click the game to drive your mech (WASD, mouse, both buttons).</p>
+
+  <h2>Enemy</h2>
+  <div class="tabs" id="tabs"></div>
+  <div class="card" id="unitCard"></div>
+
+  <h2>Time <small id="tick"></small></h2>
+  <div class="row" style="margin-top:0" id="speeds"></div>
+  <div class="row"><button class="b" id="stepBtn" type="button">Step 1 frame</button><button class="b" id="step10" type="button">Step 10 frames</button></div>
+
+  <h2>Live <small>every enemy on the field</small></h2>
+  <div class="wide"><table id="live"></table></div>
+  <div class="log" id="log" aria-live="polite"></div>
+
+  <h2>Field</h2>
+  <label class="tog"><input type="checkbox" id="oAi"> Enemy AI <small>off: enemies stand idle until you trigger a behaviour</small></label>
+  <label class="tog"><input type="checkbox" id="oGod" checked> Can't die <small>your armor stops at 1</small></label>
+  <label class="tog"><input type="checkbox" id="oRanges" checked> Show ranges <small>sight, fire and attack rings of the picked enemy</small></label>
+  <div class="row">
+    <button class="b" id="lineup" type="button">Line-up: one of each</button>
+    <button class="b" data-wave="1" type="button">Wave 1</button><button class="b" data-wave="2" type="button">Wave 2</button><button class="b" data-wave="3" type="button">Wave 3</button><button class="b" data-wave="4" type="button">Wave 4</button><button class="b" data-wave="5" type="button">Wave 5</button>
+  </div>
+  <div class="row">
+    <button class="b" id="clear" type="button">Clear enemies</button>
+    <button class="b" id="reset" type="button">Reset arena</button>
+    <button class="b" id="sound" type="button">Sound: on</button>
+  </div>
+  <p class="note">Wave buttons drop that wave's mix from sim.js with the AI on, staggered as in the game. "Building falls on it" and "Ram a building" knock buildings down for good; Reset arena rebuilds the map. Nothing is written to the prototype's banked scrap.</p>
+
+  <h2>In the GDD, not in the ink prototype yet</h2>
+  <div class="plan" id="plan"></div>
+  <p class="note">From the Enemies and AI section of the GDD fun pass (pull request #13, still open). None of these has sim.js numbers or ink art yet; they get a tab here once they do.</p>
+</div>
+
+<script>
+(function(){
+"use strict";
+var PROTO="prototype-ink.html";   /* the ink prototype, next to this file */
+var $=function(id){return document.getElementById(id)};
+var frame=$("game"),G=null,K=null,ST=null,upd=null;
+var opt={ai:false,god:true,ranges:true},speed=1,stepQ=0,acc=0,clock=0,unit="bot",nid=0,H=1/60,waveQ=[],waveT=0;
+
+/* ----- the enemies and the behaviours each can be asked for ----- */
+var U={
+  bot:{name:"Gunner bot",tag:"60 hp · shoots",parts:["b_torso","b_thigh","b_shin","b_arm"],
+    about:"The patrol bot role, drawn as a two-legged gunner. It closes to range, strafes from side to side, backs off when you are close, and fires single orbs at you.",
+    acts:[["drop","Drop in","falls in; 10 damage if it lands on you"],
+      ["walk","Strafe and close in","4 s of movement, weapon held"],
+      ["fire","Fire","one 7-damage orb at you"],
+      ["pile","Pile bunker hit","a Perfect: 90 damage, enough to wreck it"],
+      ["hit","Minigun hit","one bullet: hit flash and health bar"],
+      ["crush","Building falls on it","the nearest building collapses beside it"],
+      ["kill","Destroy","bursts into its sprite parts, bolts and scrap"]],
+    diff:["Engages from anywhere on the map: no patrol, no going for pods, no giving up after 3 s unseen.","Fires whenever you are within 10 m, with no line-of-sight check (props still stop the orb)."]},
+  loader:{name:"Heavy loader",tag:"160 hp · rams",parts:["l_hull","l_leg","l_claw"],
+    about:"The heavy loader, drawn as a crab with a claw. It walks at you, shakes with a red \"!\" for its tell, rams in a straight line, then stops to recover. Bullets do half damage.",
+    acts:[["drop","Drop in","falls in with a heavy landing"],
+      ["walk","Advance","4 s walking at you, no ram"],
+      ["tell","Tell and charge","0.5 s shake, then the ram: 22 damage and a shove"],
+      ["ram","Ram a building","charges the nearest building and chips it"],
+      ["pile","Pile bunker hit","a Perfect: double damage, knockback and a stun"],
+      ["hit","Minigun hit","one bullet at half damage"],
+      ["crush","Building falls on it","takes 80 collapse damage"],
+      ["kill","Destroy","bursts into hull, legs and claw"]],
+    diff:["Starts its tell at 5.3 m, 2.4 times the 2.2 m in sim.js and the GDD.","No haul route between two waypoints, and a ram stops at the first prop it hits instead of plowing through barriers and containers."]},
+  boss:{name:"Jumper boss",tag:"180 hp · leaps",parts:["j_body","j_leg","j_leg2"],
+    about:"The boss of waves 3 and 5, drawn as the spider scuttler. It stalks you, fires a spread of three orbs, or crouches with a glowing eye and leaps onto you for a slam that cracks the ground and shakes nearby buildings.",
+    acts:[["drop","Drop in","falls in"],
+      ["walk","Stalk","4 s of movement, weapons held"],
+      ["volley","Triple shot","three orbs in a spread, 9 damage each"],
+      ["jump","Crouch and jump slam","0.6 s crouch, 0.9 s leap, 18 damage within 2.2 m"],
+      ["pile","Pile bunker hit","a Perfect: double damage, knockback and a stun"],
+      ["hit","Minigun hit","one bullet"],
+      ["crush","Building falls on it","takes 80 collapse damage"],
+      ["kill","Destroy","bursts into body and legs"]],
+    diff:["Stands in for the Bounty sniper but is a different enemy: no roofs, perches or 15 m aim line, and no fall stun.","The triple shot (half damage each) and the jump slam exist only in the ink prototype, not in sim.js or the GDD."]}
+};
+var PLAN=[
+  ["Scuttler","Freight Yard","18 hp drone in packs of 4; runs at you, flashes for 0.4 s, explodes for 10 within 1.5 m. Its art sheet's spider is used for the jumper boss today"],
+  ["Bulwark","Smelter Row","220 hp loader with a riot shield that blocks hits within 60° of its front; bashes at 3 m for 15 and a 2 m shove"],
+  ["Wrecker","Glass Quarter","90 hp; keeps 8 m away and plants charges on pillars and buildings to bring them down on you"],
+  ["Elite","Terminus Yard","one bot or loader a wave with double health, +25% damage and gold trim"],
+  ["Sniper pair","boss, levels 2 to 4","two snipers with two thirds of the health each, firing in turn"],
+  ["Juggernaut","boss, levels 3 to 5","450 hp boss loader whose 2 s charge plows through buildings"],
+  ["The Warden","big boss, level 5","four-legged walker carrying three snipers; shell barrages, stomps and breakable legs"]
+];
+$("plan").innerHTML=PLAN.map(function(p){return "<div><b>"+p[0]+"</b> <i>· "+p[1]+"</i><br>"+p[2]+"</div>"}).join("");
+
+function showErr(msg){var e=$("err");e.style.display="flex";e.textContent=msg}
+frame.addEventListener("load",function(){
+  try{G=frame.contentWindow;if(!G.MetroSim)throw 0}
+  catch(x){showErr("The prototype frame did not load or is blocked. Open this file from a local web server at the repo root (for example: python3 -m http.server), next to prototype-ink.html.");return}
+  var tries=0;
+  (function wait(){   /* the prototype boots once its atlas and images are in */
+    if(G.A&&G.mode==="garage"&&G.atlasImg&&G.atlasImg.complete){setup();return}
+    if(++tries>200){showErr("The ink prototype loaded but its sprites did not. Check that art/metr0niks/ink-proto/sprites/ is reachable.");return}
+    setTimeout(wait,50);
+  })();
+});
+frame.src=PROTO;
+
+/* ----- the hooks: fixed 60 Hz steps under a time scale, waves off, idle enemies, can't die ----- */
+function setup(){
+  K=G.T;ST=G.MetroSim.T;
+  upd=G.update;
+  G.update=function(dt){
+    if(G.mode!=="battle")return upd(dt);
+    if(stepQ>0){stepQ--;one();return}
+    if(speed>0){acc+=dt*speed;var n=0;while(acc>=H&&n<6){acc-=H;one();n++}if(n===6)acc=0}
+  };
+  function one(){clock+=H;pre();upd(H);post()}
+  var ue=G.updateEnemy;
+  G.updateEnemy=function(e,dt){
+    var held=e.labUntil>clock,c=K[e.type];
+    if(!held&&e.cool>20)e.cool=c.fireEvery||c.cooldown;   /* a weapon held for a behaviour comes back after it */
+    if(opt.ai||held||e.dropping||e.stun>0||e.state!=="walk")return ue(e,dt);
+    idle(e,dt);
+  };
+  var hm=G.hurtMech;
+  G.hurtMech=function(m,dmg,x,y,why){
+    if(m.dead||m.extracting)return;
+    if(m===G.player){
+      if(m.dash>0)return hm(m,dmg,x,y,why);
+      if(opt.god&&m.hp-dmg<1){dmg=Math.max(0,m.hp-1);note("A hit that would have wrecked you (Can't die is on)","bad")}
+      else note("You took "+Math.round(dmg),"bad");
+      return hm(m,dmg,x,y,why);
+    }
+    var r=hm(m,dmg,x,y,why);
+    if(m.dead)note(name(m)+" destroyed"+(why==="crush"?" by the collapse":""),"good");
+    else if(dmg>=10)note(name(m)+" took "+Math.round(dmg)+(why==="crush"?" from the collapse":""),"haz");
+    return r;
+  };
+  G.wrecked=function(){   /* with Can't die off: note it and send a fresh mech in instead of ending the run */
+    note("You were wrecked; a new mech drops in","bad");
+    setTimeout(function(){var p=G.newMech("player",G.player.x,G.player.y);p.z=520;p.vz=0;p.dropping=true;G.player=p},1200);
+  };
+  var dr=G.drawRing;
+  G.drawRing=function(p){dr(p);if(opt.ranges)drawRanges()};
+  try{if(localStorage.getItem("m0ink.mute")==="1")$("sound").textContent="Sound: off"}catch(x){}
+  arena();renderTabs();pickUnit("bot");lineup();
+  requestAnimationFrame(loop);
+}
+function pre(){
+  if(waveQ.length){waveT-=H;if(waveT<=0){var w=waveQ.shift();spawn(w,true,far());waveT=K.wave.stagger}}
+}
+var lastK={};
+function post(){
+  G.bots.forEach(function(e){
+    if(e.dead||!e.lid)return;var k=label(e);
+    if(lastK[e.lid]!==k){if(lastK[e.lid])note(name(e)+": "+k,"cy");lastK[e.lid]=k}
+  });
+}
+/* idle: an enemy with its AI off stands where it is, turns to face you and keeps breathing */
+function idle(e,dt){
+  var p=G.player;
+  e.vx*=Math.pow(.02,dt);e.vy*=Math.pow(.02,dt);e.x+=e.vx*dt;e.y+=e.vy*dt;e.face=p.x>=e.x?1:-1;
+  if(e.type==="bot"){var sh=G.shoulderWorld(e);e.aim=Math.atan2(p.y-60-sh.y,(p.x-sh.x)*e.face)}
+  else if(e.type==="loader")e.aim=Math.sin(G.gtime*3+e.phase)*.15;
+  else e.aim=0;
+}
+
+/* ----- arena and spawning ----- */
+function arena(){
+  G.level=1;   /* always level 1 (Underpass, no level scaling); the prototype's saved level is left alone */
+  G.beginRun();G.run.over=true;   /* run.over keeps the wave director, extract and the result screen out of the lab */
+  G.stopMusic();waveQ=[];lastK={};
+  G.document.getElementById("wave").style.display="none";   /* no waves here, so no wave counter */
+}
+function freeSpot(x,y){
+  for(var r=0;r<12;r++)for(var k=0;k<8;k++){var a=k/8*6.283+r,d=r*22,cx=x+Math.cos(a)*d,cy=y+Math.sin(a)*d;
+    if(cx>80&&cx<G.WW-80&&cy>100&&cy<G.WH-60&&!G.blocked(cx,cy,44))return {x:cx,y:cy}}
+  return {x:x,y:y};
+}
+function near(dx,dy){var p=G.player;return freeSpot(p.x+dx,p.y+dy)}
+function far(){var p=G.player,a=Math.random()*6.283,d=380+Math.random()*200;return freeSpot(Math.max(160,Math.min(G.WW-160,p.x+Math.cos(a)*d)),Math.max(160,Math.min(G.WH-160,p.y+Math.sin(a)*d*.7)))}
+function spawn(type,drop,at){
+  at=at||near((Math.random()<.5?-1:1)*(220+Math.random()*80),(Math.random()-.5)*140);
+  var e=G.newMech(type,at.x,at.y);e.lid=++nid;e.face=G.player.x>=e.x?1:-1;
+  if(drop){e.z=600;e.vz=0;e.dropping=true}
+  G.bots.push(e);return e;
+}
+function alive(type){return G.bots.filter(function(b){return !b.dead&&b.type===type})}
+function target(type){var u=alive(type);return u.length?u[u.length-1]:spawn(type)}
+function name(e){return {bot:"Gunner",loader:"Loader",boss:"Jumper"}[e.type]+" "+e.lid}
+function label(e){
+  if(e.dropping)return "dropping in";if(e.stun>0)return "stunned";
+  var ai=opt.ai||e.labUntil>clock;
+  if(e.type==="bot")return ai?"engaging":"idle";
+  var L={walk:ai?(e.type==="loader"?"advancing":"stalking"):"idle",tell:"tell (about to ram)",charge:"charging",recover:"recovering",crouch:"crouching (about to leap)",jump:"leaping",land:"landing"};
+  return L[e.state]||e.state;
+}
+function hold(e,s){e.labUntil=clock+s}
+function lineup(){
+  G.bots.length=0;
+  spawn("bot",false,near(230,-110));spawn("loader",false,near(270,70));spawn("boss",false,near(-270,0));
+  note("Line-up: a gunner bot, a heavy loader and the jumper boss","cy");
+}
+function wave(n){
+  var w=K.waves[n-1],q=[],i;
+  if(w.boss)q.push("boss");for(i=0;i<(w.loaders||0);i++)q.push("loader");for(i=0;i<(w.bots||0);i++)q.push("bot");
+  waveQ=waveQ.concat(q);waveT=.2;
+  if(!opt.ai){opt.ai=true;$("oAi").checked=true}
+  note("Wave "+n+": "+(w.bots||0)+" bots"+(w.loaders?", "+w.loaders+" loader"+(w.loaders>1?"s":""):"")+(w.boss?", the boss":"")+" (AI on)","cy");
+}
+/* move your mech to a clear spot, so the behaviour plays out on screen */
+function movePlayer(x,y){var p=G.player,s=freeSpot(x,y);p.x=s.x;p.y=s.y;p.vx=p.vy=0}
+function nearestBuilding(){
+  var p=G.player,best=null,bd=1e9;
+  G.props.forEach(function(q){if(q.dead||q.fw<=50)return;var d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;best=q}});
+  return best;
+}
+function placeInSight(e,dist){
+  var p=G.player,d=Math.hypot(p.x-e.x,p.y-e.y);if(d<=dist+30&&d>=dist*.5)return;
+  var s=near((e.x>=p.x?1:-1)*dist,0);e.x=s.x;e.y=s.y;e.vx=e.vy=0;
+}
+
+/* ----- behaviours: each sets the prototype's own state and lets the enemy play it out ----- */
+function act(a){
+  var e,p=G.player;
+  if(a==="drop"){e=spawn(unit,true);note(name(e)+": dropping in","cy");return}
+  e=target(unit);var c=K[e.type];
+  switch(a){
+    case "walk":e.cool=99;hold(e,4);break;
+    case "fire":placeInSight(e,300);e.cool=0;hold(e,2*H);break;
+    case "volley":placeInSight(e,300);volley(e);hold(e,.3);break;
+    case "tell":placeInSight(e,200);startTell(e,p.x-e.x,p.y-e.y);break;
+    case "ram":ram(e);break;
+    case "jump":placeInSight(e,300);e.state="crouch";e.st=c.tell;e.vx=e.vy=0;G.sfx("ring",{vol:.4,rate:.7});hold(e,c.tell+c.jumpTime+.85);break;
+    case "pile":pile(e);break;
+    case "hit":G.hurtMech(e,K.minigun.dmg*(e.type==="loader"?K.loader.minigunMult:1),e.x,e.y);G.fx("spark",e.x,e.y-60,20,.1,0);G.sfx("minigun",{vol:.3,dur:.13});break;
+    case "crush":crush(e);break;
+    case "kill":G.hurtMech(e,1e6,e.x,e.y);break;
+  }
+}
+function startTell(e,dx,dy){
+  var c=K.loader,d=Math.hypot(dx,dy)||1;e.state="tell";e.st=c.tell;e.cdx=dx/d;e.cdy=dy/d;e.vx=e.vy=0;
+  G.sfx("claw",{vol:.6});hold(e,c.tell+c.charge+c.recover+.15);
+}
+/* the boss's three-orb spread, as the prototype fires it from its walk */
+function volley(e){
+  var c=K.boss,p=G.player,a0=Math.atan2(p.y-e.y,p.x-e.x);e.face=p.x>=e.x?1:-1;
+  for(var k=-1;k<=1;k++){var a=a0+k*.22;G.eshots.push({x:e.x,y:e.y,z:60,vx:Math.cos(a)*c.shotSpeed,vy:Math.sin(a)*c.shotSpeed,life:3,dmg:c.dmg*.5,r:9})}
+  G.sfx("enemy_shot",{vol:.6,rate:.8});G.fx("flash",e.x+e.face*30,e.y-60,30,.08,0);e.cool=c.fireEvery;
+}
+/* a Perfect pile-bunker hit, with the damage, knockback and stun firePile gives it */
+function pile(e){
+  var p=G.player,P=K.pile,dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy)||1,kn=P.knock.Perfect*G.U;
+  G.floatText(e.x,e.y-140,"Perfect!","#d9a441",true);G.sfx("pile",{vol:.95});G.sfx("perfect",{vol:.8});G.fx("spark",e.x,e.y-60,90,.25,0);
+  G.hurtMech(e,P.dmg*P.mult.Perfect,p.x,p.y);
+  if(!e.dead){e.vx+=dx/d*kn*5;e.vy+=dy/d*kn*5;e.stun=.5}
+}
+function ram(e){
+  var q=nearestBuilding();if(!q){note("No buildings left standing: press Reset arena","bad");return}
+  var side=e.x<q.x?-1:1,cy=q.y-q.fd*.6;
+  e.x=q.x+side*(q.fw+150);e.y=cy;e.vx=e.vy=0;movePlayer(q.x+side*(q.fw+150),cy+190);
+  startTell(e,-side,0);note(name(e)+" rams the "+q.kind,"cy");
+}
+function crush(e){
+  var q=nearestBuilding();if(!q){note("No buildings left standing: press Reset arena","bad");return}
+  e.x=q.x+q.fw*.4;e.y=q.y+q.fd+22;e.vx=e.vy=0;e.state="walk";hold(e,.1);
+  movePlayer(q.x,q.y+q.fd+230);G.destroyProp(q);
+}
+
+/* ----- range rings, drawn in the world under the floating text ----- */
+function ring(ctx,x,y,r,col,dash){ctx.save();ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.setLineDash(dash||[10,8]);ctx.beginPath();ctx.ellipse(x,y,r,r,0,0,6.283);ctx.stroke();ctx.restore()}
+function drawRanges(){
+  var ctx=G.ctx;
+  G.bots.forEach(function(e){
+    if(e.dead||e.dropping||e.type!==unit)return;var c=K[e.type];
+    if(e.type==="bot"){ring(ctx,e.x,e.y,c.sight,"rgba(93,111,134,.55)");ring(ctx,e.x,e.y,c.range*.8,"rgba(224,122,95,.75)",[4,6])}
+    else if(e.type==="loader"){ring(ctx,e.x,e.y,c.engage*2.4,"rgba(224,122,95,.75)",[4,6])}
+    else{ring(ctx,e.x,e.y,c.jumpRange,"rgba(93,111,134,.55)");ring(ctx,e.state==="jump"?e.tx:e.x,e.state==="jump"?e.ty:e.y,2.2*G.U,"rgba(224,122,95,.8)",[4,6])}
+  });
+}
+
+/* ----- panel ----- */
+function renderTabs(){
+  $("tabs").innerHTML=Object.keys(U).map(function(k){return '<button class="tab" type="button" data-u="'+k+'" aria-pressed="'+(k===unit)+'"><canvas width="240" height="168" data-p="'+k+'"></canvas><b>'+U[k].name+"</b><span>"+U[k].tag+"</span></button>"}).join("");
+}
+$("tabs").addEventListener("click",function(e){var t=e.target.closest(".tab");if(t&&G){pickUnit(t.dataset.u);if(!alive(unit).length)spawn(unit)}});
+function pickUnit(k){
+  unit=k;[].forEach.call($("tabs").children,function(t){t.setAttribute("aria-pressed",t.dataset.u===k)});var u=U[k];
+  $("unitCard").innerHTML="<p>"+u.about+'</p><div class="acts">'+u.acts.map(function(a){return '<button class="act" type="button" data-a="'+a[0]+'"><b>'+a[1]+"</b><span>"+a[2]+"</span></button>"}).join("")+
+    '</div><table class="kv" style="margin-top:8px">'+stats(k)+'</table><div class="parts">'+u.parts.map(function(n){return '<figure><canvas width="144" height="120" data-s="'+n+'"></canvas><figcaption>'+n+"</figcaption></figure>"}).join("")+
+    '</div><p class="note" style="margin-bottom:0"><b>Differs from sim.js:</b></p><ul class="diff">'+u.diff.map(function(d){return "<li>"+d+"</li>"}).join("")+"</ul>";
+  drawParts();
+}
+$("unitCard").addEventListener("click",function(e){var a=e.target.closest(".act");if(a&&G)act(a.dataset.a)});
+function f(n,k){return (+n).toFixed(k===undefined?1:k).replace(/\.0+$/,"")}
+function stats(k){
+  var B=ST.bot,L=ST.loader,S=ST.boss,r;
+  if(k==="bot")r=[["Armor",B.hp],["Speed",B.speed+" m/s"],["Sight / range",B.sight+" m / "+B.range+" m"],["Shot",B.shotDmg+" damage, about every "+B.fireEvery+" s, "+B.shotSpeed+" m/s"],["Scrap",B.scrap.join(" to ")]];
+  else if(k==="loader")r=[["Armor",L.hp+" (bullets × "+L.minigunMult+")"],["Speed",L.speed+" m/s"],["Charge","tell "+L.tell+" s, ram "+L.chargeSpeed+" m/s for up to "+L.charge+" s"],["Ram",L.dmg+" damage, "+L.shove+" m shove"],["After",L.recover+" s recover, "+L.cooldown+" s cooldown"],["Scrap",L.scrap.join(" to ")]];
+  else r=[["Armor",S.hp],["Triple shot",f(S.dmg*.5)+" damage each, every "+S.fireEvery+" s"],["Jump slam","within "+S.jumpRange+" m: "+S.tell+" s crouch, "+S.jumpTime+" s leap, "+S.dmg+" damage within 2.2 m"],["Scrap",S.scrap]];
+  return r.map(function(x){return "<tr><td>"+x[0]+"</td><td>"+x[1]+"</td></tr>"}).join("");
+}
+/* each part straight from the atlas, scaled to fit */
+function drawParts(){
+  if(!G||!G.A)return;
+  [].forEach.call(document.querySelectorAll("canvas[data-s]"),function(cv){
+    var s=G.A.sprites[cv.dataset.s],g=cv.getContext("2d");if(!s)return;
+    var k=Math.min((cv.width-12)/s.w,(cv.height-12)/s.h);g.clearRect(0,0,cv.width,cv.height);
+    g.drawImage(G.atlasImg,s.x,s.y,s.w,s.h,(cv.width-s.w*k)/2,(cv.height-s.h*k)/2,s.w*k,s.h*k);
+  });
+}
+/* live portraits: the prototype's own rig drawing pointed at the tab canvases */
+var port={};
+function drawPortraits(){
+  var main=G.ctx;
+  [].forEach.call(document.querySelectorAll("canvas[data-p]"),function(cv){
+    var k=cv.dataset.p,m=port[k]||(port[k]=G.newMech(k,0,0)),g=cv.getContext("2d");
+    m.x=0;m.y=0;m.z=0;m.vx=m.vy=0;m.face=1;m.aim=k==="loader"?Math.sin(G.gtime*3)*.15:0;m.phase+=.01;
+    g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);
+    var sc=k==="bot"?.8:.85;g.setTransform(sc,0,0,sc,cv.width/2,cv.height-18);
+    G.ctx=g;try{G.drawMech(m)}finally{G.ctx=main}
+  });
+}
+var SPEEDS=[[0,"Pause"],[.1,"0.1×"],[.25,"0.25×"],[.5,"0.5×"],[1,"1×"]];
+$("speeds").innerHTML=SPEEDS.map(function(x){return '<button class="b" type="button" data-sp="'+x[0]+'" aria-pressed="'+(x[0]===1)+'">'+x[1]+"</button>"}).join("");
+$("speeds").addEventListener("click",function(e){var b=e.target.closest("[data-sp]");if(!b)return;speed=+b.dataset.sp;acc=0;
+  [].forEach.call($("speeds").children,function(x){x.setAttribute("aria-pressed",x===b)})});
+$("stepBtn").addEventListener("click",function(){stepQ+=1});
+$("step10").addEventListener("click",function(){stepQ+=10});
+$("oAi").addEventListener("change",function(e){opt.ai=e.target.checked});
+$("oGod").addEventListener("change",function(e){opt.god=e.target.checked});
+$("oRanges").addEventListener("change",function(e){opt.ranges=e.target.checked});
+$("lineup").addEventListener("click",function(){if(G)lineup()});
+$("clear").addEventListener("click",function(){if(!G)return;G.bots.length=0;G.eshots.length=0;waveQ=[]});
+$("reset").addEventListener("click",function(){if(!G)return;arena();lineup()});
+$("sound").addEventListener("click",function(){if(!G)return;G.initAudio();G.toggleMute();var m=false;try{m=localStorage.getItem("m0ink.mute")==="1"}catch(x){}$("sound").textContent="Sound: "+(m?"off":"on")});
+document.querySelectorAll("[data-wave]").forEach(function(b){b.addEventListener("click",function(){if(G)wave(+b.dataset.wave)})});
+/* the first click anywhere on the panel also starts the prototype's audio */
+addEventListener("pointerdown",function once(){if(G&&G.initAudio){G.initAudio();removeEventListener("pointerdown",once)}});
+
+var logLines=[];
+function note(t,c){logLines.unshift([t,c||""]);if(logLines.length>8)logLines.length=8;$("log").innerHTML=logLines.map(function(l){return '<div class="'+l[1]+'">'+esc(l[0])+"</div>"}).join("")}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function cls(k){return /tell|charg|crouch|leap|engag/.test(k)?"hot":/drop|stun|land|recover/.test(k)?"warn":/idle/.test(k)?"idle":"calm"}
+function renderLive(){
+  var p=G.player,rows=G.bots.filter(function(b){return !b.dead}).map(function(e){
+    var k=label(e),t="";
+    if(e.stun>0)t="stun "+f(e.stun,2)+" s";
+    else if(e.state!=="walk"&&e.type!=="bot")t=f(Math.max(0,e.st),2)+" s left";
+    else if(e.cool<20&&(opt.ai||e.labUntil>clock))t=(e.type==="loader"?"ram ready in ":"next shot ")+f(Math.max(0,e.cool),2)+" s";
+    return "<tr><td>"+name(e)+'</td><td><span class="st '+cls(k)+'">'+k+"</span></td><td>"+Math.max(0,Math.ceil(e.hp))+"/"+e.max+"</td><td>"+f(Math.hypot(e.x-p.x,e.y-p.y)/G.U)+" m</td><td>"+t+"</td></tr>"});
+  $("live").innerHTML=rows.length?"<tr><th>Enemy</th><th>State</th><th>Armor</th><th>Dist</th><th>Timers</th></tr>"+rows.join(""):'<tr><td class="note">No enemies. Pick one above or press Line-up.</td></tr>';
+  $("tick").textContent=(speed===1?"1×":speed?speed+"×":"paused")+" · "+f(clock,1)+" s";
+}
+var lastPanel=0;
+function loop(now){
+  requestAnimationFrame(loop);if(!G||!G.player)return;
+  drawPortraits();
+  if(now-lastPanel>100){lastPanel=now;renderLive()}
+}
+})();
+</script>
+</body>
+</html>

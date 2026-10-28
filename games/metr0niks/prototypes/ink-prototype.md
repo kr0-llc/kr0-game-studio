@@ -52,6 +52,19 @@ kr0 decided the ink renderer stays in this prototype and is built out here, not 
 
 Still open in the renderer: a back view for walking up the screen, bending legs for the crab and spider enemies, and art for the other 18 parts. Tim-O's animation sets are a separate piece of work, after Asset Desk ships.
 
+## Enemy lab (28 October 2026)
+
+kr0 asked for a lab page to see all the enemies in the ink prototype. `prototypes/ink-enemy-lab.html` loads `prototype-ink.html` in a frame (open it from a local web server at the repo root, or use the published copy in INDEX.md). It is modelled on the voxel units lab and changes nothing in the prototype: it wraps the prototype's own `update`, `updateEnemy`, `hurtMech`, `wrecked` and `drawRing` from outside.
+
+- **Enemies:** the gunner bot (patrol bot role), the heavy loader (crab) and the jumper boss (spider), each with a live portrait, its numbers from `sim.js`, and its atlas parts.
+- **Behaviours on demand:** drop in, walk, fire or triple shot, tell and charge, ram a building, crouch and jump slam, a Perfect pile-bunker hit, a minigun hit, a building collapsing on it, destroy. With Enemy AI off, enemies stand idle between behaviours.
+- **Time:** pause, 0.1×, 0.25×, 0.5× and 1×, plus single-frame and 10-frame steps (fixed 60 Hz steps).
+- **Field:** a line-up of one of each, waves 1 to 5 with their real mix, can't die, range rings (sight, fire range, ram trigger, jump range and slam radius), clear and reset. Waves, extract and the banked scrap are off.
+
+**Where the ink enemies differ from sim.js** (listed on each enemy's card; nothing changed): the bot engages from anywhere with no patrol, pods or line-of-sight check; the loader starts its tell at 5.3 m instead of 2.2 m and has no haul route; the boss is a ground jumper with a triple shot and a jump slam instead of the roof-perching Bounty sniper. These are gaps against GDD-D32 to fix when the ink prototype is worked on again (GDD-D46 has it paused as a look study).
+
+The lab also lists the enemies in the GDD fun pass (PR #13) that are not in the ink prototype yet: Scuttler, Bulwark, Wrecker, Elite, Sniper pair, Juggernaut and the Warden.
+
 ## Audio
 
 ### What was made
