@@ -84,6 +84,7 @@ Still Proposed in the [decision history](gdd-decisions.md): the revive price and
 - [ ] Redline (GDD-D36) bends heat from a hard stop into a gamble. Keep heat as a hard stop instead? Dropping D36 also drops the Redline reactor and the Hot hands contract.
 - [ ] A second boss for the later bands, or keep one sniper (GDD-D13) with Sniper's nest and Elites as the variety?
 - [ ] Blackout (GDD-D39) needs a night look in each art style (Blockout, Cinematic, Ink). Keep it, or leave it out until an art style is chosen?
+- [ ] Swappable rendering (GDD-D46, accepted): how the renderer is kept apart from the sim so a new look can replace voxels, and whether collision should use simple shapes under the art while destruction keeps the sim's voxel cells. For the technical-director in the TDD.
 - [ ] Blueprints (GDD-D42) need the save to keep the highest level ever reached. The campaign code format changes; the TDD's save section needs the technical-director's update once kr0 accepts D42.
 
 ## Backlog: dropped from the GDD, to bring back only by decision

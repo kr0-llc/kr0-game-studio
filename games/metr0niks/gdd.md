@@ -28,7 +28,7 @@ Metr0niks is an isometric voxel mech brawler. You drive and shoot in real time, 
 
 **Non-goals:** no PvP, no other game modes, no touch controls, no accounts or server-held saves, no rejoining a match, no story, no map damage that carries between matches, no procedural maps, no accessibility options or remappable keys in this version (backlog, GDD-D19). Production milestones and pricing are not part of this GDD (GDD-D27).
 
-**Look:** three art styles that change only how the game looks: Blockout (default), Cinematic and Ink.
+**Look:** three art styles that change only how the game looks: Blockout (default), Cinematic and Ink. The game is built in the voxel look first; rendering stays swappable so shaders, textures and animated models can replace it later without changing any rule, because the rules live in `sim.js` and the renderer only draws them (GDD-D46).
 
 ## Core loop
 
