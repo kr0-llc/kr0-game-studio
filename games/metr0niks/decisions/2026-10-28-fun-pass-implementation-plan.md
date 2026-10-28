@@ -62,6 +62,8 @@ Done when: the rules check covers each step of the damage order, credit after 2.
 
 ## Phase 2: campaign and save
 
+**Done Oct 28:** `T.level.max` 5 with a `victory` end state; save v2 with v1 migration; wear, repair and Mk upgrades (applied through phase 1's hit path); `Campaign.plan` with the condition, contract and bosses per level; the in-match mark; the garage's repair, upgrade, next-level panel and seed box; a victory screen and the records line. 66 rules-check cases. Not yet: the call-in shop and "New" marks (phase 6), showing the plan to a co-op guest, and the room server's v2 fields (TDD-D21).
+
 - **Five levels and victory:** `T.level.max = 5`; extracting level 5 ends the campaign with a victory event, and the victory button starts a new climb (prototype changes section 11, changed from level 50).
 - **A seed per climb (GDD-D49):** a new campaign, a death and a victory restart draw a new random seed from the browser (outside the sim, which stays seeded). A typed seed at level 1 is kept for that climb only.
 - **The climb plan (TDD-D10):** `Campaign.plan(c)` derives, from the climb seed alone, each level's sector condition, contract and wave-3 and wave-5 bosses, with no repeats inside a climb, level 1's mild conditions and the sniper on level 1 wave 3. It uses its own seeded stream, not the level's, so in-match randomness never changes the plan, and the garage can show the next level before the match exists. The plan is worked out again on load and never saved.
