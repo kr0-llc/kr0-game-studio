@@ -34,6 +34,13 @@ Every changed number, why it changed, and the tokens each story spent. No tuning
 | Level 1, co-op | 50 | 100% | 109 s | 28 | none |
 | Climb from level 1, solo | 50 | 9 of 50 reached level 2, none passed it | — | — | — |
 
+**After phase 1, Oct 28** (tuning `757f3b12`: the baseline plus `T.combo`, `T.stagger`, `T.credit`, `T.multiKill`, `T.demolition`; same pilot and seeds). Records in `tuning-runs/2026-10-28-phase1-*.jsonl`, now with the GDD-D50 stats.
+
+| Scenario | Runs | Extracted | Mean length | Mean kills | Reached ×4 combo | Deaths by wave |
+| --- | --- | --- | --- | --- | --- | --- |
+| Level 1, solo | 100 | 26% | 127 s | 20 | 61% | 2: 2, 3: 10, 4: 35, 5: 27 |
+| Level 1, co-op | 50 | 100% | 110 s | 28 | 22% | none |
+
 The patrol bots' orbs do the killing: with bot shots set to 0 damage, the solo pilot extracts 33 of 40 times. The solo/co-op gap is large; whether that's the pilot or the waves is a question for the wave-density sweep.
 
 Questions that need sweeps:
