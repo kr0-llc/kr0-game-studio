@@ -11,14 +11,14 @@ Build for one developer: fake the expensive parts and make everything data-drive
 - **Team:** solo developer, with AI agents writing code and docs on branches.
 - **Mode:** Excursion, single-player or two-player co-op, is the only mode. Single-player runs entirely in the browser; co-op runs on a room server.
 - **Platform:** PC, keyboard and mouse only. No touch controls (GDD-D29).
-- **Performance target:** not set yet; playtesters use high-end PCs (see Open questions).
+- **Performance target:** 60 fps at 1080p on a mid-range PC during a level-5 co-op Warden fight (TDD-D19).
 - **Destruction:** looks like voxels, but uses chunks and a support graph rather than per-voxel physics.
 - **Look:** voxels first. The rules never depend on how the game is drawn, so a later renderer with shaders, textures and animated models can replace the look without changing a rule (GDD-D46).
 - **Determinism:** the same seed, tuning and inputs give the same match, in the browser, on the room server and in Node.
 
 ## Builds and tools
 
-The engine choice is deferred. Every build today is plain JavaScript in the browser, with the rules in `sim.js`, which also runs in Node.
+This version ships as plain JavaScript in the browser (TDD-D18), with the rules in `sim.js`, which also runs in Node. An engine is only for a later port.
 
 | Build | File | Uses the rules how | State |
 | --- | --- | --- | --- |
@@ -276,11 +276,13 @@ Every number above is a key in `T`; the GDD's numbers are starting values for th
 | AI on changing terrain | Enemies get stuck behind rubble | Refresh flow fields after a collapse and time it |
 | Wave density | The map is 2.25× the old floor with the same waves | Sweep wave counts in solo and co-op before fixing level-1 counts |
 | Durability and economy tuning | Wear plus trimmed income makes a losing streak hard to climb out of | The economy sweep in the tuning history |
-| Two prototypes | The ink prototype drifts from the rules because it reimplements them | Keep it reading `T`; see Open questions |
+| Two prototypes | The ink prototype drifts from the rules because it reimplements them | Move it onto `sim.js` (TDD-D20) |
 
-## Open questions
+## Decided Oct 28 (kr0)
 
-- **Engine:** the browser build is the game today. Does the TDD treat browser JavaScript as the shipping technology for this version, with the engine choice deferred to a later port?
-- **Performance target:** proposed 60 fps at 1080p on a mid-range PC in a level-5 co-op Warden fight.
-- **Ink prototype:** it reads `sim.js` numbers but runs its own 2D rules. Should it move to running `sim.js` itself (the renderer swap GDD-D46 describes), or stay a look study?
-- **Room server:** the fun pass changes snapshots, and the server code is in the private `kr0/blackletter-chronos` repo. Should it move into this repo next to `sim.js`?
+kr0 answered the TDD's open questions on Oct 28 with "continue", taking the suggested answers (TDD-D18 to TDD-D21):
+
+- **Engine (TDD-D18):** browser JavaScript is the shipping technology for this version. Godot 4 and Unity stay options for a later port only.
+- **Performance target (TDD-D19):** 60 fps at 1080p on a mid-range PC during a level-5 co-op Warden fight. The collapse performance spike measures against it.
+- **Ink prototype (TDD-D20):** it should move to running `sim.js` itself, as the renderer swap GDD-D46 describes, instead of reimplementing rules. Until then it reads `T` and its gaps are listed in its brief.
+- **Room server (TDD-D21):** the room server code moves into this repo next to `sim.js`, so snapshot changes ship with the rules. It lives in the private `kr0/blackletter-chronos` repo, which this repo's agents can't read yet; kr0 adds that repo to a session, or copies `server/metr0niks.js` in.

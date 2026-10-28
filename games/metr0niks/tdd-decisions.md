@@ -4,6 +4,10 @@ Newest first. Status is Proposed until kr0 accepts or rejects it. The [TDD](tdd.
 
 | ID | Date | Decision | Options considered | Trade-off | Status |
 | --- | --- | --- | --- | --- | --- |
+| TDD-D21 | 2026-10-28 | The co-op room server code moves into this repo next to `sim.js` | Keep it in the private `kr0/blackletter-chronos` repo | Snapshot changes ship with the rules they carry; needs kr0 to add that repo to a session or copy the file in | Accepted (kr0) |
+| TDD-D20 | 2026-10-28 | The ink prototype moves to running `sim.js` itself, as a second renderer (GDD-D46) | Keep it a look study with its own 2D rules | One set of rules for both looks; the ink view has to map voxel state to 2D | Accepted (kr0) |
+| TDD-D19 | 2026-10-28 | Performance target: 60 fps at 1080p on a mid-range PC during a level-5 co-op Warden fight | No target until an engine is picked | Gives the collapse spike and the Warden build a number to meet | Accepted (kr0) |
+| TDD-D18 | 2026-10-28 | Browser JavaScript is the shipping technology for this version; Godot 4 or Unity only for a later port | Pick an engine now | The whole game is already in the browser and `sim.js`; a port can come once the rules settle | Accepted (kr0) |
 | TDD-D17 | 2026-10-28 | A headless runner (`simulations/run.js`) with a scripted player plays whole excursions in Node, writes one metrics record per run to `tuning-runs/` and replays one run per batch to compare state hashes; `rules-check.js` asserts single rules in short scenarios | Sweep by hand in the mechanics lab; wait for the studio's `chronos-sim` (postponed) | Needed before any fun pass number can be swept (studio simulation standard); a game-local runner is throwaway once `chronos-sim` exists | Proposed |
 | TDD-D16 | 2026-10-28 | Feel effects (hit-stop, stamps, camera punch, multi-kill text, cockpit voice) live only in the client and are driven by sim events; the sim never pauses or slows | Freeze the struck enemy in the sim for 60 ms | Keeps co-op in step and the rules renderer-free (GDD-D45, GDD-D46); the freeze has to be faked with an effect | Proposed |
 | TDD-D15 | 2026-10-28 | Overtime, extract-now and call-ins arrive as new input bits (F, Enter or R, 1, 2) through `setInput`, and the post-wave-5 choice is a sim state with a 6 s timer | A separate command channel from the client | Input bits already reach the host every tick and replay with the input log; a command channel would need its own ordering and replay | Proposed |
@@ -26,6 +30,7 @@ Newest first. Status is Proposed until kr0 accepts or rejects it. The [TDD](tdd.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-28 | kr0 answers the four open questions: browser JS ships (TDD-D18), performance target (TDD-D19), ink prototype onto `sim.js` (TDD-D20), room server into this repo (TDD-D21) |
 | 2026-10-28 | TDD rewritten to cover the whole GDD: builds and tools, match flow, contracts and conditions tables, climb plan, kill credit and damage, blueprint part hooks, pods and call-ins, economy and garage, every enemy and boss, co-op, match stats, save v2, HUD and screens, feel, events, tuning data, testing, open questions |
 | 2026-10-28 | TDD updated for the approved fun pass (GDD-D35 to D55) and the five-sector map: hit path, kill credit, climb plan, tuning overrides, save v2, match stats, zone enemies and bosses, runner (TDD-D9 to TDD-D17). Build order in `decisions/2026-10-28-fun-pass-implementation-plan.md`. Previous TDD in `superseded/tdd-2026-10-27.md` |
 | 2026-10-27 | Oct 26 critique fixes in the TDD: timing ring in seconds, Perfect radius limited to the pile-bunker, collapse rubble and scrap, engine table, header; TDD-D1 and TDD-D5 wording. Previous TDD in `superseded/tdd-2026-10-26.md` |
