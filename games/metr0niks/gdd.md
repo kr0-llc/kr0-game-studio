@@ -382,9 +382,9 @@ The map is built from voxels, and anything resting on something else can fall.
 | Prop | Zone | Rule |
 | --- | --- | --- |
 | Overpass spans | Underpass (and the whole map) | As today: break two neighbouring pillars and the span falls |
-| Container stacks | Freight Yard | Containers stacked 2 or 3 high follow the support rule: destroy or plow the bottom container and the ones above fall as a collapse, with the usual warning and landing damage |
-| Gantry crane | Freight Yard | Holds one container over a lane on a hook (30 health). Shoot the hook and the container falls as a collapse onto its footprint after the 0.9 s warning. Once per crane per excursion |
-| Slag vat | Smelter Row | A 2×2 m vat on legs. Break a leg chunk and it tips away from the hit, spilling a 4×4 m pool of molten slag for 8 s. The pool deals 25 damage a second to enemies and 10 to mechs, and adds 15 heat a second to a mech standing in it. Grav-skids float over it. Slag lights the street during Blackout |
+| Container stacks | Freight Yard | Containers, single or stacked up to 3 high, follow the support rule: destroy or plow the bottom container and the ones above fall as a collapse, with the usual warning and landing damage |
+| Gantry crane | Freight Yard | A frame 6 m high holding one container on its hook over the yard. The hook is above the 2 m aim height, so you bring it down from the ground: break a crane leg chunk and the frame and its container fall as a collapse after the 0.9 s warning, onto whatever is under them. Once per crane per excursion |
+| Slag vat | Smelter Row | A 2×2 m vat on a leg frame in the street or on the 3 m slag gallery. Break its support and it falls as a collapse; where it lands it spills a 4×4 m pool of molten slag for 8 s. The pool deals 25 damage a second to enemies and 10 to mechs, and adds 15 heat a second to a mech standing in it. Grav-skids float over it. Slag lights the street during Blackout |
 
 ## Enemies and AI
 
