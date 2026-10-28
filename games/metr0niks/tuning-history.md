@@ -83,3 +83,4 @@ None logged yet.
 | 2026-10-28 | Tim-o | Isometric jump-jet hop sprite sheet (GPT Image 2, medium) | 13 |
 | 2026-10-28 | Tim-o | Isometric win cheer sprite sheet (GPT Image 2, medium) | 13 |
 | 2026-10-28 | Tim-o | Isometric jump-jet hop, round 4 with the turnaround reference (GPT Image 2, medium) | 13 |
+| 2026-10-28 | Tim-o | Isometric idle, run and destroyed, round 4 (GPT Image 2, medium, 13 each) | 39 |

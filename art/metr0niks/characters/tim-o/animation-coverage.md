@@ -20,7 +20,7 @@ Five drawn facings give all eight, because the left-hand three are mirrors. On t
 
 | Move (GDD) | Puppet today | Frame-by-frame today |
 | --- | --- | --- |
-| Walk, 8 directions, backwards while aiming | IK walk, front 3/4 only | Run: Redo (side view, PR #7) |
+| Walk, 8 directions, backwards while aiming | IK walk, front 3/4 only | `sprites/run-iso/` (round 4), front 3/4 only |
 | Turn, walk away from the camera | Missing: needs back views | Missing |
 | Torso aim, apart from the legs | Yes, about 45° up to 55° down, front 3/4 only | Can't: the torso is baked to the legs |
 | Minigun fire | Recoil and flash | None |
@@ -29,8 +29,8 @@ Five drawn facings give all eight, because the left-hand three are mirrors. On t
 | Jump-jets, drop-in, extract | Done | `sprites/jetpack-iso-r4/` (round 4) |
 | Hit | Hit flash | None |
 | Overheat vent | Done | None |
-| Destroyed | Break-apart | Explode: PR #7, unmarked |
-| Garage idle | Breathing | Idle: Redo (side view, PR #7) |
+| Destroyed | Break-apart | `sprites/explode-iso/` (round 4) |
+| Garage idle | Breathing | `sprites/idle-iso/` (round 4) |
 | Results cheer | None | `sprites/win-iso/` (round 3) |
 | Other parts: shotgun, plasma cutter, rail rifle, bunker-buster, mag-winch, siege mortar, flash-vent, treads, servo-legs | No art; each one is a part sprite swap | A new sheet per part, move and facing |
 

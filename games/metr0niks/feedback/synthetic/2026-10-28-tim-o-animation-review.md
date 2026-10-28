@@ -36,3 +36,13 @@ Recommendation: the puppet for gameplay, frame-by-frame for acting reference and
 - **Jump-jets** (`sprites/jetpack-iso/`): on-model, and the reactor pack finally matches the sheet: two tall upright cylinders behind the shoulders. Arms are attached in every frame. Faults: he faces the lower left instead of the lower right (mirroring would also swap the weapons), the pack-nozzle flames in f4–9 sit behind the pile-bunker arm and can read as coming from it, and f12 stands 31 px higher than f1.
 - **Win** (`sprites/win-iso/`): on-model, with the right shoulders and arms, no flip, the hop and hearts kept, and the happy lens in f8–12. Faults: the f7 squash is very low (175 px against 225 px) and f12 doesn't match f1.
 - Frame-1 heights across the isometric sets are 225 to 239 px, so the sets are close to one height but not exact. "Same size" on the review page evens them out.
+
+## Round 4: turnaround reference (28 October 2026)
+
+kr0 named the four-view turnaround as the main reference. Every round 4 set used it first, with the character sheet for eye emotes.
+
+- **Jump-jets** (`sprites/jetpack-iso-r4/`): the pack matches the turnaround, he faces the lower right with the minigun on the near arm, and flame comes from the legs. f12 ends 17 px above f1.
+- **Idle** (`sprites/idle-iso/`): the cleanest on-model Tim-o. The motion is very subtle, with a blink in f7, and f12 sits 6 px above f1.
+- **Run** (`sprites/run-iso/`): on-model, running in place. The guns point down rather than forward, and the footfalls are hard to count.
+- **Destroyed** (`sprites/explode-iso/`): the strongest set. It is on-model at full size (kr0's "too small" note is fixed), and he breaks into his own parts.
+- Every set still faces one way only; see `animation-coverage.md`.

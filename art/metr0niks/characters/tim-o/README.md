@@ -42,7 +42,15 @@ kr0 chose to redraw jetpack and win first, isometric and at one height. Brief ch
 
 Prompts: `../../prompts/tim-o-sprites-jetpack-iso.txt` and `../../prompts/tim-o-sprites-win-iso.txt`. Frame-1 heights: dash 229 px, jump-jets 239 px, win 225 px (in 366 × 323 frames).
 
-Round 4: `sprites/jetpack-iso-r4/` re-runs the jump-jets with the four-view turnaround as the first reference (`asset_6GYo8kL4SHBX3euYMvjCbVa6`, GPT Image 2, 13 credits, prompt `../../prompts/tim-o-sprites-jetpack-iso-r4.txt`). It faces the lower right with the minigun on the near arm, the pack matches the turnaround, and frame 12 ends 17 px above frame 1. Which moves and facings are still missing: `animation-coverage.md`.
+Round 4: `sprites/jetpack-iso-r4/` re-runs the jump-jets with the four-view turnaround as the first reference (`asset_6GYo8kL4SHBX3euYMvjCbVa6`, GPT Image 2, 13 credits, prompt `../../prompts/tim-o-sprites-jetpack-iso-r4.txt`). It faces the lower right with the minigun on the near arm, the pack matches the turnaround, and frame 12 ends 17 px above frame 1. Also round 4, same reference and brief style (kr0: "continue with the other animations"), 13 credits each:
+
+| Folder | Move | Scenario asset | Frame-1 height |
+| --- | --- | --- | --- |
+| `sprites/idle-iso/` | Garage idle loop, blink and look-around; very subtle motion | `asset_oAo1wgWsRwRMMuDW1vGNttVz` | 285 px |
+| `sprites/run-iso/` | Run cycle in place toward the lower right; the guns point down rather than forward | `asset_kdh2N3yXxVt36jbjy1J7i6Lm` | 251 px |
+| `sprites/explode-iso/` | Destroyed: hit, smoke, burst, break into his own parts, smoking heap | `asset_nd82f2LHrEhBwfK9CcEt42MW` | 260 px |
+
+Frame-1 heights across the isometric sets run from 229 to 285 px, so they still differ by up to a fifth; "Same size" on the review page evens them out. Which moves and facings are still missing: `animation-coverage.md`.
 
 ## Puppet moves (28 October 2026)
 
