@@ -399,6 +399,7 @@ The map is built from voxels, and anything resting on something else can fall.
 | Prop | Zone | Rule |
 | --- | --- | --- |
 | Overpass spans | Underpass (and the whole map) | Break two neighbouring pillars and the span between them falls |
+| Water tower | Underpass | The district's landmark: an 8×8 m tank at 4 to 7 m on four steel legs over the drop-in plaza. Break all four legs and the tank falls as a collapse after the 0.9 s warning (GDD-D56). Once per excursion |
 | Container stacks | Freight Yard | Containers, single or stacked up to 3 high, follow the support rule: destroy or plow the bottom container and the ones above fall as a collapse, with the usual warning and landing damage |
 | Gantry crane | Freight Yard | A frame 6 m high holding one container on its hook over the yard. The hook is above the 2 m aim height, so you bring it down from the ground: break all four of its legs (any leg still standing holds the frame up, like a pillar under a cantilevered deck) and the frame and its container fall as a collapse after the 0.9 s warning, onto whatever is under them. Once per crane per excursion |
 | Slag vat | Smelter Row | A 2×2 m vat on a leg frame in the street or on the 3 m slag gallery. Break its support and it falls as a collapse; where it lands it spills a 4×4 m pool of molten slag for 8 s. The pool deals 25 damage a second to enemies and 10 to mechs, and adds 15 heat a second to a mech standing in it. Grav-skids take half its damage and heat. Slag lights the street during Blackout |
@@ -440,19 +441,28 @@ The map is built from voxels, and anything resting on something else can fall.
 
 ## Map
 
-Overpass Sector 4 is the only map: a voxel grid 80 m long, 32 m wide and 8 m high, with an indestructible perimeter wall.
+Overpass Sector 4 is the only map: a voxel grid 216 m long, 48 m wide and 8 m high, with an indestructible perimeter wall (GDD-D56). It is five districts in a row, each with one landmark that falls under the support rule. Every sector is sized so two mechs can fight side by side: at least 75% of each zone's street sits inside a clear 4×4 m square. The full section breakdown, with coordinates, is in the [level design](level-design.md), and `simulations/map-check.js` checks the map.
 
-- **The overpass:** a six-lane road deck 5 m up, one voxel thick, runs the full length on ten 2×2 concrete pillars at x = 3, 11, 19, 27, 35, 43, 51, 59, 67 and 75. Dropping a span puts the road on whoever is below.
-- **Streets:** 47 buildings (2 to 5 m high), 16 barriers and 14 containers fill the streets; all of it can be shot apart.
-- **Hook:** break two pillars in a row and the 8 m of road between them falls on everyone below.
+- **The overpass:** a road deck 8 m wide (y 20 to 27), 5 m up and one voxel thick, on fourteen 2×2 concrete pillars every 12 m from x = 5 to 161. It ends at x = 167, over the entrance to the Terminus Yard, so the last zone has open sky. Dropping a span puts the road on whoever is below.
+- **Streets:** north of the deck (y 1 to 19) and south of it (y 28 to 46), each district has its own buildings of 2 to 7 m, cover and colours (below). All of it can be shot apart.
+- **Hook:** break two pillars in a row and the 12 m of road between them falls on everyone below.
+- **Drop-in:** player 1 lands at (23.5, 17.5) in the Underpass plaza, and player 2 lands beside them at (26, 17.5).
+
+| Zone | x | District | Landmark | Plays like |
+| --- | --- | --- | --- | --- |
+| Underpass | 0 to 47 | Shanty market: 24 shacks of 2 to 5 m on 3 m alleys, canvas awnings, market stalls | A water tower on four legs over the drop-in plaza | Close range, a corner every few metres |
+| Freight Yard | 48 to 83 | Container yard: a warehouse and sheds on the north wall, 13 container stacks of 1 to 3 | A gantry crane over the south yard with a container on its hook | Long sightlines and charge lanes |
+| Smelter Row | 84 to 119 | Furnace canyons: halls of up to 7 m on 3 to 4 m canyons, 8 m chimneys, street slag vats | The slag gallery, an iron walkway at 3 m on three legs carrying four vats over the north street | Vertical, with the sniper above you |
+| Glass Quarter | 120 to 167 | Financial district: 15 glass towers of 3 to 7 m with neon windows on a street grid | A neon billboard on two legs over the plaza | A tall grid with perches on every corner |
+| Terminus Yard | 168 to 215 | The arena: 46×46 m of open yard past the end of the deck, with pylons, bunkers, short stacks and scrap heaps only at the rim | Open sky and a clear floor of at least 24×24 m (27 m as built) inside a painted ring, where the Warden fights | An open finale: circle in the middle, take cover at the edge |
 
 ### Zones
 
-The map is cut into three zones along its length, each walled off by an indestructible blast shutter until it opens: the Underpass (x 0 to 31), the Freight Yard (x 32 to 55) and Smelter Row (x 56 to 79). Level 1 opens the Underpass, level 2 adds the Freight Yard, level 3 and up open all three. A sealed zone is drawn dark with its name, and nothing spawns there. Enemies, pods and sniper perches only use open zones, so the fight spreads out as you climb levels. When you die, the campaign returns to level 1 and the zones close again.
+The map is cut into five zones along its length, each walled off by an indestructible blast shutter until it opens. Each level opens the next zone (GDD-D47): level 1 has only the Underpass, and level 5 opens the Terminus Yard and the whole sector. A sealed zone is drawn dark with its name, and nothing spawns there. Enemies, pods and sniper perches only use open zones, so the fight spreads out as you climb levels. When you die, the campaign returns to level 1 and the zones close again.
 
-Opening a zone is the drop-in of that level: the mechs land, nothing spawns for 5.5 s, the camera leaves the mechs and pulls back over the sealed zone, the shutter falls into debris at 2.6 s, the zone lights up, and the camera returns before wave 1 begins. Input is locked and mechs take no damage during the shot. Levels 1 and 4 and up have no drop-in shot.
+Opening a zone is the drop-in of that level: the mechs land, nothing spawns for 5.5 s, the camera leaves the mechs and pulls back over the sealed zone, the shutter falls into debris at 2.6 s, the zone lights up, and the camera returns before wave 1 begins. Input is locked and mechs take no damage during the shot. Only level 1 has no drop-in shot.
 
-**Zone identity** (GDD-D40, GDD-D41): each zone has its own enemy (see Zone threats) and hazard prop (see Destruction and environment), so the zones play differently: the Underpass is about dropping spans, the Freight Yard about Scuttlers among toppling stacks and the crane, Smelter Row about Bulwarks and slag, the Glass Quarter about Wreckers and the billboard, and the Terminus Yard is the open-sky arena where the Elites fight. The layout of each zone, and where its props stand, is being designed in the level design work and will be written here once kr0 picks a concept.
+**Zone identity** (GDD-D40, GDD-D41, GDD-D56): each zone has its own enemy (see Zone threats), hazard prop (see Destruction and environment), landmark and look, so the zones play differently. The Underpass is about dropping spans and the water tower. The Freight Yard is about Scuttlers among toppling stacks and the crane. Smelter Row is about Bulwarks and slag. The Glass Quarter is about Wreckers and the billboard. The Terminus Yard is the open-sky arena where the Elites and the Warden fight.
 
 ## Content counts
 
@@ -471,7 +481,7 @@ Opening a zone is the drop-in of that level: the mechs land, nothing spawns for 
 | Sector conditions | 9 (GDD-D39) |
 | Contracts | 10 (GDD-D38) |
 | Match stats | About 15 per player per wave (GDD-D50) |
-| Hazard props | 5 kinds: overpass spans, container stacks, gantry cranes, slag vats, the billboard (GDD-D41) |
+| Hazard props | 6 kinds: overpass spans, the water tower, container stacks, gantry cranes, slag vats, the billboard (GDD-D41, GDD-D56) |
 | Art styles | 3 (Blockout, Cinematic, Ink); only the voxel build is being developed for now (GDD-D46) |
 | Music cues and sound effects | 9 music cues, about 55 effects and 10 cockpit voice lines (see Audio, GDD-D45) |
 | Story and narrative beats | 0 (non-goal) |

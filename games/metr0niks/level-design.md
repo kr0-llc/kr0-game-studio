@@ -118,4 +118,4 @@ The map uses the existing support rule: anything no longer connected to the grou
 
 New materials in `sim.js`: steel, lamp, furnace and neon windows, canvas, tank, iron and slag. `MAP.overpass.x1` sets where the deck ends, `MAP.rubble` places scrap heaps, and `zones[k].arena` paints the arena ring. The loader plows the new windows and the awnings as it does the old windows. The three art styles have hues for every district, and each zone tints its street.
 
-**GDD Map section:** the "47 buildings, 16 barriers and 14 containers" line and the Zone identity paragraph are out of date. Once the fun-pass PR (#13) merges, the Map section gets the district table and landmark list from this document. The Excursion rules line about zones ("level 2 also opens the Freight Yard, level 3 and up open the whole sector") and the drop-in note ("levels 1 and 4 and up have no drop-in shot") change too: one zone opens per level, so only level 1 has no drop-in shot.
+**GDD Map section:** rewritten from this document after the fun pass (#13) merged (GDD-D56): the map size, the deck, the drop-in points, the district table, one zone per level and the water tower as a hazard prop.
