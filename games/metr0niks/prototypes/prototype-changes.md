@@ -119,5 +119,5 @@ These GDD statements already match the prototype: the controls table, the dimetr
 
 ## 18. Level design: three districts with landmarks (done Oct 28, 2026)
 
-kr0 picked concept A + B landmarks ([level design](../level-design.md)). Done in `simulations/sim.js` and the voxel prototype: the new `MAP`, materials, landmark builders and district hues in all three art styles. `node simulations/map-check.js` passes. Still to do if kr0 accepts GDD-D41: the crane hook (30 health, drops only the container) and the slag spill pool. Today both props fall like any other collapse.
+kr0 picked concept A + B landmarks ([level design](../level-design.md)). Done in `simulations/sim.js` and the voxel prototype: the new `MAP`, materials, landmark builders and district hues in all three art styles. `node simulations/map-check.js` passes. Still to do if kr0 accepts GDD-D41: the slag spill pool where a vat lands. Today vats fall like any other collapse.
 

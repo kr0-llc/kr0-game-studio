@@ -82,9 +82,8 @@ Each zone has three sections: the north street (y 1–12), under the deck (y 13�
 
 The map uses the existing support rule: anything no longer connected to the ground falls as a collapse, with the 0.9 s warning and the usual landing damage. So container stacks, the tower, the crane frame, the gallery, the street vats and the chimneys all fall without new rules. The GDD fun pass proposes richer prop behaviour (GDD-D41, not yet accepted). If kr0 accepts it, the prototype also needs:
 
-1. **Crane hook:** a 30-health hook that drops only the container. Today the load falls with the frame, and the hook is 4 to 6 m up, above the 2 m aim ceiling.
-2. **Slag spill:** a vat that tips away from the hit and leaves a 4 × 4 m pool for 8 s (25 damage a second to enemies, 10 to mechs, 15 heat a second). Today a vat falls and breaks like any other collapse.
-3. **Tuning:** steel legs have 20 health per voxel and break on their first lost voxel, so the tower takes four quick hits. A tuning pass should decide whether that is too easy.
+1. **Slag spill:** vats fall as collapses today. The proposed spill, a 4 × 4 m pool for 8 s where a vat lands (25 damage a second to enemies, 10 to mechs, 15 heat a second), is not built. The crane hook rule was dropped from GDD-D41: the frame and its container fall together, as built.
+2. **Tuning:** steel legs have 20 health per voxel and break on their first lost voxel, so the tower takes four quick hits. A tuning pass should decide whether that is too easy.
 
 New materials in `sim.js`: steel, lamp and furnace windows, canvas, tank, iron and slag. The loader plows the new windows and the awnings as it does the old windows. The three art styles have hues for every district, and each zone tints its street.
 
