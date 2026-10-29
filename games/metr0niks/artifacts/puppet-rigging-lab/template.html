@@ -152,11 +152,11 @@ const ORIG={},CUR={};
 for(const n in SP){const s=SP[n];ORIG[n]={pivot:s.pivot.slice(),joints:deep(s.joints),rot:s.rot||0,note:""};CUR[n]=deep(ORIG[n])}
 
 const RIGS={
- timo3:{label:"Tim-o v3 (elbows)",kind:"biped",R:{torso:"p_torso",thigh:"p_thigh",shin:"p_shin",armF2:["p_upF","p_foreF"],armB2:["p_upB","p_foreB"],pack:"p_pack",scale:1.15,legLen:.82},
+ timo3:{label:"Tim-o v3 (elbows)",kind:"biped",R:{torso:"p_torso",thigh:"p_thigh",shin:"p_shin",armF2:["p_upF","p_foreF"],armB2:["p_upB","p_foreB"],pack:"p_pack",scale:1.15,legLen:.95,armScale:[.85,.78],packScale:.85,backAim:-.15},
   parts:["p_torso","p_upF","p_foreF","p_upB","p_foreB","p_thigh","p_shin","p_pack"],
   names:{p_torso:"Torso",p_upF:"Front upper arm",p_foreF:"Minigun forearm",p_upB:"Back upper arm",p_foreB:"Pile-bunker forearm",p_thigh:"Thigh (both legs)",p_shin:"Shin (both legs)",p_pack:"Jump pack"},
   jl:{armF:"front upper arm",armB:"back upper arm",hipF:"front thigh",hipB:"back thigh",pack:"jump pack",eye:"eye glow",knee:"shin",elbow:"forearm",muzzle:"muzzle flash",tip:"pile spike",glow:"pack glow"},
-  info:"v3 arms (29 Oct): each arm is an upper arm and a forearm joined at the elbow. The upper arm hangs down from the shoulder and the forearm stays on the aim, so the elbow bends as he walks and aims. Torso, legs and pack are the v2.1 parts and share their marks with the v2.1 rig."},
+  info:"v3 arms (29 Oct): each arm is an upper arm and a forearm joined at the elbow. The upper arm hangs down from the shoulder and the forearm stays on the aim, so the elbow bends as he walks and aims. Round 1 of the rig review fitted every pivot to the ball caps in the art, moved the knee joint up onto the thigh's ball, lengthened the legs (legLen .95), shrank the arms (.85 front, .78 back) and grew the pack (.85); the back arm aims a little above the front one so the pile-bunker shows. Torso, legs and pack are the v2.1 parts and share their marks with the v2.1 rig."},
  timo:{label:"Tim-o v2.1",kind:"biped",R:{torso:"p_torso",thigh:"p_thigh",shin:"p_shin",armF:"p_armR",armB:"p_armL",pack:"p_pack",scale:1.15,legLen:.82},
   parts:["p_torso","p_thigh","p_shin","p_armR","p_armL","p_pack"],
   names:{p_torso:"Torso",p_thigh:"Thigh (both legs)",p_shin:"Shin (both legs)",p_armR:"Minigun arm (front)",p_armL:"Pile-bunker arm (back)",p_pack:"Jump pack"},
@@ -210,13 +210,13 @@ function bipedOps(D,R,P){
   function arm2(side,pr,sc,ang,bend){const s=joint(D,R.torso,side),up=pr[0],b1=base.translate(s.x,ty+s.y).rotate((ang+bend)*DEG);
     const e=joint(D,up,"elbow"),ur=D[up].rot||0,ex=e.x*Math.cos(ur)-e.y*Math.sin(ur),ey=e.x*Math.sin(ur)+e.y*Math.cos(ur);
     op(D,ops,b1.scale(sc,sc).translate(ex,ey).rotate(-bend*DEG),pr[1],0,0,0,1,1);op(D,ops,b1,up,0,0,0,sc,sc)}
-  const bF=P.bF==null?.8:P.bF,bB=P.bB==null?.8:P.bB;
-  if(R.armB2)arm2("armB",R.armB2,.92,P.aim*.9+tilt,bB);
+  const bF=P.bF==null?.8:P.bF,bB=P.bB==null?.8:P.bB,AS=R.armScale||[1,.92];
+  if(R.armB2)arm2("armB",R.armB2,AS[1],P.aim*.9+tilt+(R.backAim||0),bB);
   if(R.armB){const sb=joint(D,R.torso,"armB");op(D,ops,base.translate(sb.x,ty+sb.y).rotate((P.aim*.9+tilt)*DEG),R.armB,0,0,0,.92,.92)}
-  if(R.pack){const pk=joint(D,R.torso,"pack");op(D,ops,base,R.pack,pk.x-6,ty+pk.y,tilt,.7,.7)}
+  if(R.pack){const pk=joint(D,R.torso,"pack"),ps=R.packScale||.7;op(D,ops,base,R.pack,pk.x-6,ty+pk.y,tilt,ps,ps)}
   leg("hipF",ph);
   op(D,ops,base,R.torso,0,ty,tilt,1,1);
-  if(R.armF2)arm2("armF",R.armF2,1,P.aim+tilt*.5,bF);
+  if(R.armF2)arm2("armF",R.armF2,AS[0],P.aim+tilt*.5,bF);
   else{const sa=joint(D,R.torso,"armF");op(D,ops,base.translate(sa.x,ty+sa.y).rotate((P.aim+tilt*.5)*DEG),R.armF,0,0,0,1,1)}
   return ops;
 }
@@ -241,9 +241,9 @@ function spiderOps(D,R,P){
 }
 function pose(kind,mode,t){
   const sw=(a,b,f)=>a+(b-a)*(.5+.5*Math.sin(t*f));
-  if(mode==="rest")return {t:0,walk:0,ph:0,aim:0};
+  if(mode==="rest")return {t:0,walk:0,ph:0,aim:0,bF:.8,bB:.35};
   if(kind==="biped"){
-    if(mode==="walk")return {t,walk:1,ph:t*7,aim:Math.sin(t*.8)*.2,bF:.8+Math.sin(t*7)*.22,bB:.8-Math.sin(t*7)*.22};
+    if(mode==="walk")return {t,walk:1,ph:t*7,aim:Math.sin(t*.8)*.2,bF:.8+Math.sin(t*7)*.22,bB:.45-Math.sin(t*7)*.22};
     if(mode==="aim")return {t,walk:0,ph:0,aim:sw(-.8,.95,1.4),bF:.35,bB:.35};
     return {t,walk:1,ph:t*5,aim:sw(-.8,.95,1.1),c:sw(0,26,1.7),spread:sw(0,14,1.3),bF:sw(0,1.5,2.3),bB:sw(1.5,0,2.3)};
   }
@@ -446,6 +446,10 @@ function resize(){edDim=fitCanvas(ed);ex=ed.getContext("2d");pvDim=fitCanvas(pv)
 let ready=false;
 function boot(){if(ready)return;ready=true;setRig("timo3");resize();syncPlay();requestAnimationFrame(tick);
   try{new ResizeObserver(()=>resize()).observe(ed)}catch(e){addEventListener("resize",resize)}}
+/* test hook for the rig harness (tools/rig-harness): read-only except setRig/applyRig */
+window.__lab={SP,ORIG,CUR,RIGS,MODES,pose,rigOps,drawOp,opBounds,img,get rid(){return rid},
+  applyRig:(k,parts)=>{for(const n in parts){if(!CUR[n])continue;const p=parts[n];if(p.pivot)CUR[n].pivot=p.pivot.slice();if(p.joints)for(const j in p.joints)if(CUR[n].joints[j])CUR[n].joints[j]=p.joints[j].slice();if(typeof p.rot==="number")CUR[n].rot=p.rot}if(ready){selectPartSoft();paintParts();drawPv()}},
+  setRig:k=>setRig(k),ready:()=>ready};
 if(img.complete)boot();else img.onload=boot;
 })();
 </script>

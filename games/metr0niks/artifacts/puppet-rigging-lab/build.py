@@ -17,7 +17,7 @@ def load_js(path):
     return json.loads(s[s.index("{"):s.rindex("}") + 1])
 
 SOURCES = [
-    (os.path.join(PUP, "arms-v3"), ["p_upF", "p_foreF", "p_upB", "p_foreB"]),
+    (os.path.join(PUP, "arms-v3-1"), ["p_upF", "p_foreF", "p_upB", "p_foreB"]),
     ("timo_v21", ["p_torso", "p_thigh", "p_shin", "p_armR", "p_armL", "p_pack"]),
     ("atlas", ["b_torso", "b_thigh", "b_shin", "b_arm", "l_hull", "l_leg", "l_claw", "j_body", "j_leg", "j_leg2"]),
 ]
