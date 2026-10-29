@@ -18,9 +18,15 @@
      --overtime      the pilots call Overtime at the prompt after wave 5 (default: extract at once)
      --no-plan       play without the climb plan (no sector condition, no contract); by default each match plays
                      Campaign.plan({seed}) for its level, with the run's seed as the climb seed
+     --pilot v1|v2   the scripted pilot (default v1, the phase 0 pilot, so old records and replay hashes stay the same;
+                     v2 dodges, flanks, drops spans, uses Q and call-ins: see pilot.js)
+     --callins A,B   every mech carries these two call-ins into every match (create({callins}); types repair, overclock,
+                     strike; "-" for an empty slot). The v2 pilot calls them; v1 never does
+     --build S=P,..  parts over the starter build for every mech, e.g. --build shoulder=redline,armL=winch
 
    Each record: {seed, level, players, accuracy, tuneHash, result, wave, ticks, seconds, kills, scrap:[per mech],
-   armor:[per mech at the end], hash, condition, contract:{id,state,progress,goal,reward}|null, overtime:{called,cleared}}. A climb adds {climb:true, reached, levels:[records]}. The replay check
+   armor:[per mech at the end], hash, condition, contract:{id,state,progress,goal,reward}|null, overtime:{called,cleared}},
+   plus pilot and usage (per mech, pilot.usage) with --pilot v2, callins (the run-over detail's) with --callins, build with --build. A climb adds {climb:true, reached, levels:[records]}. The replay check
    re-runs the batch's first match from its recorded inputs and compares the state hash every 10 s and at the end;
    any mismatch exits with code 1. stats: the GDD-D50 match stats, [mech][wave] (sim.stats). */
 "use strict";
@@ -29,23 +35,29 @@ require("./sim.js");require("./pilot.js");
 var M=globalThis.MetroSim,P=globalThis.MetroPilot;
 
 function args(argv){
-  var o={runs:20,seed:1,stride:1,level:1,climb:false,to:5,players:1,accuracy:"mix",tune:null,max:900,out:null,replay:true,overtime:false,plan:true};
+  var o={runs:20,seed:1,stride:1,level:1,climb:false,to:5,players:1,accuracy:"mix",tune:null,max:900,out:null,replay:true,overtime:false,plan:true,pilot:"v1",callins:null,build:null};
   for(var i=2;i<argv.length;i++){var a=argv[i],v=argv[i+1];
     if(a==="--runs"){o.runs=+v;i++}else if(a==="--seed"){o.seed=+v;i++}else if(a==="--stride"){o.stride=+v;i++}else if(a==="--level"){o.level=+v;i++}
     else if(a==="--climb")o.climb=true;else if(a==="--to"){o.to=+v;i++}else if(a==="--players"){o.players=+v;i++}
     else if(a==="--accuracy"){o.accuracy=v;i++}else if(a==="--tune"){o.tune=JSON.parse(fs.readFileSync(v,"utf8"));i++}
     else if(a==="--max"){o.max=+v;i++}else if(a==="--out"){o.out=v;i++}else if(a==="--no-replay")o.replay=false;
     else if(a==="--overtime")o.overtime=true;else if(a==="--no-plan")o.plan=false;
+    else if(a==="--pilot"){o.pilot=v;i++;if(v!=="v1"&&v!=="v2"){console.error("--pilot is v1 or v2");process.exit(2)}}
+    else if(a==="--callins"){o.callins=v.split(",").map(function(t){return t==="-"?null:t});i++}
+    else if(a==="--build"){o.build={};v.split(",").forEach(function(kv){var p=kv.split("=");o.build[p[0]]=p[1]||null});i++}
     else{console.error("unknown option "+a);process.exit(2)}}
   return o;
 }
 
 /* One excursion. log: an array to record every tick's inputs into, or recorded inputs to replay (replay=true). */
 function match(o,seed,level,log,replay,checks,climbSeed){
-  var builds=[];for(var i=0;i<o.players;i++)builds.push(M.STARTER);
+  var build=M.STARTER;if(o.build){build=M.cloneBuild(M.STARTER);for(var sl in o.build)build[sl]=o.build[sl]}
+  var builds=[];for(var i=0;i<o.players;i++)builds.push(build);
   var plan=o.plan?M.Campaign.plan({seed:climbSeed||seed})[level-1]:undefined;
-  var sim=M.create({seed:seed,level:level,builds:builds,tune:o.tune||undefined,plan:plan});
-  var pilots=builds.map(function(_,k){return P.make({seed:seed*7+k+1,accuracy:o.accuracy,overtime:o.overtime})});
+  var copt={seed:seed,level:level,builds:builds,tune:o.tune||undefined,plan:plan};
+  if(o.callins)copt.callins=builds.map(function(){return o.callins.slice()});
+  var sim=M.create(copt);
+  var pilots=builds.map(function(_,k){var po={seed:seed*7+k+1,accuracy:o.accuracy,overtime:o.overtime};if(o.pilot==="v2")po.skill="v2";return P.make(po)});
   var over=null,maxT=Math.round(o.max*60);
   while(!over&&sim.tick<maxT){
     for(var k=0;k<builds.length;k++){
@@ -58,24 +70,29 @@ function match(o,seed,level,log,replay,checks,climbSeed){
     sim.drainEvents().forEach(function(e){if(e[0]==="o")over=e});
   }
   if(checks)checks.push(sim.stateHash());
-  return {seed:seed,level:level,players:o.players,accuracy:o.accuracy,tuneHash:sim.tuneHash(),
+  var rec={seed:seed,level:level,players:o.players,accuracy:o.accuracy,tuneHash:sim.tuneHash(),
     result:over?over[1]:"timeout",wave:sim.wave,ticks:sim.tick,seconds:Math.round(sim.tick/6)/10,kills:sim.kills,
     scrap:over&&over[4]&&over[4].scrap?over[4].scrap:sim.players.map(function(q){return over&&over[1]==="dead"?0:q.scrap}),
     armor:sim.players.map(function(q){return Math.max(0,Math.round(q.hp))}),hash:sim.stateHash(),stats:sim.stats,
     condition:sim.cond.id,contract:sim.contract&&{id:sim.contract.id,state:sim.contract.state,progress:sim.contract.progress,goal:sim.contract.goal,reward:sim.contract.reward},
     overtime:{called:sim.run.overtime,cleared:sim.run.otCleared}};
+  if(o.pilot==="v2"){rec.pilot="v2";rec.usage=pilots.map(function(p){return p.usage})}
+  if(o.callins)rec.callins=over&&over[4]&&over[4].callins?over[4].callins:null;
+  if(o.build)rec.build=build;
+  return rec;
 }
 
 function climb(o,seed){
   var levels=[],lv=1,r;
   do{r=match(o,seed*31+lv,lv,null,false,null,seed);levels.push(r);lv++}while(r.result==="extracted"&&lv<=o.to);
   var last=levels[levels.length-1];
-  return {seed:seed,climb:true,players:o.players,accuracy:o.accuracy,tuneHash:last.tuneHash,
+  return {seed:seed,climb:true,players:o.players,accuracy:o.accuracy,tuneHash:last.tuneHash,pilot:o.pilot,
     result:last.result==="extracted"?"victory":last.result,reached:last.level,
     scrap:levels.reduce(function(a,x){return x.result==="extracted"||x.result==="victory"?a.map(function(v,i){return v+(x.scrap[i]|0)}):a},levels[0].scrap.map(function(){return 0})),
     levels:levels};
 }
 
+function addUsage(a,u){if(!a)return JSON.parse(JSON.stringify(u));for(var k in u){if(typeof u[k]==="object")a[k]=addUsage(a[k]||null,u[k]);else a[k]=(a[k]||0)+u[k]}return a}
 function main(){
   var o=args(process.argv),recs=[],t0=Date.now();
   for(var k=0;k<o.runs;k++)recs.push(o.climb?climb(o,o.seed+k*o.stride):match(o,o.seed+k*o.stride,o.level));
@@ -83,7 +100,7 @@ function main(){
   if(o.out){fs.mkdirSync(path.dirname(o.out),{recursive:true});fs.writeFileSync(o.out,recs.map(function(r){return JSON.stringify(r)}).join("\n")+"\n")}
   /* summary */
   var n=recs.length,cnt=function(f){return recs.filter(f).length},mean=function(f){return n?Math.round(recs.reduce(function(a,r){return a+f(r)},0)/n*10)/10:0};
-  console.log("runs "+n+" in "+(ms/1000).toFixed(1)+" s · "+(o.climb?"climbs to level "+o.to:"level "+o.level)+" · "+o.players+" player(s) · accuracy "+o.accuracy+" · tuning "+(recs[0]&&recs[0].tuneHash));
+  console.log("runs "+n+" in "+(ms/1000).toFixed(1)+" s · "+(o.climb?"climbs to level "+o.to:"level "+o.level)+" · "+o.players+" player(s) · accuracy "+o.accuracy+" · tuning "+(recs[0]&&recs[0].tuneHash)+(o.pilot!=="v1"?" · pilot "+o.pilot:""));
   if(o.climb){
     console.log("victories "+cnt(function(r){return r.result==="victory"})+" · mean level reached "+mean(function(r){return r.reached})+" · mean banked scrap "+mean(function(r){return r.scrap.reduce(function(a,b){return a+b},0)}));
     var by={};recs.forEach(function(r){by[r.reached]=(by[r.reached]||0)+1});console.log("level reached: "+JSON.stringify(by));
@@ -98,6 +115,13 @@ function main(){
   var all=o.climb?[].concat.apply([],recs.map(function(r){return r.levels})):recs;
   console.log("contracts done "+all.filter(function(r){return r.contract&&r.contract.state===1}).length+" of "+all.filter(function(r){return r.contract}).length+
     " · Overtime called "+all.filter(function(r){return r.overtime&&r.overtime.called}).length+", cleared "+all.filter(function(r){return r.overtime&&r.overtime.cleared}).length);
+  if(o.pilot==="v2"){   /* what the v2 pilots did, per match (every mech summed) */
+    var U=null;all.forEach(function(r){(r.usage||[]).forEach(function(u){U=addUsage(U,u)})});
+    var per=function(v){return (v/all.length).toFixed(1)},list=function(o){return Object.keys(o).filter(function(k){return o[k]}).map(function(k){return k+" "+per(o[k])}).join(", ")||"none"};
+    var spans=all.reduce(function(a,r){return a+r.stats.reduce(function(b,w){return b+w.reduce(function(c,x){return c+(x?x.spans:0)},0)},0)},0);
+    if(U)console.log("pilot v2 per match: dashes "+per(Object.keys(U.dash).reduce(function(a,k){return a+U.dash[k]},0))+" ("+list(U.dash)+") · Q "+list(U.q)+" · call-ins "+list(U.callins)+
+      " · flanks "+per(U.flanks)+" · baits "+per(U.baits)+" · span plans "+per(U.spanPlans)+" · spans dropped "+per(spans)+" · cover "+per(U.cover));
+  }
   if(o.replay&&n){
     var lv=o.climb?1:o.level,sd=o.climb?(o.seed*31+1):o.seed,cs=o.climb?o.seed:sd,log=[],a=[],b=[];
     var r1=match(o,sd,lv,log,false,a,cs),r2=match(o,sd,lv,log,true,b,cs);
@@ -107,4 +131,4 @@ function main(){
   }
 }
 if(require.main===module)main();
-module.exports={match:match,climb:climb};
+module.exports={match:match,climb:climb,args:args};
