@@ -1136,5 +1136,52 @@ function wave5(how){
   ok(c.o&&c.o[1]==="victory"&&c.b.down&&c.b.legsBroken===4&&c.ev.some(function(e){return e[0]==="wd"&&e[1]==="down"})&&c.ev.some(function(e){return e[0]==="x"&&e[1]==="warden"}),"breaking all four legs, then killing it, also clears wave 5 and wins");
 })();
 
+/* ----- pilot v2 (Oct 28): the smarter test pilot plays as intended in scripted setups; it only reads state and sets inputs ----- */
+(function(){
+  var Z5=[{bots:0},{bots:0},{bots:0},{bots:0},{bots:0}],quiet={waves:Z5,pods:{perWave:0,extra:0}};
+  function pilot(skill,seed){var o={seed:seed||9,accuracy:"mix"};if(skill==="v2")o.skill="v2";return P.make(o)}
+  function drive(s,p,n,until){for(var t=0;t<n;t++){s.setInput(0,p?p(s,0):{k:0,ax:s.players[0].x+1,ay:s.players[0].y+1,az:.6});s.step();if(until&&until())return t+1}return n}
+  function play(seed){var s=M.create({seed:seed}),p=pilot("v2");drive(s,p,1800);return s.stateHash()}
+  ok(play(11)===play(11)&&play(11)!==play(12),"pilot v2 is deterministic: same seeds, same state hash after 30 s; another seed, another match");
+  ok(P.make({seed:3}).usage===undefined&&pilot("v2").usage.dash,"MetroPilot.make() is still the v1 pilot; {skill:\"v2\"} gives v2 (with usage counts)");
+  /* a loader 2 m away telegraphs a charge straight at the mech: v2 dashes out of the line, a mech that stands still is hit */
+  function charge(skill){
+    var s=M.create({seed:4,tune:quiet}),me=s.players[0];drive(s,null,5);
+    var L=s.spawnLoader(me.x+2.2,me.y);L.state="tell";L.t=.25;L.cx=-1;L.cy=0;L.cd=0;
+    var p=skill?pilot(skill):null,hp=me.hp;drive(s,p,90);return {lost:hp-me.hp,dash:p&&p.usage?p.usage.dash.loader:0};
+  }
+  var c0=charge(null),c2=charge("v2");
+  ok(c0.lost>0&&c2.lost===0&&c2.dash===1,"pilot v2 dashes out of a loader's charge (lost "+c2.lost+", "+c2.dash+" dash; standing still lost "+c0.lost+")");
+  /* a Bulwark 8 m away at level 3: v1 trades shots with its shield, v2 walks round it and kills it from behind */
+  function bulwark(skill){
+    var s=M.create({seed:1,level:3,tune:quiet}),me=s.players[0];drive(s,null,6*60);
+    var b=s.spawnUnit("bulwark",me.x+8,me.y-2,{}),p=pilot(skill),hp=me.hp,sb=0,t=drive(s,p,40*60,function(){s.drainEvents().forEach(function(e){if(e[0]==="sb")sb++});return b.hp<=0||me.hp<=0});
+    return {killed:b.hp<=0,t:t/60,lost:hp-Math.max(0,me.hp),sb:sb};
+  }
+  var b1=bulwark("v1"),b2=bulwark("v2");
+  ok(b2.killed&&b2.sb===0&&b2.lost<b1.lost&&!b1.killed,"pilot v2 flanks a Bulwark and kills it round its shield, never breaking it ("+b2.t.toFixed(1)+" s, "+b2.lost+" armor lost); v1 doesn't in 40 s ("+b1.lost+" lost)");
+  /* four bots held under the span between pillars 17 and 29, pillar 29 already down: v2 breaks pillar 17 from outside the footprint */
+  function span(skill){
+    var s=M.create({seed:1,tune:quiet}),me=s.players[0];drive(s,null,5);
+    var pil=s.world.structures.filter(function(x){return x&&x.kind==="pillar"&&x.x===29})[0];
+    for(var z=0;z<5;z++)for(var y=pil.y;y<=pil.y+1;y++)for(var x=pil.x;x<=pil.x+1;x++)s.setVox(x,y,z,0);
+    drive(s,null,60);s.drainEvents();
+    var bs=[];for(var k=0;k<4;k++){var e=s.spawnBot(21+k*1.5,21.5+(k%2)*3);e.state="idle";bs.push(e)}
+    var p=pilot(skill),hp=me.hp,ev=[];drive(s,p,15*60,function(){ev=ev.concat(s.drainEvents());return bs.every(function(e){return e.hp<=0})});
+    return {crushed:ev.filter(function(e){return e[0]==="cr"&&e[5]===0}).reduce(function(a,e){return a+e[2]},0),sd:ev.some(function(e){return e[0]==="sd"&&e[4]===0}),lost:hp-me.hp,plans:p.usage?p.usage.spanPlans:0};
+  }
+  var s1=span("v1"),s2=span("v2");
+  ok(s2.sd&&s2.crushed>=2&&s2.lost===0&&s1.crushed===0,"pilot v2 drops a span on a group: SPAN DOWN credited to it, "+s2.crushed+" of 4 bots CRUSHED, no armor lost (v1 crushed "+s1.crushed+")");
+  /* low on armor with a Field repair in slot 1: v2 calls it at its feet and takes it */
+  (function(){
+    var s=M.create({seed:6,tune:quiet,callins:[["repair",null]]}),me=s.players[0];drive(s,null,5);
+    var e=s.spawnBot(me.x+14,me.y+2);e.state="idle";e.hp=e.maxHp=1e4;   /* keeps wave 1 open; never fires */
+    me.hp=30;var p=pilot("v2"),ev=[];drive(s,p,8*60,function(){ev=ev.concat(s.drainEvents());return me.hp>30});
+    var ci=ev.filter(function(x){return x[0]==="ci"&&x[1]===0})[0];
+    ok(ci&&ci[3]==="repair"&&Math.hypot(ci[4]-me.x,ci[5]-me.y)<4&&me.hp>30&&s.callins[0][0]===null&&p.usage.callins.repair===1,
+      "pilot v2 calls its Field repair when low on armor and takes it (armor 30 to "+Math.round(me.hp)+")");
+  })();
+})();
+
 console.log(bad?bad+" rule check(s) failed":"rules pass");
 process.exit(bad?1:0);

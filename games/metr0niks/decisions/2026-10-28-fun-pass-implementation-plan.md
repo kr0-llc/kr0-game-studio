@@ -207,6 +207,14 @@ Run the fun pass sweep questions in the [tuning history](../tuning-history.md) o
 
 **Sweep run Oct 28:** about 9,000 matches on spread seeds (1 + 7919 k; `run.js` gained `--stride`), scripted Warden fights and labs. Findings, a proposed target per question and a candidate changes table are in the [tuning history's Fun pass sweep section](../tuning-history.md#fun-pass-sweep-oct-28-2026); records in `tuning-runs/2026-10-28-phase9-*.jsonl`. No `T` value, rule or GDD number changed. Headlines: level 1 extracts 13% solo and 96% co-op, and nobody extracts level 3 or higher (the Bulwark in wave 4 is a wall for a pilot that can't flank); idle time grows from 16 to 22% of a wave at level 1 to 43 to 48% at level 5; a full Redline costs 32 to 52 armor; the Warden takes 136 to 160 s for a pair with armor refilled. The targets and the changes wait for kr0.
 
+**Re-run with pilot v2, Oct 28:** kr0 asked for a smarter scripted pilot before any tuning change. Pilot v2 (`pilot.js` `skill: "v2"`, `run.js --pilot v2`) dodges telegraphed attacks, uses Q and call-ins, flanks Bulwarks, shoots Warden riders first and drops spans. The sweep was re-run with it on the same spread seeds: about 8,200 matches and 240 climbs. Findings, v1 against v2 tables, updated targets and a re-ranked candidate table are in the [tuning history's Sweep with pilot v2 section](../tuning-history.md#sweep-with-pilot-v2-oct-28-2026); records are in `tuning-runs/2026-10-28-pilot-v2-*.jsonl`. No `T` value, rule or GDD number changed. Headlines:
+
+- Level 1 extracts 99% solo and 100% co-op; level 2 extracts 93% and 100%.
+- The Bulwark wave at level 3 is still the cliff: −62 points solo and −38 co-op, and the bash does about half of all damage.
+- Co-op extracts level 3 62% of the time and level 5 16%, and wins 5 of 60 climbs in 22 to 23 minutes.
+- A pair wins half its Warden fights at normal armor, in 210 s.
+- Lighter waves 4 and 5 are no longer needed. Moving or softening the Bulwark, the Warden's health, the combo decay, Overtime at levels 1 and 2, and the spawn ring still are.
+
 ## Risks
 
 | Risk | Why | What we do |
