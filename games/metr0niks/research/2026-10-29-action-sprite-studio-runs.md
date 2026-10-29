@@ -57,7 +57,7 @@ Points 1 to 6 are edits to the workflow graph followed by `workflow_publish`. Th
 
 ## 4. Proposed rule: a run record for every generation
 
-Proposed for `studio/design-workflows.md`, under "Before running from an agent". Not adopted until kr0 says so.
+**Adopted by kr0 on Oct 29, 2026** ("adopt as written"), widened to every model or API, not only Scenario: kr0 wants these calls kept so the studio can learn from them. The rule now lives under Run records in `studio/design-workflows.md`; the wording below is the original proposal.
 
 > **Record every run.** Every Scenario run, whether a workflow or a direct model call, gets a run record in `art/<game>/prompts/<character>-<step>.txt`, committed with the art it made, rejected takes and failed runs included. Write it from the job id with `tools/scenario-run-record/run_record.py` rather than by hand, then add a title line and a Status line (what it was for, kr0's mark, what replaced it). The record holds:
 >
