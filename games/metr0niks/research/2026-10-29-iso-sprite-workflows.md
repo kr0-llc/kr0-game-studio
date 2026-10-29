@@ -79,6 +79,18 @@ Goal: does a fixed-geometry clay grid stop the drift, and does the back-3/4 view
 
 Total: 12 CU on generation, up to 15 with slicing. Pass criteria: feet spread under 1 percent of height and height spread under 3 percent on A and B without post alignment; pack, guns and lens on-model in all 24 frames; B reads as walking away. If it passes, the next step is the same recipe for dash and jets and a 3D-render on-model test; if it fails on style (clay ignored or shaded), the 3D route is judged on a toon render next; if it fails only on B, back views come from the 3D route and front views stay drawn.
 
+## Experiment result (29 October, 8 credits, kr0: "Do the experiment")
+
+Clay grids came from the puppet rigs, not Blender or the voxel prototype: `tools/rig-harness/clay-grid.js` renders twelve walk poses of the lab's Tim-o v4 rig (front 3/4) and of the back-3/4 parts with the review page's walk maths (back 3/4) as grey silhouettes with black outlines. One GPT Image 2.5 Sunburst call per grid with references [clay, hero frame, turnaround] (`art/metr0niks/prompts/tim-o-clay-repaint-v1.txt`); the control is the round-5 run (same model, hero frame, no clay). Frames in `art/metr0niks/characters/tim-o/sprites/run-clayfront/` and `run-clayback/`, numbers in `tools/rig-harness/out/clay/repaint-report.json`, all three sets on the review page.
+
+| Set | Poses as asked | Height spread | Feet spread | Centre wander | Mean IoU with the clay |
+| --- | --- | --- | --- | --- | --- |
+| Round 5 (hero, no clay) | mostly | 3.6% | 7 px | 23 px | n/a |
+| A clay front 3/4 | yes, cell by cell | 7.1% | 53 px (rows at 333 / 298 / 283) | 8 px | 0.49 |
+| B clay back 3/4 | yes, cell by cell | 8.0% | 16 px | 18 px | 0.44 |
+
+Verdict: the clay locks the acting and the facing (B is the first Tim-o walking away from the camera, pack and all), but not the scale or the baseline: the model repaints each figure about a fifth larger than the clay and settles each row at its own height. The pass criteria (feet under 1%, height under 3%) fail on both, and round 5 without clay is tighter on height. So: clay for pose and facing control, then per-frame alignment in post (feet anchor, height normalise) for any baked set; the torso still cannot aim apart from the legs. The 3D route is not judged by this; it would need a toon-render on-model test next.
+
 ## What could not be verified
 
 Page contents behind blocked hosts (scenario.com blog "AI Sprite Generator: 3 ways" and app pages, help.scenario.com spritesheet and Uthana articles, ludo.ai, pixellab.ai, tripo3d.ai, meshy.ai, rigbake.com, itch.io add-ons, roboticape, geekvibesnation, sorceress.games, dev.to, substack, glama.ai): snippets only. Whether GPT Image 2.5 Sunburst drifts less than GPT Image 2 (no run yet). Whether any image model honours a clay layout on a 12-cell animation grid (the orbit-views evidence is single views). Quality and pose of the existing Tim-o meshes (`asset_xhPHTKBPCQgbrwErBttNdQVC`, `asset_qRoCff2ZdqxPzyvFu1Ke4tNf`), and whether a humanoid rigger accepts a ball-jointed mech. The look of a toon-shaded render of Tim-o against the ligne-claire guide. Exact per-frame costs of Video to Layers and per-image removers at our sizes. Vendor subscription prices (Tripo, Meshy, PixelLab, Ludo, Layer) beyond snippets dated 2026. Frame order defect in the Scenario extractor (reported by the skill, not reproduced).
