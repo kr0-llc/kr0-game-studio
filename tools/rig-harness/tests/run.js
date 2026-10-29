@@ -57,7 +57,7 @@ const fmt=v=>typeof v==="number"?(Number.isInteger(v)?String(v):v.toFixed(3).rep
         if(q.overhang>s.overhang){s.overhang=q.overhang;s.fo=f}if(q.peek>s.peek){s.peek=q.peek;s.fp=f}
         if(PLAN_TOP[j]&&q.top!==PLAN_TOP[j])s.planOk=false}
       /* back arm under the pack too */
-      const pk=T["p_pack"],ub=T["p_upB"]||T["p_armL"];if(pk&&ub&&ub.order>pk.order){seen["pack-over-backarm"]=seen["pack-over-backarm"]||{top:"back arm over pack",overhang:0,peek:0,fo:f,fp:f,planOk:false}}}
+      const pk=T[rep.R.pack],ub=T[rep.R.armB2?rep.R.armB2[0]:rep.R.armB];if(pk&&ub&&ub.order>pk.order){seen["pack-over-backarm"]=seen["pack-over-backarm"]||{top:"back arm over pack",overhang:0,peek:0,fo:f,fp:f,planOk:false}}}
     for(const k in seen){const s=seen[k],bad=[];if(!s.planOk)bad.push(`order differs from plan (top is ${s.top})`);if(s.overhang>TOL.overhang)bad.push(`top cap sticks out ${fmt(s.overhang)} > ${TOL.overhang} at ${png(s.fo)}`);if(s.peek>TOL.peek)bad.push(`bottom cap peeks ${fmt(s.peek)} > ${TOL.peek} at ${png(s.fp)}`);
       lines.push(`${k}: top=${s.top} overhang ${fmt(s.overhang)} peek ${fmt(s.peek)}${bad.length?" FAIL "+bad.join("; "):""}`);if(bad.length)fails.push(k)}
     add("3 draw order",fails.length===0,[`plan: shin over thigh, upper arm over forearm, front arm over torso, back arm under torso and pack`,...lines],{joints:Object.fromEntries(Object.entries(seen).map(([k,s])=>[k,{top:s.top,overhang:s.overhang,peek:s.peek,planOk:s.planOk}])),fails});
@@ -66,12 +66,12 @@ const fmt=v=>typeof v==="number"?(Number.isInteger(v)?String(v):v.toFixed(3).rep
   {
     const arms=rep.kind==="biped"?[["F",rep.R.armF2?rep.R.armF2[0]:rep.R.armF,rep.R.armF2?rep.R.armF2[1]:rep.R.armF,"muzzle"],["B",rep.R.armB2?rep.R.armB2[0]:rep.R.armB,rep.R.armB2?rep.R.armB2[1]:rep.R.armB,"tip"]]:[];
     const lines=[],fails=[],data={};
-    for(const [side,up,fore,tipName] of arms){const two=up!==fore;const st={min:1e9,max:-1e9,fmin:null,fmax:null,torso:[],ground:[],neg:[]};
-      for(const f of rep.frames){if(!["walk","stress","aim"].includes(f.mode))continue;const T=byTag(f),U=T[up],Fo=T[fore];if(!U||!Fo)continue;
+    for(const [side,up,fore,tip0] of arms){const two=up!==fore;let tipName=tip0;const st={min:1e9,max:-1e9,fmin:null,fmax:null,torso:[],ground:[],neg:[]};
+      for(const f of rep.frames){if(!["walk","stress","aim"].includes(f.mode))continue;const T=byTag(f),U=T[up],Fo=T[fore];if(!U||!Fo)continue;if(!Fo.joints[tipName])tipName=Object.keys(Fo.joints)[0]||tipName;   /* v4 swaps the weapons between arms */
         let bend=null;if(two){const s=U.pivot,e=U.joints.elbow,t=Fo.joints[tipName];const ux=e[0]-s[0],uy=e[1]-s[1],fx=t[0]-e[0],fy=t[1]-e[1];
           bend=-Math.atan2(ux*fy-uy*fx,ux*fx+uy*fy)*180/Math.PI;/* positive = forearm comes back up toward the aim, as arm2 intends */
           if(bend<st.min){st.min=bend;st.fmin=f}if(bend>st.max){st.max=bend;st.fmax=f}if(bend<-0.5)st.neg.push(`${f.mode}-${f.i}(${bend.toFixed(1)})`)}
-        const h=Fo.jointHits[tipName];if(h){if(h.hits.includes("p_torso"))st.torso.push(`${f.mode}-${f.i}`);if(h.belowGround)st.ground.push(`${f.mode}-${f.i}`)}}
+        const h=Fo.jointHits[tipName];if(h){if(h.hits.includes(rep.R.torso))st.torso.push(`${f.mode}-${f.i}`);if(h.belowGround)st.ground.push(`${f.mode}-${f.i}`)}}
       data[side]=st;const bad=[];if(st.neg.length)bad.push(`negative bend in ${st.neg.join(" ")}`);if(st.torso.length)bad.push(`${tipName} inside torso in ${st.torso.join(" ")}`);
       lines.push(`arm ${side}: ${two?`elbow bend ${st.min.toFixed(1)}..${st.max.toFixed(1)} deg (min ${st.fmin?png(st.fmin):"-"}, max ${st.fmax?png(st.fmax):"-"})`:"one-piece arm, no elbow"}; ${tipName} in torso: ${st.torso.length} frame(s); ${tipName} below ground: ${st.ground.length} frame(s)${st.ground.length?" "+st.ground.join(" "):""}${two&&st.max>TOL.bendMax?`; WARN bend over ${TOL.bendMax} deg (plan clamp 1.5 rad)`:""}${bad.length?" FAIL "+bad.join("; "):""}`);
       if(bad.length)fails.push(side)}
@@ -82,10 +82,10 @@ const fmt=v=>typeof v==="number"?(Number.isInteger(v)?String(v):v.toFixed(3).rep
     let ref=null,lines=[],pass=true,data={};
     try{ref=await measureReference()}catch(e){lines.push("reference measurement failed: "+e.message);pass=false}
     const rest=rep.frames.find(f=>f.mode==="rest");
-    if(ref&&rest){const T=byTag(rest),torso=T["p_torso"],upF=T[rep.R.armF2?rep.R.armF2[0]:rep.R.armF],foreF=T[rep.R.armF2?rep.R.armF2[1]:rep.R.armF],thF=T[rep.R.thigh+"@hipF"],shF=T[rep.R.shin+"@hipF"],pack=T["p_pack"];
+    if(ref&&rest){const T=byTag(rest),torso=T[rep.R.torso],upF=T[rep.R.armF2?rep.R.armF2[0]:rep.R.armF],foreF=T[rep.R.armF2?rep.R.armF2[1]:rep.R.armF],thF=T[rep.R.thigh+"@hipF"],shF=T[rep.R.shin+"@hipF"],pack=T[rep.R.pack];
       const top=Math.min(...rest.parts.map(p=>p.ink[1])),sole=Math.max(...rest.parts.map(p=>p.ink[3])),hipY=(torso.joints.hipF[1]+torso.joints.hipB[1])/2,sh=torso.joints.armF;
       const d=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
-      const arm=rep.R.armF2?d(upF.pivot,upF.joints.elbow)+d(foreF.pivot,foreF.joints.muzzle):d(upF.pivot,upF.joints.muzzle);
+      const tipJ=f=>f.joints.muzzle||f.joints.tip||Object.values(f.joints)[0];const arm=rep.R.armF2?d(upF.pivot,upF.joints.elbow)+d(foreF.pivot,tipJ(foreF)):d(upF.pivot,tipJ(upF));
       const leg=d(thF.pivot,thF.joints.knee)+(shF.ink[3]-shF.pivot[1]);
       const rigM={torso:hipY-torso.ink[1],total:sole-top,arm,leg,packAbove:sh[1]-pack.ink[1],upper:rep.R.armF2?d(upF.pivot,upF.joints.elbow):null,shoulderDrop:sh[1]-torso.ink[1]};
       const ratios=[["arm / torso","arm"],["leg / torso","leg"],["total / torso","total"],["pack above shoulder / torso","packAbove"],["shoulder below top / torso","shoulderDrop"]];

@@ -152,6 +152,11 @@ const ORIG={},CUR={};
 for(const n in SP){const s=SP[n];ORIG[n]={pivot:s.pivot.slice(),joints:deep(s.joints),rot:s.rot||0,note:""};CUR[n]=deep(ORIG[n])}
 
 const RIGS={
+ timo4:{label:"Tim-o v4 (exploded sheet)",kind:"biped",R:{torso:"p4_torso",thigh:"p4_thighF",shin:"p4_shinF",thighB:"p4_thighB",shinB:"p4_shinB",armF2:["p4_upF","p4_foreF"],armB2:["p4_upB","p4_foreB"],pack:"p4_pack",scale:1.15,legLen:.85,armScale:[.85,.85],packScale:1,backAim:-.15},
+  parts:["p4_torso","p4_upF","p4_foreF","p4_upB","p4_foreB","p4_thighF","p4_shinF","p4_thighB","p4_shinB","p4_pack"],
+  names:{p4_torso:"Torso",p4_upF:"Front upper arm",p4_foreF:"Pile-bunker forearm (front)",p4_upB:"Back upper arm",p4_foreB:"Minigun forearm (back)",p4_thighF:"Front thigh",p4_shinF:"Front shin",p4_thighB:"Back thigh",p4_shinB:"Back shin",p4_pack:"Jump pack"},
+  jl:{armF:"front upper arm",armB:"back upper arm",hipF:"front thigh",hipB:"back thigh",pack:"jump pack",eye:"eye glow",knee:"shin",elbow:"forearm",muzzle:"muzzle flash",tip:"pile spike",glow:"pack glow"},
+  info:"v4 (29 Oct, new pipeline): the mech was drawn ONCE, assembled, in the game camera (the hero frame), then an edit slid the pieces apart and drew a sand ball cap on every limb end and a socket on every body side (the exploded sheet). Every part is a cut of the same drawing, so the shoulders match, the torso has shoulder and hip sockets, and each leg has its own thigh and shin. Pivots were seeded from the cap circles by art/metr0niks/source/timo_exploded.py and nothing has been hand-tuned yet: mark what is off. The forearms swapped sides on the hero frame (bunker front, minigun back); the game can swap the weapons back in code."},
  timo3:{label:"Tim-o v3 (elbows)",kind:"biped",R:{torso:"p_torso",thigh:"p_thigh",shin:"p_shin",armF2:["p_upF","p_foreF"],armB2:["p_upB","p_foreB"],pack:"p_pack",scale:1.15,legLen:.95,armScale:[.85,.78],packScale:.85,backAim:-.15},
   parts:["p_torso","p_upF","p_foreF","p_upB","p_foreB","p_thigh","p_shin","p_pack"],
   names:{p_torso:"Torso",p_upF:"Front upper arm",p_foreF:"Minigun forearm",p_upB:"Back upper arm",p_foreB:"Pile-bunker forearm",p_thigh:"Thigh (both legs)",p_shin:"Shin (both legs)",p_pack:"Jump pack"},
@@ -179,7 +184,7 @@ const RIGS={
   info:"Four legs hang from two joints, spread sideways in code and 22–30 px up. Claude keeps those nudges unless you say otherwise in a note."}
 };
 /* parts whose rest angle may change: nothing hangs off them in the game code */
-const ROT_OK=new Set(["p_upF","p_foreF","p_upB","p_foreB","p_shin","p_armR","p_armL","p_pack","b_shin","b_arm","l_leg","l_claw","j_leg","j_leg2"]);
+const ROT_OK=new Set(["p4_upF","p4_foreF","p4_upB","p4_foreB","p4_shinF","p4_shinB","p4_pack","p_upF","p_foreF","p_upB","p_foreB","p_shin","p_armR","p_armL","p_pack","b_shin","b_arm","l_leg","l_claw","j_leg","j_leg2"]);
 const MODES={
  biped:[["walk","Walk","Walk cycle with the gun drifting."],["aim","Aim sweep","Standing, both arms sweep the full aim range the game allows (−46° to +54°)."],["stress","Stress","Deep knee bends, walking and full aim at once: gaps at a bad pivot show up here first."],["rest","Rest","Standing still, arms level."]],
  crab:[["walk","Walk","Leg pairs scuttle, claw drifts."],["aim","Claw sweep","Standing, claw sweeps up and down."],["stress","Stress","Legs swing twice as far as the game, claw sweeps."],["rest","Rest","Standing still."]],
@@ -202,8 +207,9 @@ function bipedOps(D,R,P){
     const dx=fx-hx,dy=fy-hy,d=Math.min(Math.hypot(dx,dy),(L.l1+L.l2)*.999),aF=Math.atan2(-dx,dy);
     const bend=Math.acos(Math.max(-1,Math.min(1,(L.l1*L.l1+d*d-L.l2*L.l2)/(2*L.l1*d)))),r1=aF-bend;
     const kx=hx-Math.sin(r1)*L.l1,ky=hy+Math.cos(r1)*L.l1,r2=Math.atan2(-(fx-kx),fy-ky);
-    op(D,ops,base,R.thigh,hx,hy,r1-L.base,k,k,R.thigh+"@"+side);
-    op(D,ops,base,R.shin,kx,ky,r2+lift*.004,k,k,R.shin+"@"+side);
+    const th=side==="hipB"&&R.thighB||R.thigh,sn=side==="hipB"&&R.shinB||R.shin;   /* v4 has its own back-leg parts */
+    op(D,ops,base,th,hx,hy,r1-L.base,k,k,th+"@"+side);
+    op(D,ops,base,sn,kx,ky,r2+lift*.004,k,k,sn+"@"+side);
   }
   leg("hipB",ph+Math.PI);
   /* two-bone arm: the upper arm drops by the elbow bend, the forearm comes back up to the aim; forearm drawn first so the elbow socket covers its cap */
@@ -444,7 +450,7 @@ function applyDoc(v){if(!v||!v.parts||!RIGS[v.rig])return;for(const n in v.parts
 /* ---------- boot ---------- */
 function resize(){edDim=fitCanvas(ed);ex=ed.getContext("2d");pvDim=fitCanvas(pv);px=pv.getContext("2d");fitPreview();drawEd();drawPv()}
 let ready=false;
-function boot(){if(ready)return;ready=true;setRig("timo3");resize();syncPlay();requestAnimationFrame(tick);
+function boot(){if(ready)return;ready=true;setRig("timo4");resize();syncPlay();requestAnimationFrame(tick);
   try{new ResizeObserver(()=>resize()).observe(ed)}catch(e){addEventListener("resize",resize)}}
 /* test hook for the rig harness (tools/rig-harness): read-only except setRig/applyRig */
 window.__lab={SP,ORIG,CUR,RIGS,MODES,pose,rigOps,drawOp,opBounds,img,get rid(){return rid},

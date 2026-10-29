@@ -338,3 +338,5 @@ None logged yet.
 | 2026-10-28 | Tim-o | Isometric idle, run and destroyed, round 4 (GPT Image 2, medium, 13 each) | 39 |
 | 2026-10-29 | Tim-o | Arm parts v3, split at the elbow, back shoulder flipped (GPT Image 2.5 Sunburst, medium, transparent) | 4 |
 | 2026-10-29 | Tim-o | Arm parts v3.1: shorter upper arms, back shoulder pad as a cup (GPT Image 2.5 Sunburst edit, medium) | 4 |
+| 2026-10-29 | Tim-o | Hero frame v1: the mech assembled in the game camera, rig rest pose (GPT Image 2.5 Sunburst, medium, transparent) | 4 |
+| 2026-10-29 | Tim-o | Exploded parts sheet v1: hero frame slid apart with caps and sockets (GPT Image 2.5 Sunburst edit, medium) | 4 |
