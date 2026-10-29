@@ -215,6 +215,8 @@ Run the fun pass sweep questions in the [tuning history](../tuning-history.md) o
 - A pair wins half its Warden fights at normal armor, in 210 s.
 - Lighter waves 4 and 5 are no longer needed. Moving or softening the Bulwark, the Warden's health, the combo decay, Overtime at levels 1 and 2, and the spawn ring still are.
 
+**Tuning pass 1, Oct 29 (GDD-D57):** kr0 picked the three tested changes: the Bulwark comes in wave 5 only on level 3, the Warden has 1,000 health and 200 per leg, and the combo decay is 16 s. Level 3 now extracts 22% solo and 82% co-op with pilot v2. Evidence is in the [tuning history's Changes section](../tuning-history.md#changes). Overtime at levels 1 and 2, the spawn ring, the Redline cost and the Warden's rider damage stay open.
+
 ## Risks
 
 | Risk | Why | What we do |

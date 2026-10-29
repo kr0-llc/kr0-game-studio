@@ -140,7 +140,7 @@ var T={
   pods:{perWave:1,extra:.4,window:[1.5,6],minDist:4,countdown:3,dropHeight:9,fall:30,touch:.7,heal:.4,
         overclock:{mult:2,time:15},fire:2,        /* window: seconds into the wave; fire: bot fire-rate multiplier while overclocked */
         odds:{repair:.5,overclock:.2,cache:.15,strike:.15}},   /* GDD-D43: pod type odds, drawn in this order (they need not sum to 1) */
-  combo:{max:4,step:.1,decay:12,atbAt4:.25},   /* GDD-D35: x1..x4; each step above x1 adds 10% scrap to credited kills; drops after 12 s without a heavy shot; ATB fills 25% faster at x4 */
+  combo:{max:4,step:.1,decay:16,atbAt4:.25},   /* GDD-D35: x1..x4; each step above x1 adds 10% scrap to credited kills; drops after 16 s without a heavy shot (TUNE-1); ATB fills 25% faster at x4 */
   stagger:{time:1,taken:.5},                   /* GDD-D35: a Perfect staggers for 1 s; a staggered enemy takes 50% more damage */
   credit:{window:3},multiKill:{window:1.5},demolition:.15,   /* GDD-D48 kill credit window (s); GDD-D53 multi-kill window (s); GDD-D41/D55 collapse and hazard scrap bonus */
   /* ----- phase 5: city hazards (GDD-D41) ----- */
@@ -155,7 +155,7 @@ var T={
                      A "pack" entry lands T.scuttler.pack Scuttlers together. elite: one bot or loader slot in each wave becomes
                      an Elite instead. waves: wave numbers, null = every wave (Overtime included) */
     {zone:1,enemy:"pack",take:"bot",n:2,give:1,waves:[2,4,5]},
-    {zone:2,enemy:"bulwark",take:"loader",n:1,give:1,waves:[4,5]},
+    {zone:2,enemy:"bulwark",take:"loader",n:1,give:1,waves:[4,5],firstWaves:[5]},   /* TUNE-1: on the level its zone opens (3), wave 5 only */
     {zone:3,enemy:"wrecker",take:"bot",n:1,give:1,waves:[2,4]},
     {zone:4,elite:true,waves:null}],
   dropOrder:{boss:0,loader:1,"elite-loader":1,bulwark:1,wrecker:2,bot:3,"elite-bot":3,pack:4},   /* GDD Wave pacing: lower drops first */
@@ -197,8 +197,8 @@ T.pair={hp:2/3,scrap:9,apart:8,wait:3};   /* Sniper pair: share of a sniper's he
                                              firing in turn (the turn passes back after `wait` s when the partner can't take it) */
 T.juggernaut={hp:450,speed:1.8,radius:.85,height:1.8,patrol:.7,engage:6,tell:.6,charge:2,chargeSpeed:6.5,dmg:30,shove:2.5,recover:1,cooldown:2.5,voxDmg:60,scrap:20};   /* a boss loader: charges from
                                              `engage` m for up to `charge` s, plowing buildings, pillars, barriers and containers (voxDmg goes through T.structural) */
-T.warden={hp:1500,speed:.8,z:5,height:1.4,radius:2.6,half:3,scrap:60,cover:.5,below:.5,   /* body aloft at z (m), hit cylinder radius, half the 6x6 footprint; damage x cover while a rider is up; below: share of health for the belly packs and stomp */
-  leg:{hp:300,radius:.45,off:2.6,stagger:2,slow:.25},   /* four legs at the body's corners (off m along each axis); a break staggers 2 s and slows 25% (each) */
+T.warden={hp:1000,speed:.8,z:5,height:1.4,radius:2.6,half:3,scrap:60,cover:.5,below:.5,   /* body aloft at z (m), hit cylinder radius, half the 6x6 footprint; damage x cover while a rider is up; below: share of health for the belly packs and stomp */
+  leg:{hp:200,radius:.45,off:2.6,stagger:2,slow:.25},   /* four legs at the body's corners (off m along each axis); a break staggers 2 s and slows 25% (each) */
   platform:{hp:150,radius:.7,height:.35,off:2},   /* three rider platforms on its back, off m from the centre */
   fall:{dmg:400,taken:1.5,z:.9,gravity:22},   /* four legs broken: it comes down to z, takes dmg (x hp scale) and x taken damage from then on */
   barrage:{every:8,first:4,warn:2,at:[-6,-3,0,3],radius:2,mechDmg:20,enemyDmg:40,voxDmg:40},   /* four shells walking a line toward a mech (at: m from it along the Warden-to-mech line), a warn s ground warning, a 3x3x3 hole each */
@@ -1976,7 +1976,8 @@ function create(opts){
   function zoneSlots(q,n){
     var c=lvm("count"),open=openZones(),O=T.dropOrder||{};
     (T.zoneThreats||[]).forEach(function(Z){
-      if(Z.zone>=open||(Z.waves&&Z.waves.indexOf(n)<0))return;
+      var zw=Z.firstWaves&&zone.target===Z.zone?Z.firstWaves:Z.waves;   /* firstWaves: on the level this zone opens */
+      if(Z.zone>=open||(zw&&zw.indexOf(n)<0))return;
       var i;
       if(Z.elite){var at=[];q.forEach(function(k,j){if(k==="bot"||k==="loader")at.push(j)});
         if(at.length){i=at[(rnd()*at.length)|0];q[i]="elite-"+q[i]}return}

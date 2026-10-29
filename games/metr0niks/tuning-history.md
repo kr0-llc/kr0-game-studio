@@ -632,7 +632,17 @@ The GDD sets these (GDD-D18, GDD-D20, GDD-D23 and GDD-D24). kr0 accepted the GDD
 
 ## Changes
 
-None yet.
+### Tuning pass 1 (Oct 29, 2026, GDD-D57)
+
+kr0 picked the three tested changes from the [pilot v2 candidate table](#sweep-with-pilot-v2-oct-28-2026). Each is now in `T`:
+
+| T key | Was | Now | Evidence |
+| --- | --- | --- | --- |
+| `zoneThreats` row 2 (Bulwark) | waves [4, 5] | waves [4, 5], and `firstWaves` [5] on the level Smelter Row opens (level 3) | Re-run after the change, pilot v2, 60 runs each, seeds 1 + 7919 k: level 3 solo extracts 13 of 60 (22%, was 4%), deaths by wave {2: 1, 4: 4, 5: 41}; co-op 49 of 60 (82%, was 62%), deaths only in wave 5 (9). Records in `tuning-runs/2026-10-29-tune1-l3-solo.jsonl` and `-l3-coop.jsonl` |
+| `warden.hp`, `warden.leg.hp` | 1500, 300 | 1000, 200 | From the run-only Warden batch in `2026-10-28-pilot-v2-warden.jsonl`: a pair at normal armor wins 29 of 40 (was 20), median fight 164 s (was 210 s). Still above the 90 to 120 s target; rider damage is the next lever |
+| `combo.decay` | 12 s | 16 s | Re-run after the change, level 1 solo, 100 runs: ×4 reached in 79 (was 57). Record in `tuning-runs/2026-10-29-tune1-l1-solo.jsonl` |
+
+The rules check now expects no Bulwark in wave 4 of level 3, one in wave 5, Bulwarks in waves 4 and 5 from level 4, and a 1,000-health Warden with 200-health legs. Still open for kr0: Overtime at levels 1 and 2, the spawn ring, the Redline cost, and the Warden's rider damage.
 
 ## Tokens per story
 
