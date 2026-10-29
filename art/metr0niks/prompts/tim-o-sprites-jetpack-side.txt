@@ -1,0 +1,27 @@
+Tim-o jetpack rise, side view, Action Sprite Studio (PR #7 jetpack set; brief version 1, see action-sprite-studio-brief-v1.txt)
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_6igsYbsWkwma3BRWcBEtSidC, 2026-10-26 17:31 UTC, success
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 16.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_fgx3t3P1162cJmWBXtroy71B
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_mZCfGwxV9qw1ubEpWqYCGgH1
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_CkYfgv9M7JP8HnpcLcuScPsC
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_Rj6fcbp9Fwq4hefs5z1Uhz5M
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_bq8JtEwhzFFT74ch4Bxv3msj
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_GRpLdsg9ESzWsTdJh3HCEBYt, asset_nPznQonE2xvAvYDHHjMgBaS1, asset_x6QVHVrY3oaCxcK2h6CWZgp3, asset_iKwLqwjiKrmXNYEwjHUDMcmn, asset_i5dXt9Ah1nXQPjg9nBcAA5Gy, asset_1iaBMnVUzxTuN42AEGqVY9p7, asset_JmLzc1tVzyQjGgMsVEkoa8uo, asset_W83tRVnVDytjQPU94S3dpUoq, asset_rHNKD5czEQ8Tz1imkxDK7S66, asset_8KmRLTbiGQvSUjFEyFYGv9GJ, asset_nYPPENc1cFKRPoiRt1rd6mkS, asset_t5wuknjvFZ7tr61Vfc4fLEWB
+  - videoGenerator1: model_scenario-image-seq-to-video, success, 2 credits, job job_zrwqGvmofY81Q9bNQuPm7vJg
+    settings: compressionLevel 15, fps 6, images = tool1 output, loopCount 0, outputFormat "mp4", pingpong false
+    outputs: asset_rh1BWZRv4GZ4kW8uLnWHM3dC
+Final outputs: asset_rh1BWZRv4GZ4kW8uLnWHM3dC
+Status: Recovered from Scenario on 2026-10-29. Sheet asset_Rj6fcbp9Fwq4hefs5z1Uhz5M is the PR #7 jetpack/sheet.png (pixel match). kr0 mark Fix on 2026-10-28 (pack alignment should match the reference). Redone as tim-o-sprites-jetpack-iso.txt and -iso-r4.txt.
+
+Input text2 (as typed):
+side view 2D platformer, character faces right. JETPACK RISE loop: crouch to load, then the jetpack tank on the back ignites with a bright flame and smoke, the mech lifts off the ground and rises straight up, legs dangling and trailing, arms slightly out for balance, exhaust flame flickering below, ending in a hover pose that bridges back to the crouch.
+
+Prompt imageGenerator1 received:
+Create a clean, professional 12-frame spritesheet of the character from the reference image. Perspective Shift: Adapt the character’s orientation perfectly for a side-view 2D platformer game. If it's a platformer, use a direct side profile; if it's top-down or isometric, adjust the camera and body tilt accordingly. The Canvas: Place the character on a solid white background divided by a sharp black 4x3 grid (4 columns, 3 rows). The character must be perfectly contained within each cell, never touching the black lines. Design a seamless loop for a jetpack rise action using the following motion logic: Preparation & Anticipation (Frames 1-4): Start from a steady idle pose. Use "Anticipation": the character should coil their body or pull the weapon back to build energy for the move. The Impact Strike (Frames 5-7): Execute the main action with "High Speed". These frames should show rapid, explosive movement to convey power and impact. Strict Hand Lock: The weapon/object must stay in the right hand. Do not swap hands or mirror the character. Follow-Through & Overlapping Action (Frames 8-10): Show the character's momentum carrying forward even after the strike is done. Apply "Overlapping Action": hair, capes, or loose equipment should continue moving slightly after the main body has stopped. The Seamless Reset (Frames 11-12): Frame 11 shows the character recovering their balance. Frame 12 is a specific "Bridge Pose"—the final frame that leads smoothly back into the first frame’s idle position for a perfect infinite loop. Absolute Anchor Point: The character’s root (the feet or center of gravity) must stay at the exact same pixel coordinate in every frame. When played in sequence, the character must not "jump," "stutter," or "drift" across the screen. Scale & Detail: Keep the character’s height, limb thickness, and armor details identical in every cell. Use the unique identifiers from the reference, such as, to ensure the side-view is consistent.

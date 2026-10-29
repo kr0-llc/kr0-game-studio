@@ -1,8 +1,8 @@
 # Design workflows
 
-Last updated: 28 October 2026 · Owner: art-director, approved by kr0
+Last updated: 29 October 2026 · Owner: art-director, approved by kr0
 
-Every game makes its characters and generated art with the same tools: three Scenario workflows, the Scenario MCP server and its skills, and the gemini-creative plugin. This page says what each one does, when to use it, and where its output goes. The general art rules are in [art style guides](art-style-guides.md).
+Every game makes its characters and generated art with the same starting tools: three Scenario workflows, the Scenario MCP server and its skills, and the gemini-creative plugin. They are defaults, not the only choice: when another model or API does a job better, use it, and say why in the run record (kr0, 29 October 2026). This page says what each tool does, when to use it, how every run is recorded, and where its output goes. The general art rules are in [art style guides](art-style-guides.md).
 
 ## The character pipeline
 
@@ -59,13 +59,14 @@ All three live in kr0's Scenario project (team `team_pG6MaimfJd9b9PTLYKkYR7fQ`, 
 ### 3. Action sprite studio
 
 - **Link:** [Action Sprite Studio](https://app.scenario.com/workflows/wflow_hRqp6ojU7j6t1Az51W4XjaKd?teamId=team_pG6MaimfJd9b9PTLYKkYR7fQ&projectId=proj_T9sfQEQPZ2s4yoHgggBe1fAE) (`wflow_hRqp6ojU7j6t1Az51W4XjaKd`)
-- **What it does:** makes one looping action animation from one character image. An LLM step writes a frame-by-frame plan from a fixed animation brief: frames 1 to 4 anticipation, 5 to 7 the strike, 8 to 10 follow-through with overlapping action, 11 recovery, 12 a bridge pose back into frame 1, with the feet locked to one anchor point. GPT Image 2 draws it as a 4 × 3 grid on white with black lines (1536 × 1024). The image slicer cuts the grid into 12 frames, and the frames become a looping MP4 at 6 fps.
+- **What it does:** makes one looping action animation from one character image. An LLM step (Gemini 3.5 Flash Lite, thinking off) fills the blanks in a fixed animation brief from the View & Action text, and its reply is the image prompt. The brief: frames 1 to 4 anticipation, 5 to 7 the strike, 8 to 10 follow-through with overlapping action, 11 recovery, 12 a bridge pose back into frame 1, with the feet locked to one anchor point (text in `art/metr0niks/prompts/action-sprite-studio-brief-v2.txt`). A blank 4 × 3 grid image (`asset_RveFaTyXuPAwQ62kwaU1QXzF`) is fixed in the graph as a second reference. GPT Image 2 draws it as a 4 × 3 grid on white with black lines (1536 × 1024). The image slicer cuts the grid into 12 frames, and the frames become a looping MP4 at 6 fps.
 - **Inputs:**
   - `image1` Character Image (required): use the turnaround view that matches the game's camera
   - `text2` View & Action: the camera and the move, for example "side view platformer, right hand, overhead hammer swing" or "isometric 3/4 top-down, firing shoulder cannon". It fills the blanks in the animation brief: game view, action, and which hand holds the weapon.
 - **Use it for:** attack, idle, hit and walk cycles for prototypes; animation tests before committing to a rig; reference for hand-drawn or code-drawn animation.
 - **Tips:** one action per run. Check the 12 frames for hand swaps and drift before packing them into an atlas. The white background has to be keyed out for the game; for transparent cut-out parts, use the GPT Image route in the Metr0niks ink prototype instead (`art/metr0niks/source/`).
-- **Changes to make before real use** (read from the saved graph on 26 October 2026; no real run yet to confirm):
+- **What the runs showed:** the workflow ran 18 times on 26 October 2026, for Tim-o's side-view sets in PR #7 (180 credits; every input, prompt and setting is in `art/metr0niks/prompts/tim-o-sprites-workflow-runs-2026-10-26.txt`). In all 11 runs that reached the image model, the LLM step dropped the frame-by-frame plan typed into View & Action, and in five it cut the prompt to a line or two (the PR #7 run cycle was drawn from `side-view 2D platformer; run cycle loop; right`). Nine runs hit the rate limit. Findings and suggested fixes: [Action Sprite Studio runs](../games/metr0niks/research/2026-10-29-action-sprite-studio-runs.md).
+- **Changes to make before real use** (read from the saved graph on 26 October 2026):
   1. *Always fill View & Action.* The prompt template has blanks (`****`) for the game type, the action and the weapon hand, and the LLM step fills them from this field. Empty, they stay blank. Say the camera (side, top-down, isometric), the move, and which hand.
   2. *Remove the background.* The sheet is drawn on white with black grid lines and cut into 12 equal cells, so frames keep the white and may keep grid-line edges. Add a background-removal and trim step after the slicer, or key it out afterwards, before building an atlas.
   3. *Resolution.* The sheet is 1536 × 1024 at "auto" quality, so each frame is about 384 × 341. Raise the quality and size for large sprites; downscale for pixel art.
@@ -106,6 +107,21 @@ The agent's own findings go in `games/<game>/feedback/synthetic/<date>-<characte
 - **One run per character, one run per action.** None of the three loops over a list.
 - **Three jobs at a time.** Scenario returned HTTP 429 at twelve parallel jobs.
 
+## Run records
+
+kr0 adopted this rule on 29 October 2026, after the Action Sprite Studio inputs had to be recovered from Scenario's job history ([what that showed](../games/metr0niks/research/2026-10-29-action-sprite-studio-runs.md)). We keep our generation calls so we can learn from them and improve the process.
+
+- **Every run gets a record**, whatever made it: a Scenario workflow or model, another provider's API (OpenAI, Gemini and so on), a local model or a script. Failed runs and rejected takes are recorded too; they show what to change.
+- **Where:** `art/<game>/prompts/<character>-<step>.txt`, committed with the art it made. A batch of runs also gets one summary file with a row per run, and may add a `.jsonl` copy for tools.
+- **What it holds:**
+  - the provider, the workflow or model id, the run or request id, the time and the result, and why this tool was picked if it isn't the default;
+  - every input as typed, and every reference asset or file in order;
+  - inputs fixed inside a workflow (hidden images, brief text), or the file that holds them;
+  - the prompt each model actually received, after any LLM step;
+  - every step's settings, ids, output asset ids or files, and cost.
+- **How:** for Scenario, write it from the job id with `tools/scenario-run-record/run_record.py`, then add a title line and a Status line (what it was for, kr0's mark, what replaced it). For any other API, the script or session that makes the call writes the same fields from the request and response it sent and got back.
+- A run with no record can't be reviewed, compared or repeated, so it doesn't go into a game.
+
 ## Where the output goes
 
 | Output | Folder |
@@ -113,7 +129,7 @@ The agent's own findings go in `games/<game>/feedback/synthetic/<date>-<characte
 | Character sheets | `art/<game>/characters/<character>/sheet.png` |
 | Turnaround views | `art/<game>/characters/<character>/turnaround/<angle>.png` (`front`, `three-quarter`, `side`, `rear`, `low`, `high`) |
 | Sprite sheets, frames and loop videos | `art/<game>/characters/<character>/sprites/<action>/` (`sheet.png`, `frame-01.png` to `frame-12.png`, `loop.mp4`) |
-| Inputs for every run (brief text, view and action, reference asset ids, workflow id, cost) | `art/<game>/prompts/<character>-<step>.txt` |
+| Run record for every run, failed ones included (see Run records above) | `art/<game>/prompts/<character>-<step>.txt` |
 
 Note the workflow and model on the art board, as for any generated image. Raw runs and rejected takes stay in Scenario. Picked outputs go to the same paths in the **kr0 Studio Art** Google Drive folder as full-resolution masters, with a provenance record. The repo gets a web-size preview and a `manifest.jsonl` row: see [asset management](asset-management.md).
 
@@ -165,7 +181,7 @@ Scenario publishes tested procedures for its tools as skills. Read the one that 
 
 - **The game's chosen style comes first.** Feed each workflow with art in the game's chosen style from [art style guides](art-style-guides.md). While a game's style is "Not chosen", label character art as exploration.
 - **kr0 approves the character sheet** before turnarounds or sprites are made from it.
-- **Record every run** in `art/<game>/prompts/` (inputs, workflow id, model, cost), as with any generated image.
+- **Record every run**, with any tool, as described under Run records.
 - **Check before use:** remove garbled AI text, check hand swaps and drift in sprite frames, and say what was fixed in the art README.
 - **Review every animation run** before it is used, as described under Animation review: a review page with all the art, a frame player, frame-by-frame findings, kr0's marks and review comments.
 - **Log spend.** Scenario credits per character go into the game's tuning history next to the story's tokens.
