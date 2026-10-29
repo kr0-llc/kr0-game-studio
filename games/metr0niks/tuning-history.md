@@ -9,7 +9,7 @@ Every changed number, why it changed, and the tokens each story spent. No tuning
 - **Runner:** `simulations/run.js` (built Oct 28, TDD-D17). `node simulations/run.js --runs 100 --level 1` plays whole excursions headless with scripted pilots and prints a summary; `--players 2` for co-op, `--climb` for level 1 up until a death, `--tune file.json` for a variant (a partial `T` merged over a copy for those runs only, TDD-D11), `--out` writes one JSON record per run to `games/metr0niks/tuning-runs/`. Run k of a batch uses seed `--seed + k × --stride` (stride 1 by default), so batches share paired seeds; the phase 9 sweep spread them with `--stride 7919`. About 0.3 s per excursion.
 - **Determinism:** the simulation draws from one seeded stream, steps in fixed 1/60 s ticks and has no DOM, timers or browser globals. Every runner batch replays its first match from the recorded inputs and compares `sim.stateHash()` every 10 s and at the end; a mismatch fails the batch. `sim.tuneHash()` identifies the tuning a record was made with. `simulations/rules-check.js` asserts single rules.
 - **Scenarios:** to be set by kr0. Likely: Excursion level 1 and level 3 (all zones open), single-player and two-player co-op, Overpass Sector 4.
-- **Players:** `simulations/pilot.js`, a scripted pilot: it fights the nearest enemy from about 9 m while circle-strafing, closes in for the pile-bunker when the ATB bar is full (not into a charging loader or a crowd), takes Field repair below 60% armor and picks up scrap. Ring accuracy is set per batch: `perfect`, `mix` (70% Perfect, 25% Good, 5% Miss), `random` or `none`. It is a baseline, not a model of a skilled player: it never dashes, uses Q or plays the city.
+- **Players:** `simulations/pilot.js`, a scripted pilot: it fights the nearest enemy from about 9 m while circle-strafing, closes in for the pile-bunker when the ATB bar is full (not into a charging loader or a crowd), takes Field repair below 60% armor and picks up scrap. Ring accuracy is set per batch: `perfect`, `mix` (70% Perfect, 25% Good, 5% Miss), `random` or `none`. It is a baseline, not a model of a skilled player: it never dashes, uses Q or plays the city. Pilot v2 (`MetroPilot.make({skill: "v2"})`, `run.js --pilot v2`, Oct 28) dashes out of telegraphed attacks, uses Q and call-ins (`--callins A,B`), flanks Bulwarks, shoots Warden riders first and drops spans on groups; see [Sweep with pilot v2](#sweep-with-pilot-v2-oct-28-2026). `--build slot=part` swaps a starter part. v1 stays the default.
 - **Seeds:** TBD (kr0 to decide). Paired seeds are required by the standard.
 - **Measures and targets:**
 
@@ -283,6 +283,319 @@ Each is a proposal for kr0; none is applied. "Tested" means a run-only `--tune` 
 | `callin.price.overclock` | 30 | keep, or 20 | No pilot effect (it can't use Overclock) | Overclock call-ins lowered the extract rate (13% → 9%); a human test should decide |
 
 Top five by expected effect: the waves 4 and 5 counts (solo survival), the Redline cost, the spawn ring (density from level 2 on), the Warden health, and the combo decay. The Bulwark wall is the biggest single number in the sweep but is mostly the pilot's: teaching the pilot to flank and to drop spans should come before any Bulwark change, and the sweep should be re-run with that pilot before kr0 fixes the level 3 to 5 targets.
+
+## Sweep with pilot v2 (Oct 28, 2026)
+
+The phase 9 sweep above was biased by its pilot: it never dashed, used Q or call-ins, or played the city, and it couldn't flank. kr0 decided (Oct 28) to build a smarter scripted pilot and re-run the sweep before any tuning change. This section is that re-run. It is measurement and proposals only: no value in `T`, no rule and no GDD or TDD number changed.
+
+**Pilot v2.** `MetroPilot.make({skill: "v2"})` in `simulations/pilot.js`; `run.js --pilot v2`. The default stays v1, so old records and replay hashes are unchanged. Like v1 it only reads sim state and sets inputs, and it keeps v1's ring accuracy model (`mix` is 70% Perfect, 25% Good, 5% Miss). It draws from its own seeded stream. What it adds:
+
+- **Dodges.** It dashes or walks out of a loader's or the Juggernaut's charge line, a flashing Scuttler, a Warden barrage line or stomp tell, an enemy-taken Strike beacon line, slag and a Bulwark's bash. It picks its walking direction around orbs that are about to hit.
+- **Closes and escapes.** It dashes into pile-bunker reach when the bar is full. It rings a loader or the Juggernaut only in the window after a charge, and it backs off when low on armor.
+- **Bulwark.** It flanks to the Bulwark's back or baits a front Perfect, and it holds fire into the shield.
+- **Warden.** It shoots riders and platforms first, then legs, then the body.
+- **City.** It breaks a pillar to drop a span on two or more enemies that a collapse can kill.
+- **Cover.** It kites, and backs into cover when a shooter has line of sight.
+- **Q.** It uses Q per shoulder part: mortar, vent, Redline as a burst, and breach throw and detonate.
+- **Call-ins.** It uses its call-in slots: Field repair below 45% armor, Overclock with a boss or 5+ enemies up, Strike at a group or a heavy.
+- **Stalemates.** It breaks a stalemate (no enemy damaged for 20 s) by playing plainly for 10 s.
+
+`rules-check.js` asserts it in scripted setups:
+
+| Setup | Pilot v2 | Comparison |
+| --- | --- | --- |
+| Loader charge | 0 armor lost, 1 dash | Standing still loses 22 |
+| Level-3 Bulwark 1v1 | Kills it in 9 s, 0 armor lost, never breaks the shield | v1: no kill in 40 s, loses 100 |
+| Span drop on 4 bots | Crushes 3 | v1: crushes 0 |
+| Field repair | Called at its feet, armor 30 → 70 | — |
+
+`run.js` also gained `--callins A,B` and `--build slot=part`.
+
+**How it was run.**
+- Branch `pilot-v2` from `012d198`.
+- Same spread seeds as phase 9 (run k uses seed 1 + 7919 k), same climb plans, 100 runs per batch unless noted.
+- About 8,200 matches plus 240 climbs, about 1.6 hours of wall time on 4 cores. A level-1 solo match takes about 0.7 s; a level-5 co-op match takes about 9 s.
+- The harness is a scratch copy of `run.js`'s match loop with v2 pilots, as in phase 9.
+- Records are in `tuning-runs/2026-10-28-pilot-v2-*.jsonl`: `grid`, `zonethreats`, `overtime`, `callins-redline` (with the per-part Q batches), `warden`, `climbs` and `candidates`. Each batch starts with a header line holding its config.
+- Records are trimmed: per-run totals, per-wave density and the pilot's usage counts.
+- v2 stalls now and then at levels 3 to 5: 0 to 12 timeouts per 100 runs at the 900 s cap. They count as not extracted.
+
+**Headline.**
+- v2 clears levels 1 and 2 almost every time, solo and co-op.
+- The wall moves to wave 4 of level 3 and is still the Bulwark. It does 43 to 59% of all damage at levels 3 and 4, even though v2 flanks it about 10 times a match.
+- A co-op pair now extracts level 3 62% of the time and level 5 16%, and wins 5 of 60 climbs.
+- The Warden is beatable by a pair: 20 of 40 fights at normal armor. Its fight is long because rider snipers and Bulwarks out-damage the barrage.
+- Several v1 findings flip:
+  - Lighter waves 4 and 5 aren't needed at levels 1 and 2.
+  - Overtime is now too safe at levels 1 and 2, solo as well as co-op.
+  - Two Field repairs don't lift level 1 or 2 any more.
+
+### Behaviour usage counts
+
+Per mech per match, mix accuracy, starter build (no shoulder part, no call-ins), from the grid unless noted.
+
+| Scenario | Dashes | Where the dashes go | Flanks | Bulwark baits | Span plans | Spans down per match | Stalemate breaks |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Level 1, solo | 18.1 | loader 6.0, orb 3.4, Strike 0.2; close 7.8; escape 0.8 | 0 | 0 | 1.6 | 0.40 | 0 |
+| Level 1, co-op | 9.2 | loader 3.1, orb 1.1, Strike 0.2; close 4.8 | 0 | 0 | 0.5 | 0.18 | 0 |
+| Level 2, solo | 22.6 | loader 9.1, orb 3.9; close 8.4; escape 0.9 | 0 | 0 | 2.0 | 0.35 | 0.2 |
+| Level 3, solo | 36.6 | loader 5.4, bash 6.2, orb 3.6, Juggernaut 0.3, Scuttler 0.3; close 9.6; escape 4.9; flank 6.3 | 9.7 | 1.0 | 2.5 | 0.38 | 2.0 |
+| Level 3, co-op | 28.1 | loader 2.8, bash 5.0, orb 1.9; close 9.5; escape 2.4; flank 6.1 | 13.1 | 1.4 | 2.7 | 1.00 | 1.5 |
+| Level 5, solo | 45.8 | loader 8.8, bash 3.6, orb 5.0, barrage 1.2, Juggernaut 0.5; close 14.9; escape 6.7; flank 4.5 | 6.7 | 0.7 | 1.3 | 0.57 | 1.8 |
+| Level 5, co-op | 36.3 | loader 4.4, barrage 4.7, bash 3.8, orb 2.6; close 11.1; escape 4.2; flank 4.9 | 11.2 | 1.4 | 1.2 | 0.83 | 1.1 |
+| Warden lab, pair | 19.7 | barrage 9.7, bash 2.3, orb 1.7; close 2.5; flank 2.8 | 2.8 | — | — | — | — |
+
+"Span plans" counts the times v2 picked a span with enough enemies under it and went for its pillar. "Spans down" counts every span that fell, whoever broke it. Slag and stomp dodges are near 0. v2 rarely stands under the Warden, since it shoots the riders first.
+
+**Q by part** (level 2, solo, mix, 50 runs per part; Redline 100 runs):
+
+| Shoulder part | Q uses per match | Extract rate (starter: 93%) |
+| --- | --- | --- |
+| Twin-pod siege mortar | 33 shots | 96% |
+| Cryo flash-vent | 3.4 vents | 100% |
+| Redline vent | 6.6 uses | 84% |
+| Breach charges | 23.5 throws, 21.1 detonations | 98% |
+
+**Call-ins per match (solo, levels 1 to 3):**
+- Repair + repair: 0.4 used at levels 1 and 2, 1.8 at level 3.
+- Repair + strike: the Strike is always used (1.0); 0.2 to 1.0 repairs.
+- Overclock + overclock: both used (2.0).
+
+### Per-level extract rates (v1 → v2)
+
+Starter build, no upgrades, every level played from full armor. Banked = scrap per mech per extract (mix).
+
+| Level | Solo mix | Solo perfect | Co-op mix | Co-op perfect | v2 banked: solo / co-op | v2 mean extract length: solo / co-op |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 13% → 99% | 14% → 99% | 96% → 100% | 97% → 100% | 204 / 102 | 174 s / 107 s |
+| 2 | 4% → 93% | 1% → 98% | 73% → 100% | 75% → 100% | 230 / 116 | 248 s / 159 s |
+| 3 | 0% → 4% | 0% → 5% | 0% → 62% | 0% → 76% | 401 / 183 | 416 s / 275 s |
+| 4 | 0% → 1% | 0% → 1% | 0% → 52% | 0% → 58% | 419 / 209 | 482 s / 347 s |
+| 5 | 0% → 0% | 0% → 0% | 0% → 16% | 0% → 16% | — / 284 | — / 620 s |
+
+Perfect timing now matters: it adds 14 points at level 3 co-op and 5 points at level 2 solo, because v2 rings 11 to 34 times a match, on targets in their opening window.
+
+Sturdy proxies under v2:
+- Armor 300: level 3 is 52% solo and 98% co-op; level 5 is 2% solo and 86% co-op. v1 got 0% / 3% at level 3 and 0% / 0% at level 5.
+- Solo dies at the start of level 3 even at armor 300 (wave 4 kills 14%, wave 5 kills 40%).
+
+### Death rate per wave and the zone enemies
+
+Deaths per wave = matches lost in that wave / matches that reached it (mix).
+
+| Level | Solo, v1 | Solo, v2 | Co-op, v1 | Co-op, v2 |
+| --- | --- | --- | --- | --- |
+| 1 | W2 3%, W3 9%, W4 45%, W5 73% | W4 1% | W4 2%, W5 2% | none |
+| 2 | W2 3%, W3 38%, W4 70%, W5 76% | W5 7% | W4 2%, W5 24% | none |
+| 3 | W2 31%, W3 74%, W4 100% | W2 2%, W3 1%, W4 74%, W5 84% | W3 11%, W4 100% | W4 8%, W5 33% |
+| 4 | W2 40%, W3 90%, W4 100% | W2 1%, W3 3%, W4 81%, W5 94% | W3 19%, W4 100% | W4 14%, W5 40% |
+| 5 | W1 7%, W2 66%, W3 97%, W4 100% | W2 2%, W3 6%, W4 79%, W5 100% | W2 1%, W3 48%, W4 100% | W4 25%, W5 79% |
+
+The step each zone enemy adds, on paired seeds (mix). The columns are the extract rate with no zone enemies, without the newest, and with the full table.
+
+| Level (newest enemy) | Players | No zone enemies | Without the newest | Full table | Step from the newest, v2 | Step, v1 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2 (Scuttler packs) | Solo | 94% | 94% | 93% | −1 pt | +3 pts |
+| 2 (Scuttler packs) | Co-op | 100% | 100% | 100% | 0 | +12 pts |
+| 3 (Bulwark) | Solo | 70% | 66% | 4% | **−62 pts**; wave-4 deaths 7% → 74% | — (0% throughout) |
+| 3 (Bulwark) | Co-op | 99% | 100% | 62% | **−38 pts**; wave-4 deaths 0 → 8%, wave-5 deaths 0 → 33% | −30 pts |
+| 4 (Wrecker) | Solo | 43% | 2% | 1% | −1 pt (masked by the Bulwark) | — |
+| 4 (Wrecker) | Co-op | 99% | 49% | 52% | +3 pts | masked |
+| 5 (Elites) | Co-op | 37% | 11% | 16% | +5 pts | masked |
+
+The Bulwark is still the cliff, now measured cleanly. v2 kills a lone Bulwark easily (rules-check: 9 s, no armor lost). Two Bulwarks with bots and a loader in wave 4 are another matter. The bash does 51% (solo) to 57% (co-op) of all damage taken at level 3, against 0% without it. Shield breaks stay rare (0.1 per match), since v2 kills from behind rather than breaking the shield. The packs, the Wrecker and the Elites are steps of 5 points or less, inside the target. Without zone enemies the levels still fall: solo 94%, 70%, 43%, 0%, and co-op 100%, 99%, 99%, 37% at levels 2 to 5. Co-op's drop at level 5 is the Warden.
+
+### Wave density on the 216 × 48 m map
+
+Per cleared wave, mix accuracy. Each cell reads wave length / first contact within 16 m / idle seconds per mech. The last two columns give v2 with v1 in brackets.
+
+| Level | Players | W1 | W2 | W3 | W4 | W5 | Idle share: v2 (v1) | Mean nearest enemy: v2 (v1) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Solo | 13 / 1.6 / 4.1 | 29 / 2.0 / 4.8 | 23 / 0 / 2.5 | 51 / 2.0 / 5.8 | 45 / 0 / 3.1 | 13% (16%) | 10 m (10) |
+| 1 | Co-op | 10 / 1.5 / 4.0 | 18 / 1.8 / 5.0 | 14 / 0 / 3.2 | 28 / 1.6 / 4.8 | 24 / 0 / 3.1 | 21% (22%) | 11 m (12) |
+| 2 | Solo | 22 / 2.7 / 9.3 | 35 / 2.6 / 10.0 | 40 / 0.2 / 8.6 | 77 / 2.5 / 10.6 | 57 / 0.1 / 8.4 | 20% (30%) | 12 m (13) |
+| 2 | Co-op | 17 / 2.5 / 10.0 | 24 / 2.7 / 10.1 | 23 / 0.1 / 7.7 | 44 / 2.4 / 9.8 | 33 / 0.1 / 7.8 | 32% (33%) | 15 m (15) |
+| 3 | Solo | 30 / 3.3 / 14.3 | 70 / 3.1 / 17.3 | 60 / 0.9 / 13.4 | 113 / 3.6 / 20.7 | 118 / 1.9 / 21.0 | 26% (31%) | 14 m (15) |
+| 3 | Co-op | 25 / 3.1 / 15.8 | 44 / 2.9 / 16.0 | 38 / 0.9 / 14.6 | 76 / 3.3 / 17.3 | 81 / 1.3 / 15.7 | 32% (42%) | 16 m (18) |
+| 4 | Co-op | 32 / 4.4 / 22.3 | 62 / 3.2 / 26.7 | 51 / 1.1 / 22.9 | 97 / 3.4 / 25.7 | 92 / 0.6 / 22.8 | 38% (47%) | 19 m (22) |
+| 5 | Solo | 58 / 6.1 / 32.4 | 124 / 3.1 / 38.1 | 133 / 4.8 / 37.8 | 203 / 5.4 / 40.7 | — | 33% (43%) | 20 m (23) |
+| 5 | Co-op | 46 / 5.8 / 32.8 | 81 / 3.4 / 37.4 | 82 / 4.2 / 34.8 | 126 / 3.8 / 38.2 | 264 / 4.8 / 45.3 | 41% (48%) | 23 m (25) |
+
+A pilot that hunts cuts idle time by 5 to 10 points from level 2 up. First contact is the spawn's, not the pilot's, so it is unchanged: 3 to 6 s from level 3 up. Idle time still roughly doubles from level 1 to level 5, so the spawn ring remains the density lever.
+
+### Combo, multi-kills and span drops
+
+| Level | Players | ×4 reach, mix / perfect: v2 (v1) | Kills at ×1 / ×2 / ×3 / ×4 (v2 mix) | Runs with a multi-kill: v2 (v1) | Runs with a triple or better: v2 (v1) | Multi-kills per run, v2 mix: doubles / triples / quads / 5+ | CRUSHED kills per run: v2 (v1) | Spans down per run: v2 (v1) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Solo | 57% / 91% (47% / 89%) | 48 / 32 / 12 / 7% | 91% (81%) | 24% (18%) | 1.7 / 0.2 / 0 / 0 | 0.46 (0.05) | 0.40 (0.07) |
+| 1 | Co-op | 21% / 38% (31% / 58%) | 61 / 31 / 7 / 1% | 98% (93%) | 34% (41%) | 2.4 / 0.3 / 0.1 / 0 | 0.19 (0.03) | 0.18 (0.26) |
+| 2 | Solo | 58% / 81% (41% / 71%) | 52 / 31 / 11 / 6% | 100% (94%) | 82% (53%) | 2.5 / 0.7 / 0.4 / 0.1 | 0.40 (0.02) | 0.35 (0) |
+| 2 | Co-op | 22% / 40% (58% / 86%) | 68 / 26 / 4 / 1% | 100% (100%) | 81% (70%) | 3.3 / 0.9 / 0.3 / 0.1 | 0.26 (0.17) | 0.55 (0.35) |
+| 3 | Solo | 61% / 91% (58% / 83%) | 53 / 31 / 11 / 5% | 99% (90%) | 80% (45%) | 2.6 / 0.7 / 0.4 / 0.2 | 0.49 (0.21) | 0.38 (0.04) |
+| 3 | Co-op | 71% / 83% (56% / 87%) | 63 / 27 / 7 / 4% | 100% (100%) | 84% (60%) | 4.4 / 1.2 / 0.4 / 0.2 | 0.95 (0.14) | 1.00 (0.22) |
+| 4 | Solo | 53% / 87% | 55 / 29 / 11 / 5% | 99% | 37% (23%) | 2.3 / 0.4 / 0.1 / 0.1 | 0.25 (0.14) | 0.32 (0.07) |
+| 4 | Co-op | 68% / 96% | 62 / 26 / 8 / 4% | 100% | 63% (35%) | 3.7 / 0.7 / 0.2 / 0.1 | 0.51 (0.13) | 0.49 (0.23) |
+| 5 | Solo | 83% / 96% (54% / 80%) | 51 / 29 / 11 / 8% | 95% (49%) | 49% (13%) | 1.8 / 0.4 / 0.2 / 0.1 | 0.46 (0.06) | 0.57 (0.10) |
+| 5 | Co-op | 76% / 93% (73% / 93%) | 65 / 24 / 7 / 3% | 99% (85%) | 75% (23%) | 4.0 / 1.0 / 0.4 / 0.1 | 0.45 (0.12) | 0.83 (0.37) |
+
+**Combo.** v2's ×4 reach grows with the match. At levels 1 and 2 co-op it is worse than v1's, because a pair that clears fast has few heavy-shot targets and splits them.
+
+**Multi-kills.** The multi-kill target is met almost everywhere: 91 to 100% of runs. Triples or better are a third or more of runs except at level 1, which has few enemies.
+
+**Collapses.** v2 crushes 2 to 20 times as many enemies as v1, but collapse kills are still only 1 to 2% of all kills. They also cost armor: a mech takes 2 (level 1) to 12 (level 3 co-op) armor per match from collapses, some of it from its partner's span drops.
+
+### Redline armor cost
+
+v2 presses Q for a burst when a target is staggered or a heavy is close, then fires up to 96.5 heat, or 110 only to finish a kill. Solo, Redline vent build, 100 runs per batch.
+
+| Batch | Extract rate (starter build) | Uses per match | Armor per use | Armor per match from Redline | Share of armor lost |
+| --- | --- | --- | --- | --- | --- |
+| Level 2, mix | 84% (93%) | 6.6 | 5.9 | 39 | 41% |
+| Level 2, perfect | 75% (98%) | 6.9 | 5.7 | 39 | 41% |
+| Level 3, mix | 0% (4%) | 5.8 | 7.3 | 43 | 35% |
+| Level 2, `redline.armor` 0.25, `per10` 0.5 | 87% | 7.3 | 3.0 | 22 | 27% |
+| Level 3, same tune | 0% | 6.1 | 3.5 | 21 | 18% |
+
+The cost is much lower used well: v1 paid 28 to 29 armor per use, firing through it as a heat dump. But even used well, the Redline costs 9 points of extract rate at level 2, against a vent or no shoulder part. The lab numbers above (32 to 52 armor for a full use from a lockout) are pilot-independent and still stand. The halved cost gives back 3 of the 9 points.
+
+### Extract rate and scrap with and without Overtime (v2)
+
+Paired seeds, mix. The host calls Overtime at the prompt or extracts at once. Banked per mech; expected = mean over all runs, with deaths counting 0.
+
+| Level | Players | Reached the prompt | Extract rate: no OT / OT | OT cleared: v2 (v1) | Banked per extract: no OT / OT | Expected per run: no OT / OT |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Solo | 99% | 99% / 94% | 95% (38%) | 204 / 298 | 202 / 280 |
+| 1 | Co-op | 100% | 100% / 100% | 100% (88%) | 102 / 150 | 102 / 150 |
+| 2 | Solo | 93% | 93% / 89% | 96% | 230 / 350 | 214 / 311 |
+| 2 | Co-op | 100% | 100% / 100% | 100% (77%) | 116 / 176 | 116 / 176 |
+| 3 | Solo | 4% | 4% / 0% | 0 of 4 | 401 / — | 16 / 0 |
+| 3 | Co-op | 62% | 62% / 32% | 52% | 183 / 265 | 113 / 85 |
+| 5 | Co-op | 16% | 16% / 6% | 38% | 284 / 413 | 45 / 25 |
+| 3 | Solo, armor 300 | 52% | 52% / 26% | 50% | 375 / 561 | 195 / 146 |
+| 3 | Co-op, armor 300 | 98% | 98% / 96% | 98% | 186 / 282 | 183 / 271 |
+| 5 | Co-op, armor 300 | 86% | 86% / 80% | 93% | 294 / 430 | 253 / 344 |
+
+Overtime still adds about 45 to 50% to an extract. With v2 it is a free +40 to 50% at levels 1 and 2, solo and co-op. At level 3 and up it is the gamble the GDD wants: it clears 38 to 52% of the time and loses expected scrap. The target (clear about 70%) is now missed on the safe side at levels 1 and 2, for solo as well as co-op.
+
+### Call-ins (v2)
+
+Solo unless noted, mix. v2 carries the two call-ins and decides when to call them (rules above). Paired with the grid. Pair price = garage price × (1 + 0.1 × (level − 1)).
+
+| Level | Slots | Extract rate: none / with (v1) | Used per mech per match | Price of the pair | Banked per extract (with) | Expected per run: none / with, before the price |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Repair + repair | 99% / 98% (13% / 36%) | 0.4 | 80 | 204 | 202 / 200 |
+| 1 | Repair + strike | 99% / 99% (13% / 29%) | 1.2 | 90 | 203 | 202 / 201 |
+| 1 | Overclock + overclock | 99% / 99% (13% / 9%) | 2.0 | 60 | 203 | 202 / 201 |
+| 2 | Repair + repair | 93% / 98% (4% / 10%) | 0.5 | 88 | 231 | 214 / 226 |
+| 2 | Repair + strike | 93% / 97% (4% / 8%) | 1.4 | 99 | 231 | 214 / 224 |
+| 2 | Overclock + overclock | 93% / 96% | 2.0 | 66 | 233 | 214 / 224 |
+| 3 | Repair + repair | 4% / 10% (0% / 0%) | 1.7 | 96 | 358 | 16 / 36 |
+| 3 | Repair + strike | 4% / 15% | 1.9 | 108 | 360 | 16 / 54 |
+| 3 | Overclock + overclock | 4% / 3% | 1.8 | 72 | 359 | 16 / 11 |
+| 3 | Co-op, repair + repair | 62% / 76% | 1.0 | 96 per mech | 184 | 113 / 140 |
+| 5 | Co-op, repair + repair | 16% / 28% | 1.7 | 112 per mech | 290 | 45 / 81 |
+
+Call-ins buy survival where it's short: +6 to +11 points solo at level 3, +12 to +14 co-op at levels 3 and 5. They still never pay for themselves: the expected gain is 12 to 38 scrap against a price of 88 to 112. Overclock still does nothing for a scripted pilot.
+
+### Collapse lethality
+
+The span-drop lab above is pilot-independent: bots and Scuttlers die at every level, the Wrecker survives with 10 × the level scale. In matches, v2 drops 0.2 to 1.0 spans per match and crushes 0.2 to 1.0 enemies, mostly bots and Scuttlers, plus damaged loaders and Bulwarks. A run-only `collapse.botDmg` 90 changed nothing measurable in level-4 and level-5 co-op:
+
+| Level, co-op | Extract rate: 80 / 90 | Crushed per run: 80 / 90 | Wreckers crushed in 100 runs: 80 / 90 |
+| --- | --- | --- | --- |
+| 4 | 52% / 53% | 0.51 / 0.49 | 2 / 3 |
+| 5 | 16% / 16% | 0.45 / 0.49 | 0 / 4 |
+
+Wreckers rarely stand under a span.
+
+### Warden fight with real armor
+
+Same scripted setup as above: level 5, waves 1 to 4 emptied by a run-only override, 40 seeds each. Wave 5 still brings its zone enemies, Bulwarks among them. "Armor 1000" is the sturdy proxy that replaces v1's "refilled". Fight length runs from the Warden's spawn and includes its walk-in.
+
+| Setup | Mechs | Warden killed | Fight length of wins, median (range) | Legs broken | Armor lost per mech | Per mech per minute |
+| --- | --- | --- | --- | --- | --- | --- |
+| Normal armor | 1 | 1 of 40 | 349 s | 0.1 | 100 (dies) | 57 |
+| Normal armor | 2 | 20 of 40 | 210 s (177 to 280) | 1.0 | 78 | 27 |
+| Normal armor, `warden.hp` 1000, `leg.hp` 200 | 1 | 0 of 40 | — | 0.2 | 100 (dies) | 57 |
+| Normal armor, hp 1000 / 200 | 2 | 29 of 40 | 164 s (144 to 228) | 1.1 | 70 | 26 |
+| Armor 1000 | 1 | 39 of 40 | 378 s (293 to 583) | 0.9 | 444 | 67 |
+| Armor 1000 | 2 | 40 of 40 | 204 s (173 to 277) | 1.8 | 108 | 31 |
+| Armor 1000, hp 1000 / 200 | 1 | 40 of 40 | 298 s (229 to 405) | 1.1 | 329 | 65 |
+| Armor 1000, hp 1000 / 200 | 2 | 40 of 40 | 159 s (138 to 218) | 1.5 | 101 | 37 |
+
+**v1 against v2.** v1 never won at normal armor (a pair died after 47 s), and with armor refilled took 136 to 160 s as a pair. v2 wins half its pair fights. It takes about a sixth of the damage per minute (27 to 37 against 149 to 217), but fights longer, because it shoots riders first, takes cover and breaks few legs. It never brought the Warden down.
+
+**Where the damage comes from** (pair, normal armor):
+- rider and boss snipers 43%
+- Bulwark bash 31%
+- orbs 12%
+- collapses 6%
+- the barrage 5%; v2 dodges it about 10 times a fight
+
+So `warden.barrage.mechDmg` is not the lever v1 suggested. The riders and the wave-5 escort are. A solo player at normal armor still can't win: 1 of 40 fights, even with the smaller Warden.
+
+### The scrap curve against garage prices (v2)
+
+Banked per mech per extract (mix):
+- Solo: 204, 230, 401 and 419 at levels 1 to 4.
+- Co-op: 102, 116, 183, 209 and 284 at levels 1 to 5.
+
+Levels 1 and 2 are close to v1's numbers (186 / 104 and 228 / 122). The level 3 to 5 numbers are measured for the first time, and they sit close to the sturdy proxy's (186, 220, 301).
+
+Where the cubes come from (co-op level-1 extracts): light gun kills 81%, contracts 13%, pods 5%, collapses 1%, heavy kills under 1%. Heavy kills reach 20% of solo level-3 income.
+
+A victorious co-op climb banks about 102 + 116 + 183 + 209 + 284 ≈ 894 per mech without Overtime, and about 1,300 with it. Everything (2,985) is still about 3.3 victorious climbs, or 29 level-1 extracts. Wear is still no sink: v2 loses 13 (co-op level 1) to 154 (solo level 5) armor per mech per match, and only 45 solo at level 1 (v1 113).
+
+### Climb length
+
+| Players | Accuracy | Climbs | Victories: v2 (v1) | Died on level 1 / 2 / 3 / 4 / 5 | Mean climb, match time: v2 (v1) | Victorious climb, match time | Banked per mech per climb: v2 (v1) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Solo | mix | 60 | 0 (0) | 1 / 3 / 53 / 3 / 0 | 12.8 min (2.6) | — | 431 (25) |
+| Solo | perfect | 60 | 0 (0) | 1 / 3 / 56 / 0 / 0 | 11.8 min (2.4) | — | 434 (31) |
+| Co-op | mix | 60 | 5 (0) | 0 / 0 / 18 / 16 / 21 | 15.9 min (6.6) | 23.3 min | 461 (185) |
+| Co-op | perfect | 60 | 1 (0) | 0 / 0 / 19 / 17 / 23 | 16.1 min (6.6) | 21.9 min | 443 (187) |
+
+The first measured victorious climbs take 22 to 23 minutes of match time, inside the 20 to 30 minute target, and close to the 22 minutes estimated from cleared waves. Solo climbs end at level 3, the Bulwark.
+
+### Proposed targets for kr0, updated
+
+Same twelve. Each shows where pilot v2 stands, and how the target changes once a pilot can play. "The pilot" now means pilot v2 at the mix accuracy. A v2 number is still a regression guard, not a promise about players. But v2 dodges, flanks and drops spans, so its numbers are closer to a careful player's than v1's floor.
+
+1. **Combo:** ×4 in about 60% of matches, solo and co-op, with 10 to 20% of kills at ×4. v2 is at 53 to 83% solo, and at 21 to 22% co-op at levels 1 and 2, where pairs clear too fast to chain heavy shots. The co-op gap is now firmer evidence for a longer decay.
+2. **Redline:** unchanged. A full Redline from a lockout costs at most 20 armor. Add: used well (v2), it costs no more than about 5 points of extract rate against a vent. Today it costs 32 to 52 in the lab, and 9 points of extract at level 2 with v2.
+3. **Overtime:** clears about 70% for a team that reaches the prompt, and adds about 50%. v2 clears 95 to 100% at levels 1 and 2 (too safe, solo too) and 38 to 52% at levels 3 to 5 (about right to harsh).
+4. **Call-ins:** one call-in costs about 20 to 25% of an extract at its level, and two Field repairs lift a struggling player by at least 15 points. v2 sees +6 to +14 points where it struggles (level 3 and up), and nothing at levels 1 and 2.
+5. **Collapse lethality:** unchanged. The lab result holds whoever drops the span.
+6. **Warden:** a pair breaks it in 90 to 120 s and a solo player in 3 to 4 minutes. Add: a pair at normal armor wins at least 60% of its Warden fights. v2 as a pair: 20 of 40 wins, 210 s; 29 of 40 and 164 s with hp 1000 / leg 200. Solo: 1 of 40.
+7. **Multi-kills:** at least one multi-kill in 80% of matches and a triple or better in a third. v2 meets both from level 2 up (95 to 100% and 37 to 84%). At level 1 the triple rate is 24 to 34%, which is fine for the first level. Treat this target as met.
+8. **Scrap curve:** unchanged. v2's income matches v1's at levels 1 and 2, and the sturdy proxy's at levels 3 to 5.
+9. **Death rate per wave and zone enemies:** each zone enemy costs at most 10 points on its first level, and no wave kills more than 50% of those who reach it. v2 meets it for packs, the Wrecker and Elites. The Bulwark costs 62 points solo and 38 co-op. Wave 4 kills 74 to 81% of the solo pilots who reach it at levels 3 to 5, and wave 5 of level 5 kills 79% of pairs.
+10. **Climb length:** unchanged; 22 to 23 minutes for v2's victorious co-op climbs, inside the target.
+11. **Wave density:** unchanged (first contact within 3 s, at most 25% idle). v2 is at 13 to 21% idle at level 1, but 26 to 41% at levels 3 to 5, with first contact at 3 to 6 s.
+12. **Per-level extract rates, in v2 terms (replaces the v1 wording):** solo about 90% at level 1, falling about 15 points a level to about 30% at level 5; co-op about 95% at level 1, falling to about 50% at level 5. v2 today:
+    - solo 99%, 93%, 4%, 1% and 0%
+    - co-op 100%, 100%, 62%, 52% and 16%
+
+    Levels 1 and 2 are a little easy for a careful player, and levels 3 and 5 are cliffs (the Bulwark wave and the Warden wave).
+
+### Candidate changes, re-tested with pilot v2
+
+Ranked by evidence and effect. "Tested" means a run-only `--tune` batch with pilot v2 on the same paired seeds, in `2026-10-28-pilot-v2-candidates.jsonl` (the Redline and Warden ones in `callins-redline` and `warden`). None is applied.
+
+| Rank | T key | Current | Proposed | v2 result | v1 result | Still needed? |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `zoneThreats` row 2 (Bulwark) `waves`, or a Bulwark rule | [4, 5] | [5] on its first level; or a gentler bash (damage, arc or turn rate) | Tested. Level 3: solo 4% → 25% (wave-4 deaths 74% → 7%), co-op 62% → 83% (wave-5 deaths 33% → 17%) | Co-op wave-4 deaths 100% → 23% | **Yes.** It is the largest effect in the sweep even for a pilot that flanks, and the bash does half of all damage at levels 3 and 4. The bash damage, arc and turn rate are untested; a decision row should pick between moving the Bulwark and softening its bash |
+| 2 | `warden.hp`, `warden.leg.hp` | 1500, 300 | 1000, 200 | Tested. Pair wins at normal armor 50% → 73%, fight 210 s → 164 s; armor 1000: 204 → 159 s (pair), 378 → 298 s (solo) | Co-op 160 → 122 s refilled | **Yes**, and it is still short of 90 to 120 s. Rider damage (snipers 43% of what a pair takes) is the next lever, not the barrage (5%) |
+| 3 | `combo.decay` | 12 s | 16 s | Tested. Level 1 ×4 reach 57% → 79% solo, 21% → 51% co-op; kills at ×4 7% → 18% solo, 1% → 6% co-op; banked +3% / +2%; extract rates unchanged (99% → 100%, 100%) | ×4 47 → 74% solo, 31 → 54% co-op | **Yes**, the same effect with v2, and co-op needs it more |
+| 4 | `overtime.loaders` (or a per-level Overtime wave) | 1 | 2 at levels 1 and 2 | Untested. v2 clears 95 to 100% of Overtimes at levels 1 and 2, solo and co-op; 38 to 52% from level 3 | Co-op 88 to 91% | **Yes**, more than before: it now applies to solo too, so a per-level rule rather than per-player; a question for kr0 |
+| 5 | New key for the spawn ring (the literal 10 m in `pickSpawn` and `pickZoneSpawn`) | more than 10 m, anywhere in open zones | 10 to about 30 m of a living mech | Untested. v2 idles 26 to 41% at levels 3 to 5 (v1 31 to 48%), first contact 3 to 6 s | — | **Yes**; needs a decision row first, as before |
+| 6 | `redline.armor`, `redline.per10` | 0.5, 1 | 0.25, 0.5 | Tested at level 2 solo: armor per use 5.9 → 3.0; extract 84% → 87% (starter build 93%); Redline share of armor lost 41% → 27%; level 3: 7.3 → 3.5 per use, 0% either way | 29 → 16 per use | **Probably.** The lab worst case (32 to 52 from a lockout) is what makes it a trap for players, and that's unchanged. Used well, it is less urgent than v1 suggested |
+| 7 | `waves[3]`, `waves[4]` (waves 4 and 5) | 6 bots + 2 loaders; 5 bots + 1 loader + boss | 5 bots + 1 loader; 4 bots + 1 loader + boss | Tested. Level 1: 99% → 99% solo, 100% → 100% co-op; level 2: 93% → 99% solo, 100% → 100% co-op; level 3: 4% → 7% solo, 62% → 75% co-op. Banked per extract −11% at level 1; ×4 reach 57% → 39% solo, 21% → 10% co-op | Solo L1 13% → 30% | **No** at levels 1 and 2, where v2 already clears; it costs scrap and combo there. At level 3 it does less than moving the Bulwark. Drop it, or keep it as a level-3+ question |
+| 8 | `collapse.botDmg` | 80 | 90 | Tested in level-4 and level-5 co-op: no measurable change (extract 52% → 53%, 16% → 16%; crushes 0.51 → 0.49, 0.45 → 0.49) | Lab only | **Optional.** The lab reason (a Wrecker survives every drop) still holds, but matches don't feel it |
+| 9 | `durability.share` | 0.10 | 0.25 | Untested. v2 loses less armor per match than v1 (13 to 154 per mech), so wear is even less of a sink | — | As before, a question for kr0 |
+| 10 | `callin.price.overclock` | 30 | keep, or 20 | Tested as a pair: v2 calls both every match with no extract lift (level 1 99%, level 2 96% against 93%, level 3 3% against 4%) | Same | No pilot evidence either way; a human test should decide |
+
+Top five with pilot v2: the Bulwark (move it to wave 5 on level 3, or soften the bash), the Warden's health together with its rider damage, the combo decay, Overtime at levels 1 and 2, and the spawn ring. Lighter waves 4 and 5 drop off the list: they were the pilot's problem, not the waves'.
 
 ## Baseline: tuning in the prototype (Oct 25, 2026)
 
