@@ -376,8 +376,10 @@ function count(q,k){return q.filter(function(x){return x===k}).length}
     if(count(q,"pack")!==([2,4,5].indexOf(n)>=0?1:0)||count(q,"bulwark")||count(q,"wrecker")||count(q,"elite-bot")||count(q,"elite-loader"))ok2=false}
   ok(ok2,"level 2 opens the Freight Yard: one Scuttler pack in waves 2, 4 and 5, and nothing from the sealed zones");
   ok(waveQueue(M.create({seed:9,level:2}),2).length===4,"level 2 wave 2: the pack takes the place of round(2 x 1.25) = 3 of the 5 bots");
-  var s3=M.create({seed:9,level:3}),q34=waveQueue(s3,4),q32=waveQueue(s3,2);
-  ok(count(q34,"bulwark")===2&&count(q34,"loader")===1&&!count(q32,"bulwark")&&!count(q34,"wrecker"),"level 3 opens Smelter Row: Bulwarks take loader slots in waves 4 and 5 only ("+q34.join(",")+")");
+  var s3=M.create({seed:9,level:3}),q34=waveQueue(s3,4),q35=waveQueue(s3,5),q32=waveQueue(s3,2);
+  ok(!count(q34,"bulwark")&&count(q35,"bulwark")>=1&&!count(q32,"bulwark")&&!count(q34,"wrecker"),"level 3 opens Smelter Row: on its first level the Bulwark takes a loader slot in wave 5 only (TUNE-1) ("+q35.join(",")+")");
+  var s4=M.create({seed:9,level:4}),q44=waveQueue(s4,4);
+  ok(count(q44,"bulwark")>=1&&count(waveQueue(s4,5),"bulwark")>=1,"from level 4 the Bulwark takes loader slots in waves 4 and 5 ("+q44.join(",")+")");
   var s4=M.create({seed:9,level:4}),w4={};for(n=1;n<=5;n++)w4[n]=count(waveQueue(s4,n),"wrecker");
   ok(w4[2]>0&&w4[4]>0&&!w4[1]&&!w4[3]&&!w4[5]&&!count(waveQueue(s4,5),"elite-bot"),"level 4 opens the Glass Quarter: Wreckers in waves 2 and 4 only, no Elites yet");
   var s5=M.create({seed:9,level:5}),el=true;for(n=1;n<=5;n++){q=waveQueue(s5,n);if(count(q,"elite-bot")+count(q,"elite-loader")!==1)el=false}
@@ -1026,8 +1028,8 @@ function warden(o){o=o||{};var s=M.create({seed:o.seed||8,level:o.level||1,tune:
 function hit(s,e,n,by){return s.hitEnemy(e,n,{by:by===undefined?0:by,kind:"light",pow:1},e.x,e.y,(e.z||0)+.5)}
 (function(){
   var W=warden(),s=W.s,b=W.b;
-  ok(b.z===5&&b.maxHp===1500&&b.scrapN===60&&W.legs.length===4&&W.legs.every(function(l){return l.maxHp===300&&l.z===0})&&W.plats.length===3&&W.plats.every(function(q){return q.maxHp===150})&&b.riders.length===3&&b.riders.every(function(r){return r.maxHp===180&&r.mode==="ride"}),
-    "the Warden: a body 5 m up (1,500 health, 60 cubes), four 300-health legs, three 150-health platforms each carrying a Bounty sniper");
+  ok(b.z===5&&b.maxHp===1000&&b.scrapN===60&&W.legs.length===4&&W.legs.every(function(l){return l.maxHp===200&&l.z===0})&&W.plats.length===3&&W.plats.every(function(q){return q.maxHp===150})&&b.riders.length===3&&b.riders.every(function(r){return r.maxHp===180&&r.mode==="ride"}),
+    "the Warden: a body 5 m up (1,000 health, 60 cubes; TUNE-1), four 200-health legs, three 150-health platforms each carrying a Bounty sniper");
   ok(s.bots.filter(function(e){return e.wid===b.wid}).length===11,"its parts are linked entities in the enemy list sharing one parent id");
   ok(hit(s,b,100)===50,"while any rider is up, the body takes half damage (100 -> 50)");
   ok(hit(s,W.legs[0],100)===100,"a leg takes full damage: the riders' cover doesn't reach it");

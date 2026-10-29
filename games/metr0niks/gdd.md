@@ -47,7 +47,7 @@ An excursion is five waves on one map. It ends when you clear wave 5 (or Overtim
   | --- | --- | --- | --- |
   | Underpass (1) | Patrol bots, heavy loaders, the sniper | — | None |
   | Freight Yard (2) | Scuttler packs | 2 bots, in waves 2, 4 and 5 | Arc caster |
-  | Smelter Row (3) | Bulwark | 1 loader, in waves 4 and 5 | Redline vent, Seismic hammer |
+  | Smelter Row (3) | Bulwark | 1 loader, in waves 4 and 5 (wave 5 only on level 3, GDD-D57) | Redline vent, Seismic hammer |
   | Glass Quarter (4) | Wrecker | 1 bot, in waves 2 and 4 | Breach charges |
   | Terminus Yard (5) | Elites | One bot or loader in every wave (Overtime included) becomes an Elite | Overdrive core, Grav-skids |
 
@@ -170,7 +170,7 @@ Combat runs on two layers: the right-arm light gun fires in real time, the left-
 
 **Combo and stagger** (GDD-D35)
 
-- **Combo:** a counter from ×1 to ×4 shown beside the heat bar, and on the cursor ring only while it is ×2 or more. Each Perfect raises it by one, up to ×4. A Good holds it. A Miss, a ring that closes, a ring cancelled by an overheat, or 12 s without a heavy shot drops it back to ×1. Destruction doesn't break it.
+- **Combo:** a counter from ×1 to ×4 shown beside the heat bar, and on the cursor ring only while it is ×2 or more. Each Perfect raises it by one, up to ×4. A Good holds it. A Miss, a ring that closes, a ring cancelled by an overheat, or 16 s without a heavy shot drops it back to ×1. Destruction doesn't break it.
 - **Combo reward:** an enemy credited to you (see Kill credit) while your combo is ×2, ×3 or ×4 drops 10%, 20% or 30% more scrap (see Economy for how bonuses combine). At ×4 your ATB fills 25% faster. In co-op each player has their own combo.
 - **Stagger:** a Perfect staggers every enemy it hits for 1.0 s. A staggered enemy stops moving, can't fire, charge or jump, loses any tell in progress, and takes 50% more damage from every source. Stagger stacks with knockback: a Perfect pile-bunker hit knocks the enemy back 3 m and leaves it staggered where it lands. A staggered loader's charge stops. A staggered sniper's shot is cancelled and its jump timer pauses.
 
@@ -218,7 +218,7 @@ Collapse, hazard and pod-strike damage to enemies scales with the level instead 
 | Heat drain per second | 20 |
 | Overheat lockout | 3 s |
 | Structural share of damage | 50% |
-| Combo (GDD-D35) | ×1 to ×4; drops after 12 s without a heavy shot; scrap +10% per step above ×1; ATB +25% at ×4 |
+| Combo (GDD-D35) | ×1 to ×4; drops after 16 s without a heavy shot; scrap +10% per step above ×1; ATB +25% at ×4 |
 | Stagger (GDD-D35) | 1.0 s; +50% damage taken |
 | Redline vent (GDD-D36) | 5 s; cap 130 heat; 0.5 armor per heat above 100, net of drain; lockout 3 s + 1 s per 10 heat above 100 if it ends above 100; 14 s recharge |
 
@@ -426,11 +426,11 @@ The map is built from voxels, and anything resting on something else can fall.
   | Juggernaut | 3 or 5, levels 3 to 5 | A boss loader: 450 health, armored like a loader, 1.8 m/s. Its charge runs up to 2 s and plows through buildings and pillar chunks as well as barriers, so it can bring a span down on you or on itself. A Perfect stagger stops a charge. 20 cubes |
   | The Warden | 5, level 5 only | The big boss of the Terminus Yard, below |
 
-- **The Warden** (GDD-D51): a four-legged command walker with a 6×6 m body 5 m up, built for the Terminus Yard's open sky. It walks at 0.8 m/s, has 1,500 health and drops 60 cubes.
+- **The Warden** (GDD-D51): a four-legged command walker with a 6×6 m body 5 m up, built for the Terminus Yard's open sky. It walks at 0.8 m/s, has 1,000 health and drops 60 cubes.
   - **Snipers on its back:** three platforms each carry a Bounty sniper (180 health, normal fire and tell). While any rider is up, the Warden takes half damage. Killing a rider, or breaking its platform (150 health), drops the sniper to the street with the usual fall damage and stun.
   - **Barrage:** every 8 s it calls four shells in a line toward a mech, drawn on the ground 2 s before they land: 20 damage each to mechs, 40 to enemies, and a 3×3×3 hole.
   - **Below 50% health:** it drops a Scuttler pack from its belly every 15 s, and stomps a mech standing under it: 0.8 s tell, then 25 damage within 3 m.
-  - **Legs:** four legs, 300 health each, that take full damage and ignore the riders' cover. Breaking a leg staggers it for 2 s and slows it by 25%. Breaking all four brings it down as a collapse: it takes 400 damage, can't move or stomp for the rest of the fight, and takes 50% more damage. Anything under it takes collapse damage.
+  - **Legs:** four legs, 200 health each, that take full damage and ignore the riders' cover. Breaking a leg staggers it for 2 s and slows it by 25%. Breaking all four brings it down as a collapse: it takes 400 damage, can't move or stomp for the rest of the fight, and takes 50% more damage. Anything under it takes collapse damage.
   - It can't be staggered by a Perfect; only leg breaks stagger it. It never takes pods.
 - **Boss placement:** a sniper boss arrives on a roof edge 8 to 16 m from a random living mech, preferring one with a line of sight to it. A sniper that fell, or that finds no roof, fights from the street and jumps back to a roof within 10 m when its jump timer runs out and one exists. The Juggernaut lands like a loader; the Warden walks in from the far end of the Terminus Yard during the wave's drop-in.
 - **Level scaling:** counts, health, damage and scrap grow with the level (see Excursion rules).
