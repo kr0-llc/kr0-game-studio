@@ -1,0 +1,31 @@
+Tim-o destruction, side view, Action Sprite Studio (PR #7 explode set, second try; brief version 1, see action-sprite-studio-brief-v1.txt)
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_rwYkaCZ65nVT7z24473mHt2A, 2026-10-26 17:34 UTC, success
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 16.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_8aiRevt3Q83ocLHW65yhWUwe
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_tUy4gshyF4FXqxYi8Fqz6EtY
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_Ei2q6bVD2N1nvEU7p4yrGE1s
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_ePoKVbjeYjjStmHb4TVa3iYC
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_ZkQPgMsFb4fHH2iNqYpWTuX2
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_BM21EMu8TgrnHrS44FNVuApN, asset_QXS27KWDCUhPZ5uhQe6dxWNg, asset_CW7N5C6evyb1QUgTrKBB7fw4, asset_W1RdNTMpXQiFsYcL5uJwyEZA, asset_onFrMYrxoRog1Djckq9GUnjd, asset_x1HxccKS5VVfBMdazi1YtdB1, asset_cuA8umrSXe4wRBnVo8ZqUDcE, asset_aPsDT82TwGipX8yHkN8h25dK, asset_YSi8Yj2pHeMDVkNKh1ss65UP, asset_5DTvCmWdyTPnmsqXZQzH36uG, asset_T7csxHCXMxBzgXH7pMG1B9ef, asset_YMXhmh6xHHHa1HGAMxjfWyA6
+  - videoGenerator1: model_scenario-image-seq-to-video, success, 2 credits, job job_yo2Df5HTFQVrQwUtTjG4bTk2
+    settings: compressionLevel 15, fps 6, images = tool1 output, loopCount 0, outputFormat "mp4", pingpong false
+    outputs: asset_AcJF63uHJDkunvB4bn3HJSHA
+Final outputs: asset_AcJF63uHJDkunvB4bn3HJSHA
+Status: Recovered from Scenario on 2026-10-29. Sheet asset_ePoKVbjeYjjStmHb4TVa3iYC is the PR #7 explode/sheet.png (pixel match). The first try, job_G1KVVEzZHBvc6LH8axsVu7ks, was not used. Redone as tim-o-sprites-explode-iso.txt.
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT. DESTRUCTION: the mech is destroyed and does NOT survive. Plain pale background. Frame by frame: 1 neutral stand; 2 hit flash and sparks, body jolts; 3-4 cracks, panels pop off, smoke leaks, body shakes; 5 the whole body glows and swells; 6-7 a huge cartoon fireball explosion fills the frame, the body is NOT visible, only flame and smoke; 8-10 armor plates, arms, legs, the round eye lens and the jetpack tank fly outward as separate ink-drawn pieces with smoke trails; 11-12 only scattered scrap pieces and a thin smoke wisp on the ground, the mech is gone.
+
+Prompt imageGenerator1 received:
+Perspective Shift: Adapt the character’s orientation perfectly for a side view 2D platformer game. If it's a platformer, use a direct side profile; if it's top-down or isometric, adjust the camera and body tilt accordingly.
+
+Design a seamless loop for a mech destruction animation using the following motion logic:
+
+Strict Hand Lock: The weapon/object must stay in the right hand. Do not swap hands or mirror the character.

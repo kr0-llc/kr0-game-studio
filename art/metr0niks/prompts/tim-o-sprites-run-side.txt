@@ -1,0 +1,27 @@
+Tim-o run cycle, side view, Action Sprite Studio (PR #7 run set; brief version 1, see action-sprite-studio-brief-v1.txt)
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_hbcRLMYBoQnmDEj3wYq6y2KS, 2026-10-26 17:30 UTC, success
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 16.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_PzP6MUWA3ef3i6tmG38vzCPC
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_ACxYh8o2TVwpEutpirKcywKf
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_vqjCHwsbbprbywc92Wg6Lov6
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_ZuBz1Y8oTQmxChvqeH9ssbxC
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_Abq5gEVWoUuVGmTv61c9n9GN
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_Wbu6nFy8YH1oCsAhyMXRH9V5, asset_ZcTXjV5NqAMzPB9P98i8chiw, asset_SrfhSofwAdC1QV5HfqrHF7CZ, asset_7yVNQ3pj7kNxPisAfjbH7dJG, asset_qGfbHmr5EckaovV4ML5aHL4e, asset_QuSwn45q2vy9eT2wpt5T5evC, asset_Z6CRHp5GEsdUSnU8HJNL1Qm6, asset_yYpqQxi6aeghNB9KQDgwAjDE, asset_yKRmwF3sscv42sGzRLzA5CWD, asset_WfChngpuLGeChwusUBVnWhGW, asset_C5Bgkk6Ez9YBhoY8t5DGQybs, asset_5AAUo6TykyzSBpSWPiM1QTYv
+  - videoGenerator1: model_scenario-image-seq-to-video, success, 2 credits, job job_HRTkEbGArZFSLPzqbrhM38jC
+    settings: compressionLevel 15, fps 6, images = tool1 output, loopCount 0, outputFormat "mp4", pingpong false
+    outputs: asset_yRakMk9e6FP8uztURuVwb2i3
+Final outputs: asset_yRakMk9e6FP8uztURuVwb2i3
+Status: Recovered from Scenario on 2026-10-29. Sheet asset_ZuBz1Y8oTQmxChvqeH9ssbxC is the PR #7 run/sheet.png (pixel match). kr0 mark Redo on 2026-10-28 (off-model, arms detach, wrong camera). Replaced by the isometric run (tim-o-sprites-run-iso.txt).
+
+Input text2 (as typed):
+side view 2D platformer, character faces right. RUN CYCLE loop: a heavy mech jog, alternating leg strides with the body bobbing and leaning slightly forward, arms swinging opposite to the legs, jetpack tank bouncing on the back, small dust puffs at the feet. Full 12-frame cycle, last frame leads into the first.
+
+Prompt imageGenerator1 received:
+side-view 2D platformer; run cycle loop; right

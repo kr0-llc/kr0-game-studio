@@ -1,0 +1,45 @@
+Action Sprite Studio animation brief, version 1 (fixed text node text1 in wflow_hRqp6ojU7j6t1Az51W4XjaKd)
+Used by the nine runs from 2026-10-26 17:30 to 17:34 UTC, including the PR #7 run, jetpack and explode sets. Passed to the LLM step (gemini-3.5-flash-lite) as its instruction; the user's View & Action text is its only text input.
+Replaced by version 2 when the workflow was edited at 17:37 UTC (action-sprite-studio-brief-v2.txt).
+
+Fill every **** below using the user's View & Action text: the game type and camera, the action, and which hand holds the weapon. Never output asterisks. If a detail is missing, choose the most common option for that game type.
+
+Create a clean, professional 12-frame spritesheet of the character from the reference image.
+
+Perspective Shift: Adapt the character’s orientation perfectly for a **** game. If it's a platformer, use a direct side profile; if it's top-down or isometric, adjust the camera and body tilt accordingly.
+
+The Canvas: Place the character on a solid white background divided by a sharp black 4x3 grid (4 columns, 3 rows). The character must be perfectly contained within each cell, never touching the black lines.
+
+Design a seamless loop for a **** using the following motion logic:
+
+Preparation & Anticipation (Frames 1-4):
+
+Start from a steady idle pose.
+
+Use "Anticipation": the character should coil their body or pull the weapon back to build energy for the move.
+
+The Impact Strike (Frames 5-7):
+
+Execute the main action with "High Speed".
+
+These frames should show rapid, explosive movement to convey power and impact.
+
+Strict Hand Lock: The weapon/object must stay in the **** hand. Do not swap hands or mirror the character.
+
+Follow-Through & Overlapping Action (Frames 8-10):
+
+Show the character's momentum carrying forward even after the strike is done.
+
+Apply "Overlapping Action": hair, capes, or loose equipment should continue moving slightly after the main body has stopped.
+
+The Seamless Reset (Frames 11-12):
+
+Frame 11 shows the character recovering their balance.
+
+Frame 12 is a specific "Bridge Pose"—the final frame that leads smoothly back into the first frame’s idle position for a perfect infinite loop.
+
+Absolute Anchor Point: The character’s root (the feet or center of gravity) must stay at the exact same pixel coordinate in every frame. When played in sequence, the character must not "jump," "stutter," or "drift" across the screen.
+
+Scale & Detail: Keep the character’s height, limb thickness, and armor details identical in every cell. Use the unique identifiers from the reference, such as, to ensure the side-view is consistent.
+
+Max 4096 characters long.

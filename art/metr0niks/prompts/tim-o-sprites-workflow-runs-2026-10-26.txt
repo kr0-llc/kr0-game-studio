@@ -1,0 +1,462 @@
+Every Action Sprite Studio run, 2026-10-26 (Tim-o, side view, for PR #7)
+Workflow: Action Sprite Studio, wflow_hRqp6ojU7j6t1Az51W4XjaKd (named "Action Sprite Studio (copy)" in Scenario), team team_pG6MaimfJd9b9PTLYKkYR7fQ, project proj_T9sfQEQPZ2s4yoHgggBe1fAE
+Recovered from the Scenario job records on 2026-10-29 with tools/scenario-run-record/run_record.py. These are the only runs of this workflow in the project. Machine-readable copy: tim-o-sprites-workflow-runs-2026-10-26.jsonl (one row per run, every step's job id, settings, outputs and cost).
+Brief: runs 1 to 9 used action-sprite-studio-brief-v1.txt, runs 10 to 18 used action-sprite-studio-brief-v2.txt (the workflow was edited at 17:37 UTC).
+Reference for every run: image1 asset_RwZeqZVP1d8N4BpuKrcwn9f3 (the side view cropped from the Tim-o character sheet, side-reference.png in PR #7), plus the hidden image3 asset_RveFaTyXuPAwQ62kwaU1QXzF (a blank 4 x 3 grid fixed in the graph).
+Cost: 180 credits in all. Nine runs succeeded (16.5 each, 148.5). Two drew the sheet but failed at the video step on the rate limit (14.5 each, 29). Seven failed before or at the image step (2.5). Three sets went into PR #7: run, jetpack and explode (49.5).
+
+| # | Run | UTC | Action | Result | Credits | Sheet asset | Prompt length typed / received |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | job_jkngH7Y4GejmCWWESGgnjC7m | 17:30 | idle | success, not used | 16.5 | asset_yFGQfZsedCMCvKSXCzYe7BBJ | 247 / 408 |
+| 2 | job_hbcRLMYBoQnmDEj3wYq6y2KS | 17:30 | run | success, PR #7 run | 16.5 | asset_ZuBz1Y8oTQmxChvqeH9ssbxC | 312 / 46 |
+| 3 | job_nigNjuu8G9ahDV681rtCh3FU | 17:30 | dash | success, not used | 16.5 | asset_LLmD4fSQd3VzoYY95jf5nmY7 | 288 / 23 |
+| 4 | job_6igsYbsWkwma3BRWcBEtSidC | 17:31 | jetpack | success, PR #7 jetpack | 16.5 | asset_Rj6fcbp9Fwq4hefs5z1Uhz5M | 355 / 1972 |
+| 5 | job_G1KVVEzZHBvc6LH8axsVu7ks | 17:31 | explode | success, not used | 16.5 | asset_s9j9xSiDTR85oidGizJNypUu | 355 / 1974 |
+| 6 | job_AA6ZmAVPocmfeFpofcVLdhjm | 17:32 | win | success, not used | 16.5 | asset_7s34xW3eX1mULF1uVKr7LH8T | 331 / 1972 |
+| 7 | job_5sJJJoAHSFAvkmsofc2CXxCP | 17:34 | win, frame by frame | success, not used | 16.5 | asset_DNRmZD3kcdcMCxKPEJ7BWDqV | 570 / 408 |
+| 8 | job_jDFtKfk2KP7JV9qgquYSdDVj | 17:34 | dash, frame by frame | success, not used | 16.5 | asset_wqHosrg8yBwzguvcmXpqy297 | 546 / 399 |
+| 9 | job_rwYkaCZ65nVT7z24473mHt2A | 17:34 | explode, frame by frame | success, PR #7 explode | 16.5 | asset_ePoKVbjeYjjStmHb4TVa3iYC | 607 / 423 |
+| 10 | job_5BzrghDAY5G3b3jncnDMqXaV | 17:37 | win | sheet drawn, video hit the rate limit | 14.5 | asset_DCiAmt68uQhUtS5apuSjJT4W | 480 / 443 |
+| 11 | job_Mb8rAksZNoyHZoF2ddQ5dmYB | 17:37 | idle | sheet drawn, video hit the rate limit | 14.5 | asset_9oAnzB1MbE4iLPbjMmo3S3N6 | 511 / 2336 |
+| 12 | job_Z9CHzcFqsCLE4321boutpsLq | 17:37 | dash | rate limit at the image step | 0.5 | none | 500 / none |
+| 13 | job_GgedXwZ77cvKGxAC14jWj3u4 | 17:56 | win | rate limit at the image step | 0.5 | none | 480 / none |
+| 14 | job_7RrSD79HWuNyi9Q5oxwdX1K2 | 17:56 | idle | rate limit at the image step | 0.5 | none | 511 / none |
+| 15 | job_Vgp4469Rpr69K3z9epKE6dmE | 19:29 | win | rate limit at the image step | 0.5 | none | 480 / none |
+| 16 | job_ewfv59ty5vZw2Hkv7XRSQAaf | 19:30 | idle | rate limit at the LLM step | 0 | none | 511 / none |
+| 17 | job_redwN7f2vkGLAzuuf4A14o7o | 19:30 | dash | rate limit at the LLM step | 0 | none | 500 / none |
+| 18 | job_qprPudUs3DDdt1kVL1Ts1Vk4 | 19:47 | idle | rate limit at the image step | 0.5 | none | 511 / none |
+
+PR #7's idle, dash and win sheets were not made by this workflow: after runs 10 to 18 failed they were drawn with direct GPT Image 2 calls (wrapper and action text in PR #7's sprites/PROMPTS.md). The three PR #7 sheets were matched to runs 2, 4 and 9 pixel for pixel. Findings and recommendations: games/metr0niks/research/2026-10-29-action-sprite-studio-runs.md.
+
+Full record of each run follows, in the order the runs started.
+
+=== Run 1 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_jkngH7Y4GejmCWWESGgnjC7m, 2026-10-26 17:30 UTC, success
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 16.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_PLkYFPDpYGteuRCZRGWdd9w3
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_BSqfzsxyFDERJ9Go44ikKoPY
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_csh7damGK6ALVT5Q5roqNpen
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_yFGQfZsedCMCvKSXCzYe7BBJ
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_LxXP6Xwj79PHi4g2xcYTgVq7
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_J96EfGc9DVMnnD9mWmAvySGM, asset_nSa4DHaHBq3kpkyBBKfjHeTe, asset_6B65bqQA8Xw7EDqguPjeZwWo, asset_GXp1fsXXZwu6ViMLDasWGUZ3, asset_fFNqaEiLHf5gnj6GtfdP1tPY, asset_MZgVFYk7EugSPYtL1Bg1dXY6, asset_kwYCxnCttB8yKjtZz5QKySYY, asset_tvk5XPtZKXAzMHKG3ArHuLG4, asset_n9H8CoawHSWS436k1geTwYjq, asset_AFqTKVubDdX3C4ZHxFuWsaAn, asset_1W2SL3TnD9zzFbVGmQUdLNAD, asset_Ju89mUyoFCH4hN3ohaUgEQr5
+  - videoGenerator1: model_scenario-image-seq-to-video, success, 2 credits, job job_DSKs9z4guz59dsH4Wazu1bwA
+    settings: compressionLevel 15, fps 6, images = tool1 output, loopCount 0, outputFormat "mp4", pingpong false
+    outputs: asset_wxSKdsm5haLpd4R9fCf9hebU
+Final outputs: asset_wxSKdsm5haLpd4R9fCf9hebU
+
+Input text2 (as typed):
+side view 2D platformer, character faces right. IDLE loop: heavy robot breathing, slow chest rise and fall, shoulders settle, a slow blink of the single eye lens, one small curious head tilt, feet planted on one spot. Arms hang relaxed, no weapon.
+
+Prompt imageGenerator1 received:
+Perspective Shift: Adapt the character’s orientation perfectly for a side-scrolling platformer game. The Canvas: Place the character on a solid white background divided by a sharp black 4x3 grid (4 columns, 3 rows). Design a seamless loop for a heavy robot breathing using the following motion logic: Strict Hand Lock: The weapon/object must stay in the right hand. Do not swap hands or mirror the character.
+
+
+=== Run 2 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_hbcRLMYBoQnmDEj3wYq6y2KS, 2026-10-26 17:30 UTC, success
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 16.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_PzP6MUWA3ef3i6tmG38vzCPC
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_ACxYh8o2TVwpEutpirKcywKf
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_vqjCHwsbbprbywc92Wg6Lov6
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_ZuBz1Y8oTQmxChvqeH9ssbxC
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_Abq5gEVWoUuVGmTv61c9n9GN
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_Wbu6nFy8YH1oCsAhyMXRH9V5, asset_ZcTXjV5NqAMzPB9P98i8chiw, asset_SrfhSofwAdC1QV5HfqrHF7CZ, asset_7yVNQ3pj7kNxPisAfjbH7dJG, asset_qGfbHmr5EckaovV4ML5aHL4e, asset_QuSwn45q2vy9eT2wpt5T5evC, asset_Z6CRHp5GEsdUSnU8HJNL1Qm6, asset_yYpqQxi6aeghNB9KQDgwAjDE, asset_yKRmwF3sscv42sGzRLzA5CWD, asset_WfChngpuLGeChwusUBVnWhGW, asset_C5Bgkk6Ez9YBhoY8t5DGQybs, asset_5AAUo6TykyzSBpSWPiM1QTYv
+  - videoGenerator1: model_scenario-image-seq-to-video, success, 2 credits, job job_HRTkEbGArZFSLPzqbrhM38jC
+    settings: compressionLevel 15, fps 6, images = tool1 output, loopCount 0, outputFormat "mp4", pingpong false
+    outputs: asset_yRakMk9e6FP8uztURuVwb2i3
+Final outputs: asset_yRakMk9e6FP8uztURuVwb2i3
+
+Input text2 (as typed):
+side view 2D platformer, character faces right. RUN CYCLE loop: a heavy mech jog, alternating leg strides with the body bobbing and leaning slightly forward, arms swinging opposite to the legs, jetpack tank bouncing on the back, small dust puffs at the feet. Full 12-frame cycle, last frame leads into the first.
+
+Prompt imageGenerator1 received:
+side-view 2D platformer; run cycle loop; right
+
+
+=== Run 3 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_nigNjuu8G9ahDV681rtCh3FU, 2026-10-26 17:30 UTC, success
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 16.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_hmhWVrfs1dqN9hLkVzQUQ8qo
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_VXZ6ag56YJ5UDXKF9MCW62GY
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_5YP1BBttkK7yPQQXab8ZamEH
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_LLmD4fSQd3VzoYY95jf5nmY7
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_DyZ82PZm3pnzsozJnxuyLuZp
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_NpMwYqeEyY8UCTi9MBEDUoWp, asset_uCGTmwXPBWR3PsYkF8txvq2v, asset_ujT22xnLFkZhh3jXfJq9Q67x, asset_3h96QqzjNon99ektjQ1Zie4b, asset_muzsHRvDHctfNZmyUYYD2Hzr, asset_GinnPGaMsEptZnyqDq34Mhbv, asset_YCSXemMbeYCUXmdLEPYX6xkC, asset_JojfTjgy9r4fENJCfH2CGhoK, asset_iRSNzgMMbygecdJFQPKRDYdC, asset_SL8KAZsrv1WJsxyBiN2QoARw, asset_YrZYMLLhsq8fWQMhW4ZgB9aw, asset_B9S6Hyfntcqj8H8A149CuLgo
+  - videoGenerator1: model_scenario-image-seq-to-video, success, 2 credits, job job_6En5y82VBgCcaecaM1ZfwmJK
+    settings: compressionLevel 15, fps 6, images = tool1 output, loopCount 0, outputFormat "mp4", pingpong false
+    outputs: asset_yPKGnYg17Eaoeh1vFGAWx598
+Final outputs: asset_yPKGnYg17Eaoeh1vFGAWx598
+
+Input text2 (as typed):
+side view 2D platformer, character faces right. DASH loop: a sudden forward boost, body low and leaning hard into it, both arms swept back, legs stretched in a sliding lunge, jetpack puffing a short burst of exhaust behind, speed lines and a dust trail, then recover to the standing pose.
+
+Prompt imageGenerator1 received:
+side view 2D platformer
+
+
+=== Run 4 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_6igsYbsWkwma3BRWcBEtSidC, 2026-10-26 17:31 UTC, success
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 16.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_fgx3t3P1162cJmWBXtroy71B
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_mZCfGwxV9qw1ubEpWqYCGgH1
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_CkYfgv9M7JP8HnpcLcuScPsC
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_Rj6fcbp9Fwq4hefs5z1Uhz5M
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_bq8JtEwhzFFT74ch4Bxv3msj
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_GRpLdsg9ESzWsTdJh3HCEBYt, asset_nPznQonE2xvAvYDHHjMgBaS1, asset_x6QVHVrY3oaCxcK2h6CWZgp3, asset_iKwLqwjiKrmXNYEwjHUDMcmn, asset_i5dXt9Ah1nXQPjg9nBcAA5Gy, asset_1iaBMnVUzxTuN42AEGqVY9p7, asset_JmLzc1tVzyQjGgMsVEkoa8uo, asset_W83tRVnVDytjQPU94S3dpUoq, asset_rHNKD5czEQ8Tz1imkxDK7S66, asset_8KmRLTbiGQvSUjFEyFYGv9GJ, asset_nYPPENc1cFKRPoiRt1rd6mkS, asset_t5wuknjvFZ7tr61Vfc4fLEWB
+  - videoGenerator1: model_scenario-image-seq-to-video, success, 2 credits, job job_zrwqGvmofY81Q9bNQuPm7vJg
+    settings: compressionLevel 15, fps 6, images = tool1 output, loopCount 0, outputFormat "mp4", pingpong false
+    outputs: asset_rh1BWZRv4GZ4kW8uLnWHM3dC
+Final outputs: asset_rh1BWZRv4GZ4kW8uLnWHM3dC
+
+Input text2 (as typed):
+side view 2D platformer, character faces right. JETPACK RISE loop: crouch to load, then the jetpack tank on the back ignites with a bright flame and smoke, the mech lifts off the ground and rises straight up, legs dangling and trailing, arms slightly out for balance, exhaust flame flickering below, ending in a hover pose that bridges back to the crouch.
+
+Prompt imageGenerator1 received:
+Create a clean, professional 12-frame spritesheet of the character from the reference image. Perspective Shift: Adapt the character’s orientation perfectly for a side-view 2D platformer game. If it's a platformer, use a direct side profile; if it's top-down or isometric, adjust the camera and body tilt accordingly. The Canvas: Place the character on a solid white background divided by a sharp black 4x3 grid (4 columns, 3 rows). The character must be perfectly contained within each cell, never touching the black lines. Design a seamless loop for a jetpack rise action using the following motion logic: Preparation & Anticipation (Frames 1-4): Start from a steady idle pose. Use "Anticipation": the character should coil their body or pull the weapon back to build energy for the move. The Impact Strike (Frames 5-7): Execute the main action with "High Speed". These frames should show rapid, explosive movement to convey power and impact. Strict Hand Lock: The weapon/object must stay in the right hand. Do not swap hands or mirror the character. Follow-Through & Overlapping Action (Frames 8-10): Show the character's momentum carrying forward even after the strike is done. Apply "Overlapping Action": hair, capes, or loose equipment should continue moving slightly after the main body has stopped. The Seamless Reset (Frames 11-12): Frame 11 shows the character recovering their balance. Frame 12 is a specific "Bridge Pose"—the final frame that leads smoothly back into the first frame’s idle position for a perfect infinite loop. Absolute Anchor Point: The character’s root (the feet or center of gravity) must stay at the exact same pixel coordinate in every frame. When played in sequence, the character must not "jump," "stutter," or "drift" across the screen. Scale & Detail: Keep the character’s height, limb thickness, and armor details identical in every cell. Use the unique identifiers from the reference, such as, to ensure the side-view is consistent.
+
+
+=== Run 5 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_G1KVVEzZHBvc6LH8axsVu7ks, 2026-10-26 17:31 UTC, success
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 16.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_3hYvevCZwvxpNu4V9hLSN7Mo
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_qvEZtJ8FpQmNfrujvHcCZFjR
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_qkXQbqYfRgL2yaXPp1E6TwZe
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_s9j9xSiDTR85oidGizJNypUu
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_iEk4drw5PuBAUizCeHx3ZiJG
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_QnwWHGmkcqBYEDwpaPF2bEyj, asset_1V6yH54KX9RaTuUjhsZGQUnD, asset_6ZJ4uvqaTgbXznfboxfaHwmD, asset_rRccKso4bMpeBsiDWsnQAJ25, asset_StMc1Too88nXELdCJzTbdHwJ, asset_xHh3JX4GS3JwhTkRPKXKpVpM, asset_uDGZV6tRebwC1gS1v9c6DjUq, asset_t1cNudnbUPqHrCAgvvHmmrXr, asset_R59MBFtTTBqFgyaWfWbMPMx3, asset_gCY59dFThyzHK2Jb8JH73sMf, asset_kP1KgSjLeCu7Yw6ZTVzHB7sS, asset_EnAyygedgDho6pKwJiAPkqQw
+  - videoGenerator1: model_scenario-image-seq-to-video, success, 2 credits, job job_Eqz5sMttX4f2UfvJ9q9exbzJ
+    settings: compressionLevel 15, fps 6, images = tool1 output, loopCount 0, outputFormat "mp4", pingpong false
+    outputs: asset_9r8tDpYJVxE3T1dG1dfzHK97
+Final outputs: asset_9r8tDpYJVxE3T1dG1dfzHK97
+
+Input text2 (as typed):
+side view 2D platformer, character faces right. EXPLOSION sequence: hit flash, panels pop off, sparks, then the whole mech blows apart in a cartoon fireball with armor plates, limbs and the round eye lens flying outward and a smoke cloud, final frames smoke and scattered scrap on the ground. Ink-drawn debris and fire in the same orange and teal palette.
+
+Prompt imageGenerator1 received:
+Create a clean, professional 12-frame spritesheet of the character from the reference image. Perspective Shift: Adapt the character’s orientation perfectly for a side view 2D platformer game. If it's a platformer, use a direct side profile; if it's top-down or isometric, adjust the camera and body tilt accordingly. The Canvas: Place the character on a solid white background divided by a sharp black 4x3 grid (4 columns, 3 rows). The character must be perfectly contained within each cell, never touching the black lines. Design a seamless loop for a self-destruction explosion sequence using the following motion logic: Preparation & Anticipation (Frames 1-4): Start from a steady idle pose. Use Anticipation: the character should coil their body or pull the weapon back to build energy for the move. The Impact Strike (Frames 5-7): Execute the main action with High Speed. These frames should show rapid, explosive movement to convey power and impact. Strict Hand Lock: The weapon/object must stay in the right hand. Do not swap hands or mirror the character. Follow-Through & Overlapping Action (Frames 8-10): Show the character's momentum carrying forward even after the strike is done. Apply Overlapping Action: hair, capes, or loose equipment should continue moving slightly after the main body has stopped. The Seamless Reset (Frames 11-12): Frame 11 shows the character recovering their balance. Frame 12 is a specific Bridge Pose—the final frame that leads smoothly back into the first frame’s idle position for a perfect infinite loop. Absolute Anchor Point: The character’s root (the feet or center of gravity) must stay at the exact same pixel coordinate in every frame. When played in sequence, the character must not jump, stutter, or drift across the screen. Scale & Detail: Keep the character’s height, limb thickness, and armor details identical in every cell. Use the unique identifiers from the reference, such as, to ensure the side-view is consistent.
+
+
+=== Run 6 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_AA6ZmAVPocmfeFpofcVLdhjm, 2026-10-26 17:32 UTC, success
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 16.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_V4D9uVKEhV3UCuZqRP4qAsPL
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_JGAjp5GjTpcQfozdw9YkNrwv
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_SeJ8ET6sSBZWUnRr8wdjvaaw
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_7s34xW3eX1mULF1uVKr7LH8T
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_X7PuaCEPBrKCxguR54JKy8ak
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_HrM8Cj5wS6wa4ZJUfUGULaXg, asset_eEjGX5XCYGxXm9BKPTgjXbvU, asset_MqkvYdUkV2sqq5eJPDRWpzWr, asset_JLHSEXXcNu3wBkRFB1DyA3EF, asset_uZZ2ruaWRpwx1y7QALgBPNeS, asset_R2AE7bFyEz89URTAWeJeCpj8, asset_TMVN6m3EFZuxeHdudeJK57kG, asset_ErVdbxTwwkQAEe6hqiutgraj, asset_fJofuMLwp61942vJhuTASy2o, asset_yt9DRotmpR7FryTbkFEgxmqQ, asset_niaKggqmQRpoggx64eZDhpYn, asset_xKARKCSqUfoAwx53r2vKaog9
+  - videoGenerator1: model_scenario-image-seq-to-video, success, 2 credits, job job_wznCZ3nrEWMrec1GSdcyyP2F
+    settings: compressionLevel 15, fps 6, images = tool1 output, loopCount 0, outputFormat "mp4", pingpong false
+    outputs: asset_CQk4rFTQaYVf87HH3pRc69BB
+Final outputs: asset_CQk4rFTQaYVf87HH3pRc69BB
+
+Input text2 (as typed):
+side view 2D platformer, character faces right. VICTORY CELEBRATION loop: cute and joyful, the heavy mech does a little hop of joy with both arms raised, a happy wiggle dance, a small spin, hearts and sparkles popping around, the eye lens squinting in a happy curve, ending with a tiny bow-bounce that leads back to the first pose.
+
+Prompt imageGenerator1 received:
+Create a clean, professional 12-frame spritesheet of the character from the reference image. Perspective Shift: Adapt the character’s orientation perfectly for a side view 2D platformer game. If it's a platformer, use a direct side profile; if it's top-down or isometric, adjust the camera and body tilt accordingly. The Canvas: Place the character on a solid white background divided by a sharp black 4x3 grid (4 columns, 3 rows). The character must be perfectly contained within each cell, never touching the black lines. Design a seamless loop for a victory celebration using the following motion logic: Preparation & Anticipation (Frames 1-4): Start from a steady idle pose. Use "Anticipation": the character should coil their body or pull the weapon back to build energy for the move. The Impact Strike (Frames 5-7): Execute the main action with "High Speed". These frames should show rapid, explosive movement to convey power and impact. Strict Hand Lock: The weapon/object must stay in the right hand. Do not swap hands or mirror the character. Follow-Through & Overlapping Action (Frames 8-10): Show the character's momentum carrying forward even after the strike is done. Apply "Overlapping Action": hair, capes, or loose equipment should continue moving slightly after the main body has stopped. The Seamless Reset (Frames 11-12): Frame 11 shows the character recovering their balance. Frame 12 is a specific "Bridge Pose"—the final frame that leads smoothly back into the first frame’s idle position for a perfect infinite loop. Absolute Anchor Point: The character’s root (the feet or center of gravity) must stay at the exact same pixel coordinate in every frame. When played in sequence, the character must not "jump," "stutter," or "drift" across the screen. Scale & Detail: Keep the character’s height, limb thickness, and armor details identical in every cell. Use the unique identifiers from the reference, such as, to ensure the side-view is consistent.
+
+
+=== Run 7 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_5sJJJoAHSFAvkmsofc2CXxCP, 2026-10-26 17:34 UTC, success
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 16.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_FbQzueiVJcBYVA9vQFd7bYSa
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_o3m4XBoJVTe5A2dRo8gCAEqc
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_g2JD4Xzc67fZgeDBoJRFyiDN
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_DNRmZD3kcdcMCxKPEJ7BWDqV
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_PL8wJaEsQVqc1y3cvVFTG93q
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_JwBcmC3uBzVEFLY3Qjc3EDzV, asset_h3HDcYruWSBmQGCToAiKiowq, asset_L8zzE8xEQKfdR2MB6P3rGqP9, asset_teYtZf4xHoeN2SAmxFseRjCP, asset_Dosbr1ZWsmt4uscUc7S6vRXY, asset_Md4N5bFUALv87t97GfTvVCHq, asset_HoiC73E2xsi846xQVkCyBbn4, asset_1w7KGjEtULUYp5Vf9WTZgpmh, asset_aN8FJBmkqRHtgeaHT6tsp9y3, asset_CSsSRVuViupDntPEFPGiagEB, asset_62kbjSAqikovPH2zdXpdYDY9, asset_f79x9WmKYAYWr7KXqUN7se7G
+  - videoGenerator1: model_scenario-image-seq-to-video, success, 2 credits, job job_7nGCDcbFwzFc3GTbDyCCqg4v
+    settings: compressionLevel 15, fps 6, images = tool1 output, loopCount 0, outputFormat "mp4", pingpong false
+    outputs: asset_uY8dgcGmBMKpKbLNoHPpqkSx
+Final outputs: asset_uY8dgcGmBMKpKbLNoHPpqkSx
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT. This is a CELEBRATION, not an attack: there is no weapon and no striking, the jetpack tank stays attached to the back and is never held. Plain pale background, no ground, no props. Frame by frame: 1 neutral stand; 2-3 crouch to load a jump; 4-6 happy hop high in the air with BOTH arms thrown up in a cheer, small hearts and sparkles popping around the body; 7 landing squash; 8-10 a cute wiggle dance, body swaying side to side, eye lens squinting into a happy curve; 11 tiny bow; 12 back to the neutral stand of frame 1.
+
+Prompt imageGenerator1 received:
+Perspective Shift: Adapt the character’s orientation perfectly for a side view 2D platformer game. If it's a platformer, use a direct side profile; if it's top-down or isometric, adjust the camera and body tilt accordingly.
+
+Design a seamless loop for a celebration using the following motion logic:
+
+Strict Hand Lock: The weapon/object must stay in the right hand. Do not swap hands or mirror the character.
+
+
+=== Run 8 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_jDFtKfk2KP7JV9qgquYSdDVj, 2026-10-26 17:34 UTC, success
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 16.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_YNHByR4q3mmvbSz4tbfiP558
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_tP6mY7YtnmaMvfc5bt5cHpwK
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_T56C4qN3nR5k41DENfCc4aWc
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_wqHosrg8yBwzguvcmXpqy297
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_ctMhEjEBvS38tM4DZqUDbUnW
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_RRJVGon68aBGhBGSqr6AzpHG, asset_k8WyxY9ZmjKEPNSHfKdgjhaN, asset_Gg7mGnnawHe3syQfZsgtNkbm, asset_H6TLZjTytgErrU9xhZSjf7DN, asset_AXFmqh5HAKh8ndZnpmvFk4Jg, asset_iATRMS5ejcZ7eE7Qs3iUTX1H, asset_pwx6x1yqVf77BSneFfN2bmxa, asset_4vTVFuend6ELS9N72Q2n9kVu, asset_eA1SERFxoTEVG1hYwEfzihut, asset_EALGE4N9QLWUDaFNmcW7rRkZ, asset_BipWArKMRFHCKZh8tn65J5xd, asset_HRLaqsDnTYEe4Cjymp7WFrjt
+  - videoGenerator1: model_scenario-image-seq-to-video, success, 2 credits, job job_5TtywQEbtk78aiVnyMTwpvBz
+    settings: compressionLevel 15, fps 6, images = tool1 output, loopCount 0, outputFormat "mp4", pingpong false
+    outputs: asset_SeofhXw7nXQ82cLLh8jW6AKz
+Final outputs: asset_SeofhXw7nXQ82cLLh8jW6AKz
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT. DASH: no weapon, plain pale background, NO ground and NO grass or platform, only a small soft shadow. Frame by frame: 1 neutral stand; 2-4 crouch low and lean far forward, arms pulled back; 5-9 the mech is flung forward in a very low, stretched horizontal dash, body nearly horizontal, both arms swept straight back, legs trailing, jetpack tank blasting a bright orange flame backwards, long speed lines and a dust trail; 10-11 skid to a stop with dust; 12 back to a neutral stand matching frame 1.
+
+Prompt imageGenerator1 received:
+Perspective Shift: Adapt the character’s orientation perfectly for a side-view 2D platformer game. If it's a platformer, use a direct side profile; if it's top-down or isometric, adjust the camera and body tilt accordingly. Design a seamless loop for a dash using the following motion logic: Strict Hand Lock: The weapon/object must stay in the right hand. Do not swap hands or mirror the character.
+
+
+=== Run 9 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_rwYkaCZ65nVT7z24473mHt2A, 2026-10-26 17:34 UTC, success
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 16.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_8aiRevt3Q83ocLHW65yhWUwe
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_tUy4gshyF4FXqxYi8Fqz6EtY
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_Ei2q6bVD2N1nvEU7p4yrGE1s
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_ePoKVbjeYjjStmHb4TVa3iYC
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_ZkQPgMsFb4fHH2iNqYpWTuX2
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_BM21EMu8TgrnHrS44FNVuApN, asset_QXS27KWDCUhPZ5uhQe6dxWNg, asset_CW7N5C6evyb1QUgTrKBB7fw4, asset_W1RdNTMpXQiFsYcL5uJwyEZA, asset_onFrMYrxoRog1Djckq9GUnjd, asset_x1HxccKS5VVfBMdazi1YtdB1, asset_cuA8umrSXe4wRBnVo8ZqUDcE, asset_aPsDT82TwGipX8yHkN8h25dK, asset_YSi8Yj2pHeMDVkNKh1ss65UP, asset_5DTvCmWdyTPnmsqXZQzH36uG, asset_T7csxHCXMxBzgXH7pMG1B9ef, asset_YMXhmh6xHHHa1HGAMxjfWyA6
+  - videoGenerator1: model_scenario-image-seq-to-video, success, 2 credits, job job_yo2Df5HTFQVrQwUtTjG4bTk2
+    settings: compressionLevel 15, fps 6, images = tool1 output, loopCount 0, outputFormat "mp4", pingpong false
+    outputs: asset_AcJF63uHJDkunvB4bn3HJSHA
+Final outputs: asset_AcJF63uHJDkunvB4bn3HJSHA
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT. DESTRUCTION: the mech is destroyed and does NOT survive. Plain pale background. Frame by frame: 1 neutral stand; 2 hit flash and sparks, body jolts; 3-4 cracks, panels pop off, smoke leaks, body shakes; 5 the whole body glows and swells; 6-7 a huge cartoon fireball explosion fills the frame, the body is NOT visible, only flame and smoke; 8-10 armor plates, arms, legs, the round eye lens and the jetpack tank fly outward as separate ink-drawn pieces with smoke trails; 11-12 only scattered scrap pieces and a thin smoke wisp on the ground, the mech is gone.
+
+Prompt imageGenerator1 received:
+Perspective Shift: Adapt the character’s orientation perfectly for a side view 2D platformer game. If it's a platformer, use a direct side profile; if it's top-down or isometric, adjust the camera and body tilt accordingly.
+
+Design a seamless loop for a mech destruction animation using the following motion logic:
+
+Strict Hand Lock: The weapon/object must stay in the right hand. Do not swap hands or mirror the character.
+
+
+=== Run 10 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_5BzrghDAY5G3b3jncnDMqXaV, 2026-10-26 17:37 UTC, failure (Too Many Requests. Please, wait 786 seconds before trying again.)
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 14.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_AkbFuwLZv6dzBxEze9tVnRP3
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_ge7csU44CoXv9pR2VW4Bkn3Y
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_mTi1XHYzBKZTnM1fgXWwKXDD
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_DCiAmt68uQhUtS5apuSjJT4W
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_dg48PmUuTf8f74f1DANKpzLS
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_QNcyEKVmcuU3MUJEcDJKHSQt, asset_6mzK74Eih42Q1ocVA3z85sye, asset_WJNpyEgHgRrt6UHX62vYCG9J, asset_b8yt3pPxq1LafJmMCyzDtMtN, asset_QvkBanMHb2rhbKGm2Bh6exKp, asset_zRLRgqVPfuNDkAkWaV2zXhgd, asset_DRjg9XrZkczQBDQ8iB83bJSc, asset_r5ZNxRbz525F9GaYHTWbV9mb, asset_ApHdKUpkujk98Y5Lai1CnYTv, asset_Us8CpVSkTBe7YLVdeXLgdp3V, asset_cs5oQpqiCspyGB1HGJCo29fz, asset_mfdzg4RPmC8NZSyq7r5aNnL2
+  - videoGenerator1: model_scenario-image-seq-to-video, failure, not billed, job job_QiSecCavH38cFhriPvVtvXdh
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT, no weapon, empty hands. WIN CELEBRATION, cute and joyful, clearly animated: 1 neutral stand; 2-3 crouch to load a jump; 4-5 happy hop high in the air with BOTH arms thrown up in a cheer and legs tucked, hearts and sparkles popping; 6 landing squash; 7-9 a wiggle dance with body tilting left and right, one arm waving, eye lens squinting into a happy curve; 10 little spin pose; 11 tiny bow; 12 back to the neutral stand of frame 1.
+
+Prompt imageGenerator1 received:
+Perspective Shift: Adapt the character’s orientation perfectly for a side-view 2D platformer game. If it's a platformer, use a direct side profile; if it's top-down or isometric, adjust the camera and body tilt accordingly. Design a seamless loop for a win celebration using the following motion logic: Strict Hand Lock: If the action uses a weapon or tool, it stays in the empty hand in every frame; do not swap hands or mirror the character.
+
+
+=== Run 11 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_Mb8rAksZNoyHZoF2ddQ5dmYB, 2026-10-26 17:37 UTC, failure (Too Many Requests. Please, wait 781 seconds before trying again.)
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 14.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_egLKJikk1STLZgfykKKL7KcR
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_gHoS3KfjfhXqQ6m1qH27dvAP
+  - imageGenerator1: model_openai-gpt-image-2, success, 13 credits, job job_fSrkKsx3djSqWCuFSmSoj2ZN
+    settings: background "auto", height 1024, numOutputs 1, quality "auto", referenceImages ["asset_RwZeqZVP1d8N4BpuKrcwn9f3", "asset_RveFaTyXuPAwQ62kwaU1QXzF"], width 1536
+    outputs: asset_9oAnzB1MbE4iLPbjMmo3S3N6
+  - tool1: model_scenario-image-slicer, success, 1 credits, job job_fS7R1cqJHPF5UvCbgUcvTjqT
+    settings: image = imageGenerator1 output, xSubdivisions 4, ySubdivisions 3
+    outputs: asset_4cYCNr1Tqe4F9Z4Z2JgdiXSv, asset_zzrUczrUnuJiRQ1LyDyNTQDp, asset_vsrWKhHAyJNwgxmEeAH7xHye, asset_wnUz2qLQvXUsdncfyAF95d6D, asset_yQHEzEfxSmfbWE5EGQX6Desp, asset_VrrMZk21ZxmJMTiHgdqnmf1o, asset_MPqwAT9L4LmCMa4EbgEKPaAH, asset_cnd9a4Kz7WSvQsEE3awHWKc9, asset_Cv4NC6NfYPfFx6occ9ZN2do4, asset_wqLAA3tmEYzfJsWreLjmgwih, asset_pYb2Ti163XK1iGuR2witRxi2, asset_DZn6stXdLz6Mpzy9Qx9Guc5r
+  - videoGenerator1: model_scenario-image-seq-to-video, failure, not billed, job job_R3usbjqkiyCh9DuBp2Qgvho7
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT, no weapon, empty hands. IDLE loop with clearly visible, charming motion (not a still pose): 1 neutral stand; 2-4 big slow breath in, chest and shoulders rise, arms lift slightly; 5-6 the head tilts curiously and the eye lens looks up; 7 a slow blink with the lens half closed; 8-9 the body does a small sway forward with a shrug of both shoulders; 10-11 settle down with a soft exhale, small steam puff from the back vent; 12 back to the neutral stand of frame 1.
+
+Prompt imageGenerator1 received:
+Create a clean, professional 12-frame spritesheet of the character from the reference image. Perspective Shift: Adapt the character’s orientation perfectly for a side view 2D platformer game. If it's a platformer, use a direct side profile; if it's top-down or isometric, adjust the camera and body tilt accordingly. The Canvas: Place the character on a solid white background divided by a sharp black 4x3 grid (4 columns, 3 rows). The character must be perfectly contained within each cell, never touching the black lines. Design a seamless loop for a side view 2D platformer IDLE loop using the following motion logic: Preparation & Anticipation (Frames 1-4): Start from a steady idle pose. Use Anticipation: the character should coil or crouch to build energy for the move (pull the weapon back only if there is one). The Impact Strike (Frames 5-7): Execute the main action with High Speed. These frames should show rapid, explosive movement to convey power and impact. Strict Hand Lock: If the action uses a weapon or tool, it stays in the right hand in every frame; do not swap hands or mirror the character. If the action has no weapon (idle, run, dash, jump, celebrate, explode), the hands stay empty: never invent an object, and never turn a part attached to the body (backpack, tank, jetpack, shoulder pack) into something held in a hand. Follow-Through & Overlapping Action (Frames 8-10): Show the character's momentum carrying forward even after the strike is done. Apply Overlapping Action: hair, capes, or loose equipment should continue moving slightly after the main body has stopped. The Seamless Reset (Frames 11-12): Frame 11 shows the character recovering their balance. Frame 12 is a specific Bridge Pose—the final frame that leads smoothly back into the first frame’s idle position for a perfect infinite loop. Absolute Anchor Point: The character’s root (the feet or center of gravity) must stay at the exact same pixel coordinate in every frame. When played in sequence, the character must not jump, stutter, or drift across the screen. Scale & Detail: Keep the character’s height, limb thickness, and armor details identical in every cell. Keep the reference's colours, panels, eye lens and jetpack-tank shape identical. Use a plain pale background with no ground, grass or props unless the action asks for them.
+
+
+=== Run 12 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_Z9CHzcFqsCLE4321boutpsLq, 2026-10-26 17:37 UTC, failure (Too Many Requests. Please, wait 791 seconds before trying again.)
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 0.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_oAus13heCW81rHXWTRc6caYX
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_J6BGs3CdFThwyzErQsViavGx
+  - imageGenerator1: model_openai-gpt-image-2, failure, not billed, job job_NGbtAAJv1sGnfVVyNBk7bg4L
+  - tool1: model_scenario-image-slicer, pending, not billed, job none
+  - videoGenerator1: model_scenario-image-seq-to-video, pending, not billed, job none
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT, no weapon, empty hands, the jetpack tank stays on the back. DASH: 1 neutral stand; 2-3 crouch low and lean far forward, both arms pulled back; 4-8 flung forward in a very low stretched dash, body nearly horizontal, both arms swept straight back with open hands, legs trailing, the jetpack tank on the back blasting an orange flame backwards, long speed lines and a dust trail; 9-11 skid to a stop with dust; 12 back to a neutral stand matching frame 1.
+
+
+=== Run 13 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_GgedXwZ77cvKGxAC14jWj3u4, 2026-10-26 17:56 UTC, failure (Too Many Requests. Please, wait 789 seconds before trying again.)
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 0.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_DTcSnwbW9abSQNZUpo26acqu
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_eYrYZ7Ux1oS9eCLaQDQ8VR68
+  - imageGenerator1: model_openai-gpt-image-2, failure, not billed, job job_edc5JAFjbBQZJTmW6gzEgtdg
+  - tool1: model_scenario-image-slicer, pending, not billed, job none
+  - videoGenerator1: model_scenario-image-seq-to-video, pending, not billed, job none
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT, no weapon, empty hands. WIN CELEBRATION, cute and joyful, clearly animated: 1 neutral stand; 2-3 crouch to load a jump; 4-5 happy hop high in the air with BOTH arms thrown up in a cheer and legs tucked, hearts and sparkles popping; 6 landing squash; 7-9 a wiggle dance with body tilting left and right, one arm waving, eye lens squinting into a happy curve; 10 little spin pose; 11 tiny bow; 12 back to the neutral stand of frame 1.
+
+
+=== Run 14 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_7RrSD79HWuNyi9Q5oxwdX1K2, 2026-10-26 17:56 UTC, failure (Too Many Requests. Please, wait 787 seconds before trying again.)
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 0.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_1Ws64H5xYks4gZe1GVBwvKDr
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_u81Lj6QuWK7vZB6Xa1ux14LT
+  - imageGenerator1: model_openai-gpt-image-2, failure, not billed, job job_EVn594je2LkhVdHWajDKcA3s
+  - tool1: model_scenario-image-slicer, pending, not billed, job none
+  - videoGenerator1: model_scenario-image-seq-to-video, pending, not billed, job none
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT, no weapon, empty hands. IDLE loop with clearly visible, charming motion (not a still pose): 1 neutral stand; 2-4 big slow breath in, chest and shoulders rise, arms lift slightly; 5-6 the head tilts curiously and the eye lens looks up; 7 a slow blink with the lens half closed; 8-9 the body does a small sway forward with a shrug of both shoulders; 10-11 settle down with a soft exhale, small steam puff from the back vent; 12 back to the neutral stand of frame 1.
+
+
+=== Run 15 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_Vgp4469Rpr69K3z9epKE6dmE, 2026-10-26 19:29 UTC, failure (Too Many Requests. Please, wait 781 seconds before trying again.)
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 0.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_J9bPWBBabprQ6MEn1G6Pf4jb
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_nn9Q1y5q2bow3PRGSSmi4Xk6
+  - imageGenerator1: model_openai-gpt-image-2, failure, not billed, job job_KyvQZuphiQCaYfPJ5gcdxySK
+  - tool1: model_scenario-image-slicer, pending, not billed, job none
+  - videoGenerator1: model_scenario-image-seq-to-video, pending, not billed, job none
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT, no weapon, empty hands. WIN CELEBRATION, cute and joyful, clearly animated: 1 neutral stand; 2-3 crouch to load a jump; 4-5 happy hop high in the air with BOTH arms thrown up in a cheer and legs tucked, hearts and sparkles popping; 6 landing squash; 7-9 a wiggle dance with body tilting left and right, one arm waving, eye lens squinting into a happy curve; 10 little spin pose; 11 tiny bow; 12 back to the neutral stand of frame 1.
+
+
+=== Run 16 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_ewfv59ty5vZw2Hkv7XRSQAaf, 2026-10-26 19:30 UTC, failure (Too Many Requests. Please, wait 770 seconds before trying again.)
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 0 credits
+Steps, in the order they ran:
+  - imageGenerator1: model_openai-gpt-image-2, pending, not billed, job none
+  - llmGenerator1: model_scenario-llm, failure, not billed, job job_LzLQfU47GCAgc7UH4sEuhjVN
+  - tool1: model_scenario-image-slicer, pending, not billed, job none
+  - videoGenerator1: model_scenario-image-seq-to-video, pending, not billed, job none
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT, no weapon, empty hands. IDLE loop with clearly visible, charming motion (not a still pose): 1 neutral stand; 2-4 big slow breath in, chest and shoulders rise, arms lift slightly; 5-6 the head tilts curiously and the eye lens looks up; 7 a slow blink with the lens half closed; 8-9 the body does a small sway forward with a shrug of both shoulders; 10-11 settle down with a soft exhale, small steam puff from the back vent; 12 back to the neutral stand of frame 1.
+
+
+=== Run 17 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_redwN7f2vkGLAzuuf4A14o7o, 2026-10-26 19:30 UTC, failure (Too Many Requests. Please, wait 768 seconds before trying again.)
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 0 credits
+Steps, in the order they ran:
+  - imageGenerator1: model_openai-gpt-image-2, pending, not billed, job none
+  - llmGenerator1: model_scenario-llm, failure, not billed, job job_LRGqZrB6eWLbEcFxwvuN9K8y
+  - tool1: model_scenario-image-slicer, pending, not billed, job none
+  - videoGenerator1: model_scenario-image-seq-to-video, pending, not billed, job none
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT, no weapon, empty hands, the jetpack tank stays on the back. DASH: 1 neutral stand; 2-3 crouch low and lean far forward, both arms pulled back; 4-8 flung forward in a very low stretched dash, body nearly horizontal, both arms swept straight back with open hands, legs trailing, the jetpack tank on the back blasting an orange flame backwards, long speed lines and a dust trail; 9-11 skid to a stop with dust; 12 back to a neutral stand matching frame 1.
+
+
+=== Run 18 ===
+Tool: Scenario, workflow wflow_hRqp6ojU7j6t1Az51W4XjaKd
+Run: job_qprPudUs3DDdt1kVL1Ts1Vk4, 2026-10-26 19:47 UTC, failure (Too Many Requests. Please, wait 780 seconds before trying again.)
+Input image1: asset_RwZeqZVP1d8N4BpuKrcwn9f3
+Hidden input (fixed in the graph): image3 asset_RveFaTyXuPAwQ62kwaU1QXzF
+Cost: 0.5 credits
+Steps, in the order they ran:
+  - llmGenerator1: model_scenario-llm, success, 0.5 credits, job job_K9Ki3dmJziqVPTy1XXjnzia3
+    settings: images ["asset_RwZeqZVP1d8N4BpuKrcwn9f3"], model "gemini-3.5-flash-lite", numOutputs 1, thinkingLevel "none"
+    outputs: asset_zWRu4sENB6xRXXkb1H51T4zP
+  - imageGenerator1: model_openai-gpt-image-2, failure, not billed, job job_wEke3aCxJBrziSkiaeMyVJmE
+  - tool1: model_scenario-image-slicer, pending, not billed, job none
+  - videoGenerator1: model_scenario-image-seq-to-video, pending, not billed, job none
+
+Input text2 (as typed):
+side view 2D platformer, character FACES RIGHT, no weapon, empty hands. IDLE loop with clearly visible, charming motion (not a still pose): 1 neutral stand; 2-4 big slow breath in, chest and shoulders rise, arms lift slightly; 5-6 the head tilts curiously and the eye lens looks up; 7 a slow blink with the lens half closed; 8-9 the body does a small sway forward with a shrug of both shoulders; 10-11 settle down with a soft exhale, small steam puff from the back vent; 12 back to the neutral stand of frame 1.
