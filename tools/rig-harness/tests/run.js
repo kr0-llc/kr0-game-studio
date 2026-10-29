@@ -10,7 +10,8 @@ const args=process.argv.slice(2),get=(k,d)=>{const i=args.indexOf("--"+k);return
 const ROOT=path.resolve(__dirname,"..","..",".."),HARNESS=path.resolve(__dirname,"..");
 const rig=get("rig","timo3"),override=get("override",null),frames=+get("frames",8);
 const out=path.resolve(get("out",path.join(HARNESS,"out","tests-"+rig+(override?"-override":""))));
-const TOL={cap:+get("capTol",.05),gap:+get("gapTol",0),sliver:+get("sliverTol",0),peek:+get("peekTol",.05),overhang:+get("overhangTol",.25),prop:+get("propTol",15),bendMax:86};
+const TOL={cap:+get("capTol",.05),gap:+get("gapTol",0),sliver:+get("sliverTol",0),peek:+get("peekTol",.05),overhang:+get("overhangTol",.25),prop:+get("propTol",15),bendMax:86,
+  sink:+get("sinkTol",10),stagger:+get("staggerTol",8),plant:+get("plantTol",4)};
 const REF=path.join(ROOT,"art","metr0niks","characters","tim-o","turnaround","four-view.png");
 const rel=p=>path.relative(ROOT,p);
 /* draw order the plan asks for, per joint: who is on top of whom */
@@ -27,18 +28,24 @@ const fmt=v=>typeof v==="number"?(Number.isInteger(v)?String(v):v.toFixed(3).rep
   const png=f=>rel(path.join(out,`${f.mode}-${f.i}.png`));
   const results=[];const add=(name,pass,lines,data)=>results.push({name,pass,lines,data});
   const byTag=f=>Object.fromEntries(f.parts.map(p=>[p.tag,p]));
+  /* v4 (hero-frame sheets, marked by R.restAim): every joint is a ball drawn visible on the child, below the parent, as the hero frame draws it,
+     so a cap that shows is the design, not a detached part. For those rigs cap exposure and peek are reported but not scored; gap, sliver,
+     draw order and child-on-top overhang still are. Rigs without restAim (timo3, timo) keep the original criteria unchanged. */
+  const BALL=!!rep.R.restAim;
+  /* a child whose pivot lies above its own box (the v4 shin turns about the thigh's knee ball) can never have gap 0: allow the pivot's overhang */
+  const gapAllow=(tag,sprite)=>{const st=rep.store[sprite];if(!st||st.pivot[1]>=0)return TOL.gap;const k=/@hipB$/.test(tag)?(rep.R.legLen||1)*(rep.R.legScaleB||1):/@hipF$/.test(tag)?(rep.R.legLen||1):1;return TOL.gap+(-st.pivot[1]*st.h/st.store*k)+1.5};
 
   /* ---- 1 joint fit: capExposure of every child, socketGap of every parent joint ---- */
   {
     const fails={},worst={};let n=0;
     for(const f of rep.frames){const T=byTag(f);
       for(const pp of f.parts)for(const j in pp.jointFit){const q=pp.jointFit[j],kid=T[q.child],key=`${pp.tag}.${j}`;n++;
-        const cap=q.offset?0:(kid.capExposure??0),gap=pp.socketGap[j]??0;
-        const w=worst[key]=worst[key]||{cap:0,gap:0,frame:null};
+        const cap=q.offset?0:(kid.capExposure??0),gap=pp.socketGap[j]??0,ga=+gapAllow(q.child,kid.sprite).toFixed(1);
+        const w=worst[key]=worst[key]||{cap:0,gap:0,frame:null,gapAllow:ga};
         if(cap>w.cap||gap>w.gap){w.cap=Math.max(w.cap,cap);w.gap=Math.max(w.gap,gap);w.frame=f}
-        if(cap>TOL.cap||gap>TOL.gap)(fails[key]=fails[key]||[]).push({frame:`${f.mode}-${f.i}`,cap,gap})}}
-    const lines=[];for(const k in worst){const w=worst[k],bad=fails[k]||[];lines.push(`${k}: worst cap ${fmt(w.cap)} gap ${fmt(w.gap)} px, ${bad.length} failing frame(s)${bad.length?" "+bad.map(b=>b.frame).join(" ")+" worst "+png(w.frame):""}`)}
-    add("1 joint fit",Object.keys(fails).length===0,[`${n} joint-frames checked, cap < ${TOL.cap} and gap <= ${TOL.gap}`,...lines],{worst:Object.fromEntries(Object.entries(worst).map(([k,w])=>[k,{cap:w.cap,gap:w.gap,frame:w.frame?`${w.frame.mode}-${w.frame.i}`:null}])),fails});
+        if((!BALL&&cap>TOL.cap)||gap>ga)(fails[key]=fails[key]||[]).push({frame:`${f.mode}-${f.i}`,cap,gap})}}
+    const lines=[];for(const k in worst){const w=worst[k],bad=fails[k]||[];lines.push(`${k}: worst cap ${fmt(w.cap)}${BALL?" (ball, not scored)":""} gap ${fmt(w.gap)} px${w.gapAllow>TOL.gap?` (allowed ${w.gapAllow}: pivot sits on the parent's ball)`:""}, ${bad.length} failing frame(s)${bad.length?" "+bad.map(b=>b.frame).join(" ")+" worst "+png(w.frame):""}`)}
+    add("1 joint fit",Object.keys(fails).length===0,[`${n} joint-frames checked, ${BALL?"ball joints drawn visible by design: cap reported only":"cap < "+TOL.cap} and gap <= ${TOL.gap} (+ pivot overhang where the pivot is the parent's ball)`,...lines],{ball:BALL,worst:Object.fromEntries(Object.entries(worst).map(([k,w])=>[k,{cap:w.cap,gap:w.gap,gapAllow:w.gapAllow,frame:w.frame?`${w.frame.mode}-${w.frame.i}`:null}])),fails});
   }
   /* ---- 2 visual gap scan: sealed cracks between parent and child near the joint ---- */
   {
@@ -58,21 +65,25 @@ const fmt=v=>typeof v==="number"?(Number.isInteger(v)?String(v):v.toFixed(3).rep
         if(PLAN_TOP[j]&&q.top!==PLAN_TOP[j])s.planOk=false}
       /* back arm under the pack too */
       const pk=T[rep.R.pack],ub=T[rep.R.armB2?rep.R.armB2[0]:rep.R.armB];if(pk&&ub&&ub.order>pk.order){seen["pack-over-backarm"]=seen["pack-over-backarm"]||{top:"back arm over pack",overhang:0,peek:0,fo:f,fp:f,planOk:false}}}
-    for(const k in seen){const s=seen[k],bad=[];if(!s.planOk)bad.push(`order differs from plan (top is ${s.top})`);if(s.overhang>TOL.overhang)bad.push(`top cap sticks out ${fmt(s.overhang)} > ${TOL.overhang} at ${png(s.fo)}`);if(s.peek>TOL.peek)bad.push(`bottom cap peeks ${fmt(s.peek)} > ${TOL.peek} at ${png(s.fp)}`);
-      lines.push(`${k}: top=${s.top} overhang ${fmt(s.overhang)} peek ${fmt(s.peek)}${bad.length?" FAIL "+bad.join("; "):""}`);if(bad.length)fails.push(k)}
-    add("3 draw order",fails.length===0,[`plan: shin over thigh, upper arm over forearm, front arm over torso, back arm under torso and pack`,...lines],{joints:Object.fromEntries(Object.entries(seen).map(([k,s])=>[k,{top:s.top,overhang:s.overhang,peek:s.peek,planOk:s.planOk}])),fails});
+    for(const k in seen){const s=seen[k],bad=[];if(!s.planOk)bad.push(`order differs from plan (top is ${s.top})`);
+      /* ball-joint rigs: a parent drawn over its child "overhangs" by its own edge (the hip joint sits on the torso's bottom edge), so only a child cap sticking past its socket is scored; peek is the ball showing, by design */
+      if(s.overhang>TOL.overhang&&!(BALL&&s.top==="parent"))bad.push(`top cap sticks out ${fmt(s.overhang)} > ${TOL.overhang} at ${png(s.fo)}`);if(s.peek>TOL.peek&&!BALL)bad.push(`bottom cap peeks ${fmt(s.peek)} > ${TOL.peek} at ${png(s.fp)}`);
+      lines.push(`${k}: top=${s.top} overhang ${fmt(s.overhang)} peek ${fmt(s.peek)}${BALL?" (ball: peek and parent-on-top overhang not scored)":""}${bad.length?" FAIL "+bad.join("; "):""}`);if(bad.length)fails.push(k)}
+    add("3 draw order",fails.length===0,[`plan: shin over thigh, upper arm over forearm, front arm over torso, back arm under torso and pack`,...lines],{ball:BALL,joints:Object.fromEntries(Object.entries(seen).map(([k,s])=>[k,{top:s.top,overhang:s.overhang,peek:s.peek,planOk:s.planOk}])),fails});
   }
   /* ---- 4 elbow behaviour ---- */
   {
     const arms=rep.kind==="biped"?[["F",rep.R.armF2?rep.R.armF2[0]:rep.R.armF,rep.R.armF2?rep.R.armF2[1]:rep.R.armF,"muzzle"],["B",rep.R.armB2?rep.R.armB2[0]:rep.R.armB,rep.R.armB2?rep.R.armB2[1]:rep.R.armB,"tip"]]:[];
     const lines=[],fails=[],data={};
     for(const [side,up,fore,tip0] of arms){const two=up!==fore;let tipName=tip0;const st={min:1e9,max:-1e9,fmin:null,fmax:null,torso:[],ground:[],neg:[]};
+      /* a rig that reproduces a hero frame may rest hyper-extended (v4 front elbow: restBend -0.13 rad); the forearm has crossed back only when it bends past that rest */
+      const negMin=rep.R.restBend?Math.min(-0.5,rep.R.restBend[side==="F"?0:1]*180/Math.PI-0.5):-0.5;st.negMin=+negMin.toFixed(1);
       for(const f of rep.frames){if(!["walk","stress","aim"].includes(f.mode))continue;const T=byTag(f),U=T[up],Fo=T[fore];if(!U||!Fo)continue;if(!Fo.joints[tipName])tipName=Object.keys(Fo.joints)[0]||tipName;   /* v4 swaps the weapons between arms */
         let bend=null;if(two){const s=U.pivot,e=U.joints.elbow,t=Fo.joints[tipName];const ux=e[0]-s[0],uy=e[1]-s[1],fx=t[0]-e[0],fy=t[1]-e[1];
           bend=-Math.atan2(ux*fy-uy*fx,ux*fx+uy*fy)*180/Math.PI;/* positive = forearm comes back up toward the aim, as arm2 intends */
-          if(bend<st.min){st.min=bend;st.fmin=f}if(bend>st.max){st.max=bend;st.fmax=f}if(bend<-0.5)st.neg.push(`${f.mode}-${f.i}(${bend.toFixed(1)})`)}
+          if(bend<st.min){st.min=bend;st.fmin=f}if(bend>st.max){st.max=bend;st.fmax=f}if(bend<negMin)st.neg.push(`${f.mode}-${f.i}(${bend.toFixed(1)})`)}
         const h=Fo.jointHits[tipName];if(h){if(h.hits.includes(rep.R.torso))st.torso.push(`${f.mode}-${f.i}`);if(h.belowGround)st.ground.push(`${f.mode}-${f.i}`)}}
-      data[side]=st;const bad=[];if(st.neg.length)bad.push(`negative bend in ${st.neg.join(" ")}`);if(st.torso.length)bad.push(`${tipName} inside torso in ${st.torso.join(" ")}`);
+      data[side]=st;const bad=[];if(st.neg.length)bad.push(`bend below ${st.negMin} deg in ${st.neg.join(" ")}`);if(st.torso.length)bad.push(`${tipName} inside torso in ${st.torso.join(" ")}`);
       lines.push(`arm ${side}: ${two?`elbow bend ${st.min.toFixed(1)}..${st.max.toFixed(1)} deg (min ${st.fmin?png(st.fmin):"-"}, max ${st.fmax?png(st.fmax):"-"})`:"one-piece arm, no elbow"}; ${tipName} in torso: ${st.torso.length} frame(s); ${tipName} below ground: ${st.ground.length} frame(s)${st.ground.length?" "+st.ground.join(" "):""}${two&&st.max>TOL.bendMax?`; WARN bend over ${TOL.bendMax} deg (plan clamp 1.5 rad)`:""}${bad.length?" FAIL "+bad.join("; "):""}`);
       if(bad.length)fails.push(side)}
     add("4 elbow behaviour",fails.length===0,[`bend measured from report.json bones (shoulder->elbow, elbow->${arms.map(a=>a[3]).join("/")}), art tilt included`,...lines],data);
@@ -105,6 +116,30 @@ const fmt=v=>typeof v==="number"?(Number.isInteger(v)?String(v):v.toFixed(3).rep
     const expect=rep.frames.length;add("7 regression hook",expect>0,[`${expect} frames rendered for ${rig}${override?" with override "+override:""}, report ${rel(path.join(out,"report.json"))}`],{frames:expect});
   }
 
+  /* ---- 8 ground contact: feet neither sink through the ground line nor float; standing feet on one line ---- */
+  {
+    const z=rep.zoom,gy=rep.gy,lines=[],fails=[],data={};
+    const shin=(f,side)=>f.parts.find(p=>p.tag===(side==="hipB"&&rep.R.shinB||rep.R.shin)+"@"+side);
+    const sole=(f,side)=>{const s=shin(f,side);return s&&s.ink?(s.ink[3]-gy)/z:null};   /* rig px, + = below the ground line */
+    const rest=rep.frames.find(f=>f.mode==="rest");
+    /* a rig with a stagger knob (v4 R.stagger > 0) stands as the hero frame draws it, one sole above the other on purpose: its rest stagger is
+       reported, not scored, and sink is measured from the ground line (the lowest rest sole) instead of each foot's own rest sole, because the
+       walk brings the raised foot down to the ground by design */
+    const knob=rep.R.stagger>0;
+    if(rest){const r0={hipF:sole(rest,"hipF"),hipB:sole(rest,"hipB")};data.rest=r0;
+      const stag=Math.abs(r0.hipF-r0.hipB);data.stagger=+stag.toFixed(1);
+      lines.push(`rest: front sole ${fmt(+r0.hipF.toFixed(1))} back sole ${fmt(+r0.hipB.toFixed(1))} rig px from the ground line, stagger ${fmt(data.stagger)} (<= ${TOL.stagger})${knob?` (R.stagger ${rep.R.stagger}: the hero's stance, not scored)`:stag>TOL.stagger?" FAIL feet not on one line":""}`);if(stag>TOL.stagger&&!knob)fails.push("stagger");
+      const ref=knob?Math.max(r0.hipF,r0.hipB):null;
+      for(const side of ["hipF","hipB"]){let sink=0,fs=null,plant=1e9,fp=null;const sinks=[];
+        for(const f of rep.frames){const s=sole(f,side);if(s==null)continue;const d=s-(knob?ref:r0[side]);if(d>sink){sink=d;fs=f}if(d>TOL.sink)sinks.push(`${f.mode}-${f.i}(+${d.toFixed(0)})`);
+          if(f.mode==="walk"){const up=-s;if(up<plant){plant=up;fp=f}}}
+        data[side]={sink:+sink.toFixed(1),plant:plant<1e9?+plant.toFixed(1):null};const bad=[];
+        if(sinks.length)bad.push(`sinks ${fmt(+sink.toFixed(1))} px below ${knob?"the ground line":"its rest sole"} (> ${TOL.sink}) in ${sinks.join(" ")} worst ${png(fs)}`);
+        if(plant<1e9&&plant>TOL.plant)bad.push(`never plants in walk: closest ${fmt(+plant.toFixed(1))} px above the ground (> ${TOL.plant}) at ${png(fp)}`);
+        lines.push(`${side}: max sink ${fmt(+sink.toFixed(1))} px, walk plant ${plant<1e9?fmt(+plant.toFixed(1))+" px above ground":"-"}${bad.length?" FAIL "+bad.join("; "):""}`);if(bad.length)fails.push(side)}}
+    else lines.push("no rest frame");
+    add("8 ground contact",fails.length===0,[`sole = lowest shin ink vs the ground line (rig px): rest stagger <= ${TOL.stagger}, sink below the rest sole <= ${TOL.sink} in every frame, each foot within ${TOL.plant} px of the ground in some walk frame`,...lines],{...data,fails});
+  }
   const allPass=results.every(r=>r.pass);
   if(has("json"))console.log(JSON.stringify({rig,override,out:rel(out),pass:allPass,results},null,1));
   else{console.log(`rig ${rig}${override?" + "+override:""}  ->  ${rel(out)}`);for(const r of results){console.log(`${r.pass?"PASS":"FAIL"}  ${r.name}`);for(const l of r.lines)console.log("      "+l)}console.log(allPass?"ALL PASS":"SOME TESTS FAILED")}

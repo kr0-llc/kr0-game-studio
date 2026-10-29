@@ -24,10 +24,11 @@ SOURCES = [
 ]
 
 def main():
-    crops = []
+    crops, rigs = [], {}
     for name, parts in SOURCES:
         base = name if os.path.isabs(name) else os.path.join(SPR, name)
         meta, im = load_js(base + ".js"), Image.open(base + ".webp").convert("RGBA")
+        if "hero" in meta: rigs["timo4"] = meta["hero"]   # timo_reassemble.py: registered hero positions, rest aim/bend, foot offsets, scale constants
         for n in parts:
             s = meta["sprites"][n]
             crops.append((n, im.crop((s["x"], s["y"], s["x"] + s["w"], s["y"] + s["h"])), s, meta["store"]))
@@ -42,7 +43,7 @@ def main():
         out[n] = {"x": pos[n][0], "y": pos[n][1], "w": c.width, "h": c.height, "store": store,
                   "pivot": s["pivot"], "joints": s["joints"], "rot": s.get("rot", 0)}
     b = io.BytesIO(); atlas.save(b, "WEBP", quality=92, method=6)
-    data = json.dumps({"img": "data:image/webp;base64," + base64.b64encode(b.getvalue()).decode(), "sprites": out})
+    data = json.dumps({"img": "data:image/webp;base64," + base64.b64encode(b.getvalue()).decode(), "sprites": out, "rigs": rigs})
     page = open(os.path.join(HERE, "template.html")).read().replace("/*ATLAS*/", data)
     open(os.path.join(HERE, "puppet-rigging-lab.html"), "w").write(page)
     print("wrote puppet-rigging-lab.html", len(page), "bytes")

@@ -11,6 +11,8 @@ plus parts/exploded-<ver>-marks.png, the sheet with the seeded pivots and joints
 Pivots and joints are seeded from the sand (#e8d6b0) caps: the centre of a cap circle is the child's pivot, the centre of
 the matching socket is the parent's joint. Rest angles (rot) turn each piece so its bone axis is horizontal (arms) or
 vertical (shins) in rig space. kr0 corrects all of it in the Puppet Rigging Lab (rig "Tim-o v4").
+Then run timo_reassemble.py: it registers the pieces back onto the hero frame and replaces the seeded joints (and the shin pivots)
+with where the caps actually land, and adds the "hero" block the lab's rig constants read. Re-running this slicer resets that.
 """
 import json, os, sys, numpy as np
 from PIL import Image, ImageDraw
@@ -40,15 +42,14 @@ def blobs(rgba, mask, tol=38, min_area=250):
         out.append((xs.mean() + s[1].start, ys.mean() + s[0].start, r, a, a / (np.pi * r * r + 1e-9)))
     return out
 
-def main():
-    ver = sys.argv[1] if len(sys.argv) > 1 else "v1"
-    a = np.array(Image.open(os.path.join(TIMO, "parts", "exploded-%s.webp" % ver)).convert("RGBA"))
+def segment(a):
+    """Label the ten pieces on an exploded sheet (RGBA array) and name them by where they sit (the figure faces right: near
+    side = right). Returns ({name: (box, mask)}, torso_centre): box = (x0, y0, x1, y1) in sheet px, mask = sheet-size bool."""
     H, W = a.shape[:2]
     m = a[:, :, 3] > 40
     lab, n = ndimage.label(ndimage.binary_dilation(m, iterations=1))
     objs = [(s, i) for i, s in enumerate(ndimage.find_objects(lab)) if (lab[s] == i + 1).sum() > 4000]
     assert len(objs) == 10, "expected 10 pieces, got %d" % len(objs)
-    # name the pieces by where they sit on the exploded sheet (the figure faces right: near side = right)
     cent = []
     for s, i in objs:
         ys, xs = np.nonzero(lab[s] == i + 1)
@@ -65,15 +66,27 @@ def main():
     left = sorted([c for c in rest if c[0] < tx], key=lambda c: c[1]); right = sorted([c for c in rest if c[0] > tx], key=lambda c: c[1])
     assert len(left) == 2 and len(right) == 2
     names[id(left[0])] = "p4_upB"; names[id(left[1])] = "p4_foreB"; names[id(right[0])] = "p4_upF"; names[id(right[1])] = "p4_foreF"
-
-    marks = Image.fromarray(a.copy()); dr = ImageDraw.Draw(marks)
-    parts = {}
+    pieces = {}
     for c in cent:
         nm, (s, i) = names[id(c)], c[2]
         sel = (lab[s] == i + 1) & (a[s][:, :, 3] > 40)
         ys, xs = np.nonzero(sel)
         y0, y1, x0, x1 = ys.min() + s[0].start, ys.max() + s[0].start + 1, xs.min() + s[1].start, xs.max() + s[1].start + 1
         full = np.zeros((H, W), bool); full[s] = sel
+        pieces[nm] = ((int(x0), int(y0), int(x1), int(y1)), full)
+    return pieces, (tx, ty)
+
+def main():
+    ver = sys.argv[1] if len(sys.argv) > 1 else "v1"
+    a = np.array(Image.open(os.path.join(TIMO, "parts", "exploded-%s.webp" % ver)).convert("RGBA"))
+    H, W = a.shape[:2]
+    pieces, (tx, ty) = segment(a)
+
+    marks = Image.fromarray(a.copy()); dr = ImageDraw.Draw(marks)
+    parts = {}
+    for nm, ((x0, y0, x1, y1), full) in pieces.items():
+        ys, xs = np.nonzero(full)
+        s = (slice(0, H), slice(0, W))   # coordinates below are already absolute
         crop = a[y0:y1, x0:x1].copy(); crop[:, :, 3] = np.where(full[y0:y1, x0:x1], crop[:, :, 3], 0); crop[crop[:, :, 3] == 0, :3] = 0
         w, h = x1 - x0, y1 - y0
         B = blobs(a, full)
