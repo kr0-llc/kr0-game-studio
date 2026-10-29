@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0f1218">
+<title>Metr0niks Mobile UI Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Metr0niks mobile UI lab: four touch layouts for the voxel prototype (prototype 1).
+   The game runs unchanged in a frame; this page only writes the prototype's own keys and mouse through its
+   test hook (window.__m) and draws its own HUD. Rules and numbers stay in sim.js. */
+:root{
+  color-scheme:dark;
+  --bg:#0f1218; --panel:rgba(14,16,20,.72); --panel2:rgba(22,24,28,.9); --line:#3a3f47;
+  --fg:#ece8e1; --muted:#a39d93;
+  --rust:#e0702b; --cyan:#3fd6e8; --hazard:#f2c230; --good:#7fdc6a; --bad:#ff5a4a; --r0-pink:#ff4f9a;
+  --display:"Chakra Petch","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --sl:env(safe-area-inset-left,0px); --sr:env(safe-area-inset-right,0px); --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--fg);font:14px/1.4 var(--mono);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+.r0{color:var(--r0-pink)}
+h1 .r0{font-family:var(--mono);font-weight:700}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+/* ===== Picker ===== */
+#pick{position:fixed;inset:0;overflow-y:auto;padding:calc(18px + var(--st)) calc(16px + var(--sr)) calc(24px + var(--sb)) calc(16px + var(--sl));
+  -webkit-user-select:text;user-select:text;background:radial-gradient(120% 70% at 50% 0%,#1b2230 0%,var(--bg) 60%)}
+#pick[hidden]{display:none}
+.pk{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.pk h1{margin:0;font:700 30px/1.05 var(--display);letter-spacing:.04em;text-transform:uppercase}
+.pk h1 small{display:block;font:500 12px var(--mono);letter-spacing:.14em;color:var(--cyan);margin-top:6px}
+.pk p{margin:0;color:var(--muted);font:14px/1.5 system-ui,sans-serif;max-width:68ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.cardD{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);min-height:44px}
+.cardD:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.cardD:active{border-color:var(--rust)}
+.cardD .no{font:700 11px var(--mono);letter-spacing:.14em;color:var(--rust)}
+.cardD h2{margin:0;font:700 20px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04em}
+.cardD .ins{font:500 11px var(--mono);color:var(--cyan);letter-spacing:.04em}
+.cardD .tx{font:13px/1.45 system-ui,sans-serif;color:var(--muted)}
+.cardD .ori{font:500 11px var(--mono);color:var(--fg)}
+.cardD .go{margin-top:auto;align-self:flex-start;font:700 13px var(--display);letter-spacing:.1em;text-transform:uppercase;background:var(--rust);color:#16171a;border-radius:6px;padding:10px 16px}
+.mini{position:relative;height:96px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(#141a22,#10141a);overflow:hidden}
+.mini i{position:absolute;border-radius:50%;border:1.5px solid var(--cyan);opacity:.85}
+.mini i.f{background:rgba(224,112,43,.35);border-color:var(--rust)}
+.mini i.y{border-color:var(--hazard)}
+.mini b{position:absolute;height:5px;border-radius:2px;background:var(--good)}
+.mini b.h{background:var(--rust)}
+.mini em{position:absolute;font:700 9px var(--mono);color:var(--muted);font-style:normal}
+.tips{display:flex;flex-wrap:wrap;gap:8px 18px;font:12px/1.5 var(--mono);color:var(--muted)}
+.tips b{color:var(--fg)}
+.pk .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.pill{font:700 12px var(--display);letter-spacing:.08em;text-transform:uppercase;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);min-height:44px;cursor:pointer}
+.pill[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan)}
+
+/* ===== Stage: the prototype in a frame. During a match the frame is drawn larger and scaled down,
+   which shows more of the city on a small screen without touching the prototype's zoom. ===== */
+#stage{position:fixed;inset:0;overflow:hidden}
+#stage[hidden]{display:none}
+#game{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:var(--bg)}
+
+/* ===== Touch layer ===== */
+#ctl{position:fixed;inset:0;touch-action:none;z-index:5}
+#ctl[hidden]{display:none}
+.stick{position:absolute;width:132px;height:132px;margin:-66px 0 0 -66px;border-radius:50%;border:2px solid rgba(63,214,232,.45);background:rgba(10,20,30,.28);pointer-events:none;opacity:0;transition:opacity .12s}
+.stick.on,.stick.fixed{opacity:1}
+.stick.fixed:not(.on){opacity:.55}
+.stick .kn{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(63,214,232,.55);border:2px solid var(--cyan);box-shadow:0 0 14px rgba(63,214,232,.35)}
+.stick.aim{border-color:rgba(224,112,43,.5)}
+.stick.aim .kn{background:rgba(224,112,43,.55);border-color:var(--rust);box-shadow:0 0 14px rgba(224,112,43,.4)}
+.stick.aim.firing .kn{background:var(--rust)}
+.stick svg{position:absolute;inset:-10px;width:calc(100% + 20px);height:calc(100% + 20px);transform:rotate(-90deg)}
+.stick svg circle{fill:none;stroke-width:5;stroke-linecap:round}
+.btn{position:absolute;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  font:700 11px/1.05 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--fg);
+  background:rgba(14,18,24,.62);border:2px solid rgba(236,232,225,.35);touch-action:none;padding:0;cursor:pointer}
+.btn[hidden]{display:none}
+.btn.dn{transform:scale(.93);background:rgba(224,112,43,.45)}
+.btn svg.rg{position:absolute;inset:-7px;width:calc(100% + 14px);height:calc(100% + 14px);transform:rotate(-90deg);pointer-events:none;overflow:visible}
+.btn svg.rg circle{fill:none;stroke-width:4;stroke-linecap:round}
+.btn svg.rg .tr{stroke:rgba(255,255,255,.12)}
+.btn .lb{position:relative;z-index:1;pointer-events:none}
+.btn .sm{display:block;font:500 9px var(--mono);letter-spacing:.02em;color:var(--muted);margin-top:2px;text-transform:none}
+.btn.fire{width:92px;height:92px;font-size:14px;border-color:rgba(224,112,43,.8);background:rgba(224,112,43,.22)}
+.btn.fire.big{width:104px;height:104px}
+.btn.pile{width:76px;height:76px;border-color:rgba(242,194,48,.55)}
+.btn.pile.ready{border-color:var(--hazard);box-shadow:0 0 16px rgba(242,194,48,.45)}
+.btn.pile.ring{border-color:#fff}
+.btn.dash{border-color:rgba(63,214,232,.6)}
+.btn.dash.cd{opacity:.55}
+.btn.q{width:56px;height:56px}
+.btn.q.ready{border-color:var(--hazard)}
+.btn.ci{width:48px;height:48px;border-radius:12px;font-size:9px}
+.btn.ci .sm{font-size:8px}
+.btn.next{width:56px;height:56px;border-color:rgba(255,79,154,.6)}
+.btn.pause{width:44px;height:44px;border-radius:10px;font-size:13px;background:var(--panel)}
+.btn.fire2{width:64px;height:64px;font-size:10px}
+/* the pile-bunker timing ring drawn on the button itself: outer ring closes on the target ring */
+.pr{position:absolute;inset:0;pointer-events:none}
+.pr i{position:absolute;left:50%;top:50%;border-radius:50%;transform:translate(-50%,-50%)}
+.pr .tg{border:4px solid rgba(127,220,106,.95);box-shadow:0 0 10px rgba(127,220,106,.5)}
+.pr .cl{border:4px solid #fff;box-shadow:0 0 8px rgba(0,0,0,.6)}
+.lockM{position:absolute;width:60px;height:60px;margin:-30px 0 0 -30px;pointer-events:none;display:none}
+.lockM.on{display:block}
+.lockM i{position:absolute;width:16px;height:16px;border:3px solid var(--r0-pink)}
+.lockM i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}.lockM i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
+.lockM i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}.lockM i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
+.lockM.soft i{border-color:rgba(255,255,255,.7);border-style:dashed}
+.lockM.soft{width:48px;height:48px;margin:-24px 0 0 -24px}
+.lockM.gnd i{border-style:dashed}.lockM.gnd{width:40px;height:40px;margin:-20px 0 0 -20px}
+.tapFx{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:2px solid var(--r0-pink);pointer-events:none;animation:tap .35s ease-out forwards}
+@keyframes tap{from{transform:scale(.4);opacity:1}to{transform:scale(1.4);opacity:0}}
+.zoneHint{position:absolute;pointer-events:none;transition:opacity 1.2s;font:500 10px var(--mono);color:rgba(236,232,225,.38);letter-spacing:.08em;text-transform:uppercase}
+
+/* ===== HUD ===== */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:4;font:700 11px var(--mono);letter-spacing:.05em;text-transform:uppercase}
+#hud[hidden]{display:none}
+.hp{position:absolute;display:flex;flex-direction:column;gap:5px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.hb{display:flex;align-items:center;gap:6px}
+.hb span{width:44px;color:var(--muted);font-weight:500;font-size:10px}
+.hb b{min-width:34px;text-align:right}
+.bar{flex:1;height:9px;background:#07080a;border:1px solid var(--line);border-radius:3px;overflow:hidden;min-width:70px}
+.bar i{display:block;height:100%;width:100%;background:var(--good)}
+.bar.low i{background:var(--bad)}
+.bar.heat i{background:var(--rust)}
+.bar.heat.over i{background:var(--bad)}
+.bar.heat.red i{background:#fff4e6}
+.bar.heat .gv{position:absolute}
+.hs{position:absolute;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 7px;display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}
+.chip small{font:500 9px var(--mono);color:var(--muted)}
+.chip b{font:700 15px var(--display)}
+.chip.sc b{color:var(--hazard)}
+.chip.ct{align-items:flex-start;max-width:200px}
+.chip.ct b{font-size:11px;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.chip.ct.done b{color:var(--good)}
+.oc{color:var(--cyan)}
+.tcard{position:absolute;background:var(--panel);border:1px solid var(--r0-pink);border-radius:8px;padding:5px 9px;min-width:150px;display:none}
+.tcard.on{display:block}
+.tcard .tn{display:flex;justify-content:space-between;gap:8px}
+.tcard .tn small{color:var(--muted);font-weight:500}
+.tcard .bar i{background:var(--bad)}
+.gov{position:absolute;font:700 13px var(--display);letter-spacing:.06em;padding:7px 14px;border-radius:999px;background:var(--panel2);border:2px solid var(--line);white-space:nowrap;min-height:36px}
+.gov.cool{color:var(--cyan);border-color:var(--cyan)}
+.gov.fire{color:var(--rust);border-color:var(--rust)}
+.arc{position:absolute;pointer-events:none}
+.arc circle{fill:none;stroke-linecap:round}
+
+/* ===== Extract or Overtime prompt ===== */
+#prompt{position:fixed;left:50%;transform:translateX(-50%);z-index:6;background:var(--panel2);border:1px solid var(--hazard);border-radius:12px;padding:12px 14px;
+  display:flex;flex-direction:column;gap:10px;align-items:center;width:min(420px,calc(100vw - 24px));top:calc(22% + var(--st))}
+#prompt[hidden]{display:none}
+#prompt .q{font:700 15px var(--display);letter-spacing:.06em;text-transform:uppercase}
+#prompt .n{font:12px/1.4 var(--mono);color:var(--muted);text-align:center}
+#prompt .bt{display:flex;gap:10px;width:100%}
+#prompt button{flex:1;min-height:56px;font:700 15px var(--display);letter-spacing:.08em;text-transform:uppercase;border-radius:8px;border:2px solid var(--rust);background:transparent;color:var(--rust)}
+#prompt button.ot{background:var(--rust);color:#16171a}
+#prompt .cb{width:100%;height:6px;background:#07080a;border-radius:3px;overflow:hidden}#prompt .cb i{display:block;height:100%;background:var(--hazard)}
+
+/* ===== Lab bar: shown outside a match (menu, garage, pause) ===== */
+#lab{position:fixed;z-index:7;left:calc(10px + var(--sl));bottom:calc(10px + var(--sb));display:flex;gap:6px;flex-wrap:wrap;max-width:calc(100vw - 20px)}
+#lab[hidden]{display:none}
+#lab button{font:700 11px var(--display);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;min-height:40px;border-radius:999px;border:1px solid var(--cyan);background:rgba(10,20,30,.92);color:var(--cyan)}
+#rot{position:fixed;inset:auto 0 0 0;z-index:8;display:none}
+#help{position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:rgba(8,9,11,.78);padding:16px}
+#help[hidden]{display:none}
+#help .hc{max-width:440px;width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 32px);overflow:auto}
+#help h3{margin:0;font:700 18px var(--display);text-transform:uppercase;letter-spacing:.05em}
+#help table{border-collapse:collapse;font:12px/1.4 var(--mono)}
+#help td{padding:4px 10px 4px 0;vertical-align:top;color:var(--muted)}
+#help td:first-child{color:var(--fg);white-space:nowrap;font-weight:700}
+#help button{min-height:48px;font:700 14px var(--display);letter-spacing:.1em;text-transform:uppercase;border-radius:8px;border:1px solid var(--rust);background:var(--rust);color:#16171a}
+
+/* ===== Layouts. Each design has a landscape (.lan) and a portrait (.por) arrangement.
+   Positions are from the screen edges plus the safe area, so notches and home bars stay clear. ===== */
+/* common HUD placement */
+.lan .hp{left:calc(10px + var(--sl));top:calc(8px + var(--st));width:220px}
+.lan .hs{right:calc(60px + var(--sr));top:calc(8px + var(--st))}
+.por .hp{left:calc(8px + var(--sl));right:calc(58px + var(--sr));top:calc(8px + var(--st));flex-direction:row;gap:10px;padding:6px 8px}
+.por .hp .hb{flex:1;min-width:0}.por .hp .hb span{width:auto}.por .hp .bar{min-width:0}.por .hp .oc{position:absolute;left:8px;top:100%;margin-top:4px}
+.por .hs{left:calc(8px + var(--sl));right:calc(8px + var(--sr));top:calc(50px + var(--st));justify-content:flex-start;gap:4px}
+.por .chip{padding:3px 6px}.por .chip b{font-size:13px}
+.btn.pause{right:calc(8px + var(--sr));top:calc(8px + var(--st))}
+.por .btn.pause{width:44px;height:38px}
+
+/* 1. Twin stick */
+.d-twin.lan #bFire{display:none}
+.d-twin #bPile{right:calc(178px + var(--sr));bottom:calc(30px + var(--sb))}
+.d-twin #bDash{right:calc(160px + var(--sr));bottom:calc(122px + var(--sb))}
+.d-twin #bQ{right:calc(82px + var(--sr));bottom:calc(178px + var(--sb))}
+.d-twin #bC1{right:calc(12px + var(--sr));bottom:calc(222px + var(--sb))}
+.d-twin #bC2{right:calc(12px + var(--sr));bottom:calc(168px + var(--sb))}
+.d-twin.por #bPile{right:calc(22px + var(--sr));bottom:calc(214px + var(--sb))}
+.d-twin.por #bDash{right:calc(112px + var(--sr));bottom:calc(214px + var(--sb))}
+.d-twin.por #bQ{right:calc(190px + var(--sr));bottom:calc(222px + var(--sb))}
+.d-twin.por #bC1{left:calc(12px + var(--sl));bottom:calc(222px + var(--sb));right:auto}
+.d-twin.por #bC2{left:calc(66px + var(--sl));bottom:calc(222px + var(--sb));right:auto}
+
+/* 2. Cockpit */
+.d-cockpit #bFire{right:calc(26px + var(--sr));bottom:calc(26px + var(--sb))}
+.d-cockpit #bFire2{left:calc(28px + var(--sl));bottom:calc(196px + var(--sb))}
+.d-cockpit #bPile{right:calc(140px + var(--sr));bottom:calc(22px + var(--sb))}
+.d-cockpit #bDash{right:calc(36px + var(--sr));bottom:calc(140px + var(--sb))}
+.d-cockpit #bQ{right:calc(118px + var(--sr));bottom:calc(112px + var(--sb))}
+.d-cockpit #bC1{right:calc(12px + var(--sr));bottom:calc(224px + var(--sb))}
+.d-cockpit #bC2{right:calc(66px + var(--sr));bottom:calc(224px + var(--sb))}
+.d-cockpit.por #bFire2{left:calc(30px + var(--sl));bottom:calc(262px + var(--sb))}
+.d-cockpit.por #bC1{right:auto;left:calc(110px + var(--sl));bottom:calc(208px + var(--sb))}
+.d-cockpit.por #bC2{right:auto;left:calc(164px + var(--sl));bottom:calc(208px + var(--sb))}
+
+/* 3. One thumb */
+.d-thumb #bPile{right:calc(20px + var(--sr));bottom:calc(34px + var(--sb))}
+.d-thumb #bQ{right:calc(110px + var(--sr));bottom:calc(30px + var(--sb))}
+.d-thumb #bC1{right:calc(24px + var(--sr));bottom:calc(126px + var(--sb))}
+.d-thumb #bC2{right:calc(24px + var(--sr));bottom:calc(180px + var(--sb))}
+.d-thumb #bDash{right:calc(20px + var(--sr));bottom:calc(240px + var(--sb))}
+
+/* 4. Lock-on */
+.d-lock #bFire{right:calc(26px + var(--sr));bottom:calc(30px + var(--sb))}
+.d-lock #bPile{right:calc(136px + var(--sr));bottom:calc(26px + var(--sb))}
+.d-lock #bDash{right:calc(136px + var(--sr));bottom:calc(116px + var(--sb))}
+.d-lock #bNext{right:calc(44px + var(--sr));bottom:calc(142px + var(--sb))}
+.d-lock #bQ{right:calc(212px + var(--sr));bottom:calc(34px + var(--sb))}
+.d-lock #bC1{right:calc(12px + var(--sr));bottom:calc(214px + var(--sb))}
+.d-lock #bC2{right:calc(66px + var(--sr));bottom:calc(214px + var(--sb))}
+.d-lock.por #bQ{right:calc(214px + var(--sr));bottom:calc(30px + var(--sb))}
+.d-lock.por #bQ{right:calc(150px + var(--sr));bottom:calc(196px + var(--sb))}
+.d-lock .tcard{left:50%;transform:translateX(-50%);top:calc(8px + var(--st))}
+.d-lock.por .tcard{top:calc(96px + var(--st))}
+.d-thumb .tcard{display:none!important}
+.d-thumb .gov{left:50%;transform:translateX(-50%);top:calc(96px + var(--st))}
+.d-thumb.lan .gov{top:auto;bottom:calc(14px + var(--sb))}
+</style>
+</head>
+<body class="lan">
+
+<div id="pick">
+  <div class="pk">
+    <h1>Metr<span class="r0">0</span>niks <span style="color:var(--muted)">mobile UI lab</span><small>Voxel prototype 1 · tuned build 10 · four touch layouts</small></h1>
+    <p>Four ways to play the voxel prototype on a phone. Each one is the real game: same city, same enemies, same numbers from sim.js. Only the controls and the HUD change. Every layout works held sideways or upright; turn the phone at any time.</p>
+    <div class="cards" id="cards"></div>
+    <div class="tips">
+      <span><b>Pause</b> the II button</span>
+      <span><b>Switch layout</b> from the pause screen or the garage</span>
+      <span><b>View</b> near, mid or far: how much city fits on screen</span>
+      <span><b>Sound</b> starts on your first tap</span>
+    </div>
+    <div class="row"><button class="pill" id="fsBtn" type="button">Full screen</button><button class="pill" id="hapBtn" type="button" aria-pressed="true">Vibration on</button></div>
+    <p style="font-size:12px">Exploration for kr0: the GDD says keyboard and mouse only (GDD-D29). These layouts ask whether a phone version is worth reopening; see the proposal in the Metr0niks decision history.</p>
+  </div>
+</div>
+
+<div id="stage" hidden><iframe id="game" title="Metr0niks voxel prototype" allow="fullscreen; autoplay"></iframe></div>
+<div id="hud" hidden></div>
+<div id="ctl" hidden></div>
+<div id="prompt" hidden role="dialog" aria-label="Extract or Overtime">
+  <div class="q" id="pQ">Wave 5 cleared</div>
+  <div class="n" id="pN"></div>
+  <div class="cb"><i id="pBar"></i></div>
+  <div class="bt"><button id="pEx" type="button">Extract</button><button id="pOt" class="ot" type="button">Overtime</button></div>
+</div>
+<div id="lab" hidden><button id="labSwitch" type="button">Layout</button><button id="labView" type="button">View</button><button id="labHelp" type="button">Controls</button></div>
+<div id="help" hidden role="dialog" aria-modal="true" aria-labelledby="helpT"><div class="hc"><h3 id="helpT">Controls</h3><div id="helpB"></div><button id="helpOk" type="button">Got it</button></div></div>
+
+<script>
+(function(){
+"use strict";
+var SRC=window.PROTO_SRC||"prototype.html";
+var $=function(id){return document.getElementById(id)};
+var frame=$("game"),stage=$("stage"),ctl=$("ctl"),hud=$("hud"),body=document.body;
+var G=null,D=null,S=1,orient="lan",haptics=true,lastT=0;
+var VIEW=[{n:"Near",s:1},{n:"Mid",s:.82},{n:"Far",s:.68}],viewIdx={lan:1,por:2};
+function store(k,v){try{if(v===undefined)return localStorage.getItem("metr0niks.mobile."+k);localStorage.setItem("metr0niks.mobile."+k,v)}catch(e){return null}}
+
+/* ===== Input state, written by the layouts, applied to the prototype every frame ===== */
+var I={mv:[0,0],aim:null,fire:false,pile:false,q:false,dashT:0,c1T:0,c2T:0,dashDir:null};
+function buzz(ms){if(haptics&&navigator.vibrate)try{navigator.vibrate(ms)}catch(e){}}
+function m(){return G&&G.__m}
+function P(){var M=m();return M&&M.player}
+function proj(x,y,z){return m().proj(x,y,z)}                  /* world to frame px */
+function toScr(a){return [a[0]*S,a[1]*S]}                       /* frame px to screen px */
+function s2w(dx,dy){var u=dx/20,v=dy/10;return [(u+v)/2,(v-u)/2]} /* a screen direction to a world direction (the prototype's 2:1 projection) */
+function w2s(wx,wy){return [(wx-wy)*20,(wx+wy)*10]}
+function unproj(sx,sy,z){var c=m().cam,fw=G.innerWidth,fh=G.innerHeight,bx=(sx/S-fw/2)/c.zoom+c.x,by=(sy/S-fh/2)/c.zoom+c.y,u=bx/20,v=(by+z*22)/10;return [(u+v)/2,(v-u)/2]}   /* screen px to the world point at height z (the prototype's projection) */
+function alive(b){var M=m();return b&&b.hp>0&&!b.dropping&&M.bots.indexOf(b)>=0}
+function enemies(){var M=m();return (M&&M.bots||[]).filter(function(b){return b.hp>0&&!b.dropping&&b.kind!=="charge"&&b.kind!=="wbody"})}
+function los(p,b){try{return m().los3(p.x,p.y,1.1,b.x,b.y,(b.z||0)+.6)}catch(e){return true}}
+function nearest(p,maxR,needLos,skip){var best=null,bd=maxR;enemies().forEach(function(b){if(b===skip)return;var d=Math.hypot(b.x-p.x,b.y-p.y);if(d<bd&&(!needLos||los(p,b))){best=b;bd=d}});return best}
+function onScreen(b){var a=toScr(proj(b.x,b.y,(b.z||0)+.5));return a[0]>-20&&a[1]>-20&&a[0]<innerWidth+20&&a[1]<innerHeight+20}
+function bname(b){if(!b)return "";var n=b.boss?"Bounty sniper":b.loader?"Heavy loader":b.kind?String(b.kind).replace(/^w/,"Warden ").replace(/^./,function(c){return c.toUpperCase()}):"Patrol bot";return (b.elite?"Elite ":"")+n}
+
+function aimPoint(p){
+  var A=I.aim;
+  if(A&&A.t==="bot"&&alive(A.b))return proj(A.b.x,A.b.y,(A.b.z||0)+.55);
+  if(A&&A.t==="dir"){var w=s2w(A.dx,A.dy),l=Math.hypot(w[0],w[1])||1;return proj(p.x+w[0]/l*A.r,p.y+w[1]/l*A.r,.6)}
+  if(A&&A.t==="pt")return proj(A.x,A.y,A.z);
+  if(A&&A.t==="off"){var c=proj(p.x,p.y,.6);return [c[0]+A.x,c[1]+A.y]}
+  return proj(p.x+Math.cos(p.aim)*6,p.y+Math.sin(p.aim)*6,.6);   /* nothing to aim at: hold the torso where it points */
+}
+function apply(dt){
+  var M=m(),p=P();if(!M||!p)return;
+  var K=M.keys,MO=M.mouse,x=I.mv[0],y=I.mv[1],l=Math.hypot(x,y);
+  if(I.dashT>0&&I.dashDir){x=I.dashDir[0];y=I.dashDir[1];l=1}
+  K.KeyW=K.KeyA=K.KeyS=K.KeyD=false;
+  if(l>.22){x/=l;y/=l;if(y<-.383)K.KeyW=true;if(y>.383)K.KeyS=true;if(x<-.383)K.KeyA=true;if(x>.383)K.KeyD=true}   /* 8 ways: the prototype's legs read WASD */
+  K.Space=I.dashT>0;K.KeyQ=I.q;K.Digit1=I.c1T>0;K.Digit2=I.c2T>0;
+  I.dashT-=dt;I.c1T-=dt;I.c2T-=dt;if(I.dashT<=0)I.dashDir=null;
+  var a=aimPoint(p);MO.x=a[0];MO.y=a[1];
+  MO.down=!!I.fire;
+  if(I.pile&&!MO.rdown)MO.rpress=true;
+  MO.rdown=!!I.pile;
+}
+function releaseAll(){
+  I.mv=[0,0];I.fire=false;I.pile=false;I.q=false;I.dashT=0;I.c1T=0;I.c2T=0;
+  ptrs={};ctl.querySelectorAll(".dn").forEach(function(e){e.classList.remove("dn")});ctl.querySelectorAll(".stick").forEach(function(e){e.classList.remove("on","firing")});
+  if(D&&D.reset)D.reset();
+}
+
+/* ===== Touch plumbing: every pointer is owned by one control until it lifts ===== */
+var ptrs={};
+function pos(e){return [e.clientX,e.clientY]}
+ctl.addEventListener("pointerdown",function(e){
+  e.preventDefault();try{ctl.setPointerCapture(e.pointerId)}catch(x){}
+  var b=e.target.closest&&e.target.closest(".btn");
+  if(b){var o={kind:"btn",el:b,act:b.dataset.act,x0:e.clientX,y0:e.clientY,x:e.clientX,y:e.clientY,t0:performance.now()};ptrs[e.pointerId]=o;b.classList.add("dn");press(o,true);return}
+  var z=D.down(pos(e),e);if(z){z.t0=performance.now();z.x=e.clientX;z.y=e.clientY;ptrs[e.pointerId]=z}
+});
+ctl.addEventListener("pointermove",function(e){var o=ptrs[e.pointerId];if(!o)return;e.preventDefault();
+  var q=pos(e),dx=q[0]-o.x,dy=q[1]-o.y;o.x=q[0];o.y=q[1];
+  if(o.kind==="btn"){if(D.btnMove)D.btnMove(o,dx,dy)}else D.move(o,q,dx,dy,e)});
+function up(e){var o=ptrs[e.pointerId];if(!o)return;delete ptrs[e.pointerId];
+  if(o.kind==="btn"){o.el.classList.remove("dn");press(o,false)}else D.up(o,pos(e),e)}
+ctl.addEventListener("pointerup",up);ctl.addEventListener("pointercancel",up);
+ctl.addEventListener("contextmenu",function(e){e.preventDefault()});
+function held(act){for(var k in ptrs)if(ptrs[k].act===act)return true;return false}
+function press(o,dn){
+  var a=o.act;
+  if(a==="fire"||a==="fire2"){I.fire=held("fire")||held("fire2");if(dn)buzz(6)}
+  else if(a==="pile"){I.pile=dn;if(dn){buzz(10);if(D.pileDown)D.pileDown()}else if(D.pileUp)D.pileUp()}
+  else if(a==="dash"){if(dn){I.dashT=.12;buzz(14)}}
+  else if(a==="q"){I.q=dn;if(dn)buzz(8)}
+  else if(a==="c1"){if(dn){I.c1T=.15;buzz(8)}}
+  else if(a==="c2"){if(dn){I.c2T=.15;buzz(8)}}
+  else if(a==="next"){if(dn){buzz(6);D.next&&D.next()}}
+  else if(a==="pause"){if(dn)pauseGame()}
+  if(D.btn)D.btn(a,dn,o);
+}
+function pauseGame(){releaseAll();try{G.dispatchEvent(new G.KeyboardEvent("keydown",{code:"Escape",key:"Escape"}))}catch(e){}}
+
+/* a floating or fixed stick: returns a pointer owner whose vector is -1..1 */
+function Stick(el,R){this.el=el;this.R=R||58;this.kn=el.querySelector(".kn");this.cx=0;this.cy=0}
+Stick.prototype.at=function(x,y){this.cx=x;this.cy=y;this.el.style.left=x+"px";this.el.style.top=y+"px";this.el.classList.add("on");this.knob(0,0)};
+Stick.prototype.vec=function(x,y){var dx=x-this.cx,dy=y-this.cy,l=Math.hypot(dx,dy),r=this.R;if(l>r){dx*=r/l;dy*=r/l}this.knob(dx,dy);return [dx/r,dy/r,l/r]};
+Stick.prototype.knob=function(dx,dy){this.kn.style.transform="translate("+dx+"px,"+dy+"px)"};
+Stick.prototype.off=function(){this.el.classList.remove("on","firing");this.knob(0,0)};
+function el(tag,cls,html,parent){var e=document.createElement(tag);if(cls)e.className=cls;if(html)e.innerHTML=html;(parent||ctl).appendChild(e);return e}
+function mkStick(cls){return el("div","stick "+(cls||""),'<div class="kn"></div>')}
+function ringSvg(r){return '<svg class="rg" viewBox="0 0 100 100" aria-hidden="true"><circle class="tr" cx="50" cy="50" r="'+r+'"/><circle class="fg" cx="50" cy="50" r="'+r+'" stroke-dasharray="0 999"/></svg>'}
+function mkBtn(id,act,cls,label,ring){var b=el("button","btn "+cls,(ring?ringSvg(46):"")+'<span class="lb">'+label+'</span>');b.id=id;b.type="button";b.dataset.act=act;b.setAttribute("aria-label",act);return b}
+function setRing(b,u,col){var c=b.querySelector("svg.rg .fg");if(!c)return;var L=2*Math.PI*46;c.setAttribute("stroke-dasharray",(Math.max(0,Math.min(1,u))*L)+" "+L);c.style.stroke=col}
+/* the timing ring on the pile button: the white ring closes from start to target over T.ring.duration, as the sim grades it */
+function mkPileRing(b){var r=el("div","pr","<i class='tg'></i><i class='cl'></i>",b);return {tg:r.children[0],cl:r.children[1]}}
+function pileRing(b,pr){
+  var p=P(),T=m().T,R=T.ring,w=b.offsetWidth;
+  if(p.ring<0){pr.tg.style.display=pr.cl.style.display="none";pr.z=0;return}
+  var rad=Math.max(0,R.start+(R.target-R.start)*p.ring/R.duration);
+  /* a halo outside the thumb: the target ring is 1.6x the button, the closing ring starts at 2.8x and shrinks past it */
+  var dia=function(r){return w*(1.6+1.2*(r-R.target)/(R.start-R.target))};
+  pr.tg.style.display=pr.cl.style.display="block";
+  pr.tg.style.width=pr.tg.style.height=dia(R.target)+"px";
+  pr.cl.style.width=pr.cl.style.height=Math.max(w*.9,dia(rad))+"px";
+  var g=Math.abs(rad-R.target)/R.start,zone=g<=R.perfect?2:g<=R.good?1:0;pr.cl.style.borderColor=zone===2?"#7fdc6a":zone===1?"#f2c230":"#fff";
+  if(zone&&!pr.z)buzz(zone===2?25:12);pr.z=zone;   /* a tick as the ring enters the window */
+}
+
+/* ===== HUD pieces (shared, arranged per layout by CSS) ===== */
+var H={};
+function buildHud(opts){
+  hud.innerHTML="";H={};
+  var hp=el("div","hp","",hud);
+  function row(lbl,cls){var r=el("div","hb","<span>"+lbl+"</span><div class='bar "+(cls||"")+"' style='position:relative'><i></i></div><b></b>",hp);return {bar:r.querySelector(".bar"),i:r.querySelector("i"),b:r.querySelector("b")}}
+  H.armor=row("Armor");H.heat=row("Heat","heat");
+  if(opts.small!==false){H.dash=row("Dash");H.dash.i.style.background="var(--cyan)";H.pile=row("Pile");H.pile.i.style.background="var(--hazard)"}
+  H.oc=el("div","oc","",hp);H.oc.hidden=true;
+  var hs=el("div","hs","",hud);
+  function chip(lbl,cls){var c=el("div","chip "+(cls||""),"<small>"+lbl+"</small><b></b>",hs);return {el:c,s:c.querySelector("small"),b:c.querySelector("b")}}
+  H.lv=chip("Level");H.wave=chip("Wave");H.en=chip("Enemies");H.sc=chip("Scrap","sc");H.ct=chip("Contract","ct");
+  H.tc=el("div","tcard","<div class='tn'><b></b><small></small></div><div class='bar'><i></i></div>",hud);
+  H.gov=el("div","gov","",hud);H.gov.hidden=true;
+}
+function setBar(r,u,txt){r.i.style.width=Math.max(0,Math.min(100,u*100))+"%";if(txt!==undefined&&r.b.textContent!==txt)r.b.textContent=txt}
+function hudTick(){
+  var M=m(),p=P(),T=M.T,s=M.sim;if(!p||!s)return;
+  var a=Math.max(0,Math.ceil(p.hp));setBar(H.armor,a/p.maxHp,""+a);H.armor.bar.classList.toggle("low",a/p.maxHp<.35);
+  setBar(H.heat,p.heat/100,p.over?"LOCK":p.red>0?"RED":Math.round(p.heat)+"%");H.heat.bar.classList.toggle("over",!!p.over);H.heat.bar.classList.toggle("red",p.red>0);
+  if(H.dash){var dm=T.player.dashCooldown*(p.dashMul||1);setBar(H.dash,p.noDash?0:1-p.dashCd/dm,p.noDash?"–":p.dashN!=null?p.dashN+"":p.dashCd>0?p.dashCd.toFixed(1):"OK")}
+  if(H.pile){var pr=p.ring>=0;setBar(H.pile,pr?1:p.retract>0?1-p.retract/T.pile.retract:p.atb/T.atb.fill,pr?"RING":p.retract>0?"…":p.atb>=T.atb.fill?"OK":Math.round(p.atb/T.atb.fill*100)+"%")}
+  H.oc.hidden=!(p.oc>0);if(p.oc>0)H.oc.textContent="Overclock "+Math.ceil(p.oc)+"s";
+  var R=M.run,ot=R.wave>T.waves.length,ch=M.match.simState==="choose";
+  if(!hudTick.lvT||performance.now()-hudTick.lvT>1000){hudTick.lvT=performance.now();try{H.lv.b.textContent=M.campaign().level}catch(e){}}H.wave.b.textContent=ot?"OT":R.wave+"/"+T.waves.length;
+  H.en.s.textContent=ch?"Extract in":R.breather>0?"Next wave":"Enemies";
+  H.en.b.textContent=ch?Math.ceil(M.match.chooseLeft)+"s":R.breather>0?R.breather.toFixed(0)+"s":(M.bots.length+(R.queue?R.queue.length:0));
+  H.sc.b.textContent=M.scrap;
+  var c=M.match.contract;H.ct.el.hidden=!c;if(c){H.ct.b.textContent=(c.name||c.id)+" "+(c.progress|0)+"/"+c.goal;H.ct.el.classList.toggle("done",c.state===1)}
+}
+/* the shared button states: dash cooldown, pile charge and ring, Q ready, call-in names */
+function btnTick(){
+  var M=m(),p=P(),T=M.T;if(!p)return;
+  var b=$("bDash");if(b){var dm=T.player.dashCooldown*(p.dashMul||1),u=p.noDash?0:p.dashN!=null?(p.dashN>0?1:1-p.dashCd/T.skids.recharge):1-p.dashCd/dm;
+    setRing(b,u,"var(--cyan)");b.classList.toggle("cd",u<1&&!(p.dashN>0));b.hidden=!!p.noDash}
+  b=$("bPile");if(b){var pr=p.ring>=0,u2=pr?1:p.retract>0?1-p.retract/T.pile.retract:p.atb/T.atb.fill;
+    setRing(b,u2,pr?"#fff":p.retract>0?"var(--bad)":"var(--hazard)");b.classList.toggle("ready",!pr&&p.retract<=0&&p.atb>=T.atb.fill);b.classList.toggle("ring",pr);
+    if(D.pr)pileRing(b,D.pr)}
+  b=$("bQ");if(b){b.hidden=!p.q;if(p.q){var sq=p.sq||0,u3=Math.max(0,1-sq/T[p.q].every);setRing(b,u3,"var(--hazard)");b.classList.toggle("ready",sq<=0);
+    var ql=b.querySelector(".lb");var nm={redline:"Red<br>line",breach:"Breach",mortar:"Mortar",flash:"Vent",winch:"Winch",buster:"Buster"}[p.q]||p.q.slice(0,6);if(ql.dataset.q!==p.q){ql.dataset.q=p.q;ql.innerHTML=nm}}}
+  var cs=M.sim.callins&&M.sim.callins[p.idx];
+  ["bC1","bC2"].forEach(function(id,j){var e=$(id);if(!e)return;var t=cs&&cs[j];e.hidden=!t;if(t){var lb=e.querySelector(".lb");var n=(MetroSimName(t));if(lb.dataset.t!==t){lb.dataset.t=t;lb.innerHTML=(j+1)+"<span class='sm'>"+n+"</span>"}}});
+}
+function MetroSimName(t){try{return G.MetroSim.POD_NAME[t]}catch(e){return t}}
+
+/* ===== The four layouts ===== */
+var DESIGNS={};
+
+/* 1. Twin stick: a floating move stick on the left; an aim stick on the right that fires while you drag it.
+   A quick tap on the aim side fires a short burst at the nearest enemy (the Brawl Stars quick-fire). */
+DESIGNS.twin={name:"Twin stick",ins:"Brawl Stars · CoD Mobile",ori:"Best sideways; works upright",
+  tx:"Left thumb drives, right thumb aims and fires in one motion. Tap the right side to snap a burst onto the nearest enemy. Pile, dash and Q sit in an arc above the aim stick.",
+  mini:'<i style="left:8%;top:50%;width:30px;height:30px"></i><i class="f" style="right:8%;top:50%;width:30px;height:30px"></i><i class="y" style="right:28%;top:58%;width:20px;height:20px"></i><i style="right:26%;top:24%;width:16px;height:16px"></i><b style="left:6px;top:6px;width:50px"></b><b class="h" style="left:6px;top:14px;width:36px"></b>',
+  help:[["Left half","Touch and drag: drive (8 ways)"],["Right half","Drag: aim and fire. Let go: stop firing, torso holds"],["Tap right half","Quick burst at the nearest enemy"],["PILE","Hold when the ring is yellow, let go when the closing ring turns green. Aims at the closest enemy within 4 m if you are not aiming"],["DASH","Dash in the stick's direction"],["Q, 1, 2","Shoulder part and call-ins (at the aim point)"]],
+  build:function(){
+    this.ls=new Stick(mkStick());this.rs=new Stick(mkStick("aim"));
+    mkBtn("bPile","pile","pile","Pile",1);this.pr=mkPileRing($("bPile"));
+    mkBtn("bDash","dash","dash","Dash",1);mkBtn("bQ","q","q","Q",1);mkBtn("bC1","c1","ci","1");mkBtn("bC2","c2","ci","2");
+    el("div","zoneHint","Drive").style.cssText="left:18%;bottom:18px";el("div","zoneHint","Aim + fire · tap = burst").style.cssText="right:12%;bottom:18px";
+    this.burst=0;this.ghost();
+  },
+  home:function(){return orient==="por"?[innerWidth-92,innerHeight-110]:[innerWidth-110,innerHeight-110]},
+  ghost:function(){var h=this.home();this.rs.at(h[0],h[1]);this.rs.el.classList.remove("on");this.rs.el.classList.add("fixed")},
+  resize:function(){if(!this.rsOwn)this.ghost()},
+  reset:function(){this.burst=0;this.ls.off();this.rs.off();this.lsOwn=this.rsOwn=0;this.ghost()},
+  down:function(q){
+    if(q[0]<innerWidth*.45&&!this.lsOwn){this.ls.at(q[0],q[1]);this.lsOwn=1;return {kind:"ls"}}
+    if(q[0]>=innerWidth*.45&&!this.rsOwn){this.rs.at(q[0],q[1]);this.rsOwn=1;return {kind:"rs",moved:0}}
+    return null;
+  },
+  move:function(o,q){
+    if(o.kind==="ls"){var v=this.ls.vec(q[0],q[1]);I.mv=[v[0],v[1]]}
+    else{var w=this.rs.vec(q[0],q[1]);o.moved=Math.max(o.moved,w[2]);
+      if(w[2]>.28){I.aim={t:"dir",dx:w[0],dy:w[1],r:9};I.fire=true;this.rs.el.classList.add("firing")}
+      else if(o.moved>.28){I.fire=false;this.rs.el.classList.remove("firing")}}
+  },
+  up:function(o){
+    if(o.kind==="ls"){this.ls.off();this.lsOwn=0;I.mv=[0,0]}
+    else{this.rs.off();this.rsOwn=0;I.fire=held("fire");this.ghost();
+      if(o.moved<.28&&performance.now()-o.t0<260){var p=P(),b=nearest(p,13,true)||nearest(p,13,false);if(b){I.aim={t:"bot",b:b};this.burst=.45;buzz(8)}}}
+  },
+  pileDown:function(){var p=P();if(!this.rsOwn){var b=nearest(p,4,false);if(b)I.aim={t:"bot",b:b}}},
+  tick:function(dt){if(this.burst>0){this.burst-=dt;I.fire=this.burst>0||held("fire")}
+    var A=I.aim;if(A&&A.t==="bot"&&!alive(A.b))I.aim=null}
+};
+
+/* 2. Cockpit: a fixed drive stick, a trackpad for the torso on the right, and big fire buttons on both sides.
+   Dragging from the fire button keeps steering the crosshair (War Robots, Mech Arena). */
+DESIGNS.cockpit={name:"Cockpit",ins:"War Robots · Mech Arena",ori:"Sideways, two thumbs",
+  tx:"A pilot's layout: fixed drive stick, a crosshair you steer with a swipe like a trackpad, and a big fire button you can keep dragging to aim. A second fire button on the left lets the right thumb only aim.",
+  mini:'<i style="left:8%;bottom:10%;width:30px;height:30px"></i><i class="f" style="right:6%;bottom:8%;width:34px;height:34px"></i><i class="f" style="left:9%;bottom:62%;width:18px;height:18px"></i><i class="y" style="right:32%;bottom:8%;width:22px;height:22px"></i><em style="left:44%;top:40%">+ swipe</em>',
+  help:[["Left stick","Drive (8 ways). The ring round it is your armor"],["Swipe right side","Move the crosshair. It snaps onto enemies near it"],["FIRE","Hold to fire. Keep dragging from it to aim while firing. The ring is heat"],["Left FIRE","Fire with the left thumb while the right thumb aims"],["PILE","Hold when ready, let go on the green ring"],["DASH, Q, 1, 2","Dash, shoulder part, call-ins"]],
+  build:function(){
+    this.ls=new Stick(mkStick("fixed"));this.ls.el.style.cssText="";
+    mkBtn("bFire","fire","fire big","Fire",1);mkBtn("bFire2","fire2","fire fire2","Fire",0);
+    mkBtn("bPile","pile","pile","Pile",1);this.pr=mkPileRing($("bPile"));
+    mkBtn("bDash","dash","dash","Dash",1);mkBtn("bQ","q","q","Q",1);mkBtn("bC1","c1","ci","1");mkBtn("bC2","c2","ci","2");
+    this.arc=el("div","arc",'<svg viewBox="0 0 100 100" width="170" height="170"><circle cx="50" cy="50" r="46" stroke="rgba(255,255,255,.1)" stroke-width="4"/><circle class="a" cx="50" cy="50" r="46" stroke="var(--good)" stroke-width="4" stroke-dasharray="0 999" transform="rotate(135 50 50)"/></svg>');
+    el("div","zoneHint","Swipe to aim").style.cssText="right:34%;top:46%";
+    this.off={x:120,y:-30};I.aim={t:"off",x:this.off.x,y:this.off.y};this.place();
+  },
+  place:function(){var x=78+(orient==="por"?18:28),y=innerHeight-(orient==="por"?110:96);this.ls.at(x,y);this.ls.el.classList.remove("on");this.home=[x,y];
+    this.arc.style.left=(x-85)+"px";this.arc.style.top=(y-85)+"px"},
+  reset:function(){this.ls.off();this.place()},
+  down:function(q){
+    if(Math.hypot(q[0]-this.home[0],q[1]-this.home[1])<110||(q[0]<innerWidth*.4&&q[1]>innerHeight*.45)){this.ls.at(this.home[0],this.home[1]);var v=this.ls.vec(q[0],q[1]);I.mv=[v[0],v[1]];return {kind:"ls"}}
+    return {kind:"pad"};
+  },
+  pad:function(dx,dy){var k=1.5/S,o=this.off,lim=Math.min(innerWidth,innerHeight)*.55/S;o.x+=dx*k;o.y+=dy*k;var l=Math.hypot(o.x,o.y);if(l>lim){o.x*=lim/l;o.y*=lim/l}
+    I.aim={t:"off",x:o.x,y:o.y}},
+  move:function(o,q,dx,dy){if(o.kind==="ls"){var v=this.ls.vec(q[0],q[1]);I.mv=[v[0],v[1]]}else this.pad(dx,dy)},
+  btnMove:function(o,dx,dy){if(o.act==="fire")this.pad(dx,dy)},
+  up:function(o){if(o.kind==="ls"){this.ls.off();this.ls.at(this.home[0],this.home[1]);this.ls.el.classList.remove("on");I.mv=[0,0]}},
+  tick:function(){var p=P(),T=m().T,c=this.arc.querySelector(".a"),u=p.hp/p.maxHp,L=2*Math.PI*46*.75;
+    c.setAttribute("stroke-dasharray",(Math.max(0,u)*L)+" 999");c.style.stroke=u<.35?"var(--bad)":"var(--good)";
+    setRing($("bFire"),p.heat/100,p.over?"var(--bad)":p.red>0?"#fff4e6":"var(--rust)");
+    if(I.aim&&I.aim.t!=="off")I.aim={t:"off",x:this.off.x,y:this.off.y}},
+  resize:function(){this.place()}
+};
+
+/* 3. One thumb: drag anywhere to drive; the torso picks the nearest enemy it can see and fires on its own,
+   pausing at high heat so the guns never lock. Flick to dash. Pile and Q are the only buttons (Archero, Survivor.io). */
+DESIGNS.thumb={name:"One thumb",ins:"Archero · Survivor.io",ori:"Best upright, one hand",
+  tx:"Hold the phone in one hand. Drag anywhere to drive; the torso targets and fires by itself and cools off before the guns lock. Flick to dash. You choose where to stand and when to land the pile.",
+  mini:'<i style="left:40%;top:56%;width:30px;height:30px"></i><i class="y" style="right:6%;bottom:6%;width:26px;height:26px"></i><b style="left:6px;right:6px;top:6px"></b><b class="h" style="left:6px;right:40%;top:14px"></b><em style="left:34%;top:30%">auto aim</em>',
+  help:[["Drag anywhere","Drive. Let go to stop pushing (the mech coasts)"],["Auto-fire","The torso locks the nearest enemy it can see within 12 m and fires. It pauses at 85% heat and resumes at 40%, so the guns never lock"],["Tap","A quick tap on the street fires a burst at that spot: break pillars and walls"],["Flick","A quick swipe that ends with your thumb lifting: dash that way"],["PILE","Hold when ready, let go on the green ring. Aims at the closest enemy"],["Q, 1, 2","Shoulder part and call-ins"],["Fire chip","Tap the heat chip at the top to switch auto-fire off and on"]],
+  build:function(){
+    this.ls=new Stick(mkStick());
+    mkBtn("bPile","pile","pile","Pile",1);this.pr=mkPileRing($("bPile"));
+    mkBtn("bQ","q","q","Q",1);mkBtn("bC1","c1","ci","1");mkBtn("bC2","c2","ci","2");
+    mkBtn("bDash","dash","dash q","Dash",1);
+    el("div","zoneHint","Drag anywhere to drive · flick to dash").style.cssText="left:50%;transform:translateX(-50%);bottom:"+(orient==="por"?120:20)+"px;white-space:nowrap";
+    this.gov=true;this.auto=true;this.tgt=null;this.hist=[];
+    var self=this;H.gov.hidden=false;H.gov.style.pointerEvents="auto";H.gov.onclick=function(){self.auto=!self.auto;buzz(10)};
+  },
+  reset:function(){this.ls.off();this.own=0},
+  down:function(q){if(this.own)return null;this.own=1;this.ls.at(q[0],q[1]);this.hist=[[q[0],q[1],performance.now()]];return {kind:"ls",x0:q[0],y0:q[1]}},
+  move:function(o,q){var v=this.ls.vec(q[0],q[1]);I.mv=[v[0],v[1]];this.hist.push([q[0],q[1],performance.now()]);if(this.hist.length>8)this.hist.shift()},
+  up:function(o,q){this.ls.off();this.own=0;I.mv=[0,0];
+    var now=performance.now();
+    if(now-o.t0<220&&Math.hypot(q[0]-o.x0,q[1]-o.y0)<14){var w=unproj(q[0],q[1],.6);this.spot={t:"pt",x:w[0],y:w[1],z:.6};this.spotT=.7;buzz(8);
+      var fx=el("div","tapFx");fx.style.left=q[0]+"px";fx.style.top=q[1]+"px";setTimeout(function(){fx.remove()},400);return}   /* a quick tap: a burst at that spot (pillars, walls) */
+    var h=this.hist.filter(function(s){return now-s[2]<90});
+    if(h.length>=2){var a=h[0],dx=q[0]-a[0],dy=q[1]-a[1],v=Math.hypot(dx,dy)/Math.max(16,now-a[2]);
+      if(v>1.1&&Math.hypot(dx,dy)>36){I.dashT=.12;I.dashDir=[dx/Math.hypot(dx,dy),dy/Math.hypot(dx,dy)];buzz(14)}}},
+  pileDown:function(){var b=nearest(P(),4.5,false);if(b){this.tgt=b;this.pin=1}},
+  pileUp:function(){this.pin=0},
+  tick:function(dt){
+    var p=P();
+    if(this.spotT>0){this.spotT-=dt;I.aim=this.spot;I.fire=!p.over;H.gov.className="gov fire";H.gov.textContent="Burst at the spot";return}
+    if(!(this.pin&&alive(this.tgt))){var keep=alive(this.tgt)&&Math.hypot(this.tgt.x-p.x,this.tgt.y-p.y)<13&&los(p,this.tgt);
+      var nb=nearest(p,12,true);if(!keep||(nb&&nb!==this.tgt&&Math.hypot(nb.x-p.x,nb.y-p.y)<Math.hypot(this.tgt.x-p.x,this.tgt.y-p.y)-2.5))this.tgt=nb}   /* switch only for a clearly closer enemy */
+    if(this.tgt)I.aim={t:"bot",b:this.tgt};else if(I.mv[0]||I.mv[1])I.aim={t:"dir",dx:I.mv[0],dy:I.mv[1],r:6};else I.aim=null;
+    if(p.over)this.gov=false;else if(p.heat>=85)this.gov=false;else if(p.heat<=40)this.gov=true;
+    I.fire=this.auto&&!!this.tgt&&this.gov&&!p.over;
+    var g=H.gov;g.className="gov "+(!this.auto?"":I.fire?"fire":this.gov?"":"cool");
+    g.textContent=!this.auto?"Auto-fire off · tap":p.over?"Locked":!this.gov?"Cooling…":this.tgt?"Firing: "+bname(this.tgt):"Auto-fire ready";
+  }
+};
+
+/* 4. Lock-on: drive with the left stick, tap an enemy to lock it, and the torso tracks it while you hold FIRE.
+   With no lock the nearest visible enemy is soft-locked. NEXT cycles targets (Armored Core, MechWarrior, MOBA tap-to-target). */
+DESIGNS.lock={name:"Lock-on",ins:"Armored Core · MechWarrior · MOBAs",ori:"Both; tap to pick targets",
+  tx:"You pick who, the mech handles aim. Tap an enemy to lock it (pink brackets), or let the nearest one soft-lock (white). Hold FIRE to shoot the lock, NEXT to cycle. A target card shows its armor.",
+  mini:'<i style="left:8%;bottom:10%;width:30px;height:30px"></i><i class="f" style="right:6%;bottom:8%;width:32px;height:32px"></i><i style="right:12%;bottom:52%;width:18px;height:18px;border-color:#ff4f9a"></i><i class="y" style="right:34%;bottom:8%;width:22px;height:22px"></i><em style="left:46%;top:30%;color:#ff4f9a">[ tap ]</em>',
+  help:[["Left side","Touch and drag: drive (8 ways)"],["Tap an enemy","Lock it: pink brackets"],["Tap the street","Lock that spot (dashed pink) to shoot pillars and walls. Tap it again to clear"],["Soft lock","With no lock, the nearest enemy you can see gets white brackets"],["FIRE","Hold: the torso tracks the lock and fires"],["NEXT","Cycle to the next nearest enemy"],["PILE","Hold when ready, let go on the green ring. Aims at the lock if it is close, else the closest enemy"],["DASH, Q, 1, 2","Dash, shoulder part, call-ins"]],
+  build:function(){
+    this.ls=new Stick(mkStick());
+    mkBtn("bFire","fire","fire big","Fire",0);mkBtn("bPile","pile","pile","Pile",1);this.pr=mkPileRing($("bPile"));
+    mkBtn("bDash","dash","dash","Dash",1);mkBtn("bNext","next","next","Next");mkBtn("bQ","q","q","Q",1);mkBtn("bC1","c1","ci","1");mkBtn("bC2","c2","ci","2");
+    this.mk=el("div","lockM","<i></i><i></i><i></i><i></i>");
+    el("div","zoneHint","Drive").style.cssText="left:14%;bottom:18px";el("div","zoneHint","Tap enemies to lock").style.cssText="left:50%;top:40%;transform:translateX(-50%)";
+    this.lock=null;this.soft=null;this.gnd=null;
+  },
+  reset:function(){this.ls.off();this.own=0},
+  down:function(q){
+    if(q[0]<innerWidth*.42&&q[1]>innerHeight*.35&&!this.own){this.own=1;this.ls.at(q[0],q[1]);return {kind:"ls"}}
+    return {kind:"tap",x0:q[0],y0:q[1]};
+  },
+  move:function(o,q){if(o.kind==="ls"){var v=this.ls.vec(q[0],q[1]);I.mv=[v[0],v[1]]}},
+  up:function(o,q){
+    if(o.kind==="ls"){this.ls.off();this.own=0;I.mv=[0,0];return}
+    if(Math.hypot(q[0]-o.x0,q[1]-o.y0)>24)return;
+    var best=null,bd=64;enemies().forEach(function(b){var a=toScr(proj(b.x,b.y,(b.z||0)+.55)),d=Math.hypot(a[0]-q[0],a[1]-q[1]);if(d<bd){bd=d;best=b}});
+    var fx=el("div","tapFx");fx.style.left=q[0]+"px";fx.style.top=q[1]+"px";setTimeout(function(){fx.remove()},400);
+    if(best){this.lock=best;this.gnd=null;buzz(12)}
+    else{var w=unproj(q[0],q[1],.6);this.lock=null;this.gnd=this.gnd&&Math.hypot(w[0]-this.gnd.x,w[1]-this.gnd.y)<1.2?null:{t:"pt",x:w[0],y:w[1],z:.6};buzz(6)}   /* tap the same spot again to clear it */
+  },
+  next:function(){var p=P(),list=enemies().filter(function(b){return onScreen(b)}).sort(function(a,b){return Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y)});
+    if(!list.length)return;var cur=this.lock||this.soft,i=list.indexOf(cur);this.lock=list[(i+1)%list.length];this.gnd=null},
+  pileDown:function(){var p=P(),t=this.lock||this.soft;if(!(t&&Math.hypot(t.x-p.x,t.y-p.y)<4.5)){var b=nearest(p,4.5,false);if(b)this.pileT=b}},
+  pileUp:function(){this.pileT=null},
+  tick:function(){
+    var p=P();if(this.lock&&!alive(this.lock))this.lock=null;
+    this.soft=this.lock||this.gnd?null:nearest(p,12,true);
+    var t=this.pileT&&alive(this.pileT)?this.pileT:this.lock||this.soft;
+    I.aim=t?{t:"bot",b:t}:this.gnd?this.gnd:(I.mv[0]||I.mv[1])?{t:"dir",dx:I.mv[0],dy:I.mv[1],r:6}:null;
+    var mk=this.mk,show=this.lock||this.soft;
+    if(show){var a=toScr(proj(show.x,show.y,(show.z||0)+.55));mk.style.left=a[0]+"px";mk.style.top=a[1]+"px";mk.className="lockM on"+(this.lock?"":" soft")}
+    else if(this.gnd){var g=toScr(proj(this.gnd.x,this.gnd.y,this.gnd.z));mk.style.left=g[0]+"px";mk.style.top=g[1]+"px";mk.className="lockM on gnd"}
+    else mk.className="lockM";
+    var tc=H.tc;tc.classList.toggle("on",!!show);
+    if(show){tc.querySelector("b").textContent=(this.lock?"Locked · ":"Nearest · ")+bname(show);tc.querySelector("small").textContent=Math.hypot(show.x-p.x,show.y-p.y).toFixed(0)+" m";
+      tc.querySelector(".bar i").style.width=Math.max(0,show.hp/(show.maxHp||show.hp||1)*100)+"%";tc.style.borderColor=this.lock?"var(--r0-pink)":"var(--line)"}
+  }
+};
+var ORDER=["twin","cockpit","thumb","lock"];
+
+/* ===== Picker ===== */
+ORDER.forEach(function(k,i){var d=DESIGNS[k],c=document.createElement("button");c.className="cardD";c.type="button";
+  c.innerHTML="<span class='no'>Design "+(i+1)+"</span><h2>"+d.name+"</h2><span class='ins'>After "+d.ins+"</span><div class='mini' aria-hidden='true'>"+d.mini+"</div><span class='tx'>"+d.tx+"</span><span class='ori'>"+d.ori+"</span><span class='go'>Play</span>";
+  c.addEventListener("click",function(){choose(k)});$("cards").appendChild(c)});
+$("fsBtn").addEventListener("click",function(){var e=document.documentElement;try{(e.requestFullscreen||e.webkitRequestFullscreen).call(e)}catch(x){}});
+$("hapBtn").addEventListener("click",function(){haptics=!haptics;this.setAttribute("aria-pressed",haptics);this.textContent=haptics?"Vibration on":"Vibration off";store("haptics",haptics?"1":"0")});
+if(store("haptics")==="0")$("hapBtn").click();
+(function(){var v=store("view");if(v)try{var o=JSON.parse(v);if(o.lan>=0&&o.por>=0)viewIdx=o}catch(e){}})();
+
+function choose(k){
+  store("design",k);$("pick").hidden=true;stage.hidden=false;
+  if(!frame.src){frame.src=SRC;frame.addEventListener("load",onLoad)}
+  else setDesign(k);
+  pendingDesign=k;
+}
+var pendingDesign=null;
+function setDesign(k){
+  releaseAll();D=DESIGNS[k];ctl.innerHTML="";
+  ORDER.forEach(function(n){body.classList.remove("d-"+n)});body.classList.add("d-"+k);
+  buildHud({small:false});mkBtn("bPause","pause","pause","II");D.build();
+  clearTimeout(setDesign.ht);setDesign.ht=setTimeout(function(){ctl.querySelectorAll(".zoneHint").forEach(function(h){h.style.opacity=0})},6000);
+  var seen=store("help."+k);if(!seen){showHelp();store("help."+k,"1")}
+  relabel();
+}
+function showHelp(){if(!D)return;$("helpT").textContent=D.name+" controls";
+  $("helpB").innerHTML="<table>"+D.help.map(function(r){return "<tr><td>"+r[0]+"</td><td>"+r[1]+"</td></tr>"}).join("")+"</table>";$("help").hidden=false}
+$("helpOk").addEventListener("click",function(){$("help").hidden=true});
+$("labHelp").addEventListener("click",showHelp);
+$("labSwitch").addEventListener("click",function(){releaseAll();$("pick").hidden=false});
+$("labView").addEventListener("click",function(){viewIdx[orient]=(viewIdx[orient]+1)%VIEW.length;store("view",JSON.stringify(viewIdx));relabel()});
+function relabel(){$("labView").textContent="View: "+VIEW[viewIdx[orient]].n;$("labSwitch").textContent="Layout: "+(D?D.name:"–")}
+
+/* The frame: hide the prototype's desktop HUD and keyboard help, keep its menus, garage and toasts.
+   Focus moving to this page must not pause the game, so the frame's blur is stopped before the prototype sees it. */
+function onLoad(){
+  G=frame.contentWindow;
+  if(!G.__m){setTimeout(onLoad,100);return}
+  var st=G.document.createElement("style");
+  st.textContent="#stats,#score,#keys,#links,#choose,#ctlTable{display:none!important}canvas{cursor:default!important}"+
+    "#voCap{top:24%!important;bottom:auto!important}#overlay .card{max-width:min(520px,100%)}#overlay .card h1 span{color:#ff4f9a}";
+  G.document.head.appendChild(st);
+  G.addEventListener("blur",function(e){e.stopImmediatePropagation()},true);
+  G.document.querySelectorAll("#overlay .note").forEach(function(n){if(/Keyboard and mouse/.test(n.textContent))n.textContent="Touch layout from the mobile UI lab. Everything except the outer wall is voxels and can be shot apart."});
+  setDesign(pendingDesign||"twin");
+}
+
+/* Extract or Overtime: the prototype's prompt, as two thumb-sized buttons */
+$("pEx").addEventListener("click",function(){m().match.choose(128);buzz(15)});
+$("pOt").addEventListener("click",function(){m().match.choose(64);buzz(15)});
+function promptTick(on){
+  var pe=$("prompt");pe.hidden=!on;if(!on)return;
+  var M=m(),left=M.match.chooseLeft;$("pN").textContent="Extract now and bank "+M.scrap+" scrap, or fight an Overtime wave for more. Extracts in "+Math.ceil(left)+" s.";
+  $("pBar").style.width=Math.max(0,Math.min(100,left/((M.T.overtime&&M.T.overtime.choose)||6)*100))+"%";
+  $("pQ").textContent=M.run.wave>M.T.waves.length?"Overtime cleared":"Wave "+M.T.waves.length+" cleared";
+}
+
+/* ===== Frame loop ===== */
+function setScale(s){
+  var w=Math.ceil(innerWidth/s),h=Math.ceil(innerHeight/s),key=w+"x"+h+"@"+s;
+  if(frame.dataset.k===key)return;frame.dataset.k=key;S=s;
+  frame.style.width=w+"px";frame.style.height=h+"px";frame.style.transform=s===1?"none":"scale("+s+")";
+}
+function orientTick(){var o=innerWidth>=innerHeight?"lan":"por";if(o!==orient){orient=o;body.classList.remove("lan","por");body.classList.add(o);releaseAll();relabel();if(D&&D.resize)D.resize()}}
+addEventListener("resize",function(){orientTick();if(D&&D.resize)D.resize()});
+orientTick();
+function loop(t){
+  requestAnimationFrame(loop);
+  var dt=Math.min(.05,(t-lastT)/1000||0);lastT=t;
+  var M=m();if(!M||!D){return}
+  var st=M.state,play=st==="play"&&!!M.player&&$("pick").hidden;
+  setScale(play?VIEW[viewIdx[orient]].s:1);
+  if(ctl.hidden===play){ctl.hidden=!play;hud.hidden=!play;if(!play)releaseAll()}
+  $("lab").hidden=play||!$("pick").hidden;
+  var pr=play&&M.match.prompt;promptTick(pr);
+  if(!play)return;
+  try{if(D.tick)D.tick(dt);apply(dt);hudTick();btnTick()}catch(e){if(!loop.err){loop.err=1;console.error(e)}}
+}
+requestAnimationFrame(loop);
+
+/* a returning visitor goes straight back to the last layout only when they ask: the picker always shows first */
+window.__mobile={get D(){return D},I:I,DESIGNS:DESIGNS,choose:choose,get S(){return S}};
+})();
+</script>
+</body>
+</html>
