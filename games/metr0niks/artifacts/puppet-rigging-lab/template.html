@@ -1,4 +1,4 @@
-<title>Metr0niks Pivot Bench</title>
+<title>Metr0niks Puppet Rigging Lab</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Kalam:wght@700&display=swap">
@@ -65,12 +65,24 @@ textarea{width:100%;min-height:58px;resize:vertical;background:var(--bg);border:
 .rot{display:flex;gap:8px;align-items:center;font-size:14px}
 .rot input[type=range]{flex:1;min-width:0}
 .rot output{font:13px var(--mono);width:56px;text-align:right}
+.reviews{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.revgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.rev{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.rev canvas{width:100%;height:150px;background:var(--sunk);border-radius:6px}
+.rev h3{margin:0;font-size:15px}
+.rev small{font:11px var(--mono);color:var(--muted)}
+.verd{display:flex;gap:6px;flex-wrap:wrap}
+.verd button[data-v="Keep"][aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+.verd button[data-v="Fix"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:var(--surface)}
+.verd button[data-v="Redo"][aria-pressed="true"]{background:var(--pivot);border-color:var(--pivot);color:var(--surface)}
+.rev .acts{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:11px var(--mono);padding:0 5px;border-radius:4px;border:1px solid currentColor;margin-left:4px}
 .note{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding-left:10px;margin:0}
 </style>
 
 <header class="top">
-  <h1>Metr<span class="z">0</span>niks Pivot Bench</h1>
-  <p>Drag the pink pivot (where a part turns) and the teal joints (where the next part attaches) onto the right spot in the art. The puppet on the right moves with your marks. Every change saves for Claude to read and apply to the rig.</p>
+  <h1>Metr<span class="z">0</span>niks Puppet Rigging Lab</h1>
+  <p>Drag the pink pivot (where a part turns) and the teal joints (where the next part attaches) onto the right spot in the art. The puppet on the right moves with your marks. Every change saves for Claude to read and apply to the rig. Mark each part Keep, Fix or Redo in Part reviews below.</p>
 </header>
 
 <div class="bar tabs" id="tabs" role="group" aria-label="Rig"></div>
@@ -121,6 +133,12 @@ textarea{width:100%;min-height:58px;resize:vertical;background:var(--bg);border:
   </section>
 </main>
 
+<section class="reviews" aria-labelledby="hRev" id="part-reviews">
+  <div class="row"><h2 id="hRev">Part reviews</h2><span class="hint" id="revSum"></span></div>
+  <p class="hint">Mark every part of this rig. Keep: the art is right. Fix: the art is close; say what to change. Redo: regenerate the part. Your marks and notes save for Claude; Comment opens a comment on that part.</p>
+  <div class="revgrid" id="revs"></div>
+</section>
+
 <script>
 (function(){
 const ATLAS=/*ATLAS*/;
@@ -134,6 +152,11 @@ const ORIG={},CUR={};
 for(const n in SP){const s=SP[n];ORIG[n]={pivot:s.pivot.slice(),joints:deep(s.joints),rot:s.rot||0,note:""};CUR[n]=deep(ORIG[n])}
 
 const RIGS={
+ timo3:{label:"Tim-o v3 (elbows)",kind:"biped",R:{torso:"p_torso",thigh:"p_thigh",shin:"p_shin",armF2:["p_upF","p_foreF"],armB2:["p_upB","p_foreB"],pack:"p_pack",scale:1.15,legLen:.82},
+  parts:["p_torso","p_upF","p_foreF","p_upB","p_foreB","p_thigh","p_shin","p_pack"],
+  names:{p_torso:"Torso",p_upF:"Front upper arm",p_foreF:"Minigun forearm",p_upB:"Back upper arm",p_foreB:"Pile-bunker forearm",p_thigh:"Thigh (both legs)",p_shin:"Shin (both legs)",p_pack:"Jump pack"},
+  jl:{armF:"front upper arm",armB:"back upper arm",hipF:"front thigh",hipB:"back thigh",pack:"jump pack",eye:"eye glow",knee:"shin",elbow:"forearm",muzzle:"muzzle flash",tip:"pile spike",glow:"pack glow"},
+  info:"v3 arms (29 Oct): each arm is an upper arm and a forearm joined at the elbow. The upper arm hangs down from the shoulder and the forearm stays on the aim, so the elbow bends as he walks and aims. Torso, legs and pack are the v2.1 parts and share their marks with the v2.1 rig."},
  timo:{label:"Tim-o v2.1",kind:"biped",R:{torso:"p_torso",thigh:"p_thigh",shin:"p_shin",armF:"p_armR",armB:"p_armL",pack:"p_pack",scale:1.15,legLen:.82},
   parts:["p_torso","p_thigh","p_shin","p_armR","p_armL","p_pack"],
   names:{p_torso:"Torso",p_thigh:"Thigh (both legs)",p_shin:"Shin (both legs)",p_armR:"Minigun arm (front)",p_armL:"Pile-bunker arm (back)",p_pack:"Jump pack"},
@@ -156,7 +179,7 @@ const RIGS={
   info:"Four legs hang from two joints, spread sideways in code and 22–30 px up. Claude keeps those nudges unless you say otherwise in a note."}
 };
 /* parts whose rest angle may change: nothing hangs off them in the game code */
-const ROT_OK=new Set(["p_shin","p_armR","p_armL","p_pack","b_shin","b_arm","l_leg","l_claw","j_leg","j_leg2"]);
+const ROT_OK=new Set(["p_upF","p_foreF","p_upB","p_foreB","p_shin","p_armR","p_armL","p_pack","b_shin","b_arm","l_leg","l_claw","j_leg","j_leg2"]);
 const MODES={
  biped:[["walk","Walk","Walk cycle with the gun drifting."],["aim","Aim sweep","Standing, both arms sweep the full aim range the game allows (−46° to +54°)."],["stress","Stress","Deep knee bends, walking and full aim at once: gaps at a bad pivot show up here first."],["rest","Rest","Standing still, arms level."]],
  crab:[["walk","Walk","Leg pairs scuttle, claw drifts."],["aim","Claw sweep","Standing, claw sweeps up and down."],["stress","Stress","Legs swing twice as far as the game, claw sweeps."],["rest","Rest","Standing still."]],
@@ -183,11 +206,18 @@ function bipedOps(D,R,P){
     op(D,ops,base,R.shin,kx,ky,r2+lift*.004,k,k,R.shin+"@"+side);
   }
   leg("hipB",ph+Math.PI);
+  /* two-bone arm: the upper arm drops by the elbow bend, the forearm comes back up to the aim; forearm drawn first so the elbow socket covers its cap */
+  function arm2(side,pr,sc,ang,bend){const s=joint(D,R.torso,side),up=pr[0],b1=base.translate(s.x,ty+s.y).rotate((ang+bend)*DEG);
+    const e=joint(D,up,"elbow"),ur=D[up].rot||0,ex=e.x*Math.cos(ur)-e.y*Math.sin(ur),ey=e.x*Math.sin(ur)+e.y*Math.cos(ur);
+    op(D,ops,b1.scale(sc,sc).translate(ex,ey).rotate(-bend*DEG),pr[1],0,0,0,1,1);op(D,ops,b1,up,0,0,0,sc,sc)}
+  const bF=P.bF==null?.8:P.bF,bB=P.bB==null?.8:P.bB;
+  if(R.armB2)arm2("armB",R.armB2,.92,P.aim*.9+tilt,bB);
   if(R.armB){const sb=joint(D,R.torso,"armB");op(D,ops,base.translate(sb.x,ty+sb.y).rotate((P.aim*.9+tilt)*DEG),R.armB,0,0,0,.92,.92)}
   if(R.pack){const pk=joint(D,R.torso,"pack");op(D,ops,base,R.pack,pk.x-6,ty+pk.y,tilt,.7,.7)}
   leg("hipF",ph);
   op(D,ops,base,R.torso,0,ty,tilt,1,1);
-  const sa=joint(D,R.torso,"armF");op(D,ops,base.translate(sa.x,ty+sa.y).rotate((P.aim+tilt*.5)*DEG),R.armF,0,0,0,1,1);
+  if(R.armF2)arm2("armF",R.armF2,1,P.aim+tilt*.5,bF);
+  else{const sa=joint(D,R.torso,"armF");op(D,ops,base.translate(sa.x,ty+sa.y).rotate((P.aim+tilt*.5)*DEG),R.armF,0,0,0,1,1)}
   return ops;
 }
 function crabOps(D,R,P){
@@ -213,9 +243,9 @@ function pose(kind,mode,t){
   const sw=(a,b,f)=>a+(b-a)*(.5+.5*Math.sin(t*f));
   if(mode==="rest")return {t:0,walk:0,ph:0,aim:0};
   if(kind==="biped"){
-    if(mode==="walk")return {t,walk:1,ph:t*7,aim:Math.sin(t*.8)*.2};
-    if(mode==="aim")return {t,walk:0,ph:0,aim:sw(-.8,.95,1.4)};
-    return {t,walk:1,ph:t*5,aim:sw(-.8,.95,1.1),c:sw(0,26,1.7),spread:sw(0,14,1.3)};
+    if(mode==="walk")return {t,walk:1,ph:t*7,aim:Math.sin(t*.8)*.2,bF:.8+Math.sin(t*7)*.22,bB:.8-Math.sin(t*7)*.22};
+    if(mode==="aim")return {t,walk:0,ph:0,aim:sw(-.8,.95,1.4),bF:.35,bB:.35};
+    return {t,walk:1,ph:t*5,aim:sw(-.8,.95,1.1),c:sw(0,26,1.7),spread:sw(0,14,1.3),bF:sw(0,1.5,2.3),bB:sw(1.5,0,2.3)};
   }
   if(kind==="crab"){
     if(mode==="walk")return {t,walk:1,ph:t*6,aim:Math.sin(t)*.2};
@@ -234,7 +264,7 @@ function opBounds(D,ops){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;ops.forEach(o=>{const
   [[0,0],[1,0],[0,1],[1,1]].forEach(([u,v])=>{const p=o.m.transformPoint({x:(u-d.pivot[0])*w,y:(v-d.pivot[1])*h});x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y)})});return {x0,y0,x1,y1}}
 
 /* ---------- state ---------- */
-let rid="timo",sel="p_torso",mk="pivot",zoomU=1,pan={x:0,y:0};
+let rid="timo3",sel="p_torso",mk="pivot",zoomU=1,pan={x:0,y:0};
 const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 let COL={};const readCols=()=>{COL={pivot:css("--pivot"),joint:css("--joint"),ghost:css("--ghost"),ink:css("--ink"),c1:css("--chk1"),c2:css("--chk2"),line:css("--line"),muted:css("--muted"),surface:css("--surface")}};
 readCols();try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{readCols();drawEd();thumbs()});new MutationObserver(()=>{readCols();drawEd();thumbs()}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]})}catch(e){}
@@ -251,13 +281,32 @@ function setRig(k){rid=k;sel=RIGS[k].parts[0];mk="pivot";pan={x:0,y:0};zoomU=1;q
   tabs.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.rig===k)));
   const ms=q("mode");ms.innerHTML="";MODES[RIGS[k].kind].forEach(([v,l])=>{const o=document.createElement("option");o.value=v;o.textContent=l;ms.appendChild(o)});
   q("rigNoteText").textContent=RIGS[k].info;q("rigNote").value=notes[k]||"";
-  buildParts();selectPart(sel);fitPreview();modeHint()}
+  buildParts();buildRevs();selectPart(sel);fitPreview();modeHint()}
 function buildParts(){const box=q("parts");box.innerHTML="";RIGS[rid].parts.forEach(n=>{const b=document.createElement("button");b.type="button";b.className="part";b.dataset.n=n;
   b.innerHTML='<canvas width="88" height="88"></canvas><span><b></b><small></small></span>';b.querySelector("b").textContent=RIGS[rid].names[n];b.onclick=()=>selectPart(n);box.appendChild(b)});thumbs();paintParts()}
 function thumbs(){document.querySelectorAll("#parts .part").forEach(b=>{const n=b.dataset.n,s=SP[n],c=b.querySelector("canvas").getContext("2d");c.clearRect(0,0,88,88);const k=Math.min(80/s.w,80/s.h);
   if(img.complete)c.drawImage(img,s.x,s.y,s.w,s.h,(88-s.w*k)/2,(88-s.h*k)/2,s.w*k,s.h*k)})}
 function paintParts(){document.querySelectorAll("#parts .part").forEach(b=>{const n=b.dataset.n,e=edited(n);b.setAttribute("aria-pressed",String(n===sel));
-  const sm=b.querySelector("small");sm.innerHTML=e?'<span class="ed">● edited</span>':"original"})}
+  const sm=b.querySelector("small");sm.innerHTML=e?'<span class="ed">● edited</span>':"original";const v=(REV[n]||{}).verdict;if(v){const c=document.createElement("span");c.className="chip";c.textContent=v;sm.appendChild(c)}})}
+/* ---------- part reviews ---------- */
+const REV={};let cm=null;
+function buildRevs(){const box=q("revs");box.innerHTML="";RIGS[rid].parts.forEach(n=>{const s=SP[n],a=document.createElement("article");a.className="rev";a.dataset.n=n;a.setAttribute("data-comment-target","");
+  a.innerHTML='<canvas width="480" height="300"></canvas><div><h3></h3><small></small></div><div class="verd" role="group"></div><textarea rows="2"></textarea><div class="acts"><button type="button" class="go">Edit marks</button><button type="button" class="cmt" hidden>Comment</button></div>';
+  a.querySelector("h3").textContent=RIGS[rid].names[n];a.querySelector("small").textContent=n+" · "+Math.round(s.w/s.store)+"×"+Math.round(s.h/s.store)+" px";
+  const g=a.querySelector(".verd");g.setAttribute("aria-label","Verdict for "+RIGS[rid].names[n]);["Keep","Fix","Redo"].forEach(v=>{const b=document.createElement("button");b.type="button";b.dataset.v=v;b.textContent=v;
+    b.onclick=()=>{const r=REV[n]||(REV[n]={});r.verdict=r.verdict===v?null:v;paintRevs();saveRev(n)};g.appendChild(b)});
+  const ta=a.querySelector("textarea");ta.id="rev-"+n;ta.setAttribute("aria-label","Review note for "+RIGS[rid].names[n]);ta.placeholder="What's wrong with this part, or what to keep";
+  ta.oninput=()=>{(REV[n]||(REV[n]={})).note=ta.value;clearTimeout(ta._t);ta._t=setTimeout(()=>saveRev(n),700)};
+  a.querySelector(".go").onclick=()=>{selectPart(n);q("ed").scrollIntoView({behavior:"smooth",block:"center"})};
+  const cb=a.querySelector(".cmt");cb.onclick=async()=>{if(!cm)return;try{const r=await cm.openComposer({element:a});if(r&&!r.opened)st("Click inside the page first, then press Comment again.","warn")}catch(e){st("Commenting from the page is off here; use comment mode instead.","warn")}};
+  box.appendChild(a);const c=a.querySelector("canvas").getContext("2d"),k=Math.min(440/s.w,260/s.h);if(img.complete)c.drawImage(img,s.x,s.y,s.w,s.h,(480-s.w*k)/2,(300-s.h*k)/2,s.w*k,s.h*k)});
+  paintRevs()}
+function paintRevs(){let done=0;const ps=RIGS[rid].parts;document.querySelectorAll("#revs .rev").forEach(a=>{const n=a.dataset.n,r=REV[n]||{};if(r.verdict)done++;
+  a.querySelectorAll(".verd button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===r.verdict)));const ta=a.querySelector("textarea");if(document.activeElement!==ta)ta.value=r.note||"";
+  a.querySelector(".cmt").hidden=!cm});q("revSum").textContent=done+" of "+ps.length+" parts marked";paintParts()}
+async function saveRev(n){if(!db){st("Not saving: open this page on claude.ai to save reviews for Claude.","warn");return}const r=REV[n]||{};st("Saving review…");
+  try{await db.collection("reviews").doc(n).set({sprite:n,rig:rid,part:RIGS[rid].names[n],verdict:r.verdict||null,note:r.note||"",updatedAt:new Date().toISOString()});st("Review saved for Claude","ok")}
+  catch(e){st("Review not saved: "+((e&&e.message)||"the store refused the write"),"warn")}}
 function selectPart(n){sel=n;mk="pivot";pan={x:0,y:0};q("partName").textContent=RIGS[rid].names[n];paintParts();
   const ok=ROT_OK.has(n);q("rotRow").hidden=!ok;q("partNote").value=CUR[n].note||"";syncRot();buildMarks();drawEd()}
 function syncRot(){const d=CUR[sel].rot*DEG;q("rot").value=d.toFixed(1);q("rotOut").textContent=d.toFixed(1)+"°"}
@@ -386,14 +435,16 @@ function applyDoc(v){if(!v||!v.parts||!RIGS[v.rig])return;for(const n in v.parts
 (async()=>{try{db=window.claude?await window.claude.use("db"):null}catch(e){db=null}
   if(!db){st("Not saving: open this page on claude.ai to save for Claude. Copy rig JSON still works.","warn");return}
   st("Loading saved marks…");
-  try{const snap=await db.collection("pivots").get();(snap.docs||[]).forEach(d=>applyDoc(d.data?d.data():d));st("Ready. Changes save for Claude.","ok")}
+  try{const snap=await db.collection("pivots").get();(snap.docs||[]).map(d=>d.data?d.data():d).sort((a,b)=>String(a.updatedAt||"").localeCompare(String(b.updatedAt||""))).forEach(applyDoc);st("Ready. Changes save for Claude.","ok")}
   catch(e){st("Could not load saved marks: "+((e&&e.message)||"store unavailable"),"warn")}
-  q("rigNote").value=notes[rid]||"";selectPart(sel);drawPv()})();
+  try{const rs=await db.collection("reviews").get();(rs.docs||[]).forEach(d=>{const v=d.data?d.data():d;if(v&&v.sprite)REV[v.sprite]={verdict:v.verdict||null,note:v.note||""}})}catch(e){}
+  q("rigNote").value=notes[rid]||"";selectPart(sel);paintRevs();drawPv()})();
+(async()=>{try{cm=window.claude?await window.claude.use("comments"):null}catch(e){cm=null}if(cm)paintRevs()})();
 
 /* ---------- boot ---------- */
 function resize(){edDim=fitCanvas(ed);ex=ed.getContext("2d");pvDim=fitCanvas(pv);px=pv.getContext("2d");fitPreview();drawEd();drawPv()}
 let ready=false;
-function boot(){if(ready)return;ready=true;setRig("timo");resize();syncPlay();requestAnimationFrame(tick);
+function boot(){if(ready)return;ready=true;setRig("timo3");resize();syncPlay();requestAnimationFrame(tick);
   try{new ResizeObserver(()=>resize()).observe(ed)}catch(e){addEventListener("resize",resize)}}
 if(img.complete)boot();else img.onload=boot;
 })();
