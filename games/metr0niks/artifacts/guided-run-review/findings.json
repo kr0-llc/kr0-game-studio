@@ -1,0 +1,40 @@
+{
+ "guided-sunburst": {
+  "summary": {"run":"Yes, legs alternate with knee lift","facing":"Lower right, all 8","loadout":"Right, minigun near; left, pile-bunker far; both level","model":"Partly: torso simplified"},
+  "findings": [
+   ["keep","f1–8: it reads as a run. The legs alternate (f1 near leg planted, f5 far leg planted), the knees lift on the passing frames (f3, f7) and the push-off frames stretch out (f4, f8). The guide's timing came through."],
+   ["keep","f1–8: faces the lower right in every frame and never flips."],
+   ["keep","f1–8: minigun on the near (right) arm and pile-bunker on the far (left) arm, both attached at the shoulder and pointed forward and level. This is the first Tim-o set where the guns stay up while he runs."],
+   ["keep","f1–8: pack fixed to the back with both cylinders upright. Transparent background, and no guide line, ellipse or cell border leaked into the art."],
+   ["fault","f1–8 off-model: the torso is a plain sphere. The turnaround's sage chest plate, hip skirt and panel lines are missing, the lens is bigger and pale yellow, and the legs are slimmer than the turnaround's."],
+   ["fault","f4, f8: the body rises far more than the guide's small bob. The top of the pack moves 83 px across the sheet and the height spreads 14%, so the loop will look bouncy."],
+   ["note","Ground drift: the frames sit up to 41 px off the guide's ground line in their cells. The line-up step fixes it (the player shows both: turn Lined up off to see the raw placement)."],
+   ["note","f1, f5: a stray ink dot past the pile-bunker tip. Clean it in the atlas."]
+  ],
+  "gdd": "Camera: the game's high three-quarter view, matches. Loadout: starter minigun right, pile-bunker left, matches. Move: a run while aiming, which is what the GDD's run-and-gun needs. The off-model torso is the blocker for in-game use."
+ },
+ "guided-gemini": {
+  "summary": {"run":"No, a slow walk","facing":"Three-quarter right, not lower right","loadout":"Wrong: hand on the right arm, drill on the left","model":"Yes, closest to the turnaround"},
+  "findings": [
+   ["keep","f1–8: the most on-model Tim-o so far. Chest plate, hip skirt, knee pads, segmented arms and pack all match the turnaround."],
+   ["fault","f1–8: a walk, not a run. Short strides, no knee lift and almost no bob. It ignored the guide's poses."],
+   ["fault","f1–8: no minigun. The right arm ends in an open hand. The pile-bunker is drawn as a drill, and it disappears in f2 and f3, where the left arm also has a hand."],
+   ["fault","f1 → f2: the lens changes from yellow to blue."],
+   ["fault","f1–8: faces right in three-quarter, not toward the lower right of the game camera."],
+   ["note","It drew a floor shadow despite \"no shadow\", and it can't return a transparent background, so the frames had to be keyed."],
+   ["note","20 credits, five times the Sunburst run."]
+  ],
+  "gdd": "Camera: off (faces right, not lower right). Loadout: wrong (no minigun, drill instead of a pile-bunker). Move: a walk, not a run. Useful only as a model reference."
+ },
+ "run-iso-r4": {
+  "summary": {"run":"Weakly, a shuffle","facing":"Lower left, wrong way","loadout":"Right; guns hang down","model":"Partly"},
+  "findings": [
+   ["note","Baseline: the Oct 28 isometric run, made with a direct GPT Image 2 call and a full written frame plan, but no pose guide. 12 frames, 13 credits."],
+   ["fault","f1–12: faces the lower left, against the game camera."],
+   ["fault","f1–12: the legs barely change between frames, so it reads as a shuffle in place. This is what the guide sheet was made to fix."],
+   ["fault","f1–12: both guns hang down instead of aiming forward."],
+   ["keep","Placement is steady (5.7 px body drift) and the line weight matches the ink style."]
+  ],
+  "gdd": "Camera: wrong facing. Loadout: right weapons, wrong aim. Move: too little leg action to read as a run at game size."
+ }
+}

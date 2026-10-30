@@ -139,13 +139,14 @@ def render(rec, title=None, note=None):
     if note:
         lines.append(f"Status: {note}")
     for k, v in rec["inputs"].items():
-        if isinstance(v, str) and not v.startswith("asset_"):
+        # short strings (model id, background, quality) are already in the step settings
+        if isinstance(v, str) and not v.startswith("asset_") and (rec["workflow"] or len(v) > 80):
             lines += ["", f"Input {k} (as typed):", v]
     for s in rec["steps"]:
         inp = s.get("input") or {}
         if inp.get("textInputs") and not set(inp["textInputs"]) <= set(map(str, rec["inputs"].values())):
             lines += ["", f"{s['node']} text inputs:", *inp["textInputs"]]
-        if inp.get("prompt"):
+        if inp.get("prompt") and inp["prompt"] not in rec["inputs"].values():
             lines += ["", f"Prompt {s['node']} received:", inp["prompt"]]
     for h in rec["hidden"]:
         if "text" in h:

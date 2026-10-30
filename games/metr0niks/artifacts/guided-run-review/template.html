@@ -1,0 +1,182 @@
+<title>Tim-o Guided Run</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a review bench. Summary, references, one bench per set (player + findings + marks), then the method. */
+:root{
+  --bg:#f3efe6; --panel:#fbf8f1; --ink:#22201b; --muted:#6c665a; --line:#d9d1bf;
+  --peach:#d9825c; --sage:#5f8f74; --pink:#d6337a;
+  --keep:#2f7a4f; --fix:#b7791f; --redo:#c0392b; --drop:#6b6b6b;
+  --stage:#ece6d6;
+  --display:"Archivo Narrow","Arial Narrow",system-ui,sans-serif;
+  --body:"Source Serif 4",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1b1a17; --panel:#24221e; --ink:#ece6da; --muted:#a59d8d; --line:#3a3630;
+  --peach:#e59a75; --sage:#86b79a; --pink:#ff5ca0; --keep:#5cc08a; --fix:#e0a649; --redo:#ef6b5c; --drop:#9a9a9a; --stage:#2c2a25; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1b1a17; --panel:#24221e; --ink:#ece6da; --muted:#a59d8d; --line:#3a3630;
+  --peach:#e59a75; --sage:#86b79a; --pink:#ff5ca0; --keep:#5cc08a; --fix:#e0a649; --redo:#ef6b5c; --drop:#9a9a9a; --stage:#2c2a25; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+main{max-width:1080px;margin:0 auto;display:grid;gap:40px}
+h1,h2,h3{font-family:var(--display);letter-spacing:.01em;text-wrap:balance;margin:0}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.05}
+h2{font-size:24px} h3{font-size:18px}
+.z{color:var(--pink)}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+p{margin:0;max-width:68ch}
+header{display:grid;gap:12px}
+.summary{display:grid;gap:10px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll{overflow-x:auto}
+.refs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+figure{margin:0;display:grid;gap:6px;min-width:0}
+figure img{background:var(--stage);border-radius:6px;width:100%}
+figcaption{font-size:13px;color:var(--muted)}
+.set{display:grid;gap:16px;padding-top:24px;border-top:2px solid var(--ink)}
+.bench{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px}
+@media (max-width:760px){.bench{grid-template-columns:1fr}}
+.stage{position:relative;background:var(--stage);border-radius:8px;aspect-ratio:1/1;max-width:100%;overflow:hidden;display:grid;place-items:center}
+.stage.light{background:#ffffff}.stage.dark{background:#1d1c19}
+.stage canvas{width:100%;height:100%}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select{font:500 13px var(--mono);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
+button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+label.tog{display:flex;gap:6px;align-items:center;font:13px var(--mono);color:var(--muted)}
+.strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.strip button{padding:2px;background:var(--stage);display:grid;gap:2px;justify-items:center}
+.strip button[aria-current="true"]{outline:2px solid var(--pink)}
+.strip img{height:64px;object-fit:contain}
+.strip span{font:11px var(--mono);color:var(--muted)}
+.findings{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.findings li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:baseline}
+.tag{font:500 11px var(--mono);padding:2px 6px;border-radius:4px;border:1px solid currentColor;white-space:nowrap}
+.tag.good{color:var(--keep)}.tag.bad{color:var(--redo)}.tag.warn{color:var(--fix)}
+.metrics{display:flex;flex-wrap:wrap;gap:6px 18px;font:13px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.metrics b{color:var(--ink);font-weight:500}
+.marks{display:grid;gap:10px;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.verdicts{display:flex;flex-wrap:wrap;gap:6px}
+.verdicts button[data-v="Keep"][aria-pressed="true"]{background:var(--keep);border-color:var(--keep);color:#fff}
+.verdicts button[data-v="Fix"][aria-pressed="true"]{background:var(--fix);border-color:var(--fix);color:#fff}
+.verdicts button[data-v="Redo"][aria-pressed="true"]{background:var(--redo);border-color:var(--redo);color:#fff}
+.verdicts button[data-v="Drop"][aria-pressed="true"]{background:var(--drop);border-color:var(--drop);color:#fff}
+textarea{font:14px/1.4 var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;width:100%;box-sizing:border-box;min-height:64px}
+.status{font:12px var(--mono);color:var(--muted)}
+.method ol{margin:0;padding-left:20px;display:grid;gap:6px;max-width:72ch}
+code{font:13px var(--mono)}
+</style>
+
+<main>
+<header>
+  <div class="eyebrow">Met<span class="z">r0</span>niks · Tim-o · animation review · Oct 29, 2026</div>
+  <h1>Tim-o guided run</h1>
+  <p>A run cycle made without the Action Sprite Studio workflow. I wrote the frame plan myself, drew a pose guide sheet in code, and sent my prompt to the image model word for word with the turnaround as the first reference. The same prompt and references went to two models. The Oct 28 isometric run is here as the baseline.</p>
+</header>
+
+<section class="summary" aria-labelledby="sum">
+  <h2 id="sum">Result</h2>
+  <div class="scroll"><table id="sumtable"><thead><tr><th>Set</th><th>Credits</th><th>Reads as a run</th><th>Facing</th><th>Loadout</th><th>On-model</th><th>Ground drift in sheet</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section aria-labelledby="refh" class="summary">
+  <h2 id="refh">References and on-model check</h2>
+  <div class="refs" id="refs"></div>
+</section>
+
+<div id="sets"></div>
+
+<section class="method summary" aria-labelledby="meth">
+  <h2 id="meth">The method</h2>
+  <ol>
+    <li><b>Frame plan written by hand.</b> Eight beats, contact, down, passing and up for each leg. No LLM step rewrites it.</li>
+    <li><b>Pose guide sheet.</b> <code>art/metr0niks/source/pose_guide.py</code> draws one cell per frame: the ground footprint, a height line, and a blue stick rig with knees, feet, torso, pack and both gun arms. Dark blue is the near (right) side, light blue the far (left) side. It goes in as the second reference.</li>
+    <li><b>References in order.</b> The four-view turnaround first (identity), the guide second (pose and placement).</li>
+    <li><b>Pinned settings.</b> 1536 × 1024, quality medium, transparent background for Sunburst; 2K, 3:2, thinking high for Gemini.</li>
+    <li><b>Local slicing and measuring.</b> <code>art/metr0niks/source/sheet_frames.py</code> cuts the cells, keys white, lines every frame up on the body centre and the ground, and reports height spread and drift.</li>
+    <li><b>Run record.</b> Every call is in <code>art/metr0niks/prompts/tim-o-sprites-run-iso-guided.txt</code>.</li>
+  </ol>
+</section>
+</main>
+
+<script id="data" type="application/json">__DATA__</script>
+<script id="findings" type="application/json">__FINDINGS__</script>
+<script>
+const D=JSON.parse(document.getElementById('data').textContent);
+const F=JSON.parse(document.getElementById('findings').textContent);
+const $=(t,a={},...k)=>{const e=document.createElement(t);for(const[n,v]of Object.entries(a)){if(n==='text')e.textContent=v;else if(n.startsWith('on'))e.addEventListener(n.slice(2),v);else e.setAttribute(n,v)}for(const c of k)if(c)e.append(c);return e};
+
+// summary table
+const tb=document.querySelector('#sumtable tbody');
+for(const s of D.sets){const f=F[s.id];tb.append($('tr',{},$('td',{text:s.label}),$('td',{class:'num',text:s.cu}),$('td',{text:f.summary.run}),$('td',{text:f.summary.facing}),$('td',{text:f.summary.loadout}),$('td',{text:f.summary.model}),$('td',{class:'num',text:s.metrics.ground_y_drift_px+' px'})))}
+
+// references
+const refs=document.getElementById('refs');
+const fig=(src,cap)=>$('figure',{},$('img',{src,alt:cap}),$('figcaption',{text:cap}));
+refs.append(fig(D.refs.turnaround,'Four-view turnaround, the main reference (asset_fgDKMUX8fgmRfwyzQSSFqv2s)'));
+refs.append(fig(D.refs.guide,'Pose guide sent as the second reference (asset_JNeaR5wEgZNZ34MWT1JtdfAi)'));
+for(const s of D.sets)refs.append(fig(s.aligned[0],'Frame 1 · '+s.label));
+refs.append(fig(D.refs.wf_run,'For context: the workflow\'s side-view run from PR #7, drawn from a 46-character prompt'));
+
+// sets
+let dbP=null,userP=null,commentsP=null;
+if(window.claude){dbP=claude.use('db');userP=claude.use('user');commentsP=claude.use('comments')}
+const setsEl=document.getElementById('sets');
+for(const s of D.sets){
+  const f=F[s.id];
+  const sec=$('section',{class:'set',id:s.id,'data-comment-target':''});
+  sec.append($('div',{class:'eyebrow',text:`${s.job} · ${s.asset} · ${s.cu} credits`}),$('h2',{text:s.label}));
+  const canvas=$('canvas',{width:640,height:640,'aria-label':'Frame player for '+s.label});
+  const stage=$('div',{class:'stage'},canvas);
+  const st={i:0,play:true,fps:8,onion:false,flip:false,align:true,same:false,bg:'stage'};
+  const imgs={aligned:s.aligned.map(u=>{const i=new Image();i.src=u;return i}),raw:s.raw.map(u=>{const i=new Image();i.src=u;return i})};
+  const n=s.aligned.length;
+  const strip=$('div',{class:'strip'});
+  const thumbs=s.aligned.map((u,k)=>{const b=$('button',{type:'button','aria-label':'Frame '+(k+1),onclick:()=>{st.i=k;st.play=false;sync();draw()}},$('img',{src:u,alt:''}),$('span',{text:'f'+(k+1)}));strip.append(b);return b});
+  const ctx=canvas.getContext('2d');
+  function draw(){
+    const set=st.align?imgs.aligned:imgs.raw;ctx.clearRect(0,0,640,640);
+    const ref=set[0];if(!ref.complete)return;
+    const H=st.same?Math.max(...set.map(x=>x.naturalHeight)):Math.max(...set.map(x=>x.naturalHeight));
+    const sc=Math.min(560/Math.max(...set.map(x=>x.naturalWidth)),560/H);
+    const paint=(im,a)=>{ctx.save();ctx.globalAlpha=a;const w=im.naturalWidth*sc,h=im.naturalHeight*sc;let x=(640-w)/2,y=600-h;if(st.flip){ctx.translate(640,0);ctx.scale(-1,1)}ctx.drawImage(im,x,y,w,h);ctx.restore()};
+    if(st.onion){paint(set[(st.i-1+n)%n],.25)}
+    paint(set[st.i],1);
+    ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--pink');ctx.globalAlpha=.6;ctx.beginPath();ctx.moveTo(20,600.5);ctx.lineTo(620,600.5);ctx.stroke();ctx.globalAlpha=1;
+  }
+  function sync(){thumbs.forEach((b,k)=>b.setAttribute('aria-current',k===st.i?'true':'false'));playB.textContent=st.play?'Pause':'Play';frameL.textContent=`f${st.i+1} / ${n}`}
+  const playB=$('button',{type:'button',onclick:()=>{st.play=!st.play;sync()}});
+  const frameL=$('span',{class:'status'});
+  const tog=(name,key,on)=>{const b=$('button',{type:'button','aria-pressed':String(st[key]),onclick:()=>{st[key]=!st[key];b.setAttribute('aria-pressed',String(st[key]));draw()}},document.createTextNode(name));return b};
+  const fpsS=$('select',{'aria-label':'Frame rate',onchange:e=>{st.fps=+e.target.value}});for(const v of [4,6,8,10,12]){const o=$('option',{value:v,text:v+' fps'});if(v===8)o.selected=true;fpsS.append(o)}
+  const bgS=$('select',{'aria-label':'Background',onchange:e=>{stage.className='stage '+e.target.value}});for(const[v,t]of[['','Sand'],['light','White'],['dark','Dark']])bgS.append($('option',{value:v,text:t}));
+  const controls=$('div',{class:'controls'},playB,$('button',{type:'button',onclick:()=>{st.play=false;st.i=(st.i-1+n)%n;sync();draw()}},document.createTextNode('◀ Step')),$('button',{type:'button',onclick:()=>{st.play=false;st.i=(st.i+1)%n;sync();draw()}},document.createTextNode('Step ▶')),fpsS,tog('Onion skin','onion'),tog('Flip','flip'),tog('Lined up','align'),bgS,frameL);
+  const commentFrame=$('button',{type:'button',hidden:'',onclick:async()=>{const c=await commentsP;if(c)c.openComposer({element:thumbs[st.i]}).catch(()=>{})}},document.createTextNode('Comment on this frame'));
+  const commentSet=$('button',{type:'button',hidden:'',onclick:async()=>{const c=await commentsP;if(c)c.openComposer({element:sec.querySelector('h2')}).catch(()=>{})}},document.createTextNode('Comment on this set'));
+  const left=$('div',{style:'display:grid;gap:12px;min-width:0'},stage,controls,strip,$('div',{class:'controls'},commentFrame,commentSet));
+  const m=s.metrics;
+  const metrics=$('div',{class:'metrics'},$('span',{},document.createTextNode('height '),$('b',{text:`${m.height_min}–${m.height_max} px`}),document.createTextNode(` (${m.height_spread_pct}%)`)),$('span',{},document.createTextNode('ground drift '),$('b',{text:m.ground_y_drift_px+' px'})),$('span',{},document.createTextNode('body drift '),$('b',{text:m.body_x_drift_px+' px'})));
+  const list=$('ul',{class:'findings'});for(const[k,t]of f.findings)list.append($('li',{},$('span',{class:'tag '+(k==='keep'?'good':k==='fault'?'bad':'warn'),text:k==='keep'?'keep':k==='fault'?'fault':'note'}),$('span',{text:t})));
+  const gdd=$('p',{text:f.gdd});
+  // marks
+  const vb=$('div',{class:'verdicts'});const vs={};let cur=null;
+  for(const v of ['Keep','Fix','Redo','Drop']){vs[v]=$('button',{type:'button','data-v':v,'aria-pressed':'false',onclick:()=>{cur=cur===v?null:v;paintV();save()}},document.createTextNode(v));vb.append(vs[v])}
+  const paintV=()=>{for(const v in vs)vs[v].setAttribute('aria-pressed',String(cur===v))};
+  const note=$('textarea',{id:'note-'+s.id,placeholder:'Your note: what to keep, what to fix, frames to flag (f3, f7)'});
+  const stat=$('div',{class:'status',text:'Marks save for everyone once the page connects.'});
+  let tmr=null;note.addEventListener('input',()=>{clearTimeout(tmr);tmr=setTimeout(save,900)});
+  async function save(){const db=await dbP;if(!db){stat.textContent='Marks can\'t be saved in this view.';return}const user=await userP;try{await db.doc('verdicts/'+s.id).set({verdict:cur,note:note.value,set:s.label,by:user?await user.id():null,updatedAt:new Date().toISOString()});stat.textContent='Saved.'}catch(e){stat.textContent='Not saved: '+(e.code||'error')+'.'}}
+  const marks=$('div',{class:'marks'},$('h3',{text:'kr0\'s mark'}),vb,$('label',{for:'note-'+s.id,class:'status',text:'Note'}),note,stat);
+  const right=$('div',{style:'display:grid;gap:16px;align-content:start;min-width:0'},metrics,$('h3',{text:'Findings'}),list,$('h3',{text:'Against the game'}),gdd,marks,fig(s.sheet,'The sheet as the model returned it'));
+  sec.append($('div',{class:'bench'},left,right));
+  setsEl.append(sec);
+  let last=0;const loop=t=>{if(st.play&&t-last>1000/st.fps){st.i=(st.i+1)%n;last=t;sync();draw()}requestAnimationFrame(loop)};
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)st.play=false;
+  imgs.aligned[0].onload=draw;sync();requestAnimationFrame(loop);
+  (async()=>{const db=await dbP;if(db){db.doc('verdicts/'+s.id).onSnapshot(sn=>{if(sn.exists){const d=sn.data();cur=d.verdict||null;paintV();if(document.activeElement!==note)note.value=d.note||''}},()=>{});stat.textContent='Marks save for everyone.'}const c=await commentsP;if(c){commentFrame.hidden=false;commentSet.hidden=false}})();
+}
+</script>
