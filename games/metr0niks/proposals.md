@@ -47,6 +47,8 @@ The GDD keeps it TBD (GDD-D27); kr0 said on Oct 28 to leave it for now. The draf
 - **Art styles in Settings during the voxel focus:** the GDD still offers Blockout, Cinematic and Ink, but only the voxel look is being built (GDD-D46). Keep all three in Settings, or show only Blockout until the renderer work starts? Blackout's night look needs only the voxel look either way.
 - **Desert rock music trial (GDD-D34):** a third music direction for the ink prototype, which is paused as a look study (GDD-D46).
 
+- **Phones (GDD-D58, Proposed Oct 29):** the [mobile UI lab](prototypes/mobile-ui-lab.md) has four playable touch layouts. kr0 tries them and picks one: drop phones again (GDD-D29 stands), keep phones as a second platform with one layout, or go phone-first. Adopting phones also needs a phone garage and menus, a left-handed mirror, and possibly analog legs in sim.js (the legs read 8-way WASD today).
+
 ## 4. Dropped, for the record
 
 Not proposals any more; listed so they aren't suggested again without a decision.
