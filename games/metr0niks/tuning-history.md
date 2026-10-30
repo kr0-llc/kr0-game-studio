@@ -666,3 +666,4 @@ None logged yet.
 | 2026-10-29 | Tim-o | Run cycle, isometric round 5, 12 frames from the hero frame (GPT Image 2.5 Sunburst, medium, transparent) | 4 |
 | 2026-10-29 | Tim-o | Clay-repaint experiment A: front 3/4 run from a clay pose grid (GPT Image 2.5 Sunburst, medium, transparent) | 4 |
 | 2026-10-29 | Tim-o | Clay-repaint experiment B: back 3/4 run from a clay pose grid (GPT Image 2.5 Sunburst, medium, transparent) | 4 |
+| 2026-10-29 | Tim-o | Back 3/4 puppet parts sheet (GPT Image 2.5 Sunburst, medium) | 4 |

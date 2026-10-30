@@ -1,0 +1,19 @@
+Tim-o puppet parts sheet, back three-quarter view (walking away from the camera, up and to the right; mirrored for up-left)
+Status: generated 2026-10-29, waiting on kr0's mark on the review page (https://claude.ai/artifact/34bv3u8XC7SwX124pWuEC8, "Walking away from the camera")
+Tool: Scenario, GPT Image 2.5 Sunburst (model_openai-gpt-image-2-5-sunburst), 1536 x 1024, quality medium, background transparent
+References: asset_Rzs92LmBTZFho7qvgetHLigv (parts sheet v2.1, for scale and layout), asset_fgDKMUX8fgmRfwyzQSSFqv2s (four-view turnaround, the main reference)
+Approved by kr0 on 2026-10-29 ("Yes go ahead" on the back-view card). Run job_5APSgS4JrpCmftpysq6ZeH25, output asset_6aD3T237ku1LP6HtXtsrPNDm, 4 credits. Preview: ../characters/tim-o/parts/sheet-back34.webp. Cut into the puppet atlas ../characters/tim-o/puppet/atlas-back34.webp.
+
+Prompt:
+Game sprite parts sheet for a 2D cut-out puppet of the mech Tim-o, seen FROM BEHIND. The first reference image is his existing parts sheet seen from the front; draw the same six parts, at EXACTLY THE SAME SCALE and in the same grid layout, but from the back three-quarter view, as if the assembled mech were walking AWAY from the camera, up and to the right. Use the second reference image (four-view turnaround) for what his back looks like, especially the reactor jet pack. Camera about 35 degrees above, looking at his back, the mech facing up-right, away from the viewer. All parts face the same way.
+Draw each part SEPARATELY on a transparent background, with generous empty space between parts, none touching or overlapping, in a neat grid:
+1) the torso alone, seen from behind: the round peach back shell with its sage armour band, NO lens visible (it is on the other side), a round shoulder socket on the near side and two round hip sockets underneath, and the flat mounting plate where the pack attaches;
+2) one thigh from behind: straight upper leg piece with round ball joints at hip and knee, drawn vertical;
+3) one shin with its chunky foot from behind: knee ball joint at the top, the heel and back of the foot flat at the bottom, drawn vertical;
+4) the right arm from behind: sage shoulder pad on a round ball joint, upper arm, forearm ending in the stubby rotary minigun, pointing straight out horizontally to the right and slightly away;
+5) the left arm from behind: the same shoulder pad and ball joint, forearm ending in the hydraulic pile-bunker spike, pointing out horizontally to the right and slightly away;
+6) the reactor jet pack alone, seen from behind exactly as in the turnaround: its full back face with vents and the thruster nozzles at its bottom.
+Joint ends are plain round caps so the parts rotate without gaps.
+ART STYLE: match the first reference exactly: sun-bleached ligne-claire comic ink, clean even black outlines, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0), simple soft cel shading. No text, no labels, no numbers, no ground shadow, no background.
+
+Result: all six parts came back separate. Torso, thigh, shin and arms are within 3% of v2.1's sizes, and the pack about 9% smaller. The output's alpha tops out at 254, so the cutter sets alpha above 200 to fully opaque.

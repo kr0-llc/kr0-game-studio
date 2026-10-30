@@ -46,3 +46,14 @@ kr0 named the four-view turnaround as the main reference. Every round 4 set used
 - **Run** (`sprites/run-iso/`): on-model, running in place. The guns point down rather than forward, and the footfalls are hard to count.
 - **Destroyed** (`sprites/explode-iso/`): the strongest set. It is on-model at full size (kr0's "too small" note is fixed), and he breaks into his own parts.
 - Every set still faces one way only; see `animation-coverage.md`.
+
+## Round 5: back 3/4 parts (29 October 2026)
+
+kr0 approved the back-view test. One parts sheet from behind (`art/metr0niks/characters/tim-o/parts/sheet-back34.webp`, 4 credits), drawn from the turnaround and parts v2.1. It's on the review page under "Walking away from the camera", where Tim-o walks an oval and switches between the front and back parts by direction.
+
+- On-model from behind: the turnaround's pack with its light-capped cylinders, sage band and shoulder pads, no lens.
+- Same scale as v2.1: torso, thigh, shin and arms within 3%, the pack about 9% smaller.
+- The arms come back angled slightly down, so the cut sets them level (rot -0.22, as v2.1 uses -0.27).
+- The pack's mounting point on the back torso is estimated, not drawn on the sheet; kr0 may want it moved.
+- With no front, side or back sheets yet, the change between front and back at the ends of the loop is a cut, not a turn.
+- Waiting on kr0's mark (stored as `rig-walkback`).
