@@ -1,0 +1,59 @@
+Tim-o run cycle, isometric, guided method, GPT Image 2.5 Sunburst (kr0 asked 2026-10-29 for a run without the Action Sprite Studio workflow)
+Tool: Scenario, model model_openai-gpt-image-2-5-sunburst, direct call
+Run: job_XhfS2HRf4pxaKXWdADgw1gnh, 2026-10-29 21:07 UTC, success
+Cost: 4 credits
+Steps, in the order they ran:
+  - model: model_openai-gpt-image-2-5-sunburst, success, 4 credits, job job_XhfS2HRf4pxaKXWdADgw1gnh
+    settings: background "transparent", height 1024, numOutputs 1, quality "medium", referenceImages ["asset_fgDKMUX8fgmRfwyzQSSFqv2s", "asset_JNeaR5wEgZNZ34MWT1JtdfAi"], width 1536
+    outputs: asset_y35Km3h5VjCbwQ5y4RjbvjKv
+Final outputs: asset_y35Km3h5VjCbwQ5y4RjbvjKv
+Status: Picked of the two. Method: hand-written 8-beat plan, pose guide sheet (art/metr0niks/source/pose_guide.py run-iso, uploaded as asset_JNeaR5wEgZNZ34MWT1JtdfAi), turnaround asset_fgDKMUX8fgmRfwyzQSSFqv2s first. Model chosen for its transparent background and price. Frames in ../characters/tim-o/sprites/run-iso-guided/. Review https://claude.ai/artifact/V8jnzRVMJnCg9CKvp91cRu, waiting on kr0's mark.
+
+Input prompt (as typed):
+Draw an 8-frame run-cycle sprite sheet of Tim-o, the mech in the FIRST reference image (the four-view turnaround is his exact design). The SECOND reference image is a pose guide: a 4 column by 2 row sheet with one frame per cell, read left to right, top row then bottom row.
+
+HOW TO USE THE POSE GUIDE: in each cell, draw Tim-o over the blue stick figure in exactly that pose. The big blue circle is his round torso, the small blue ring is his lens, the small box under the circle is his hips, the box and two tall rounded shapes behind the upper left are his reactor pack and its two cylinders, the two thick bars pointing to the lower right are his two gun arms, and the jointed blue lines are his legs with a dot at each knee and an oval for each foot. The DARK blue leg and arm are his RIGHT side, nearest the camera; the LIGHT blue leg and arm are his LEFT side, on the far side. Put each foot where its oval is, bend each knee where its dot is, and keep the torso at the circle's height in that cell (it bobs down in frames 2 and 6 and up in frames 4 and 8). The light blue ellipse is the ground footprint under him and the dashed line is the height line: the tops of the two pack cylinders touch it in every frame. Use the guide only for pose and placement: do NOT draw any blue lines, circles, dashes, ellipses or cell borders in the output.
+
+TIM-O, on-model in every frame: a 2.4 metre heavy salvage mech. Big round peach torso with sage-green armour bands and a sage chest plate, a single round lens set in a sage ring on the front of the torso, broad rounded sage shoulder pads, segmented peach and sand arms with sage forearm armour, a sage hip skirt, chunky peach legs with sage knee pads and wide flat feet. On his back a big peach reactor pack that covers most of the back of the torso, with two tall upright cylinders capped by round lights rising above the shoulders, exactly as in the turnaround's side and back views. The pack is fixed to his back and never drifts, tilts or floats. Heavy and solid, not small or cute; no face other than the lens.
+
+LOADOUT, the same in every frame: his RIGHT arm (near side, dark blue bar) ends in a stubby rotary minigun; his LEFT arm (far side, light blue bar) ends in a hydraulic pile-bunker spike. Both arms stay attached at the shoulder pads and both guns stay level, pointed forward to the lower right, as when aiming while running. Nothing is held in a hand.
+
+CAMERA, the same in every frame: the Metr0niks game view, high three-quarter from about 35 degrees above the ground. He faces the LOWER RIGHT of the frame in every cell, never flipping: his lens and chest point down and to the right.
+
+THE RUN, 8 frames, a heavy in-place loop (he does not travel across the cell): 1 right foot lands forward, left foot pushing off behind; 2 weight sinks onto the right leg, knee bent, torso low; 3 right leg passes under him while the left knee swings up; 4 right foot pushes off, body at its highest, left foot reaching forward; 5 left foot lands forward, right foot behind; 6 weight sinks onto the left leg; 7 left leg passes under him while the right knee swings up; 8 left foot pushes off, body highest, right foot reaching forward; frame 8 leads back into frame 1. Heavy and grounded: big knee bend on the landing frames, a small puff of sand-coloured dust only under a landing foot in frames 1 and 5.
+
+OUTPUT: one image, 4 columns by 2 rows of equal cells, each frame centred in its cell exactly where the guide puts it, same character size in every cell. Transparent background, no ground, no shadow, no grid lines, no text, no numbers.
+
+ART STYLE: sun-bleached ligne-claire comic ink like the turnaround: confident clean black outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8) and sand (#e8d6b0), simple soft cel shading.
+
+
+===
+
+Same prompt and references on Gemini 3.1 Flash (model_google-gemini-3-1-flash), for comparison; the prompt says plain white background instead of transparent
+Tool: Scenario, model model_google-gemini-3-1-flash, direct call
+Run: job_2iyW5XGJBuG1yqhHVvkaw6tS, 2026-10-29 21:07 UTC, success
+Cost: 20 credits
+Steps, in the order they ran:
+  - model: model_google-gemini-3-1-flash, success, 20 credits, job job_2iyW5XGJBuG1yqhHVvkaw6tS
+    settings: aspectRatio "3:2", numOutputs 1, referenceImages ["asset_fgDKMUX8fgmRfwyzQSSFqv2s", "asset_JNeaR5wEgZNZ34MWT1JtdfAi"], resolution "2K", thinkingLevel "HIGH"
+    outputs: asset_FKp7qn8dEkP72HbejDYM2yES
+Final outputs: asset_FKp7qn8dEkP72HbejDYM2yES
+Status: Not picked: on-model but a walk, no minigun, drill instead of pile-bunker, wrong facing. Sheet preview gemini-sheet.webp in the same folder. Tried because kr0 said on 2026-10-29 that other models may be better choices.
+
+Input prompt (as typed):
+Draw an 8-frame run-cycle sprite sheet of Tim-o, the mech in the FIRST reference image (the four-view turnaround is his exact design). The SECOND reference image is a pose guide: a 4 column by 2 row sheet with one frame per cell, read left to right, top row then bottom row.
+
+HOW TO USE THE POSE GUIDE: in each cell, draw Tim-o over the blue stick figure in exactly that pose. The big blue circle is his round torso, the small blue ring is his lens, the small box under the circle is his hips, the box and two tall rounded shapes behind the upper left are his reactor pack and its two cylinders, the two thick bars pointing to the lower right are his two gun arms, and the jointed blue lines are his legs with a dot at each knee and an oval for each foot. The DARK blue leg and arm are his RIGHT side, nearest the camera; the LIGHT blue leg and arm are his LEFT side, on the far side. Put each foot where its oval is, bend each knee where its dot is, and keep the torso at the circle's height in that cell (it bobs down in frames 2 and 6 and up in frames 4 and 8). The light blue ellipse is the ground footprint under him and the dashed line is the height line: the tops of the two pack cylinders touch it in every frame. Use the guide only for pose and placement: do NOT draw any blue lines, circles, dashes, ellipses or cell borders in the output.
+
+TIM-O, on-model in every frame: a 2.4 metre heavy salvage mech. Big round peach torso with sage-green armour bands and a sage chest plate, a single round lens set in a sage ring on the front of the torso, broad rounded sage shoulder pads, segmented peach and sand arms with sage forearm armour, a sage hip skirt, chunky peach legs with sage knee pads and wide flat feet. On his back a big peach reactor pack that covers most of the back of the torso, with two tall upright cylinders capped by round lights rising above the shoulders, exactly as in the turnaround's side and back views. The pack is fixed to his back and never drifts, tilts or floats. Heavy and solid, not small or cute; no face other than the lens.
+
+LOADOUT, the same in every frame: his RIGHT arm (near side, dark blue bar) ends in a stubby rotary minigun; his LEFT arm (far side, light blue bar) ends in a hydraulic pile-bunker spike. Both arms stay attached at the shoulder pads and both guns stay level, pointed forward to the lower right, as when aiming while running. Nothing is held in a hand.
+
+CAMERA, the same in every frame: the Metr0niks game view, high three-quarter from about 35 degrees above the ground. He faces the LOWER RIGHT of the frame in every cell, never flipping: his lens and chest point down and to the right.
+
+THE RUN, 8 frames, a heavy in-place loop (he does not travel across the cell): 1 right foot lands forward, left foot pushing off behind; 2 weight sinks onto the right leg, knee bent, torso low; 3 right leg passes under him while the left knee swings up; 4 right foot pushes off, body at its highest, left foot reaching forward; 5 left foot lands forward, right foot behind; 6 weight sinks onto the left leg; 7 left leg passes under him while the right knee swings up; 8 left foot pushes off, body highest, right foot reaching forward; frame 8 leads back into frame 1. Heavy and grounded: big knee bend on the landing frames, a small puff of sand-coloured dust only under a landing foot in frames 1 and 5.
+
+OUTPUT: one image, 4 columns by 2 rows of equal cells, each frame centred in its cell exactly where the guide puts it, same character size in every cell. Plain solid white background, no ground, no shadow, no grid lines, no text, no numbers.
+
+ART STYLE: sun-bleached ligne-claire comic ink like the turnaround: confident clean black outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8) and sand (#e8d6b0), simple soft cel shading.
+
