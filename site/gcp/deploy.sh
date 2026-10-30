@@ -4,6 +4,7 @@
 set -euo pipefail
 PROJECT="$1"; BUCKET="${2:-kr0-game-studio-site}"
 cd "$(dirname "$0")"
+./stage-metr0niks.sh
 gcloud config set project "$PROJECT"
 gcloud storage buckets describe "gs://$BUCKET" >/dev/null 2>&1 || \
   gcloud storage buckets create "gs://$BUCKET" --location=US --uniform-bucket-level-access

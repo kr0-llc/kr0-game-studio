@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Metr0niks prototypes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{--bg:#ECEEEA;--card:#fff;--ink:#1d232a;--muted:#5b6570;--line:#d5d9d4;--r0-pink:#ff4f9a}
+@media (prefers-color-scheme:dark){:root{--bg:#14181D;--card:#1c2229;--ink:#e8ebe7;--muted:#9aa4ad;--line:#2d353e}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif}
+main{max-width:880px;margin:0 auto;padding:32px 16px 64px}
+h1{font:800 44px/1 "Big Shoulders Display",sans-serif;margin:0 0 8px;text-transform:uppercase}
+h2{font:800 22px/1.2 "Big Shoulders Display",sans-serif;margin:32px 0 12px;text-transform:uppercase;letter-spacing:.02em}
+.r0{color:var(--r0-pink)}
+p{color:var(--muted);margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+a.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;color:inherit;text-decoration:none}
+a.card:hover{border-color:var(--r0-pink)}
+a.card b{display:block;margin-bottom:4px}
+a.card span{color:var(--muted);font-size:14px}
+.back{color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="../index.html#metr0niks">&larr; kr<span class="r0">0</span> Game Studio</a>
+<h1>Metr<span class="r0">0</span>niks prototypes</h1>
+<p>Every playable build and lab from the first Metr<span class="r0">0</span>niks exploration, kept as they were on 30 October 2026. Best on a PC with keyboard and mouse.</p>
+<h2>Builds</h2>
+<div class="grid">
+<a class="card" href="games/metr0niks/prototypes/prototype.html"><b>Voxel prototype</b><span>Prototype 1: the full game loop, garage to extract, solo or co-op.</span></a>
+<a class="card" href="games/metr0niks/prototypes/prototype-ink.html"><b>Ink prototype</b><span>Prototype 2: the 2D ink look study on the same rules.</span></a>
+<a class="card" href="games/metr0niks/prototypes/pitch-and-firing-range/index.html"><b>Pitch and firing range</b><span>The first pitch page with a firing range.</span></a>
+</div>
+<h2>Labs</h2>
+<div class="grid">
+<a class="card" href="games/metr0niks/prototypes/mechanics-lab.html"><b>Mechanics lab</b><span>Drives the voxel build with waves off to test single mechanics.</span></a>
+<a class="card" href="games/metr0niks/prototypes/garage-lab.html"><b>Garage lab</b><span>Parts, slots and builds in the garage.</span></a>
+<a class="card" href="games/metr0niks/prototypes/item-lab.html"><b>Item lab</b><span>Tim-o's items on the puppet rig.</span></a>
+<a class="card" href="games/metr0niks/prototypes/unit-lab.html"><b>Unit lab</b><span>Enemies one at a time against the voxel build.</span></a>
+<a class="card" href="games/metr0niks/prototypes/ink-enemy-lab.html"><b>Ink enemy lab</b><span>Ink prototype enemies and their animations.</span></a>
+<a class="card" href="games/metr0niks/prototypes/mobile-ui-lab.html"><b>Mobile UI lab</b><span>Four touch layouts over the voxel build (GDD-D58).</span></a>
+<a class="card" href="games/metr0niks/research/level-concepts/levels.html"><b>Level concepts</b><span>The first level concept explorations.</span></a>
+</div>
+<h2>Art</h2>
+<div class="grid">
+<a class="card" href="art/metr0niks/board/index.html"><b>Art board</b><span>Pitch, prototype and ink looks side by side.</span></a>
+</div>
+</main>
+</body>
+</html>

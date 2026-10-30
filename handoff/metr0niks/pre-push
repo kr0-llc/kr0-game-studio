@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Blocks a push to main when the tests fail. Enable with: git config core.hooksPath .githooks
+npm test --silent

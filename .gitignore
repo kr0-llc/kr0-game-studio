@@ -3,3 +3,8 @@ uploads/
 __pycache__/
 _catalog/
 tools/rig-harness/out/
+
+# Staged by site/gcp/stage-metr0niks.sh at deploy time
+site/gcp/public/metr0niks/games/
+site/gcp/public/metr0niks/art/
+site/gcp/public/metr0niks/index.html

@@ -1,0 +1,7 @@
+{
+  "name": "metr0niks",
+  "private": true,
+  "scripts": {
+    "test": "node tests/reference-sim/rules-check.js && node tests/reference-sim/map-check.js"
+  }
+}

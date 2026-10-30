@@ -6,6 +6,8 @@ param(
   [string]$Location = "US"
 )
 $ErrorActionPreference = "Stop"
+& "$PSScriptRoot\stage-metr0niks.ps1"
+Set-Location $PSScriptRoot
 gcloud config set project $Project
 $exists = gcloud storage buckets describe "gs://$Bucket" --format="value(name)" 2>$null
 if (-not $exists) {
