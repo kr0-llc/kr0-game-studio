@@ -1,0 +1,34 @@
+Tim-o puppet parts, exploded-sheet pipeline v1 (kr0, 29 Oct 2026, on the Puppet Rigging Lab: "These puppets and how we generate them need serious improvement"; torso note: "The right and left shoulders do not match. The elbow joints don't really connect. The main body needs sockets for the shoulders.")
+Tool: Scenario, GPT Image 2.5 Sunburst (model_openai-gpt-image-2-5-sunburst), quality medium, background transparent
+Pipeline: art/metr0niks/characters/tim-o/puppet/generation-pipeline.md. Two runs, 8 credits in all.
+
+Step 1, HERO FRAME: the mech drawn once, assembled, in the game camera and a rig-friendly rest pose.
+Run job_oKLFnUCgoqQDpaXrSfXCsjMx, output asset_4Me4ZE2qynHPE73AfAkMCV2Z, 1024 x 1024, 4 credits. References: asset_fgDKMUX8fgmRfwyzQSSFqv2s (four-view turnaround), asset_aST66TQJhq3jT1eHFbAsnexF (character sheet). Preview: ../characters/tim-o/parts/hero-v1.webp.
+Note: the model put the minigun on the far arm and the pile-bunker on the near arm, the opposite of the prompt; kept, the game swaps weapons in code.
+
+Prompt:
+Game sprite of the mech Tim-o from the reference images (a four-view turnaround and a character sheet), drawn as ONE assembled figure for a 2D side-scrolling game. Copy his design exactly: big round peach torso with sage-green armour bands and a single round lens in a sage ring on the front, broad rounded sage-green shoulder pads sitting on the top corners of the torso, chunky peach upper arms and forearms with sage panels, chunky peach legs with round sage knee plates and big flat feet, and the pressurised reactor backpack with two short downward thruster nozzles. Heavy and solid, 2.4 metres, not cute.
+CAMERA: the game camera, a high three-quarter view about 35 degrees above, the mech facing to the RIGHT and slightly toward the viewer, as in the side view of the turnaround but turned a little toward us so both arms and both legs are visible.
+POSE: a neutral rest pose for a puppet rig: standing with the legs apart (the near leg a little forward), both arms held slightly away from the body and pointing down and forward with the elbows bent a little, so the near arm, the far arm, the near leg and the far leg each show clearly without overlapping each other. The near arm's forearm ends in a stubby rotary minigun, the far arm's forearm ends in a hydraulic pile-bunker spike (his starter weapons). Every joint (shoulders, elbows, hips, knees) is a visible round ball joint in sand colour, clearly drawn where the limb meets the body.
+The figure fills the frame, centred, on a transparent background.
+ART STYLE: sun-bleached ligne-claire comic ink like the references: confident clean black outlines of even weight, flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0), simple soft cel shading. No text, no labels, no ground shadow, no background.
+
+Step 2, EXPLODED SHEET: an edit of the hero frame that slides the pieces apart and draws the caps and sockets.
+Run job_xV3tYWg6JEJSuPv61cdWvUnw, output asset_47LbNCaxE5Brtae5Q8Jh3FRG, 1536 x 1536, 4 credits. Reference: asset_4Me4ZE2qynHPE73AfAkMCV2Z (the hero frame). Preview: ../characters/tim-o/parts/exploded-v1.webp; sliced by ../source/timo_exploded.py into ../characters/tim-o/puppet/exploded-v1.{webp,js} (window.TIMO_RIG4), seeded marks drawn on ../characters/tim-o/parts/exploded-v1-marks.png. Shown in the Puppet Rigging Lab as "Tim-o v4 (exploded sheet)".
+Result: all ten pieces came back at the hero frame's scale with a sand ball on every limb end, shoulder and hip sockets on the torso and knee sockets on the shins. The far upper arm is drawn shorter than the near one (perspective), and the elbow has a ball on both the upper arm and the forearm instead of a ball and a cup.
+
+Edit prompt:
+Edit the reference image (the mech Tim-o standing in his rest pose) into an EXPLODED-VIEW puppet parts sheet of that exact drawing. Take the mech apart at his joints and slide every piece straight away from the body along its own limb direction, so the pieces sit in the same positions they came from but with a wide clear gap (at least one shoulder-ball width) between every piece. Do NOT redraw, rescale, rotate or restyle anything: each piece keeps exactly the drawing, size, angle, colours and line weight it has in the reference, as if the picture were cut up and the pieces slid apart.
+The TEN pieces, none touching or overlapping, on a transparent background:
+1) the torso alone (the round body with its lens), with no arms, legs or backpack attached;
+2) the reactor backpack, slid up and to the left away from the torso's back;
+3) the near (right-hand side of the picture) upper arm with its sage shoulder pad, slid away from the torso;
+4) the near forearm ending in the hydraulic pile-bunker spike, slid further out along the arm;
+5) the far (left-hand side) upper arm with its shoulder pad, slid away from the torso;
+6) the far forearm ending in the rotary minigun, slid further out along the arm;
+7) the near thigh, slid down away from the hip;
+8) the near shin with its foot, slid further down;
+9) the far thigh, slid down away from the hip;
+10) the far shin with its foot, slid further down.
+At every place a piece was cut from its neighbour, complete the drawing of both sides: the limb end gets a plain round sand-coloured (#e8d6b0) ball cap with a black outline, and the body side gets a matching round sand socket cup where that ball sits (two shoulder sockets high on the torso's sides, two hip sockets under the torso, an elbow socket at the end of each upper arm, a knee socket at the top of each shin). The ball and its socket are the same circle size so the piece can rotate in it without a gap.
+Same ligne-claire ink style, same flat pastel fills of peach (#f0a07a), sage green (#9cc3a8), sand (#e8d6b0). No text, no labels, no numbers, no arrows, no guide lines, no ground shadow, no background.

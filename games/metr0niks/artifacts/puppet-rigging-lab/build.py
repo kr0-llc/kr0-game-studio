@@ -1,6 +1,6 @@
-"""Build the Pivot Bench page: crop the puppet parts into one small atlas and inline it into template.html.
+"""Build the Puppet Rigging Lab page: crop the puppet parts into one small atlas and inline it into template.html.
 
-Run from anywhere: python3 games/metr0niks/artifacts/pivot-bench/build.py  (needs Pillow). Writes pivot-bench.html next to this script,
+Run from anywhere: python3 games/metr0niks/artifacts/puppet-rigging-lab/build.py  (needs Pillow). Writes puppet-rigging-lab.html next to this script,
 which is what gets published as the claude.ai artifact. Rig data (pivot, joints, rest angle) comes from the same
 files the game reads, so the bench always opens on the current rig.
 """
@@ -10,20 +10,25 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..", "..", "..", "..")
 SPR = os.path.join(ROOT, "art", "metr0niks", "ink-proto", "sprites")
+PUP = os.path.join(ROOT, "art", "metr0niks", "characters", "tim-o", "puppet")
 
 def load_js(path):
     s = open(path).read()
     return json.loads(s[s.index("{"):s.rindex("}") + 1])
 
 SOURCES = [
+    (os.path.join(PUP, "exploded-v1"), ["p4_torso", "p4_thighF", "p4_shinF", "p4_thighB", "p4_shinB", "p4_upF", "p4_foreF", "p4_upB", "p4_foreB", "p4_pack"]),
+    (os.path.join(PUP, "arms-v3-1"), ["p_upF", "p_foreF", "p_upB", "p_foreB"]),
     ("timo_v21", ["p_torso", "p_thigh", "p_shin", "p_armR", "p_armL", "p_pack"]),
     ("atlas", ["b_torso", "b_thigh", "b_shin", "b_arm", "l_hull", "l_leg", "l_claw", "j_body", "j_leg", "j_leg2"]),
 ]
 
 def main():
-    crops = []
+    crops, rigs = [], {}
     for name, parts in SOURCES:
-        meta, im = load_js(os.path.join(SPR, name + ".js")), Image.open(os.path.join(SPR, name + ".webp")).convert("RGBA")
+        base = name if os.path.isabs(name) else os.path.join(SPR, name)
+        meta, im = load_js(base + ".js"), Image.open(base + ".webp").convert("RGBA")
+        if "hero" in meta: rigs["timo4"] = meta["hero"]   # timo_reassemble.py: registered hero positions, rest aim/bend, foot offsets, scale constants
         for n in parts:
             s = meta["sprites"][n]
             crops.append((n, im.crop((s["x"], s["y"], s["x"] + s["w"], s["y"] + s["h"])), s, meta["store"]))
@@ -38,10 +43,10 @@ def main():
         out[n] = {"x": pos[n][0], "y": pos[n][1], "w": c.width, "h": c.height, "store": store,
                   "pivot": s["pivot"], "joints": s["joints"], "rot": s.get("rot", 0)}
     b = io.BytesIO(); atlas.save(b, "WEBP", quality=92, method=6)
-    data = json.dumps({"img": "data:image/webp;base64," + base64.b64encode(b.getvalue()).decode(), "sprites": out})
+    data = json.dumps({"img": "data:image/webp;base64," + base64.b64encode(b.getvalue()).decode(), "sprites": out, "rigs": rigs})
     page = open(os.path.join(HERE, "template.html")).read().replace("/*ATLAS*/", data)
-    open(os.path.join(HERE, "pivot-bench.html"), "w").write(page)
-    print("wrote pivot-bench.html", len(page), "bytes")
+    open(os.path.join(HERE, "puppet-rigging-lab.html"), "w").write(page)
+    print("wrote puppet-rigging-lab.html", len(page), "bytes")
 
 if __name__ == "__main__":
     main()
