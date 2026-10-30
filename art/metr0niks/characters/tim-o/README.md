@@ -56,6 +56,10 @@ Frame-1 heights across the isometric sets run from 229 to 285 px, so they still 
 
 `puppet/puppet-moves.js` animates Tim-o in code on parts sheet v2.1 (`puppet/atlas-v2-1.webp`, joints in `puppet/rig-v2-1.js`). It has dash, pile-bunker charge/fire/retract, jump-jets from the legs, overheat vent and destroyed break-apart. It uses the ink prototype's joints and two-bone IK legs and costs no credits. The review page plays every move. The same parts and poses are in `games/metr0niks/prototypes/prototype-ink.html` (copied to `ink-proto/sprites/timo_v21.*`). The route is written up as section 4 of `studio/design-workflows.md`.
 
+## Back 3/4 parts (29 October 2026)
+
+kr0 approved the back three-quarter test ("Yes go ahead"). `parts/sheet-back34.webp` is the v2.1 parts drawn from behind, from the turnaround, at the same scale (Scenario `asset_6aD3T237ku1LP6HtXtsrPNDm`, 4 credits; prompt `../../prompts/tim-o-parts-back34.txt`). `puppet/atlas-back34.webp` and `puppet/rig-back34.js` (`window.TIMO_RIG_BACK`) cut it into puppet parts with the same names as v2.1, so code can swap sets by facing. `puppet/walk-facings.js` is the review page's test: Tim-o walks an oval and uses the back parts when he heads up the screen and the front parts when he heads down, mirrored for left. Front, side and back sheets are still missing, so the change between front and back is a cut, not a turn.
+
 ## Item parts (28 October 2026)
 
 kr0 asked for an item lab where every item can be put on Tim-o. `items/` holds 17 new puppet parts, one per garage part in `sim.js` that the v2.1 sheet doesn't already have. They are drawn on parts sheet v2.1 and the four-view turnaround, at the v2.1 camera and scale. The lab is `games/metr0niks/prototypes/item-lab.html` (brief `item-lab.md`).
