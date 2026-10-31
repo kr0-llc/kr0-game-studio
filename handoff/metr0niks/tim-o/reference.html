@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tim-o Reference</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one canon image large, its exploded sheet beside it, then palette and the few facts every run must keep. */
+:root{
+  --bg:#EEF0EA; --card:#FFFFFF; --ink:#1B2127; --muted:#59636D; --line:#D3D8D2; --stage:#E2E6DE; --pink:#ff4f9a;
+  --display:"Chakra Petch",system-ui,sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181D;--card:#1C2229;--ink:#E8EBE7;--muted:#9AA4AD;--line:#2D353E;--stage:#2A3139;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14181D;--card:#1C2229;--ink:#E8EBE7;--muted:#9AA4AD;--line:#2D353E;--stage:#2A3139;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--body)}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+.r0{color:var(--pink)}
+.eyebrow{font:600 12px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:0 0 4px}
+h1{font:700 44px/1 var(--display);margin:0 0 8px;text-transform:uppercase}
+.lede{color:var(--muted);max-width:65ch;margin:0 0 22px}
+h2{font:700 18px/1.2 var(--display);text-transform:uppercase;margin:0 0 10px}
+.canon{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.canon{grid-template-columns:1fr}}
+figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+figure .stage{background:var(--stage);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center}
+figure img{max-width:100%;max-height:100%;display:block}
+figcaption{padding:12px 14px;display:grid;gap:2px}
+figcaption b{font:700 16px var(--display)}
+figcaption span{color:var(--muted);font-size:14px}
+figcaption code{font:12px var(--mono);color:var(--muted)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media (max-width:760px){.row{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.sw{display:grid;gap:4px;font-size:13px}
+.sw i{display:block;height:44px;border-radius:8px;border:1px solid var(--line)}
+.sw code{font:12px var(--mono);color:var(--muted)}
+ul{margin:0;padding-left:18px;display:grid;gap:6px}
+li b{font-weight:600}
+.rule{margin-top:16px;font-size:14px;color:var(--muted);border-left:3px solid var(--pink);padding-left:12px}
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Metr<span class="r0">0</span>niks · character reference · canon only</p>
+  <h1>Tim-o</h1>
+  <p class="lede">The reference mech: a salvaged heavy-duty resistance unit with a round torso, one eye, a pile-bunker arm and a minigun arm. Every new Tim-o image starts from the two canon images below. kr0 confirmed them as canon on 31 October 2026.</p>
+
+  <div class="canon">
+    <figure>
+      <div class="stage"><img src="canon/hero-v1.webp" alt="Tim-o assembled, high three-quarter view facing right, rest pose" width="1024" height="1024"></div>
+      <figcaption><b>Hero frame (v4)</b><span>Assembled, game camera (high 3/4, facing right), rig rest pose. Use it as the first reference image in every run.</span><code>canon/hero-v1.webp</code></figcaption>
+    </figure>
+    <figure>
+      <div class="stage"><img src="canon/exploded-v1.webp" alt="Tim-o's parts slid apart from the hero frame, with ball caps and sockets" width="1536" height="1536"></div>
+      <figcaption><b>Exploded sheet (v4)</b><span>The hero frame slid apart, ball caps on limb ends, sockets on the body. The puppet rig is cut from it.</span><code>canon/exploded-v1.webp</code></figcaption>
+    </figure>
+  </div>
+
+  <div class="row">
+    <section class="panel">
+      <h2>Palette</h2>
+      <div class="swatches">
+        <div class="sw"><i style="background:#fab07d"></i>Peach armor<code>#fab07d</code></div>
+        <div class="sw"><i style="background:#d0906a"></i>Peach shade<code>#d0906a</code></div>
+        <div class="sw"><i style="background:#b4bda0"></i>Sage plates<code>#b4bda0</code></div>
+        <div class="sw"><i style="background:#808b78"></i>Sage shade<code>#808b78</code></div>
+        <div class="sw"><i style="background:#c7b38f"></i>Sand joints<code>#c7b38f</code></div>
+        <div class="sw"><i style="background:#41382d"></i>Dark metal<code>#41382d</code></div>
+        <div class="sw"><i style="background:#070301"></i>Ink line<code>#070301</code></div>
+      </div>
+      <p class="rule">Sampled from the hero frame. Swatch colours are fixed; use them when you prompt or recolour.</p>
+    </section>
+    <section class="panel">
+      <h2>Keep in every image</h2>
+      <ul>
+        <li><b>One round lens eye</b> set high in the spherical torso. There is no separate head.</li>
+        <li><b>Spherical peach torso</b> with sage plates and small vents; sand ball joints at the shoulders, knees and elbows.</li>
+        <li><b>Arms:</b> a pile-bunker spike on one arm, a six-barrel rotary minigun on the other. The game mirrors sides in code.</li>
+        <li><b>Reactor pack</b> covering most of the back, two tall cylinders with round lights rising above the shoulders.</li>
+        <li><b>Stocky legs</b> with round sage knee pads and wide feet, planted apart.</li>
+        <li><b>Clean ink line</b>, flat cel shading, no text or background in the image.</li>
+      </ul>
+      <p class="rule">Only canon images go on this page. Drafts and rejected sets stay in their own folders or move to <code>_retired/</code>.</p>
+    </section>
+  </div>
+</main>
+</body>
+</html>

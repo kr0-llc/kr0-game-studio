@@ -1,77 +1,76 @@
 # Metr0niks
 
-A co-op mech extraction game by kr0. kr0 owns every decision. This file is the only rules doc: keep it under 100 lines.
+A co-op mech extraction game by kr0. kr0 owns every decision. This is the only rules file: keep it under 100 lines.
 
 ## Brand
 
-- Write kr0 and Metr0niks with a zero. Wherever the name is styled, the 0 is pink.
+Write kr0 and Metr0niks with a zero. Wherever the name is styled, the 0 is pink (`#ff4f9a`).
 
-## Start of every session
+## Every session
 
-1. Read `BOARD.md`. It says the current goal, who is working on what and what is open.
-2. Read only the sections of `docs/gdd.md` and `docs/tdd.md` that your task needs.
-3. At the end, update `BOARD.md` (your line, any new open question, any decision).
+1. Read `BOARD.md`: the goal, who owns which files, what is open.
+2. Read only the sections of `design/gdd.md` and `design/tdd.md` your task needs.
+3. Finish by updating `BOARD.md`.
 
-## Roles
+## The team
 
-One thread wears these in order. Small fixes skip the architect.
+Four agents, defined in `.claude/agents/`. A thread runs them in order; small fixes skip the architect.
 
-| Role | Does | Leaves behind |
+| Agent | Job | Writes |
 | --- | --- | --- |
-| Architect | Plans the change against the GDD and TDD | A short plan in the thread; a decision row if a rule changes |
-| Implementer | Builds it, with a test for each rule it touches | Code in `game/`, tests in `tests/` |
-| Reviewer | Writes synthetic feedback against the GDD and the plan | Long ones go to `feedback/synthetic/` |
-| Verifier | Runs `npm test`, plays it in a browser, screenshots visual work | Pushes to main, updates `BOARD.md` |
+| architect | Plans the change against the GDD and TDD | A plan on `BOARD.md`; a decision row if a rule changes |
+| implementer | Builds the plan, with a test per rule it touches | `game/`, `tests/` |
+| reviewer | Synthetic feedback against the GDD and the plan | `feedback/synthetic/` |
+| verifier | `npm test`, plays it in a browser, screenshots | Pushes to main, updates `BOARD.md` |
 
 ## Folders
 
-| Folder | Holds |
-| --- | --- |
-| `docs/` | `gdd.md` (rules only), `tdd.md`, both decision logs, `proposals.md`, `gdd-template.md` |
-| `docs/superseded/` | Old versions and archived decision rows. Nothing is deleted |
-| `decisions/` | Option papers behind a decision |
-| `feedback/human/` | kr0's verdicts |
-| `feedback/synthetic/` | The reviewer's synthetic feedback |
-| `research/` | Research notes |
-| `level-concepts/` | Level concepts (sibling of research/) |
-| `tuning-runs/` | Raw sweep records (`*.jsonl`) and `README.md`, the tuning history |
-| `characters/<name>/` | `reference.html` (one clean reference), `reviews/` (animation review pages) |
-| `art/` | Previews and `manifest.jsonl`. Masters live in Google Drive "kr0 Studio Art/metr0niks" |
-| `game/` | The build |
-| `tests/` | What `npm test` runs. `tests/reference-sim/` is the old prototype's rules engine, kept as a reference |
+| Folder | What lives there | Who writes |
+| --- | --- | --- |
+| `design/` | `gdd.md` (rules only), `tdd.md`, `proposals.md`, `level-design.md`, `gdd-template.md` | architect, with kr0 |
+| `decisions/` | `gdd-decisions.md`, `tdd-decisions.md`, and option papers | architect |
+| `feedback/human/` | kr0's verdicts | kr0 (agents transcribe) |
+| `feedback/synthetic/` | Reviewer reports | reviewer |
+| `research/` | Research notes | anyone |
+| `level-concepts/` | Level concepts (sibling of research/) | architect |
+| `tuning-runs/` | Sweep records (`*.jsonl`) and `README.md`, the tuning history | verifier |
+| `art/` | All art, checked in. `art/characters/<name>/reference.html` is that character's one clean reference | anyone making art |
+| `game/` | The build | implementer |
+| `tests/` | What `npm test` runs. `tests/reference-sim/` is the old prototype's rules engine | implementer |
+| `archive/` | Old versions, trimmed decision rows, old tuning history. Never deleted | anyone trimming |
 
 Every new or retired document gets a row in `INDEX.md`.
 
 ## Decisions
 
-- GDD rows are `GDD-Dn`, TDD rows `TDD-Dn`, newest first. Status is Proposed until kr0 accepts or rejects.
-- Ideas kr0 hasn't adopted go in `docs/proposals.md`, never in the GDD.
-- **Trim at each milestone:** fold accepted decisions into the GDD/TDD text, keep the 10 newest rows in each log, move the rest to `docs/superseded/`. Trim `tuning-runs/README.md` and `BOARD.md` the same day.
+- Rows are `GDD-Dn` or `TDD-Dn`, newest first. Proposed until kr0 accepts or rejects.
+- Ideas kr0 hasn't adopted go in `design/proposals.md`, never in the GDD.
+- **Trim at each milestone:** fold accepted rows into the GDD/TDD text, keep the 10 newest in each log, move the rest to `archive/`. Trim `tuning-runs/README.md` and `BOARD.md` the same day.
 
 ## Pushing
 
 - Trunk-based: push straight to main. No pull requests at this stage.
-- `npm test` must pass before a push (pre-push hook). CI comes later.
-- Keep commits small and say what changed and why.
+- `npm test` must pass (pre-push hook: `git config core.hooksPath .githooks`). CI comes later.
+- Small commits that say what changed and why.
 
 ## Threads
 
 - One thread per playable slice, titled by what it adds ("Metr0niks Warden fight").
-- At most 2 or 3 threads at once, never two on the same files. Claim files on `BOARD.md`.
+- At most 2 or 3 at once, never two on the same files. Claim files on `BOARD.md`.
 
 ## Art
 
-- Open for now. Scenario MCP is available; no fixed workflow.
-- Each character has one clean `reference.html`. Rejected or older versions go to `characters/<name>/_retired/`.
-- Every animation run gets a review page in `characters/<name>/reviews/` (frame player, findings, kr0's marks).
+- Art is open: try new workflows and different models. Scenario MCP is configured in `.mcp.json`.
+- Check every asset into `art/`. Move to cloud storage only when the repo size becomes a problem.
+- A character's `reference.html` shows only canon images. Never add drafts to it.
+- Every animation run gets a review page in `art/characters/<name>/reviews/` (frame player, findings, kr0's marks).
+- Rejected art moves to a `_retired/` folder next to it. Ask kr0 before deleting anything.
 
 ## Ask kr0 first
 
-- Anything outward-facing: deploying a site, messages outside the project, new repos.
-- Deleting art. Retire it instead.
-- Changing a rule in the GDD.
+- Anything outward-facing: deploys, messages outside the project, new repos.
+- Deleting art. Changing a rule in the GDD.
 
-## Related
+## Elsewhere
 
-- Studio site, every old prototype and lab: kr0-llc/kr0-game-studio (`site/`). That repo is the archive of this project's history.
-- Asset Desk: kr0-llc/kr0-home (kr0 runs it).
+- kr0-llc/kr0-game-studio: the studio site (every old prototype and lab is playable there) and this project's full history.

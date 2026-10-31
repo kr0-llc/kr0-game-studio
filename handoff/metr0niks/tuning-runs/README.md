@@ -1,6 +1,6 @@
 # Metr0niks tuning history
 
-Trimmed 2026-10-30. The full history up to tuning pass 1 is in [docs/superseded/tuning-history-2026-10-29.md](../docs/superseded/tuning-history-2026-10-29.md), and the raw records are the `*.jsonl` files in this folder.
+Trimmed 2026-10-30. The full history up to tuning pass 1 is in [archive/tuning-history-2026-10-29.md](../archive/tuning-history-2026-10-29.md), and the raw records are the `*.jsonl` files in this folder.
 
 ## How sweeps ran
 
